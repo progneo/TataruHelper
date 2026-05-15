@@ -82,7 +82,8 @@ namespace FFXIVTataruHelper.FFHandlers
 
         private bool _useDirectReading;
 
-        private int _directTextsMissedCount;
+        private readonly ConcurrentDictionary<string, DateTime> _recentEmittedMessages;
+        private static readonly TimeSpan DuplicateSuppressionWindow = TimeSpan.FromSeconds(2);
 
         private Process _ffXivProcess = null;
         private string _ffProcessName;
@@ -104,6 +105,7 @@ namespace FFXIVTataruHelper.FFHandlers
             _settingsStore = settingsStore;
             _exclusionWindowHandlers = new List<IntPtr>();
             _ffxivChat = new ConcurrentQueue<FFChatMsg>();
+            _recentEmittedMessages = new ConcurrentDictionary<string, DateTime>();
 
             _FFWindowStateChanged =
                 new AsyncEvent<WindowStateChangeEventArgs>(EventErrorHandler, "FFWindowStateChanged");
@@ -114,7 +116,6 @@ namespace FFXIVTataruHelper.FFHandlers
                     "FFMemoryReader \n FFChatMessageArrived");
 
             _useDirectReadingInternal = true;
-            _directTextsMissedCount = 0;
         }
 
         public void Start()
@@ -349,8 +350,6 @@ namespace FFXIVTataruHelper.FFHandlers
             var previousArrayIndex = 0;
             var previousOffset = 0;
 
-            var previousPanelResults = new List<ChatLogItem>();
-
             while (_keepWorking && _keepReading)
             {
                 try
@@ -359,22 +358,7 @@ namespace FFXIVTataruHelper.FFHandlers
                     previousArrayIndex = readResult.PreviousArrayIndex;
                     previousOffset = readResult.PreviousOffset;
 
-                    if (_useDirectReadingInternal && _useDirectReading)
-                    {
-                        var directDialog = _gameMemoryGateway.GetDirectDialog();
-                        EnqueueRange(readResult.ChatLogItems, directDialog.ChatLogItems);
-
-                        ClearMessagesList(readResult, previousPanelResults, directDialog);
-                    }
-
-                    if (!readResult.ChatLogItems.IsEmpty)
-                    {
-                        var chatLogEntries = readResult.ChatLogItems.ToArray();
-                        foreach (var chatLogItem in chatLogEntries)
-                        {
-                            ProcessChatMsg(chatLogItem);
-                        }
-                    }
+                    ProcessReadResult(readResult);
                 }
                 catch (OperationCanceledException)
                 {
@@ -391,109 +375,81 @@ namespace FFXIVTataruHelper.FFHandlers
             }
         }
 
-        private void ClearMessagesList(ChatLogResult chatLogResult, List<ChatLogItem> previousPanelResults,
-            ChatLogResult panelResult)
+        private void ProcessReadResult(ChatLogResult readResult)
         {
-            var messagesDeleted = false;
-            var previousCount = previousPanelResults.Count > 0 && chatLogResult.ChatLogItems.Count > 0;
+            var chatLogEntries = readResult?.ChatLogItems?.ToArray() ?? Array.Empty<ChatLogItem>();
 
-            try
+            if (!_useDirectReadingInternal || !_useDirectReading)
             {
-                for (var i = 0; i < previousPanelResults.Count; i++)
+                if (chatLogEntries.Length == 0)
                 {
-                    var pvPanel = previousPanelResults[i];
-
-                    var panel = chatLogResult.ChatLogItems.FirstOrDefault(x =>
-                        _gameMemoryGateway.CheckChatEquality(x, pvPanel));
-
-                    if (panel != null)
-                    {
-                        if (panelResult.ChatLogItems.FirstOrDefault(x =>
-                                _gameMemoryGateway.CheckChatEquality(x, panel)) == null)
-                        {
-                            RemoveFirstMatching(chatLogResult.ChatLogItems,
-                                x => _gameMemoryGateway.CheckChatEquality(x, panel));
-                        }
-
-                        var rmCount =
-                            previousPanelResults.RemoveAll(x => _gameMemoryGateway.CheckChatEquality(x, panel));
-                        messagesDeleted = true;
-
-                        if (rmCount > 0)
-                        {
-                            i = 0;
-                        }
-                    }
+                    return;
                 }
 
-                if (previousCount)
+                foreach (var chatLogItem in chatLogEntries)
                 {
-                    if (messagesDeleted == false)
-                    {
-                        _directTextsMissedCount++;
-                    }
-                    else
-                    {
-                        _directTextsMissedCount = 0;
-                    }
+                    ProcessChatMsg(chatLogItem);
                 }
 
-                if (previousPanelResults.Count > 200)
+                return;
+            }
+
+            foreach (var chatLogItem in chatLogEntries)
+            {
+                if (!IsDirectDialogCode(chatLogItem))
                 {
-                    const int startPos = 0;
-                    var count = previousPanelResults.Count / 2;
-                    previousPanelResults.RemoveRange(startPos, count);
+                    ProcessChatMsg(chatLogItem);
                 }
+            }
 
-                previousPanelResults.AddRange(panelResult.ChatLogItems);
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.WriteLog("FFMemoryReader.ClearMessagesList canceled.");
-            }
-            catch (Exception e)
-            {
-                _logger.WriteLog("FFMemoryReader.ClearMessagesList failed.");
-                _logger.WriteLog(e);
-            }
-        }
-
-        private static void EnqueueRange(ConcurrentQueue<ChatLogItem> target, IEnumerable<ChatLogItem> source)
-        {
-            if (target == null || source == null)
+            var directDialog = _gameMemoryGateway.GetDirectDialog();
+            if (directDialog?.ChatLogItems == null || directDialog.ChatLogItems.Count == 0)
             {
                 return;
             }
 
-            foreach (var item in source)
+            foreach (var directItem in directDialog.ChatLogItems.ToArray())
             {
-                target.Enqueue(item);
+                ProcessChatMsg(directItem);
             }
         }
 
-        private static bool RemoveFirstMatching(ConcurrentQueue<ChatLogItem> queue, Func<ChatLogItem, bool> predicate)
+        private static bool IsDirectDialogCode(ChatLogItem chatLogItem)
         {
-            if (queue == null || predicate == null)
+            if (chatLogItem == null || string.IsNullOrEmpty(chatLogItem.Code))
             {
                 return false;
             }
 
-            var snapshot = queue.ToArray();
-            queue.Clear();
+            return string.Equals(chatLogItem.Code, "003D", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(chatLogItem.Code, "0044", StringComparison.OrdinalIgnoreCase);
+        }
 
-            var removed = false;
-            foreach (var item in snapshot)
+        private bool ShouldSuppressAsDuplicate(ChatLogItem chatLogItem)
+        {
+            if (chatLogItem == null)
             {
-                if (!removed && predicate(item))
-                {
-                    removed = true;
-                    continue;
-                }
-
-                queue.Enqueue(item);
+                return true;
             }
 
-            return removed;
+            var normalizedLine = (chatLogItem.Line ?? string.Empty).Trim();
+            if (normalizedLine.Length == 0)
+            {
+                return true;
+            }
+
+            var signature = string.Concat(chatLogItem.Code ?? string.Empty, "|", normalizedLine);
+            var now = DateTime.UtcNow;
+            if (_recentEmittedMessages.TryGetValue(signature, out var previousEmittedAt))
+            {
+                if ((now - previousEmittedAt) <= DuplicateSuppressionWindow)
+                {
+                    return true;
+                }
+            }
+
+            _recentEmittedMessages[signature] = now;
+            return false;
         }
 
         private void ChatMessageEvetRiser()
@@ -539,6 +495,11 @@ namespace FFXIVTataruHelper.FFHandlers
 
         private void ProcessChatMsg(ChatLogItem chatLogItem)
         {
+            if (ShouldSuppressAsDuplicate(chatLogItem))
+            {
+                return;
+            }
+
             var tmpMsg = new FFChatMsg(chatLogItem.Line, chatLogItem.Code, chatLogItem.TimeStamp);
             _ffxivChat.Enqueue(tmpMsg);
         }

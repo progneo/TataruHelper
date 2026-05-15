@@ -20,31 +20,26 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 return result;
             }
 
-            var dialogPanel = chatLogResult.ChatLogItems.LastOrDefault(item =>
-                IsDialogPanelCandidate(item) && !IsTextEmpty(item));
-            var cutsceneText = chatLogResult.ChatLogItems.LastOrDefault(item =>
-                IsCutsceneCandidate(item) && !IsTextEmpty(item));
+            var directCandidates = chatLogResult.ChatLogItems
+                .Where(item => item != null && !IsTextEmpty(item))
+                .Where(item => IsDialogPanelCandidate(item) || IsCutsceneCandidate(item))
+                .ToArray();
 
-            var dialogRepeat = CheckRepetition(_dialogPanelsLog, dialogPanel);
-            var cutsceneRepeat = CheckRepetition(_cutScenesLog, cutsceneText);
+            foreach (var candidate in directCandidates)
+            {
+                var isDialogPanel = IsDialogPanelCandidate(candidate);
+                var isRepeatedByType = isDialogPanel
+                    ? CheckRepetition(_dialogPanelsLog, candidate)
+                    : CheckRepetition(_cutScenesLog, candidate);
 
-            if (CheckChatEquality(dialogPanel, cutsceneText))
-            {
-                if (dialogPanel != null && !dialogRepeat && !CheckRepetition(_directDialogLog, dialogPanel))
+                if (isRepeatedByType)
                 {
-                    result.ChatLogItems.Enqueue(dialogPanel);
-                }
-            }
-            else
-            {
-                if (dialogPanel != null && !dialogRepeat && !CheckRepetition(_directDialogLog, dialogPanel))
-                {
-                    result.ChatLogItems.Enqueue(dialogPanel);
+                    continue;
                 }
 
-                if (cutsceneText != null && !cutsceneRepeat && !CheckRepetition(_directDialogLog, cutsceneText))
+                if (!CheckRepetition(_directDialogLog, candidate))
                 {
-                    result.ChatLogItems.Enqueue(cutsceneText);
+                    result.ChatLogItems.Enqueue(candidate);
                 }
             }
 

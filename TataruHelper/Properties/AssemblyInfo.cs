@@ -58,3 +58,4 @@ using System.Windows;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("0.9.104.0")]
 [assembly: AssemblyFileVersion("0.9.104.0")]
+[assembly: InternalsVisibleTo("TataruHelper.Tests")]
