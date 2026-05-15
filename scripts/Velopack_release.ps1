@@ -106,11 +106,11 @@ if ($IncludeMsiDeploymentTool) {
     }
 
     $packHelpText = ($packHelpOutput | Out-String)
-    if ($packHelpText -match "(?m)^\s*--msiDeploymentTool\b") {
-        $msiFlag = "--msiDeploymentTool"
-    }
-    elseif ($packHelpText -match "(?m)^\s*--msi\b") {
+    if ($packHelpText -match "(?m)^\s*--msi\b") {
         $msiFlag = "--msi"
+    }
+    elseif ($packHelpText -match "(?m)^\s*--msiDeploymentTool\b") {
+        $msiFlag = "--msiDeploymentTool"
     }
     else {
         Write-Warning "MSI packaging flag was not found in current vpk build; Setup.exe only will be generated."
