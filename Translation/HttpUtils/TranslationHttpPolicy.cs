@@ -16,7 +16,11 @@ namespace Translation.HttpUtils
             reader.ReadWriteTimeoutMilliseconds = GlobalTranslationSettings.HttpReadWriteTimeoutMilliseconds;
         }
 
-        public static HttpResponse ExecuteHttpRequestWithRetry(Func<HttpResponse> request, ILog logger, string operationName)
+        public static HttpResponse ExecuteHttpRequestWithRetry(
+            Func<HttpResponse> request,
+            ILog logger,
+            string operationName,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             if (request == null)
                 return new HttpResponse(false, null);
@@ -27,6 +31,8 @@ namespace Translation.HttpUtils
 
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 lastResponse = request();
                 if (lastResponse != null && lastResponse.IsSuccessful)
                     return lastResponse;
@@ -36,13 +42,17 @@ namespace Translation.HttpUtils
                     break;
 
                 logger?.WriteLog($"{operationName}: transient HTTP failure, retry {attempt}/{maxAttempts - 1}.");
-                Thread.Sleep(delayMs);
+                DelayWithCancellation(delayMs, cancellationToken);
             }
 
             return lastResponse ?? new HttpResponse(false, null);
         }
 
-        public static string ExecuteTranslationWithRetry(Func<string> translate, ILog logger, string operationName)
+        public static string ExecuteTranslationWithRetry(
+            Func<string> translate,
+            ILog logger,
+            string operationName,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             if (translate == null)
                 return String.Empty;
@@ -53,6 +63,8 @@ namespace Translation.HttpUtils
 
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
+                cancellationToken.ThrowIfCancellationRequested();
+
                 lastResult = translate() ?? String.Empty;
                 if (lastResult.Length > 0)
                     return lastResult;
@@ -61,10 +73,25 @@ namespace Translation.HttpUtils
                     break;
 
                 logger?.WriteLog($"{operationName}: empty translation result, retry {attempt}/{maxAttempts - 1}.");
-                Thread.Sleep(delayMs);
+                DelayWithCancellation(delayMs, cancellationToken);
             }
 
             return lastResult;
+        }
+
+        private static void DelayWithCancellation(int delayMs, CancellationToken cancellationToken)
+        {
+            if (delayMs <= 0)
+                return;
+
+            if (cancellationToken == default(CancellationToken))
+            {
+                Thread.Sleep(delayMs);
+                return;
+            }
+
+            if (cancellationToken.WaitHandle.WaitOne(delayMs))
+                cancellationToken.ThrowIfCancellationRequested();
         }
 
         private static bool IsTransient(Exception exception)

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using Translation;
@@ -54,6 +55,8 @@ namespace FFXIVTataruHelper
         List<string> MsgBlackList;
 
         List<string> ChatCodesWithNickNames;
+
+        ChatMessageFilter _ChatMessageFilter;
 
         #endregion
 
@@ -142,37 +145,30 @@ namespace FFXIVTataruHelper
             ChatCodesWithNickNames = ChatCodesWithNickNames.Distinct().ToList();
 
             Helper.SaveJson(ChatCodesWithNickNames, GlobalSettings.IgnoreNickNameChatCodes);
+
+            _ChatMessageFilter = new ChatMessageFilter(MsgBlackList, ChatCodesWithNickNames);
         }
 
         public async Task OnFFChatMessageArrived(ChatMessageArrivedEventArgs ea)
         {
             ChatMsgType msgType = new ChatMsgType();
 
-            if (!MsgBlackList.Contains(ea.ChatMessage.Text))
+            if (_ChatMessageFilter.ShouldTranslate(ea.ChatMessage.Text))
                 await ProcessChatMsg(ea, msgType);
 
             if (CmdArgsStatus.LogAllChat || CmdArgsStatus.LogPlotChat)
                 Logger.WriteChatLog(String.Format("{0} {1}: {2}", ea.ChatMessage.TimeStamp, ea.ChatMessage.Code, ea.ChatMessage.Text));
         }
 
-        public async Task<string> Translate(string inSentence, TranslationEngine translationEngine, TranslatorLanguague fromLang, TranslatorLanguague toLang, string chatCode)
+        public async Task<string> Translate(string inSentence, TranslationEngine translationEngine, TranslatorLanguague fromLang, TranslatorLanguague toLang, string chatCode, CancellationToken cancellationToken = default(CancellationToken))
         {
             string text = string.Empty;
             string NickName = string.Empty;
 
-            if (ChatCodesWithNickNames.Contains(chatCode))
-            {
-                var ind1 = inSentence.IndexOf(":");
-                if(ind1>0)
-                {
-                    ind1++;
+            string sentenceToTranslate = inSentence;
+            _ChatMessageFilter.TrySplitNickname(chatCode, inSentence, out NickName, out sentenceToTranslate);
 
-                    NickName = inSentence.Substring(0, ind1);
-                    inSentence=inSentence.Remove(0, ind1);
-                }
-            }
-
-            text = await _WebTranslator.TranslateAsync(inSentence, translationEngine, fromLang, toLang);
+            text = await _WebTranslator.TranslateAsync(sentenceToTranslate, translationEngine, fromLang, toLang, cancellationToken);
 
             if (NickName.Length > 0)
                 text = NickName +" "+ text;

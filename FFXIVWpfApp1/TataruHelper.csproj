@@ -131,6 +131,7 @@
     <Compile Include="TataruComponentModel\PropertyBinder.cs" />
     <Compile Include="TataruComponentModel\PropertyCouple.cs" />
     <Compile Include="UIModel\ChatMsgType.cs" />
+    <Compile Include="UIModel\ChatMessageFilter.cs" />
     <Compile Include="FFHandlers\FFChatMsg.cs" />
     <Compile Include="FFHandlers\FFMemoryReader.cs" />
     <Compile Include="UIModel\ChatProcessor.cs" />

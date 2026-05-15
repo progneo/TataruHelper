@@ -59,6 +59,37 @@ namespace Translation.Tests
             Assert.That(deepLProvider.CallCount, Is.EqualTo(0));
         }
 
+        [Test]
+        public void Translate_ReturnsOriginal_WhenTargetLanguageEqualsSourceLanguage()
+        {
+            var googleProvider = new FakeProvider(TranslationEngineName.GoogleTranslate, "should not be used");
+            var translator = new WebTranslator(new NullLog(), new[] { googleProvider }, false);
+
+            var engine = CreateEngine(TranslationEngineName.GoogleTranslate);
+            var sameLang = new TranslatorLanguague("English", "English", "en");
+
+            var result = translator.Translate("No translation needed", engine, sameLang, sameLang);
+
+            Assert.That(result, Is.EqualTo("No translation needed"));
+            Assert.That(googleProvider.CallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Translate_ReturnsOriginal_WhenInputHasNoLetters()
+        {
+            var googleProvider = new FakeProvider(TranslationEngineName.GoogleTranslate, "should not be used");
+            var translator = new WebTranslator(new NullLog(), new[] { googleProvider }, false);
+
+            var engine = CreateEngine(TranslationEngineName.GoogleTranslate);
+            var from = new TranslatorLanguague("English", "English", "en");
+            var to = new TranslatorLanguague("Spanish", "Spanish", "es");
+
+            var result = translator.Translate("12345 !!! ???", engine, from, to);
+
+            Assert.That(result, Is.EqualTo("12345 !!! ???"));
+            Assert.That(googleProvider.CallCount, Is.EqualTo(0));
+        }
+
         private static TranslationEngine CreateEngine(TranslationEngineName engineName)
         {
             return new TranslationEngine(

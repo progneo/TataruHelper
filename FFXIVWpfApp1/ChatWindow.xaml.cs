@@ -6,6 +6,7 @@ using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.WinUtils;
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Documents;
@@ -152,17 +153,22 @@ namespace FFXIVTataruHelper
                     string translation = string.Empty;
 
 
-                    var translationTask = _TataruModel.ChatProcessor.Translate(
-                        ea.ChatMessage.Text,
-                        _ChatWindowViewModel.CurrentTransaltionEngine,
-                        _ChatWindowViewModel.CurrentTranslateFromLanguague,
-                        _ChatWindowViewModel.CurrentTranslateToLanguague,
-                        chatCode.Code);
-
-                    var completedTask = await Task.WhenAny(translationTask, Task.Delay(GlobalSettings.TranslatorWaitTime));
-                    if (completedTask == translationTask)
+                    using (var translationCts = new CancellationTokenSource(GlobalSettings.TranslatorWaitTime))
                     {
-                        translation = await translationTask;
+                        try
+                        {
+                            translation = await _TataruModel.ChatProcessor.Translate(
+                                ea.ChatMessage.Text,
+                                _ChatWindowViewModel.CurrentTransaltionEngine,
+                                _ChatWindowViewModel.CurrentTranslateFromLanguague,
+                                _ChatWindowViewModel.CurrentTranslateToLanguague,
+                                chatCode.Code,
+                                translationCts.Token);
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            translation = string.Empty;
+                        }
                     }
 
                     translateTryCount++;

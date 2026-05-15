@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 
@@ -74,14 +75,21 @@ namespace Translation
 
         public async Task<string> TranslateAsync(string inSentence, TranslationEngine translationEngine, TranslatorLanguague fromLang, TranslatorLanguague toLang)
         {
-            string result = String.Empty;
+            return await TranslateAsync(inSentence, translationEngine, fromLang, toLang, CancellationToken.None);
+        }
 
-            await Task.Run(() =>
+        public async Task<string> TranslateAsync(
+            string inSentence,
+            TranslationEngine translationEngine,
+            TranslatorLanguague fromLang,
+            TranslatorLanguague toLang,
+            CancellationToken cancellationToken)
+        {
+            return await Task.Run(() =>
             {
-                result = Translate(inSentence, translationEngine, fromLang, toLang);
-            });
-
-            return result;
+                cancellationToken.ThrowIfCancellationRequested();
+                return Translate(inSentence, translationEngine, fromLang, toLang);
+            }, cancellationToken);
         }
 
         public string Translate(string inSentence, TranslationEngine translationEngine, TranslatorLanguague fromLang, TranslatorLanguague toLang)
