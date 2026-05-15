@@ -1,23 +1,24 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using FFXIVTataruHelper.EventArguments;
 using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.WinUtils;
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Media;
+
 using FFXIVTataruHelper.TataruComponentModel;
+
 using Translation;
 
 namespace FFXIVTataruHelper.UIModel
 {
-    public class ChatWindowViewModelSettings : INotifyPropertyChanged, FFXIVTataruHelper.TataruComponentModel.INotifyPropertyChangedAsync
+    public class ChatWindowViewModelSettings : INotifyPropertyChanged,
+        FFXIVTataruHelper.TataruComponentModel.INotifyPropertyChangedAsync
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -26,6 +27,7 @@ namespace FFXIVTataruHelper.UIModel
             add { this._AsyncPropertyChanged.Register(value); }
             remove { this._AsyncPropertyChanged.Unregister(value); }
         }
+
         private AsyncEvent<AsyncPropertyChangedEventArgs> _AsyncPropertyChanged;
 
         private string _name;
@@ -61,7 +63,8 @@ namespace FFXIVTataruHelper.UIModel
 
         public string Name
         {
-            get => _name; set
+            get => _name;
+            set
             {
                 if (_name == value) return;
 
@@ -69,6 +72,7 @@ namespace FFXIVTataruHelper.UIModel
                 OnPropertyChanged();
             }
         }
+
         public long WinId
         {
             get => _winId;
@@ -79,19 +83,21 @@ namespace FFXIVTataruHelper.UIModel
                 _winId = value;
 
                 if (ShowHideChatKeys != null)
-                    ShowHideChatKeys = new HotKeyCombination("ShowHideChatKeys" + Convert.ToString(_winId), ShowHideChatKeys);
+                    ShowHideChatKeys =
+                        new HotKeyCombination("ShowHideChatKeys" + Convert.ToString(_winId), ShowHideChatKeys);
                 else
                     ShowHideChatKeys = new HotKeyCombination("ShowHideChatKeys" + Convert.ToString(_winId));
 
                 if (ClickThoughtChatKeys != null)
-                    ClickThoughtChatKeys = new HotKeyCombination("ClickThoughtChatKeys" + Convert.ToString(_winId), ClickThoughtChatKeys);
+                    ClickThoughtChatKeys = new HotKeyCombination("ClickThoughtChatKeys" + Convert.ToString(_winId),
+                        ClickThoughtChatKeys);
                 else
                     ClickThoughtChatKeys = new HotKeyCombination("ClickThoughtChatKeys" + Convert.ToString(_winId));
 
                 if (ClearChatKeys != null)
-                    ClearChatKeys = new HotKeyCombination("ClickThoughtChatKeys" + Convert.ToString(_winId), ClearChatKeys);
+                    ClearChatKeys = new HotKeyCombination("ClearChatKeys" + Convert.ToString(_winId), ClearChatKeys);
                 else
-                    ClearChatKeys = new HotKeyCombination("ClickThoughtChatKeys" + Convert.ToString(_winId));
+                    ClearChatKeys = new HotKeyCombination("ClearChatKeys" + Convert.ToString(_winId));
 
                 OnPropertyChanged();
             }
@@ -108,6 +114,7 @@ namespace FFXIVTataruHelper.UIModel
                 OnPropertyChanged();
             }
         }
+
         public double LineBreakHeight
         {
             get => _lineBreakHeight;
@@ -119,6 +126,7 @@ namespace FFXIVTataruHelper.UIModel
                 OnPropertyChanged();
             }
         }
+
         public int SpacingCount
         {
             get => _spacingCount;
@@ -154,6 +162,7 @@ namespace FFXIVTataruHelper.UIModel
                 OnPropertyChanged();
             }
         }
+
         public bool IsClickThrough
         {
             get => _isClickThrough;
@@ -165,6 +174,7 @@ namespace FFXIVTataruHelper.UIModel
                 OnPropertyChanged();
             }
         }
+
         public bool IsAutoHide
         {
             get => _isAutoHide;
@@ -224,6 +234,7 @@ namespace FFXIVTataruHelper.UIModel
                 OnPropertyChanged();
             }
         }
+
         public TranslatorLanguague FromLanguague
         {
             get => _fromLanguague;
@@ -235,6 +246,7 @@ namespace FFXIVTataruHelper.UIModel
                 OnPropertyChanged();
             }
         }
+
         public TranslatorLanguague ToLanguague
         {
             get => _toLanguague;
@@ -282,6 +294,7 @@ namespace FFXIVTataruHelper.UIModel
                 OnPropertyChanged();
             }
         }
+
         public HotKeyCombination ClickThoughtChatKeys
         {
             get => _clickThoughtChatKeys;
@@ -293,6 +306,7 @@ namespace FFXIVTataruHelper.UIModel
                 OnPropertyChanged();
             }
         }
+
         public HotKeyCombination ClearChatKeys
         {
             get => _clearChatKeys;
@@ -307,7 +321,8 @@ namespace FFXIVTataruHelper.UIModel
 
         public ChatWindowViewModelSettings()
         {
-            this._AsyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler, "ChatWindowViewModelSettings \n AsyncPropertyChanged");
+            this._AsyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler,
+                "ChatWindowViewModelSettings \n AsyncPropertyChanged");
 
             Name = String.Empty;
             WinId = 0;
@@ -342,7 +357,8 @@ namespace FFXIVTataruHelper.UIModel
 
         public ChatWindowViewModelSettings(string name, long winId)
         {
-            this._AsyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler, "ChatWindowViewModelSettings \n AsyncPropertyChanged");
+            this._AsyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler,
+                "ChatWindowViewModelSettings \n AsyncPropertyChanged");
 
             Name = name;
             WinId = winId;
@@ -376,7 +392,8 @@ namespace FFXIVTataruHelper.UIModel
 
         public ChatWindowViewModelSettings(ChatWindowViewModelSettings settings)
         {
-            this._AsyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler, "ChatWindowViewModelSettings \n AsyncPropertyChanged");
+            this._AsyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler,
+                "ChatWindowViewModelSettings \n AsyncPropertyChanged");
 
             Name = settings.Name;
             WinId = settings.WinId;
@@ -412,7 +429,7 @@ namespace FFXIVTataruHelper.UIModel
             ClearChatKeys = new HotKeyCombination(settings.ClearChatKeys);
         }
 
-        private void OnPropertyChanged([CallerMemberName]string prop = "")
+        private void OnPropertyChanged([CallerMemberName] string prop = "")
         {
             var ea = new AsyncPropertyChangedEventArgs(this, prop);
             _AsyncPropertyChanged.InvokeAsync(ea).Forget();

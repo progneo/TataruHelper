@@ -57,6 +57,8 @@ namespace FFXIVTataruHelper.Services.Settings
         public async Task StopAsync(CancellationToken cancellationToken = default)
         {
             Task workerTask;
+            Func<Task> persistSettingsAsync;
+            bool hasPendingChanges;
             lock (_sync)
             {
                 if (!_isStarted)
@@ -66,6 +68,8 @@ namespace FFXIVTataruHelper.Services.Settings
 
                 _isStarted = false;
                 _settingsSource.PropertyChanged -= OnSettingsChanged;
+                persistSettingsAsync = _persistSettingsAsync;
+                hasPendingChanges = Interlocked.CompareExchange(ref _isDirty, 0, 0) != 0;
                 _workerCancellation.Cancel();
                 workerTask = _workerTask;
             }
@@ -73,6 +77,11 @@ namespace FFXIVTataruHelper.Services.Settings
             try
             {
                 await workerTask.WaitAsync(cancellationToken);
+
+                if (hasPendingChanges)
+                {
+                    await persistSettingsAsync();
+                }
             }
             catch (OperationCanceledException)
             {
