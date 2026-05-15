@@ -28,9 +28,16 @@ namespace FFXIVTataruHelper.Services.HotKeys
             try
             {
                 var key = Helper.RealKey(e);
-                var pressedKeys = Keys.ClearMouseKeys(Keys.ClearRepeatedKeys(Keys.GetPressedKeys()));
+                if (key == Key.None || e.IsRepeat)
+                {
+                    return;
+                }
 
-                if (pressedKeys.Length <= 1)
+                var isModifierKey = HotKeyCombination.IsModifierKey(key);
+                var hasOnlyModifiers = hotKeyCombination.ModifierKey != ModifierKeys.None &&
+                                       hotKeyCombination.NormalKey == Key.None;
+
+                if (isModifierKey && !hasOnlyModifiers)
                 {
                     hotKeyCombination.ClearKeys();
                 }
@@ -58,11 +65,20 @@ namespace FFXIVTataruHelper.Services.HotKeys
 
             try
             {
-                var pressedKeys = Keys.ClearMouseKeys(Keys.ClearRepeatedKeys(Keys.GetPressedKeys()));
-
-                if (pressedKeys.Length != 0)
+                var key = Helper.RealKey(e);
+                if (key == Key.None)
                 {
                     return;
+                }
+
+                if (HotKeyCombination.IsModifierKey(key))
+                {
+                    var pressedKeys = Keys.ClearMouseKeys(Keys.ClearRepeatedKeys(Keys.GetPressedKeys()));
+
+                    if (pressedKeys.Length != 0)
+                    {
+                        return;
+                    }
                 }
 
                 Keyboard.ClearFocus();
@@ -77,8 +93,8 @@ namespace FFXIVTataruHelper.Services.HotKeys
                     return;
                 }
 
-                var key = Keys.ConvertFromWpfKey(hotKeyCombination.NormalKey);
-                globalHotKey = new GlobalHotKey(hotKeyCombination.Name, hotKeyCombination.ModifierKey, key);
+                var normalKey = Keys.ConvertFromWpfKey(hotKeyCombination.NormalKey);
+                globalHotKey = new GlobalHotKey(hotKeyCombination.Name, hotKeyCombination.ModifierKey, normalKey);
                 hotKeyManager.AddGlobalHotKey(globalHotKey);
             }
             catch (Exception ex)

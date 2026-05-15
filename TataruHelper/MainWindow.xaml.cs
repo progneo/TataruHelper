@@ -499,6 +499,8 @@ namespace FFXIVTataruHelper
             {
                 mdl.RegisterHotKeyDown(TatruHotkeyType.ShowHideChatWindow, e);
             }
+
+            e.Handled = true;
         }
 
         private void ShowHideChatWinHotKeyBox_KeyUp(object sender, KeyEventArgs e)
@@ -508,6 +510,8 @@ namespace FFXIVTataruHelper
             {
                 mdl.RegisterHotKeyUp(TatruHotkeyType.ShowHideChatWindow, e);
             }
+
+            e.Handled = true;
         }
 
         private void ClickThroughHotKey_KeyDown(object sender, KeyEventArgs e)
@@ -517,6 +521,8 @@ namespace FFXIVTataruHelper
             {
                 mdl.RegisterHotKeyDown(TatruHotkeyType.ClickThrough, e);
             }
+
+            e.Handled = true;
         }
 
         private void ClickThroughHotKey_KeyUp(object sender, KeyEventArgs e)
@@ -526,6 +532,8 @@ namespace FFXIVTataruHelper
             {
                 mdl.RegisterHotKeyUp(TatruHotkeyType.ClickThrough, e);
             }
+
+            e.Handled = true;
         }
 
         private void ClearChatHotKey_KeyDown(object sender, KeyEventArgs e)
@@ -535,6 +543,8 @@ namespace FFXIVTataruHelper
             {
                 mdl.RegisterHotKeyDown(TatruHotkeyType.ClearChat, e);
             }
+
+            e.Handled = true;
         }
 
         private void ClearChatHotKey_KeyUp(object sender, KeyEventArgs e)
@@ -544,6 +554,8 @@ namespace FFXIVTataruHelper
             {
                 mdl.RegisterHotKeyUp(TatruHotkeyType.ClearChat, e);
             }
+
+            e.Handled = true;
         }
 
         #endregion
