@@ -1,13 +1,13 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Translation.Utils;
 
 namespace Translation.Papago
 {
@@ -102,7 +102,7 @@ namespace Translation.Papago
 
                         if (papagoWebResponse.IsSuccessful)
                         {
-                            PapagoResponse papagoResponse = JsonConvert.DeserializeObject<PapagoResponse>(papagoWebResponse.Body);
+                            PapagoResponse papagoResponse = SafeJson.DeserializeExternal<PapagoResponse>(papagoWebResponse.Body);
 
                             result = papagoResponse.translatedText;
                         }
@@ -155,7 +155,7 @@ namespace Translation.Papago
 
                     var tmpResponse = _PapagoReader.RequestWebData(url, HttpUtilities.HttpMethods.POST, reqv);
 
-                    PapagoDetectLanguageResponse papagoResponse = JsonConvert.DeserializeObject<PapagoDetectLanguageResponse>(tmpResponse.Body);
+                    PapagoDetectLanguageResponse papagoResponse = SafeJson.DeserializeExternal<PapagoDetectLanguageResponse>(tmpResponse.Body);
 
                     result = papagoResponse.langCode;
 

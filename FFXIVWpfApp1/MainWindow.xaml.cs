@@ -26,6 +26,8 @@ namespace FFXIVTataruHelper
     /// </summary>
     public partial class MainWindow : Window //-V3072
     {
+        private const bool EnableLegacyUpdater = false;
+
         TataruModel TataruModel
         {
             get { return _TataruModel; }
@@ -89,7 +91,11 @@ namespace FFXIVTataruHelper
             try
             {
                 _LanguagueWrapper = new LanguagueWrapper(this);
-                _Updater = new SquirrelUpdater(new Utils.LoggerWrapper());
+
+                if (EnableLegacyUpdater)
+                    _Updater = new SquirrelUpdater(new Utils.LoggerWrapper());
+                else
+                    Logger.WriteLog("Legacy updater path is disabled in this build.");
             }
             catch (Exception e)
             {
@@ -136,11 +142,18 @@ namespace FFXIVTataruHelper
 
         private void RestartApp_Click(object sender, RoutedEventArgs e)
         {
-            _Updater.RestartApp();
+            _Updater?.RestartApp();
         }
 
         private void CheckUpdates_Click(object sender, RoutedEventArgs e)
         {
+            if (_Updater == null)
+            {
+                UserStartedUpdateText.Text = "Updater is temporarily disabled.";
+                _TataruModel.TataruViewModel.UserStartedUpdateTextVisibility = true;
+                return;
+            }
+
             UserStartedUpdateText.Text = (string)this.Resources["LookingForUpdates"];
 
             _TataruModel.TataruViewModel.UpdateCheckByUser = true;
@@ -198,12 +211,14 @@ namespace FFXIVTataruHelper
                 _WinMessagesHandler = new WinMessagesHandler(this);
                 _WinMessagesHandler.ShowFirstInstance += OnShowFirstInstance;
 
-                _Updater.UpdatingStateChanged += OnUpdaterEvent;
+                _Updater?.UpdatingStateChanged += OnUpdaterEvent;
 
 #if DEBUG
 #else
                 Task.Run(() =>
                 {
+                    if (_Updater == null)
+                        return;
 
                     _Updater.CheckAndInstallUpdates(CmdArgsStatus.IsPreRelease);
 

@@ -2,13 +2,13 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 using HttpUtilities;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Translation.Deepl.Requests;
 using Translation.Deepl.Responses;
+using Translation.Utils;
 
 namespace Translation.Deepl
 {
@@ -91,7 +91,7 @@ namespace Translation.Deepl
 
                 if (strDeepLTranslationResponse.IsSuccessful)
                 {
-                    var deepLTranslationResponse = JsonConvert.DeserializeObject<DeepLTranslationResponse>(strDeepLTranslationResponse.Body);
+                    var deepLTranslationResponse = SafeJson.DeserializeExternal<DeepLTranslationResponse>(strDeepLTranslationResponse.Body);
 
                     if (deepLTranslationResponse?.Result?.Translations != null)
                     {
@@ -131,4 +131,3 @@ namespace Translation.Deepl
         }
     }
 }
-

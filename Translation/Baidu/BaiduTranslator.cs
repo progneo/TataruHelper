@@ -1,11 +1,11 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using Newtonsoft.Json;
 using System;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Translation.Utils;
 
 namespace Translation.Baidu
 {
@@ -98,7 +98,7 @@ namespace Translation.Baidu
 
                         if (baiduResponse.IsSuccessful)
                         {
-                            var escapedResult = JsonConvert.DeserializeObject<BaiduResponse>(baiduResponse.Body);
+                            var escapedResult = SafeJson.DeserializeExternal<BaiduResponse>(baiduResponse.Body);
 
                             translationResult = Regex.Unescape(escapedResult.TransResult.Data[0].Dst);//*/
                         }

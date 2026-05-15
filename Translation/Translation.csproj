@@ -43,8 +43,8 @@
     <Reference Include="Jurassic, Version=3.1.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\packages\Jurassic.3.1.0\lib\net45\Jurassic.dll</HintPath>
     </Reference>
-    <Reference Include="Newtonsoft.Json, Version=12.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.12.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
+    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -81,6 +81,7 @@
     <Compile Include="TranslationEngine.cs" />
     <Compile Include="TranslationRequset.cs" />
     <Compile Include="TranslatorLanguague.cs" />
+    <Compile Include="Utils\SafeJson.cs" />
     <Compile Include="Utils\LanguageDetector.cs" />
     <Compile Include="WebTranslator.cs" />
   </ItemGroup>
