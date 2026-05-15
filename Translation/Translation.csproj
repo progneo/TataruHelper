@@ -1,127 +1,45 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{37DE7A36-75AA-475F-BC99-4D1B852A3FF2}</ProjectGuid>
-    <OutputType>Library</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <TargetFramework>net10.0</TargetFramework>
     <RootNamespace>Translation</RootNamespace>
     <AssemblyName>Translation</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Deterministic>true</Deterministic>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="IvanAkcheurov.Commons, Version=0.2.1.1, Culture=neutral, PublicKeyToken=a61413de1d13f8fc, processorArchitecture=MSIL">
-      <HintPath>..\packages\IvanAkcheurov.NTextCat.Lib.0.2.1.1\lib\net40\IvanAkcheurov.Commons.dll</HintPath>
-    </Reference>
-    <Reference Include="IvanAkcheurov.NClassify, Version=0.2.1.1, Culture=neutral, PublicKeyToken=a61413de1d13f8fc, processorArchitecture=MSIL">
-      <HintPath>..\packages\IvanAkcheurov.NTextCat.Lib.0.2.1.1\lib\net40\IvanAkcheurov.NClassify.dll</HintPath>
-    </Reference>
-    <Reference Include="IvanAkcheurov.NTextCat.Lib, Version=0.2.1.1, Culture=neutral, PublicKeyToken=a61413de1d13f8fc, processorArchitecture=MSIL">
-      <HintPath>..\packages\IvanAkcheurov.NTextCat.Lib.0.2.1.1\lib\net40\IvanAkcheurov.NTextCat.Lib.dll</HintPath>
-    </Reference>
-    <Reference Include="Jurassic, Version=3.1.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\packages\Jurassic.3.1.0\lib\net45\Jurassic.dll</HintPath>
-    </Reference>
-    <Reference Include="Newtonsoft.Json, Version=13.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
-      <HintPath>..\packages\Newtonsoft.Json.13.0.3\lib\net45\Newtonsoft.Json.dll</HintPath>
-    </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Web" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
-    <Reference Include="System.Xml" />
+    <PackageReference Include="IvanAkcheurov.NTextCat.Lib" />
+    <PackageReference Include="Jurassic" />
+    <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="Baidu\BaiduReqEncoder.cs" />
-    <Compile Include="Baidu\BaiduRequest.cs" />
-    <Compile Include="Baidu\BaiduResponse.cs" />
-    <Compile Include="Baidu\BaiduTranslator.cs" />
-    <Compile Include="DeepL\DeepLRequest.cs" />
-    <Compile Include="DeepL\DeepLResponse.cs" />
-    <Compile Include="DeepL\DeepLTranslator.cs" />
-    <Compile Include="GlobalTranslationSettings.cs" />
-    <Compile Include="Google\GoogleTranslator.cs" />
-    <Compile Include="HttpUtils\HttpILogWrapper.cs" />
-    <Compile Include="HttpUtils\TranslationHttpPolicy.cs" />
-    <Compile Include="ITranslationProvider.cs" />
-    <Compile Include="Utils\Helper.cs" />
-    <Compile Include="ILog.cs" />
-    <Compile Include="Papago\PapagoDetectLanguageRequest.cs" />
-    <Compile Include="Papago\PapagoDetectLanguageResponse.cs" />
-    <Compile Include="Papago\PapagoEncoder.cs" />
-    <Compile Include="Papago\PapagoResponse.cs" />
-    <Compile Include="Papago\PapagoTranslationRequest.cs" />
-    <Compile Include="Papago\PapagoTranslator.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="StringCipher.cs" />
-    <Compile Include="TranslatedMsg.cs" />
-    <Compile Include="Providers\TranslationProviderAdapter.cs" />
-    <Compile Include="Providers\TranslationProviderFactory.cs" />
-    <Compile Include="TranslationEngine.cs" />
-    <Compile Include="TranslationRequset.cs" />
-    <Compile Include="TranslatorLanguague.cs" />
-    <Compile Include="Utils\SafeJson.cs" />
-    <Compile Include="Utils\LanguageDetector.cs" />
-    <Compile Include="WebTranslator.cs" />
+    <ProjectReference Include="..\HttpUtilities\HttpUtilities.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="packages.config" />
-    <None Include="TranslationResources\BaiduEncoder">
+    <None Update="TranslationResources\BaiduEncoder">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="TranslationResources\BaiduLanguages.json">
+    <None Update="TranslationResources\BaiduLanguages.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="TranslationResources\DeeplLanguages.json">
+    <None Update="TranslationResources\DeeplLanguages.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="TranslationResources\GoogleTranslateLanguages.json">
+    <None Update="TranslationResources\GoogleTranslateLanguages.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="TranslationResources\PapagoEncoder">
+    <None Update="TranslationResources\PapagoEncoder">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="TranslationResources\PapagoLanguages.json">
+    <None Update="TranslationResources\PapagoLanguages.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TranslationResources\Core14.profile.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="TranslationResources\BaiduEncoder.js" />
-    <None Include="TranslationResources\Core14.profile.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="TranslationResources\PapagoEncoder.js" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\HttpUtilities\HttpUtilities.csproj">
-      <Project>{9ee1301d-a646-4dda-9c62-36e901e7603b}</Project>
-      <Name>HttpUtilities</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

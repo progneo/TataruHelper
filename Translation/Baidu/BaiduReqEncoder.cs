@@ -5,7 +5,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
-using System.Web;
 
 namespace Translation.Baidu
 {
@@ -100,9 +99,9 @@ namespace Translation.Baidu
         {
             var properties = from p in obj.GetType().GetProperties()
                              where p.GetValue(obj, null) != null
-                             select p.Name + "=" + HttpUtility.UrlEncode(p.GetValue(obj, null).ToString());
+                             select p.Name + "=" + Uri.EscapeDataString(p.GetValue(obj, null).ToString());
 
-            return String.Join("&", properties.ToArray());
+            return string.Join("&", properties.ToArray());
         }
     }
 }

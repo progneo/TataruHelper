@@ -3,12 +3,7 @@
 
 using HttpUtilities;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Web;
 using Translation.HttpUtils;
 
 namespace Translation.Google
@@ -55,7 +50,7 @@ namespace Translation.Google
 
         public string Translate(string sentence, string inLang, string outLang)
         {
-            string result = String.Empty;
+            string result = string.Empty;
 
             if (_GoogleWebReader == null)
                 CreateGoogleReader();
@@ -73,7 +68,7 @@ namespace Translation.Google
 
         private string TranslateInternal(string sentence, string inLang, string outLang)
         {
-            string result = String.Empty;
+            string result = string.Empty;
 
             try
             {
@@ -81,7 +76,7 @@ namespace Translation.Google
                 string _inLang = inLang;
 
                 string _baseUrl = "https://translate.google.com/m?hl=ru&sl={0}&tl={1}&ie=UTF-8&prev=_m&q={2}";
-                string url = string.Format(_baseUrl, _inLang, _outLang, HttpUtility.UrlEncode(sentence));
+                string url = string.Format(_baseUrl, _inLang, _outLang, Uri.EscapeDataString(sentence));
 
                 var requestResult = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
                     () => _GoogleWebReader.RequestWebData(url, HttpUtilities.HttpMethods.GET, true),

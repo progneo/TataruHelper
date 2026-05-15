@@ -20,107 +20,21 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup NuGet
-        uses: NuGet/setup-nuget@v2
-
-      - name: Setup MSBuild
-        uses: microsoft/setup-msbuild@v2
-
-      - name: Download .NET Framework reference assemblies
-        shell: pwsh
-        run: |
-          nuget install Microsoft.NETFramework.ReferenceAssemblies.net40 -Version 1.0.3 -OutputDirectory .reference-assemblies -ExcludeVersion
-          nuget install Microsoft.NETFramework.ReferenceAssemblies.net461 -Version 1.0.3 -OutputDirectory .reference-assemblies -ExcludeVersion
-          nuget install Microsoft.NETFramework.ReferenceAssemblies.net462 -Version 1.0.3 -OutputDirectory .reference-assemblies -ExcludeVersion
-
-      - name: Compose unified reference assemblies root
-        shell: pwsh
-        run: |
-          $root = Join-Path $PWD ".reference-assemblies\framework-root\Microsoft\Framework\.NETFramework"
-          New-Item -ItemType Directory -Force -Path $root | Out-Null
-
-          Copy-Item -Path (Join-Path $PWD ".reference-assemblies\Microsoft.NETFramework.ReferenceAssemblies.net40\build\.NETFramework\v4.0") -Destination (Join-Path $root "v4.0") -Recurse -Force
-          Copy-Item -Path (Join-Path $PWD ".reference-assemblies\Microsoft.NETFramework.ReferenceAssemblies.net461\build\.NETFramework\v4.6.1") -Destination (Join-Path $root "v4.6.1") -Recurse -Force
-          Copy-Item -Path (Join-Path $PWD ".reference-assemblies\Microsoft.NETFramework.ReferenceAssemblies.net462\build\.NETFramework\v4.6.2") -Destination (Join-Path $root "v4.6.2") -Recurse -Force
-
-      - name: Verify reference assemblies layout
-        shell: pwsh
-        run: |
-          $base = Join-Path $PWD ".reference-assemblies\framework-root\Microsoft\Framework\.NETFramework"
-          $paths = @(
-            (Join-Path $base "v4.0\mscorlib.dll"),
-            (Join-Path $base "v4.6.1\mscorlib.dll"),
-            (Join-Path $base "v4.6.2\mscorlib.dll")
-          )
-
-          foreach ($path in $paths) {
-            if (-not (Test-Path $path)) {
-              Write-Error "Missing reference assembly: $path"
-              exit 1
-            }
-            Write-Host "Found: $path"
-          }
-
-      - name: Restore packages
-        run: msbuild TataruHelper.sln /t:Restore /p:RestorePackagesConfig=true
-
-      - name: Build solution (Release|Any CPU)
-        shell: pwsh
-        run: |
-          $referencePath = Join-Path $PWD ".reference-assemblies\framework-root\Microsoft\Framework\"
-          msbuild TataruHelper.sln /m /p:Configuration=Release /p:Platform="Any CPU" /p:TargetFrameworkRootPath="$referencePath"
-
-      - name: Run tests (if present)
-        shell: pwsh
-        run: |
-          $testProjects = Get-ChildItem -Path . -Recurse -Filter "*Test*.csproj"
-          $referencePath = Join-Path $PWD ".reference-assemblies\framework-root\Microsoft\Framework\"
-          if (-not $testProjects) {
-            Write-Host "No test projects found. Skipping test execution."
-            exit 0
-          }
-
-          foreach ($project in $testProjects) {
-            Write-Host "Running tests in $($project.FullName)"
-            dotnet test $project.FullName --configuration Release /p:TargetFrameworkRootPath="$referencePath"
-          }
-
-      - name: Dependency inventory and vulnerability check
-        shell: pwsh
-        run: |
-          $rows = @()
-          Get-ChildItem -Path . -Recurse -Filter "packages.config" | ForEach-Object {
-            [xml]$xml = Get-Content $_.FullName
-            foreach ($pkg in $xml.packages.package) {
-              $rows += [PSCustomObject]@{
-                Project = (Split-Path $_.DirectoryName -Leaf)
-                Package = $pkg.id
-                Version = $pkg.version
-                TargetFramework = $pkg.targetFramework
-              }
-            }
-          }
-
-          $rows | Sort-Object Project, Package | Export-Csv -Path dependency-inventory.csv -NoTypeInformation -Encoding UTF8
-          Write-Host "Dependency inventory exported to dependency-inventory.csv"
-
-          $packageReferenceProjects = Get-ChildItem -Path . -Recurse -Filter "*.csproj" | Where-Object {
-            Select-String -Path $_.FullName -Pattern "<PackageReference " -Quiet
-          }
-
-          if (-not $packageReferenceProjects) {
-            Write-Warning "Vulnerability check skipped: solution uses packages.config (legacy), dotnet list --vulnerable is not applicable."
-            exit 0
-          }
-
-          dotnet list TataruHelper.sln package --vulnerable --include-transitive
-          if ($LASTEXITCODE -ne 0) {
-            Write-Warning "Vulnerability check failed or partially unsupported for this solution; dependency inventory was still generated."
-            exit 0
-          }
-
-      - name: Upload dependency inventory
-        uses: actions/upload-artifact@v4
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
         with:
-          name: dependency-inventory
-          path: dependency-inventory.csv
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore TataruHelper.sln
+
+      - name: Build
+        run: dotnet build TataruHelper.sln -c Release --no-restore
+
+      - name: Test
+        run: dotnet test TataruHelper.sln -c Release --no-build
+
+      - name: Dependency vulnerabilities
+        shell: pwsh
+        run: |
+          dotnet list TataruHelper.sln package --vulnerable --include-transitive

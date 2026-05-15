@@ -1,0 +1,83 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <RootNamespace>FFXIVTataruHelper</RootNamespace>
+    <AssemblyName>TataruHelper</AssemblyName>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Deterministic>true</Deterministic>
+    <NoWarn>1591</NoWarn>
+    <ApplicationIcon>app_icon2.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <Platforms>AnyCPU</Platforms>
+    <PlatformTarget>x64</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
+    <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="NGettext" />
+    <PackageReference Include="NHotkey.Wpf" />
+    <PackageReference Include="Hardcodet.NotifyIcon.Wpf" />
+    <PackageReference Include="Sharlayan" />
+    <PackageReference Include="Extended.Wpf.Toolkit" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Translation\Translation.csproj" />
+    <ProjectReference Include="..\Updater\Updater.csproj" />
+    <ProjectReference Include="..\WpfXamlExtensions\WpfXamlExtensions.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Locale_cloud\**\*.mo">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Locale_cloud\**\*.po">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\ChatCodes.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\tray_icon.ico">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\Tataru_img.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\patreon_logo.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="Resources\heavy_heart.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Resource>
+    <Resource Include="app_icon2.ico" />
+  </ItemGroup>
+
+  <Target Name="CrowdinPreBuild" BeforeTargets="BeforeBuild" Condition="'$(ConfigurationName)' == 'ReleaseDeploy' and '$(OS)' == 'Windows_NT'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy RemoteSigned -file &quot;$(SolutionDir)\scripts\CrowdinScript\Crowdin_download.ps1&quot;" />
+  </Target>
+
+  <Target Name="VelopackPostBuild" AfterTargets="AfterBuild" Condition="'$(ConfigurationName)' == 'ReleaseDeploy' and '$(OS)' == 'Windows_NT'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy RemoteSigned -file &quot;$(SolutionDir)\scripts\Velopack_release.ps1&quot;" />
+  </Target>
+</Project>
