@@ -180,6 +180,10 @@ msgstr "Cutscenes/No delay"
 msgid "EXPERIMENTAL FUNCTION. If this option is active, the application will catch text from quest clouds and cutscene subtitles directly, not from the chatlog. Errors can occur."
 msgstr "EXPERIMENTAL FUNCTION. If this option is active, the application will catch text from quest clouds and cutscene subtitles directly, not from the chatlog. Errors can occur."
 
+#: Utils/LanguagueWrapper.cs:194
+msgid "Speaker names may not always display correctly."
+msgstr "Speaker names may not always display correctly."
+
 #: Utils/LanguagueWrapper.cs:186
 msgid "Hide to Tray"
 msgstr "Hide To Tray"
@@ -446,4 +450,3 @@ msgstr "Tataru Helper is up to date."
 #~ msgstr ""
 #~ "We express our great appreciation to the people who support our project "
 #~ "and motivate us for new achievements."
-

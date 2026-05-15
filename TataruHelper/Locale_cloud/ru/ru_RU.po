@@ -180,6 +180,10 @@ msgstr "Катсцены/Без задержки"
 msgid "EXPERIMENTAL FUNCTION. If this option is active, the application will catch text from quest clouds and cutscene subtitles directly, not from the chatlog. Errors can occur."
 msgstr "ЭКСПЕРЕМЕНТАЛЬНАЯ ФУНКЦИЯ. Если данная опция активна, приложение захватывает текст непосредственно из квестовых облачков и катсцен, а не из чатлога. Возможны некоторые ошибки."
 
+#: Utils/LanguagueWrapper.cs:194
+msgid "Speaker names may not always display correctly."
+msgstr "Имена говорящих могут отображаться некорректно."
+
 #: Utils/LanguagueWrapper.cs:186
 msgid "Hide to Tray"
 msgstr "Свернуть в трей"
@@ -446,4 +450,3 @@ msgstr "У вас установлена последняя версия."
 #~ msgstr ""
 #~ "We express our great appreciation to the people who support our project "
 #~ "and motivate us for new achievements."
-

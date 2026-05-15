@@ -31,6 +31,12 @@ namespace FFXIVTataruHelper
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            if (ShouldSkipVelopackFirstRunLaunch())
+            {
+                Shutdown();
+                return;
+            }
+
             if (ShouldElevateAfterVelopackInstall() && !TryRelaunchAsAdministrator(e))
             {
                 Shutdown();
@@ -78,6 +84,14 @@ namespace FFXIVTataruHelper
                 StringComparison.OrdinalIgnoreCase);
 
             return isFirstRun && OperatingSystem.IsWindows() && !IsRunningAsAdministrator();
+        }
+
+        private static bool ShouldSkipVelopackFirstRunLaunch()
+        {
+            return string.Equals(
+                Environment.GetEnvironmentVariable("VELOPACK_FIRSTRUN"),
+                "true",
+                StringComparison.OrdinalIgnoreCase);
         }
 
         [SupportedOSPlatform("windows")]

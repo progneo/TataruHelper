@@ -209,6 +209,10 @@ msgstr ""
 "текст непосредственно из квестовых облачков и катсцен, а не из чатлога. "
 "Возможны некоторые ошибки."
 
+#: Utils/LanguagueWrapper.cs:194
+msgid "Speaker names may not always display correctly."
+msgstr "Имена говорящих могут отображаться некорректно."
+
 #: Utils/LanguagueWrapper.cs:145 Utils/LanguagueWrapper.cs:148
 msgid "Hide to Tray"
 msgstr "Свернуть в трей"

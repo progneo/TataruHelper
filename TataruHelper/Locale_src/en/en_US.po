@@ -213,6 +213,10 @@ msgstr ""
 "text from quest clouds and cutscene subtitles directly, not from the "
 "chatlog. Errors can occur."
 
+#: Utils/LanguagueWrapper.cs:194
+msgid "Speaker names may not always display correctly."
+msgstr "Speaker names may not always display correctly."
+
 #: Utils/LanguagueWrapper.cs:186
 msgid "Hide to Tray"
 msgstr "Hide To Tray"

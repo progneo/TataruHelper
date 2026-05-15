@@ -2,6 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 using NGettext;
+
 using System;
 using System.IO;
 using System.Windows;
@@ -174,13 +175,16 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["TraslateTo"] = catalog.GetString("Translate to");
 
             _SettingsWindow.Resources["ShowHideChatWindowHK"] = catalog.GetString("Show/hide Chat Window");
-            _SettingsWindow.Resources["ShowHideChatWindowHKToolTip"] = catalog.GetString("Hotkey to hide a Chat Box when it is not needed and call it up when it is needed. You should use Ctrl/Shift/Alt + Any key or combination of Ctrl+Shift+Alt + Any key, etc. The key combinations must not be repeated. If you cannot assign a key, it is occupied by the application or system. Example: CTRL+Q, CTRL+ALT+R, SHIFT+ALT+CTRL+T, ALT+SHIFT+Y, SHIFT+CTRL+G, etc.");
+            _SettingsWindow.Resources["ShowHideChatWindowHKToolTip"] = catalog.GetString(
+                "Hotkey to hide a Chat Box when it is not needed and call it up when it is needed. You should use Ctrl/Shift/Alt + Any key or combination of Ctrl+Shift+Alt + Any key, etc. The key combinations must not be repeated. If you cannot assign a key, it is occupied by the application or system. Example: CTRL+Q, CTRL+ALT+R, SHIFT+ALT+CTRL+T, ALT+SHIFT+Y, SHIFT+CTRL+G, etc.");
 
             _SettingsWindow.Resources["ClickThroughHK"] = catalog.GetString("Click Through");
-            _SettingsWindow.Resources["ClickThroughHKToolTip"] = catalog.GetString("Hotkey to turn on/off clicks through the windows. You should use Ctrl/Shift/Alt + Any key or combination of Ctrl+Shift+Alt + Any key, etc. The key combinations must not be repeated. If you cannot assign a key, it is occupied by the application or system. Example: CTRL+Q, CTRL+ALT+R, SHIFT+ALT+CTRL+T, ALT+SHIFT+Y, SHIFT+CTRL+G, etc.");
+            _SettingsWindow.Resources["ClickThroughHKToolTip"] = catalog.GetString(
+                "Hotkey to turn on/off clicks through the windows. You should use Ctrl/Shift/Alt + Any key or combination of Ctrl+Shift+Alt + Any key, etc. The key combinations must not be repeated. If you cannot assign a key, it is occupied by the application or system. Example: CTRL+Q, CTRL+ALT+R, SHIFT+ALT+CTRL+T, ALT+SHIFT+Y, SHIFT+CTRL+G, etc.");
 
             _SettingsWindow.Resources["ClearChatHK"] = catalog.GetString("Clear Chat");
-            _SettingsWindow.Resources["ClearChatHKToolTip"] = catalog.GetString("Hotkey to clear any text in the chatbox. You should use Ctrl/Shift/Alt + Any key or combination of Ctrl+Shift+Alt + Any key, etc. The key combinations must not be repeated. If you cannot assign a key, it is occupied by the application or system. Example: CTRL+Q, CTRL+ALT+R, SHIFT+ALT+CTRL+T, ALT+SHIFT+Y, SHIFT+CTRL+G, etc.");
+            _SettingsWindow.Resources["ClearChatHKToolTip"] = catalog.GetString(
+                "Hotkey to clear any text in the chatbox. You should use Ctrl/Shift/Alt + Any key or combination of Ctrl+Shift+Alt + Any key, etc. The key combinations must not be repeated. If you cannot assign a key, it is occupied by the application or system. Example: CTRL+Q, CTRL+ALT+R, SHIFT+ALT+CTRL+T, ALT+SHIFT+Y, SHIFT+CTRL+G, etc.");
 
             _SettingsWindow.Resources["OtherSett"] = catalog.GetString("Other");
             _SettingsWindow.Resources["ClickThroughCB"] = catalog.GetString("Click Through");
@@ -188,7 +192,11 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["AutoHideCB"] = catalog.GetString("Auto Hide");
 
             _SettingsWindow.Resources["DirectMemoryCB"] = catalog.GetString("Cutscenes/No delay");
-            _SettingsWindow.Resources["DirectMemoryToolTip"] = catalog.GetString("EXPERIMENTAL FUNCTION. If this option is active, the application will catch text from quest clouds and cutscene subtitles directly, not from the chatlog. Errors can occur.");
+            _SettingsWindow.Resources["DirectMemoryToolTip"] = string.Concat(
+                catalog.GetString(
+                    "EXPERIMENTAL FUNCTION. If this option is active, the application will catch text from quest clouds and cutscene subtitles directly, not from the chatlog. Errors can occur."),
+                " ",
+                catalog.GetString("Speaker names may not always display correctly."));
 
             _SettingsWindow.Resources["AlwaysOnTopCB"] = catalog.GetString("Always On Top");
             _SettingsWindow.Resources["HideToTrayCB"] = catalog.GetString("Hide to Tray");
@@ -201,19 +209,23 @@ namespace FFXIVTataruHelper
 
             _SettingsWindow.Resources["ResetChatPosition"] = catalog.GetString("Reset Chat Position");
 
-            _SettingsWindow.Resources["TranslationEngineError"] = catalog.GetString("Translation engine error. Consider switching to other engine.");
+            _SettingsWindow.Resources["TranslationEngineError"] =
+                catalog.GetString("Translation engine error. Consider switching to other engine.");
 
             _SettingsWindow.Resources["FFStatusLable"] = catalog.GetString("FF Status:");
 
-            _SettingsWindow.Resources["FFStatusText"] = catalog.GetString("FFXIV process not found. Make sure that FFXIV is running using DirectX 11.");
+            _SettingsWindow.Resources["FFStatusText"] =
+                catalog.GetString("FFXIV process not found. Make sure that FFXIV is running using DirectX 11.");
 
             _SettingsWindow.Resources["FFStatusTextFound"] = catalog.GetString("Process found:");
 
             _SettingsWindow.Resources["DearPatrons"] = catalog.GetString("Dear Patrons!");
-            _SettingsWindow.Resources["PatronsMsg"] = catalog.GetString("We express our great appreciation to the people who support our project and motivate us for new achievements.");
+            _SettingsWindow.Resources["PatronsMsg"] = catalog.GetString(
+                "We express our great appreciation to the people who support our project and motivate us for new achievements.");
             _SettingsWindow.Resources["PatronsThankYou"] = catalog.GetString("Thank you");
 
-            _SettingsWindow.Resources["TranslationEngineSwitchMsg"] = catalog.GetString("Translation engine error. Switching to:");
+            _SettingsWindow.Resources["TranslationEngineSwitchMsg"] =
+                catalog.GetString("Translation engine error. Switching to:");
 
             _SettingsWindow.Resources["CkSystem"] = catalog.GetString("System");
             _SettingsWindow.Resources["CkEcho"] = catalog.GetString("Echo");
@@ -257,7 +269,8 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["UpdateInstalled"] = catalog.GetString("Click here to update to new version.");
 
             _SettingsWindow.Resources["NotifyUpdateTitle"] = catalog.GetString("Tataru Update");
-            _SettingsWindow.Resources["NotifyUpdateText"] = catalog.GetString("New Tataru helper version is available. Restart Application to update.");
+            _SettingsWindow.Resources["NotifyUpdateText"] =
+                catalog.GetString("New Tataru helper version is available. Restart Application to update.");
 
             _SettingsWindow.Resources["CheckUpdatesText"] = catalog.GetString("Check updates");
             _SettingsWindow.Resources["LookingForUpdates"] = catalog.GetString("Looking for updates...");
