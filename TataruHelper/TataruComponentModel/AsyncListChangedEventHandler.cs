@@ -3,8 +3,9 @@
 
 using System;
 using System.ComponentModel;
+using FFXIVTataruHelper.EventArguments;
 
-namespace FFXIVTataruHelper.EventArguments
+namespace FFXIVTataruHelper.TataruComponentModel
 {
     public class AsyncListChangedEventHandler<T> : TatruEventArgs
     {

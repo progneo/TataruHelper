@@ -8,6 +8,7 @@ using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.TataruComponentModel;
 using FFXIVTataruHelper.UIModel;
 using FFXIVTataruHelper.Utils;
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -16,6 +17,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using System.Windows.Data;
+
 using Translation;
 
 namespace FFXIVTataruHelper.ViewModel
@@ -24,10 +26,11 @@ namespace FFXIVTataruHelper.ViewModel
     {
         public event AsyncEventHandler<AsyncListChangedEventHandler<ChatWindowViewModel>> ChatWindowsListChangedAsync
         {
-            add { this._ChatWindowsListChangedAsync.Register(value); }
-            remove { this._ChatWindowsListChangedAsync.Unregister(value); }
+            add { this._chatWindowsListChangedAsync.Register(value); }
+            remove { this._chatWindowsListChangedAsync.Unregister(value); }
         }
-        private AsyncEvent<AsyncListChangedEventHandler<ChatWindowViewModel>> _ChatWindowsListChangedAsync;
+
+        private readonly AsyncEvent<AsyncListChangedEventHandler<ChatWindowViewModel>> _chatWindowsListChangedAsync;
 
 
         public event EventHandler<EventArgs> ShutdownRequested;
@@ -42,18 +45,20 @@ namespace FFXIVTataruHelper.ViewModel
                     int oldIndex = _SelectedTabIndex;
 
                     if (_SelectedTabIndex >= 0 && _SelectedTabIndex < _ChatWindows.Count)
+                    {
                         _ChatWindows[_SelectedTabIndex].IsSelected = false;
+                    }
 
                     _SelectedTabIndex = value;
 
                     if (_SelectedTabIndex >= 0 && _SelectedTabIndex < _ChatWindows.Count)
+                    {
                         _ChatWindows[_SelectedTabIndex].IsSelected = true;
+                    }
 
-                    //if (oldIndex == value) return;
 
                     OnPropertyChanged();
-                    OnPropertyChanged("InnerVisibility");
-
+                    OnPropertyChanged(nameof(InnerVisibility));
                 }
             }
         }
@@ -76,8 +81,6 @@ namespace FFXIVTataruHelper.ViewModel
             }
         }
 
-        /////////////////////////////////////
-
         public bool UpdateCheckByUser { get; set; }
 
         public bool UserStartedUpdateTextVisibility
@@ -89,7 +92,7 @@ namespace FFXIVTataruHelper.ViewModel
                 {
                     _UserStartedUpdateTextVisibility = value;
                     OnPropertyChanged();
-                    OnPropertyChanged("UpdatingBlockVisiblity");
+                    OnPropertyChanged(nameof(UpdatingBlockVisibility));
                 }
             }
         }
@@ -103,7 +106,7 @@ namespace FFXIVTataruHelper.ViewModel
                 {
                     _DownloadingUpdateVisibility = value;
                     OnPropertyChanged();
-                    OnPropertyChanged("UpdatingBlockVisiblity");
+                    OnPropertyChanged(nameof(UpdatingBlockVisibility));
                 }
             }
         }
@@ -117,12 +120,15 @@ namespace FFXIVTataruHelper.ViewModel
                 {
                     _RestartReadyVisibility = value;
                     OnPropertyChanged();
-                    OnPropertyChanged("UpdatingBlockVisiblity");
+                    OnPropertyChanged(nameof(UpdatingBlockVisibility));
                 }
             }
         }
 
-        public bool UpdatingBlockVisiblity { get => DownloadingUpdateVisibility || RestartReadyVisibility || UserStartedUpdateTextVisibility; }
+        public bool UpdatingBlockVisibility
+        {
+            get => DownloadingUpdateVisibility || RestartReadyVisibility || UserStartedUpdateTextVisibility;
+        }
 
         public AsyncBindingList<ChatWindowViewModel> ChatWindows
         {
@@ -210,13 +216,15 @@ namespace FFXIVTataruHelper.ViewModel
             IUiDispatcher uiDispatcher,
             IHotKeyBindingService hotKeyBindingService)
         {
-            this._ChatWindowsListChangedAsync = new AsyncEvent<AsyncListChangedEventHandler<ChatWindowViewModel>>(this.EventErrorHandler, "TataruViewModel \n ChatWindowsListChangedAsync");
+            this._chatWindowsListChangedAsync =
+                new AsyncEvent<AsyncListChangedEventHandler<ChatWindowViewModel>>(this.EventErrorHandler,
+                    "TataruViewModel \n ChatWindowsListChangedAsync");
 
-            ChatWindows = new AsyncBindingList<ChatWindowViewModel>();
-            _TataruModel = tatruModel;
             _Logger = logger;
             _UiDispatcher = uiDispatcher;
             _HotKeyBindingService = hotKeyBindingService;
+            ChatWindows = new AsyncBindingList<ChatWindowViewModel>(_Logger);
+            _TataruModel = tatruModel;
 
             _TataruUIModel = tatruModel.TataruUIModel;
 
@@ -262,7 +270,8 @@ namespace FFXIVTataruHelper.ViewModel
 
                 var trEng = TranslationEngines;
                 cws = new ChatWindowViewModelSettings((winId + 1).ToString(), winId);
-                cwm = new ChatWindowViewModel(cws, trEng.ToList(), _AllChatCodes.ToList(), _TataruModel.HotKeyManager, _Logger, _HotKeyBindingService);
+                cwm = new ChatWindowViewModel(cws, trEng.ToList(), _AllChatCodes.ToList(), _TataruModel.HotKeyManager,
+                    _Logger, _HotKeyBindingService);
 
                 ChatWindows.Add(cwm);
 
@@ -281,7 +290,8 @@ namespace FFXIVTataruHelper.ViewModel
 
             _UiDispatcher.Invoke(() =>
             {
-                cwm = new ChatWindowViewModel(settings, trEng.ToList(), _AllChatCodes.ToList(), _TataruModel.HotKeyManager, _Logger, _HotKeyBindingService);
+                cwm = new ChatWindowViewModel(settings, trEng.ToList(), _AllChatCodes.ToList(),
+                    _TataruModel.HotKeyManager, _Logger, _HotKeyBindingService);
 
                 try
                 {
@@ -345,11 +355,12 @@ namespace FFXIVTataruHelper.ViewModel
 
         private async Task OnChatWindowsListChangeAsync(AsyncListChangedEventHandler<ChatWindowViewModel> e)
         {
-            await _ChatWindowsListChangedAsync.InvokeAsync(e);
+            await _chatWindowsListChangedAsync.InvokeAsync(e);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
-        private void OnPropertyChanged([CallerMemberName]string prop = "")
+
+        private void OnPropertyChanged([CallerMemberName] string prop = "")
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }

@@ -20,27 +20,29 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 return result;
             }
 
-            var dialogPanel = chatLogResult.ChatLogItems.LastOrDefault(IsDialogPanelCandidate);
-            var cutsceneText = chatLogResult.ChatLogItems.LastOrDefault(IsCutsceneCandidate);
+            var dialogPanel = chatLogResult.ChatLogItems.LastOrDefault(item =>
+                IsDialogPanelCandidate(item) && !IsTextEmpty(item));
+            var cutsceneText = chatLogResult.ChatLogItems.LastOrDefault(item =>
+                IsCutsceneCandidate(item) && !IsTextEmpty(item));
 
             var dialogRepeat = CheckRepetition(_dialogPanelsLog, dialogPanel);
             var cutsceneRepeat = CheckRepetition(_cutScenesLog, cutsceneText);
 
             if (CheckChatEquality(dialogPanel, cutsceneText))
             {
-                if (dialogPanel != null && !dialogRepeat && !CheckRepetition(_directDialogLog, dialogPanel) && !IsTextEmpty(dialogPanel))
+                if (dialogPanel != null && !dialogRepeat && !CheckRepetition(_directDialogLog, dialogPanel))
                 {
                     result.ChatLogItems.Enqueue(dialogPanel);
                 }
             }
             else
             {
-                if (dialogPanel != null && !dialogRepeat && !CheckRepetition(_directDialogLog, dialogPanel) && !IsTextEmpty(dialogPanel))
+                if (dialogPanel != null && !dialogRepeat && !CheckRepetition(_directDialogLog, dialogPanel))
                 {
                     result.ChatLogItems.Enqueue(dialogPanel);
                 }
 
-                if (cutsceneText != null && !cutsceneRepeat && !CheckRepetition(_directDialogLog, cutsceneText) && !IsTextEmpty(cutsceneText))
+                if (cutsceneText != null && !cutsceneRepeat && !CheckRepetition(_directDialogLog, cutsceneText))
                 {
                     result.ChatLogItems.Enqueue(cutsceneText);
                 }

@@ -12,24 +12,24 @@ namespace FFXIVTataruHelper.ViewModel
     public class ChatCodeViewModel : INotifyPropertyChanged, IEquatable<ChatCodeViewModel>
     {
         [JsonProperty]
-        string _Code;
+        string _code;
 
         [JsonProperty]
-        string _Name;
+        string _name;
 
         [JsonProperty]
-        Color _Color;
+        Color _color;
 
         [JsonProperty]
-        bool _IsChecked;
+        bool _isChecked;
 
         [JsonIgnore]
         public string Code
         {
-            get { return _Code; }
+            get { return _code; }
             private set
             {
-                _Code = value;
+                _code = value;
                 OnPropertyChanged();
             }
         }
@@ -37,11 +37,11 @@ namespace FFXIVTataruHelper.ViewModel
         [JsonIgnore]
         public string Name
         {
-            get { return _Name; }
+            get { return _name; }
             set
             {
                 var val = value.Replace("Ck", "");
-                _Name = "Ck" + val;
+                _name = "Ck" + val;
                 OnPropertyChanged();
             }
         }
@@ -49,12 +49,12 @@ namespace FFXIVTataruHelper.ViewModel
         [JsonIgnore]
         public Color Color
         {
-            get { return _Color; }
+            get { return _color; }
             set
             {
-                if (_Color == value) return;
+                if (_color == value) return;
 
-                _Color = value;
+                _color = value;
                 OnPropertyChanged();
             }
         }
@@ -62,12 +62,12 @@ namespace FFXIVTataruHelper.ViewModel
         [JsonIgnore]
         public bool IsChecked
         {
-            get { return _IsChecked; }
+            get { return _isChecked; }
             set
             {
-                if (_IsChecked == value) return;
+                if (_isChecked == value) return;
 
-                _IsChecked = value;
+                _isChecked = value;
                 OnPropertyChanged();
             }
         }
@@ -90,10 +90,10 @@ namespace FFXIVTataruHelper.ViewModel
 
         public ChatCodeViewModel(ChatCodeViewModel chatCodeViewModel)
         {
-            Code = chatCodeViewModel._Code;
-            Name = chatCodeViewModel._Name;
-            Color = chatCodeViewModel._Color;
-            IsChecked = chatCodeViewModel._IsChecked;
+            Code = chatCodeViewModel._code;
+            Name = chatCodeViewModel._name;
+            Color = chatCodeViewModel._color;
+            IsChecked = chatCodeViewModel._isChecked;
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -122,19 +122,25 @@ namespace FFXIVTataruHelper.ViewModel
                 if (this.GetType() != code.GetType())
                     return false;
 
-            return this._Code == code._Code;
+            return this._code == code._code;
         }
 
         public static bool operator ==(ChatCodeViewModel left, ChatCodeViewModel right)
         {
             if (ReferenceEquals(left, right))
+            {
                 return true;
+            }
 
             if (ReferenceEquals(left, null))
+            {
                 return false;
+            }
 
             if (ReferenceEquals(right, null))
+            {
                 return false;
+            }
 
             return left.Equals(right);
         }
@@ -143,7 +149,7 @@ namespace FFXIVTataruHelper.ViewModel
 
         public override int GetHashCode()
         {
-            return _Code.GetHashCode();
+            return _code.GetHashCode();
         }
     }
 }

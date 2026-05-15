@@ -14,6 +14,9 @@ using System.Threading.Tasks;
 using FFXIVTataruHelper.UIModel;
 using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.TataruComponentModel;
+using FFXIVTataruHelper.Services.Logging;
+using FFXIVTataruHelper.Services.Settings;
+using FFXIVTataruHelper.Services.UI;
 
 namespace FFXIVTataruHelper
 {
@@ -188,10 +191,16 @@ namespace FFXIVTataruHelper
 
         int _UiLanguage;
 
+        private readonly IUiDispatcher _uiDispatcher;
+        private readonly IAppLogger _logger;
+
         #endregion
 
-        public TataruUIModel()
+        public TataruUIModel(ISettingsStore settingsStore, IUiDispatcher uiDispatcher, IAppLogger logger)
         {
+            _uiDispatcher = uiDispatcher;
+            _logger = logger;
+
             this._ChatWindowsListChangedAsync = new AsyncEvent<AsyncListChangedEventHandler<ChatWindowViewModelSettings>>(this.EventErrorHandler, "TataruUIModel \n ChatWindowsListChangedAsync");
 
             this._AsyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler, "AsyncPropertyChanged");
@@ -204,13 +213,11 @@ namespace FFXIVTataruHelper
 
             this._UiLanguageChanged = new AsyncEvent<IntegerValueChangeEventArgs>(this.EventErrorHandler, "UiLanguageChanged");
 
-            this.ChatWindows = new AsyncBindingList<ChatWindowViewModelSettings>();
+            this.ChatWindows = new AsyncBindingList<ChatWindowViewModelSettings>(_logger);
         }
 
         public void SetSettings(UserSettings userSettings)
         {
-            UserSettings tmpSettings = new UserSettings();
-
             UiLanguage = userSettings.CurentUILanguague;
 
             IsHideSettingsToTray = userSettings.IsHideToTray;
@@ -219,11 +226,9 @@ namespace FFXIVTataruHelper
 
             SettingsWindowSize = userSettings.SettingsWindowSize;
 
-            var tmpChatList = Helper.LoadJsonData<List<ChatMsgType>>(GlobalSettings.ChatCodesFilePath);
-
             var tmpChatWindows = new List<ChatWindowViewModelSettings>(userSettings.ChatWindows);
 
-            UiWindow.Window.UIThread(() =>
+            _uiDispatcher.Invoke(() =>
             {
                 foreach (var win in tmpChatWindows)
                 {
@@ -256,7 +261,7 @@ namespace FFXIVTataruHelper
         private void EventErrorHandler(string evname, Exception ex)
         {
             string text = evname + Environment.NewLine + Convert.ToString(ex);
-            Logger.WriteLog(text);
+            _logger.WriteLog(text);
         }
 
         private void NotifyPropertyChanged([CallerMemberName] String propertyName = "")

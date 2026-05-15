@@ -50,11 +50,6 @@ namespace FFXIVTataruHelper
                 logger.WriteLog(errorMessage);
                 logger.WriteLog(Convert.ToString(e.Exception));
             }
-            else
-            {
-                Logger.WriteLog(errorMessage);
-                Logger.WriteLog(Convert.ToString(e.Exception));
-            }
             e.Handled = true;
         }
     }

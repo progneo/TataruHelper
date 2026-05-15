@@ -1,6 +1,7 @@
-using BondTech.HotKeyManagement.WPF._4;
 using FFXIVTataruHelper.WinUtils;
 using System.Windows.Input;
+
+using FFXIVTataruHelper.Compatibility.HotKeys;
 
 namespace FFXIVTataruHelper.Services.HotKeys
 {

@@ -7,13 +7,16 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Threading;
 using System.Threading.Tasks;
+using System.Windows;
+
 using FFXIVTataruHelper.EventArguments;
 using FFXIVTataruHelper.Services.GameMemory;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
+using FFXIVTataruHelper.TataruComponentModel;
 using FFXIVTataruHelper.WinUtils;
+
 using Sharlayan.Core;
 using Sharlayan.Models;
 using Sharlayan.Models.ReadResults;
@@ -26,23 +29,26 @@ namespace FFXIVTataruHelper.FFHandlers
 
         public event AsyncEventHandler<AsyncPropertyChangedEventArgs> AsyncPropertyChanged
         {
-            add { this._AsyncPropertyChanged.Register(value); }
-            remove { this._AsyncPropertyChanged.Unregister(value); }
+            add => _AsyncPropertyChanged.Register(value);
+            remove => _AsyncPropertyChanged.Unregister(value);
         }
+
         private AsyncEvent<AsyncPropertyChangedEventArgs> _AsyncPropertyChanged;
 
         public event AsyncEventHandler<WindowStateChangeEventArgs> FFWindowStateChanged
         {
-            add { this._FFWindowStateChanged.Register(value); }
-            remove { this._FFWindowStateChanged.Unregister(value); }
+            add => _FFWindowStateChanged.Register(value);
+            remove => _FFWindowStateChanged.Unregister(value);
         }
+
         private AsyncEvent<WindowStateChangeEventArgs> _FFWindowStateChanged;
 
         public event AsyncEventHandler<ChatMessageArrivedEventArgs> FFChatMessageArrived
         {
-            add { this._FFChatMessageArrived.Register(value); }
-            remove { this._FFChatMessageArrived.Unregister(value); }
+            add => _FFChatMessageArrived.Register(value);
+            remove => _FFChatMessageArrived.Unregister(value);
         }
+
         private AsyncEvent<ChatMessageArrivedEventArgs> _FFChatMessageArrived;
 
         #endregion
@@ -51,70 +57,72 @@ namespace FFXIVTataruHelper.FFHandlers
 
         public System.Windows.WindowState FFWindowState
         {
-            get { return _FFWindowState; }
+            get;
             private set
             {
-                _FFWindowState = value;
+                field = value;
                 OnPropertyChanged();
             }
         }
 
         public bool UseDirectReading
         {
-            get { return _UseDirectReading; }
-            set { _UseDirectReading = value; }
+            get => _useDirectReading;
+            set => _useDirectReading = value;
         }
 
         #endregion
 
         #region **LocalVariables.
 
-        System.Windows.WindowState _FFWindowState;
+        private bool _keepWorking;
+        private bool _keepReading;
 
-        bool _KeepWorking;
-        bool _KeepReading;
+        private readonly bool _useDirectReadingInternal;
 
-        bool _UseDirectReadingInternal;
+        private bool _useDirectReading;
 
-        bool _UseDirectReading;
+        private int _directTextsMissedCount;
 
-        int DirectTextsMissedCount;
+        private Process _ffXivProcess = null;
+        private string _ffProcessName;
 
-        private Process _FfXivProcess = null;
-        private string _FfProcessName;
+        private readonly List<IntPtr> _exclusionWindowHandlers;
 
-        private List<IntPtr> _ExclusionWindowHandlers;
+        private readonly ConcurrentQueue<FFChatMsg> _ffxivChat;
 
-        private ConcurrentQueue<FFChatMsg> _FFxivChat;
-
-        readonly IGameMemoryGateway _GameMemoryGateway;
-        readonly IAppLogger _Logger;
-        readonly ISettingsStore _SettingsStore;
+        private readonly IGameMemoryGateway _gameMemoryGateway;
+        private readonly IAppLogger _logger;
+        private readonly ISettingsStore _settingsStore;
 
         #endregion
 
         public FFMemoryReader(IGameMemoryGateway gameMemoryGateway, IAppLogger logger, ISettingsStore settingsStore)
         {
-            _GameMemoryGateway = gameMemoryGateway;
-            _Logger = logger;
-            _SettingsStore = settingsStore;
-            _ExclusionWindowHandlers = new List<IntPtr>();
-            _FFxivChat = new ConcurrentQueue<FFChatMsg>();
+            _gameMemoryGateway = gameMemoryGateway;
+            _logger = logger;
+            _settingsStore = settingsStore;
+            _exclusionWindowHandlers = new List<IntPtr>();
+            _ffxivChat = new ConcurrentQueue<FFChatMsg>();
 
-            _FFWindowStateChanged = new AsyncEvent<WindowStateChangeEventArgs>(EventErrorHandler, "FFWindowStateChanged");
-            _FFChatMessageArrived = new AsyncEvent<ChatMessageArrivedEventArgs>(EventErrorHandler, "FFChatMessageArrived");
-            _AsyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(EventErrorHandler, "FFMemoryReader \n FFChatMessageArrived");
+            _FFWindowStateChanged =
+                new AsyncEvent<WindowStateChangeEventArgs>(EventErrorHandler, "FFWindowStateChanged");
+            _FFChatMessageArrived =
+                new AsyncEvent<ChatMessageArrivedEventArgs>(EventErrorHandler, "FFChatMessageArrived");
+            _AsyncPropertyChanged =
+                new AsyncEvent<AsyncPropertyChangedEventArgs>(EventErrorHandler,
+                    "FFMemoryReader \n FFChatMessageArrived");
 
-            _UseDirectReadingInternal = true;
-            DirectTextsMissedCount = 0;
+            _useDirectReadingInternal = true;
+            _directTextsMissedCount = 0;
         }
 
         public void Start()
         {
-            _KeepWorking = true;
-            _KeepReading = true;
+            _keepWorking = true;
+            _keepReading = true;
 
-            FFWindowState = System.Windows.WindowState.Minimized;
+            FFWindowState = WindowState.Minimized;
 
             Task.Factory.StartNew(async () =>
             {
@@ -122,28 +130,29 @@ namespace FFXIVTataruHelper.FFHandlers
                 {
                     await EntryPoint();
                 }
+                catch (OperationCanceledException)
+                {
+                    _logger.WriteLog("FFMemoryReader.Start/EntryPoint canceled.");
+                }
                 catch (Exception e)
                 {
-                    _Logger.WriteLog(e);
+                    _logger.WriteLog("FFMemoryReader.Start/EntryPoint failed.");
+                    _logger.WriteLog(e);
                 }
-
             }, TaskCreationOptions.LongRunning);
         }
 
         public void AddExclusionWindowHandler(IntPtr handler)
         {
-            _ExclusionWindowHandlers.Add(handler);
+            _exclusionWindowHandlers.Add(handler);
         }
 
         private async Task EntryPoint()
         {
             ChatMessageEvetRiser();
 
-            //SendDebugMessages();
-
-            while (_KeepWorking)
+            while (_keepWorking)
             {
-
                 await InitMemoryReader();
 
                 WatchFFWindowState();
@@ -156,55 +165,67 @@ namespace FFXIVTataruHelper.FFHandlers
         {
             try
             {
-                bool porcessNotFound = true;
+                var processNotFound = true;
 
-                string processName1 = "ffxiv_dx11";
-                _FfProcessName = processName1;
+                const string processName = "ffxiv_dx11";
+                _ffProcessName = processName;
 
-                while (_KeepWorking && porcessNotFound)
+                while (_keepWorking && processNotFound)
                 {
-                    Process[] processes = Process.GetProcessesByName(_FfProcessName);
+                    var processes = Process.GetProcessesByName(_ffProcessName);
                     if (processes.Length > 0)
                     {
                         try
                         {
                             // supported: English, Chinese, Japanese, French, German, Korean
-                            string gameLanguage = "English";
+                            const string gameLanguage = "English";
                             // whether to always hit API on start to get the latest sigs based on patchVersion, or use the local json cache (if the file doesn't exist, API will be hit)
-                            bool useLocalCache = true;
-                            bool scanAllMemoryRegions = false;
+                            const bool useLocalCache = true;
+                            const bool scanAllMemoryRegions = false;
                             // patchVersion of game, or latest//
-                            string patchVersion = "latest";
-                            Process process = processes[0];
+                            const string patchVersion = "latest";
+                            var process = processes[0];
 
-                            if (_FfXivProcess != null)
-                                _FfXivProcess.Dispose();
-
-                            _FfXivProcess = process;                            ProcessModel processModel = new ProcessModel
+                            if (_ffXivProcess != null)
                             {
-                                Process = process
-                            };
+                                _ffXivProcess.Dispose();
+                            }
 
-                            _GameMemoryGateway.SetProcess(processModel, gameLanguage, patchVersion, useLocalCache, scanAllMemoryRegions);
+                            _ffXivProcess = process;
+                            var processModel = new ProcessModel { Process = process };
 
-                            porcessNotFound = false;
-                            _KeepReading = true;
+                            _gameMemoryGateway.SetProcess(processModel, gameLanguage, patchVersion, useLocalCache,
+                                scanAllMemoryRegions);
+
+                            processNotFound = false;
+                            _keepReading = true;
+                        }
+                        catch (OperationCanceledException)
+                        {
+                            _logger.WriteLog("FFMemoryReader.InitMemoryReader process attach canceled.");
+                            throw;
                         }
                         catch (Exception e)
                         {
-                            await Task.Delay(_SettingsStore.LookForProcessDelayMs);
-                            _Logger.WriteLog(e);
+                            await Task.Delay(_settingsStore.LookForProcessDelayMs);
+                            _logger.WriteLog("FFMemoryReader.InitMemoryReader process attach failed.");
+                            _logger.WriteLog(e);
                         }
                     }
                     else
                     {
-                        await Task.Delay(_SettingsStore.LookForProcessDelayMs);
+                        await Task.Delay(_settingsStore.LookForProcessDelayMs);
                     }
                 }
             }
+            catch (OperationCanceledException)
+            {
+                _logger.WriteLog("FFMemoryReader.InitMemoryReader canceled.");
+            }
             catch (Exception e)
             {
-                _Logger.WriteLog(Convert.ToString(e));
+                _logger.WriteLog("FFMemoryReader.InitMemoryReader failed.");
+                _logger.WriteLog(e);
             }
         }
 
@@ -212,209 +233,228 @@ namespace FFXIVTataruHelper.FFHandlers
         {
             Task.Factory.StartNew(async () =>
             {
-                System.Windows.WindowState FFXIVPrevWindowState = System.Windows.WindowState.Minimized;
-                FFWindowState = System.Windows.WindowState.Minimized;
+                var ffxivPrevWindowState = WindowState.Minimized;
+                FFWindowState = WindowState.Minimized;
 
-                bool _isRunningPrev = false;
-                while (_KeepWorking && _KeepReading)
+                var isRunningPrev = false;
+                while (_keepWorking && _keepReading)
                 {
                     try
                     {
-                        bool IsExclusionWindow = false;
-
-                        System.Windows.WindowState FFXIVWindowState = System.Windows.WindowState.Normal;
+                        var ffxivWindowState = WindowState.Normal;
                         var fgWindow = Win32Interfaces.GetForegroundWindow();
 
-                        if (_FfXivProcess != null)
+                        if (_ffXivProcess != null)
                         {
-                            if (_FfXivProcess.MainWindowHandle != fgWindow)
-                                FFXIVWindowState = System.Windows.WindowState.Minimized;
-                            else
-                                FFXIVWindowState = System.Windows.WindowState.Normal;
-                        }
-
-                        for (int i = 0; i < _ExclusionWindowHandlers.Count; i++)
-                        {
-                            if (fgWindow == _ExclusionWindowHandlers[i])
+                            if (_ffXivProcess.MainWindowHandle != fgWindow)
                             {
-                                IsExclusionWindow = true;
-                                break;
+                                ffxivWindowState = WindowState.Minimized;
+                            }
+                            else
+                            {
+                                ffxivWindowState = WindowState.Normal;
                             }
                         }
 
-                        if (!IsExclusionWindow && fgWindow != IntPtr.Zero)
-                        {
-                            var oldValue = FFXIVPrevWindowState;
+                        var isExclusionWindow = _exclusionWindowHandlers.Any(handler => fgWindow == handler);
 
-                            if (FFXIVWindowState != FFXIVPrevWindowState)
+                        if (!isExclusionWindow && fgWindow != IntPtr.Zero)
+                        {
+                            var oldValue = ffxivPrevWindowState;
+
+                            if (ffxivWindowState != ffxivPrevWindowState)
                             {
-                                FFXIVPrevWindowState = FFXIVWindowState;
+                                ffxivPrevWindowState = ffxivWindowState;
 
                                 var ea = new WindowStateChangeEventArgs(this)
                                 {
                                     OldWindowState = oldValue,
-                                    NewWindowState = FFXIVPrevWindowState,
-
-                                    IsRunningOld = _isRunningPrev,
+                                    NewWindowState = ffxivPrevWindowState,
+                                    IsRunningOld = isRunningPrev,
                                     IsRunningNew = true,
-
                                     Text = ""
                                 };
 
                                 _FFWindowStateChanged.InvokeAsync(ea).Forget();
                             }
 
-                            FFWindowState = FFXIVPrevWindowState;
+                            FFWindowState = ffxivPrevWindowState;
                         }
 
-                        Process[] processes = Process.GetProcessesByName(_FfProcessName);
+                        var processes = Process.GetProcessesByName(_ffProcessName);
                         if (processes.Length == 0)
                         {
-                            System.Windows.WindowState oldState = System.Windows.WindowState.Normal;
+                            const WindowState oldState = WindowState.Normal;
                             var ea = new WindowStateChangeEventArgs(this)
                             {
                                 OldWindowState = oldState,
-                                NewWindowState = FFXIVPrevWindowState,
-
-                                IsRunningOld = _isRunningPrev,
+                                NewWindowState = ffxivPrevWindowState,
+                                IsRunningOld = isRunningPrev,
                                 IsRunningNew = false,
                                 Text = ""
                             };
 
                             _FFWindowStateChanged.InvokeAsync(ea).Forget();
 
-                            _KeepReading = false;
+                            _keepReading = false;
 
-                            _isRunningPrev = false;
+                            isRunningPrev = false;
 
-                            FFWindowState = System.Windows.WindowState.Minimized;
+                            FFWindowState = WindowState.Minimized;
 
-                            _GameMemoryGateway.UnsetProcess();
+                            _gameMemoryGateway.UnsetProcess();
                         }
                         else
                         {
-                            if (_isRunningPrev == false)
+                            if (isRunningPrev == false)
                             {
-                                System.Windows.WindowState oldState = System.Windows.WindowState.Minimized;
-                                System.Windows.WindowState newState = System.Windows.WindowState.Normal;
+                                const WindowState oldState = WindowState.Minimized;
+                                const WindowState newState = WindowState.Normal;
                                 var ea = new WindowStateChangeEventArgs(this)
                                 {
                                     OldWindowState = oldState,
                                     NewWindowState = newState,
-
-                                    IsRunningOld = _isRunningPrev,
+                                    IsRunningOld = isRunningPrev,
                                     IsRunningNew = true,
-                                    Text = processes[0].ProcessName + ".exe" + "  PID: " + processes[0].Id.ToString()
+                                    Text = processes[0].ProcessName + ".exe" + "  PID: " +
+                                           processes[0].Id.ToString()
                                 };
 
                                 _FFWindowStateChanged.InvokeAsync(ea).Forget();
 
-                                FFWindowState = System.Windows.WindowState.Normal;
+                                FFWindowState = WindowState.Normal;
                             }
 
-                            _isRunningPrev = true;
+                            isRunningPrev = true;
                         }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logger.WriteLog("FFMemoryReader.WatchFFWindowState canceled.");
+                        break;
                     }
                     catch (Exception e)
                     {
-                        _Logger.WriteLog(Convert.ToString(e));
+                        _logger.WriteLog("FFMemoryReader.WatchFFWindowState failed.");
+                        _logger.WriteLog(e);
                     }
 
-                    await Task.Delay(_SettingsStore.MemoryReaderDelayMs);
+                    await Task.Delay(_settingsStore.MemoryReaderDelayMs);
                 }
-
             }, TaskCreationOptions.LongRunning);
         }
 
         private async Task ChatReader()
         {
-            int _previousArrayIndex = 0;
-            int _previousOffset = 0;
+            var previousArrayIndex = 0;
+            var previousOffset = 0;
 
             var previousPanelResults = new List<ChatLogItem>();
 
-            while (_KeepWorking && _KeepReading)
+            while (_keepWorking && _keepReading)
             {
                 try
                 {
-                    ChatLogResult readResult = _GameMemoryGateway.GetChatLog(_previousArrayIndex, _previousOffset);
-                    _previousArrayIndex = readResult.PreviousArrayIndex;
-                    _previousOffset = readResult.PreviousOffset;
+                    var readResult = _gameMemoryGateway.GetChatLog(previousArrayIndex, previousOffset);
+                    previousArrayIndex = readResult.PreviousArrayIndex;
+                    previousOffset = readResult.PreviousOffset;
 
-                    if (_UseDirectReadingInternal && _UseDirectReading)
+                    if (_useDirectReadingInternal && _useDirectReading)
                     {
-                        var directDialog = _GameMemoryGateway.GetDirectDialog();
+                        var directDialog = _gameMemoryGateway.GetDirectDialog();
                         EnqueueRange(readResult.ChatLogItems, directDialog.ChatLogItems);
 
                         ClearMessagesList(readResult, previousPanelResults, directDialog);
                     }
 
-                    if (readResult.ChatLogItems.Count > 0)
+                    if (!readResult.ChatLogItems.IsEmpty)
                     {
                         var chatLogEntries = readResult.ChatLogItems.ToArray();
-                        for (int i = 0; i < chatLogEntries.Length; i++)
+                        foreach (var chatLogItem in chatLogEntries)
                         {
-                            ProcessChatMsg(chatLogEntries[i]);
+                            ProcessChatMsg(chatLogItem);
                         }
                     }
                 }
+                catch (OperationCanceledException)
+                {
+                    _logger.WriteLog("FFMemoryReader.ChatReader canceled.");
+                    break;
+                }
                 catch (Exception e)
                 {
-                    _Logger.WriteLog(Convert.ToString(e));
+                    _logger.WriteLog("FFMemoryReader.ChatReader read failed.");
+                    _logger.WriteLog(e);
                 }
 
-                await Task.Delay(_SettingsStore.MemoryReaderDelayMs);
+                await Task.Delay(_settingsStore.MemoryReaderDelayMs);
             }
         }
 
-        void ClearMessagesList(ChatLogResult chatLogResult, List<ChatLogItem> previousPanelResults, ChatLogResult panelResult)
+        private void ClearMessagesList(ChatLogResult chatLogResult, List<ChatLogItem> previousPanelResults,
+            ChatLogResult panelResult)
         {
-            bool messgaesDeleted = false;
-            bool previousCount = previousPanelResults.Count > 0 && chatLogResult.ChatLogItems.Count > 0;
+            var messagesDeleted = false;
+            var previousCount = previousPanelResults.Count > 0 && chatLogResult.ChatLogItems.Count > 0;
 
             try
             {
-                for (int i = 0; i < previousPanelResults.Count; i++)
+                for (var i = 0; i < previousPanelResults.Count; i++)
                 {
                     var pvPanel = previousPanelResults[i];
 
-                    var panel = chatLogResult.ChatLogItems.FirstOrDefault(x => _GameMemoryGateway.CheckChatEquality(x, pvPanel));
+                    var panel = chatLogResult.ChatLogItems.FirstOrDefault(x =>
+                        _gameMemoryGateway.CheckChatEquality(x, pvPanel));
 
                     if (panel != null)
                     {
-                        if (panelResult.ChatLogItems.FirstOrDefault(x => _GameMemoryGateway.CheckChatEquality(x, panel)) == null)
+                        if (panelResult.ChatLogItems.FirstOrDefault(x =>
+                                _gameMemoryGateway.CheckChatEquality(x, panel)) == null)
                         {
-                            RemoveFirstMatching(chatLogResult.ChatLogItems, x => _GameMemoryGateway.CheckChatEquality(x, panel));
+                            RemoveFirstMatching(chatLogResult.ChatLogItems,
+                                x => _gameMemoryGateway.CheckChatEquality(x, panel));
                         }
 
-                        int rmCount = previousPanelResults.RemoveAll(x => _GameMemoryGateway.CheckChatEquality(x, panel));
-                        messgaesDeleted = true;
+                        var rmCount =
+                            previousPanelResults.RemoveAll(x => _gameMemoryGateway.CheckChatEquality(x, panel));
+                        messagesDeleted = true;
 
                         if (rmCount > 0)
+                        {
                             i = 0;
+                        }
                     }
                 }
 
                 if (previousCount)
                 {
-                    if (messgaesDeleted == false)
-                        DirectTextsMissedCount++;
+                    if (messagesDeleted == false)
+                    {
+                        _directTextsMissedCount++;
+                    }
                     else
-                        DirectTextsMissedCount = 0;
+                    {
+                        _directTextsMissedCount = 0;
+                    }
                 }
 
                 if (previousPanelResults.Count > 200)
                 {
-                    int startPos = 0;
-                    int count = previousPanelResults.Count / 2;
+                    const int startPos = 0;
+                    var count = previousPanelResults.Count / 2;
                     previousPanelResults.RemoveRange(startPos, count);
                 }
 
                 previousPanelResults.AddRange(panelResult.ChatLogItems);
             }
+            catch (OperationCanceledException)
+            {
+                _logger.WriteLog("FFMemoryReader.ClearMessagesList canceled.");
+            }
             catch (Exception e)
             {
-                _Logger.WriteLog(e);
+                _logger.WriteLog("FFMemoryReader.ClearMessagesList failed.");
+                _logger.WriteLog(e);
             }
         }
 
@@ -441,7 +481,7 @@ namespace FFXIVTataruHelper.FFHandlers
             var snapshot = queue.ToArray();
             queue.Clear();
 
-            bool removed = false;
+            var removed = false;
             foreach (var item in snapshot)
             {
                 if (!removed && predicate(item))
@@ -462,23 +502,19 @@ namespace FFXIVTataruHelper.FFHandlers
             {
                 if (_FFChatMessageArrived.HandlersCount == 0)
                 {
-                    while (_KeepWorking && _FFChatMessageArrived.HandlersCount == 0)
+                    while (_keepWorking && _FFChatMessageArrived.HandlersCount == 0)
                     {
                         await Task.Delay(50);
                     }
                 }
 
-                while (_KeepWorking)
+                while (_keepWorking)
                 {
                     try
                     {
-                        FFChatMsg ffChatMsg = new FFChatMsg();
-                        if (_FFxivChat.TryDequeue(out ffChatMsg))
+                        if (_ffxivChat.TryDequeue(out var ffChatMsg))
                         {
-                            var ea = new ChatMessageArrivedEventArgs(this)
-                            {
-                                ChatMessage = ffChatMsg
-                            };
+                            var ea = new ChatMessageArrivedEventArgs(this) { ChatMessage = ffChatMsg };
 
                             await _FFChatMessageArrived.InvokeAsync(ea);
                         }
@@ -487,79 +523,48 @@ namespace FFXIVTataruHelper.FFHandlers
                             await Task.Delay(10);
                         }
                     }
+                    catch (OperationCanceledException)
+                    {
+                        _logger.WriteLog("FFMemoryReader.ChatMessageEvetRiser canceled.");
+                        break;
+                    }
                     catch (Exception e)
                     {
-                        _Logger.WriteLog(e);
+                        _logger.WriteLog("FFMemoryReader.ChatMessageEvetRiser failed.");
+                        _logger.WriteLog(e);
                     }
                 }
-
             }, TaskCreationOptions.LongRunning);
         }
 
         private void ProcessChatMsg(ChatLogItem chatLogItem)
         {
             var tmpMsg = new FFChatMsg(chatLogItem.Line, chatLogItem.Code, chatLogItem.TimeStamp);
-            _FFxivChat.Enqueue(tmpMsg);
-        }
-
-        private string PrepareTranslationText(string text)
-        {
-            text = text.Replace(":", ": ");
-
-            return text;
+            _ffxivChat.Enqueue(tmpMsg);
         }
 
         private void OnPropertyChanged([CallerMemberName] string prop = "")
         {
-            var ea = new AsyncPropertyChangedEventArgs(this, prop);
-            _AsyncPropertyChanged.InvokeAsync(ea).Forget();
+            var eventArgs = new AsyncPropertyChangedEventArgs(this, prop);
+            _AsyncPropertyChanged.InvokeAsync(eventArgs).Forget();
         }
 
-        private void EventErrorHandler(string evname, Exception ex)
+        private void EventErrorHandler(string eventName, Exception ex)
         {
-            string text = evname + Environment.NewLine + Convert.ToString(ex);
-            _Logger.WriteLog(text);
+            var text = eventName + Environment.NewLine + Convert.ToString(ex);
+            _logger.WriteLog(text);
         }
 
         public void Stop()
         {
-            _KeepWorking = false;
-            _KeepReading = false;
+            _keepWorking = false;
+            _keepReading = false;
         }
 
         public void Dispose()
         {
-            if (_FfXivProcess != null)
-                _FfXivProcess.Dispose();
-        }
-
-        public void SendDebugMessages()
-        {
-            Task.Run(async () =>
-            {
-                await Task.Delay(2000);
-
-                /*
-                _FFxivChat.Enqueue(new FFChatMsg(@"_11_ Inoshishi Bugyo: Für immer mit dieser Täuschung leben zu können  Endkampf zuerst die Augen der Wahrheit an sich reißen und schließlich die beiden Furien töten. Im Sterben sagt Alekto dem Spartaner voraus, dass ihr Tod nichts ändern und ihn nicht befreien werde. ", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"_12_ Inoshishi Bugyo: to live forever with this deception final battle first to grab the eyes of the truth and finally kill the two Furies. In dying, Alekto predicts to the Spartan that her death will not change anything and will not free him. ", "003D", DateTime.Now));//*/
-
-                _FFxivChat.Enqueue(new FFChatMsg(@"_1_ Dakshina:Once you have finished the task, feel free to disssmount your marid.", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"_2_ Dakshina:Once you have finished the task, feel free to disssmount your marid. It will make its own way back here.", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"_3_ Inoshishi Bugyo:But...the boar will not be next year's totem animal... <sigh>", "", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"_4_ Dakshina:Once you have finished the task, feel free to disssmount your marid. It will make its own way back here. Lydirlona:Mayhap you have heard that Rowena's House of Splendors is expanding its operations. I am proud to say that these rumors are true. Inoshishi Bugyo:But...the boar will not be next year's totem animal... <sigh>", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"_5_ Dakshina:Once you have finished the task, feel free to disssmount your marid. It will make its own way back here.", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"_6_ Lydirlona:Mayhap you have heard that Rowena's House of Splendors is expanding its operations. I am proud to say that these rumors are true.", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"_7_ Inoshishi Bugyo:But...the boar will not be next year's totem animal... <sigh>", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"_8_ Dakshina:Once you have finished the task, feel free to disssmount your marid. It will make its own way back here.", "", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"_9_ Lydirlona:Mayhap you have heard that Rowena's House of Splendors is expanding its operations. I am proud to say that these rumors are true.", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"_10_ Inoshishi Bugyo:But...the boar will not be next year's totem animal... <sigh>", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"_11_ Inoshishi Bugyo: Für immer mit dieser Täuschung leben zu können  Endkampf zuerst die Augen der Wahrheit an sich reißen und schließlich die beiden Furien töten. Im Sterben sagt Alekto dem Spartaner voraus, dass ihr Tod nichts ändern und ihn nicht befreien werde. ", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"_12_ Inoshishi Bugyo: to live forever with this deception final battle first to grab the eyes of the truth and finally kill the two Furies. In dying, Alekto predicts to the Spartan that her death will not change anything and will not free him. ", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"Conrad:Ahhh, don't fret over that. You're not the first person to take up arms against the Empire under a false name. We'd do the same if we had any sense....My condolences for your loss, child.", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"Conrad:My comrades and I must confer on your proposal. A moment, if you please...", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"Conrad:Allow me to welcome you once more to Rhalgr's Reach, our humble headquarters.", "003D", DateTime.Now));
-                _FFxivChat.Enqueue(new FFChatMsg(@"Conrad:My name is Conrad Kemp, and I have the dubious honor of overseeing operations here.", "003D", DateTime.Now));//*/
-            });
+            if (_ffXivProcess != null)
+                _ffXivProcess.Dispose();
         }
     }
 }

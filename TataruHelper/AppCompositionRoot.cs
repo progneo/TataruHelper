@@ -26,6 +26,8 @@ namespace FFXIVTataruHelper
         {
             services.AddSingleton<IAppLogger, AppLogger>();
             services.AddSingleton<ISettingsStore, AppSettingsStore>();
+            services.AddSingleton<ISettingsSyncService, SettingsSyncService>();
+            services.AddSingleton<ISettingsMigrationService, SettingsMigrationService>();
             services.AddSingleton<IUiDispatcher, WpfUiDispatcher>();
 
             services.AddSingleton<IDirectDialogReader, HeuristicDirectDialogReader>();
@@ -36,6 +38,11 @@ namespace FFXIVTataruHelper
             services.AddSingleton<IFFMemoryReaderService, FFMemoryReader>();
 
             services.AddSingleton<IHotKeyBindingService, HotKeyBindingService>();
+            services.AddSingleton<IChatWindowFactory, ChatWindowFactory>();
+            services.AddTransient<IChatWindowCoordinator, ChatWindowCoordinator>();
+            services.AddTransient<IChatWindowsEventCoordinator, ChatWindowsEventCoordinator>();
+            services.AddTransient<ITranslationPipelineCoordinator, TranslationPipelineCoordinator>();
+            services.AddTransient<IApplicationCoordinator, ApplicationCoordinator>();
             services.AddTransient<ITataruModelFactory, TataruModelFactory>();
 
             services.AddSingleton<IUpdateService>(provider =>

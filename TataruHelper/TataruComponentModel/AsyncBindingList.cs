@@ -12,23 +12,28 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using FFXIVTataruHelper.EventArguments;
+using FFXIVTataruHelper.Services.Logging;
 
 namespace FFXIVTataruHelper.TataruComponentModel
 {
     public class AsyncBindingList<T> : BindingList<T>, INotifyListChanged<T>
     {
+        private readonly IAppLogger _logger;
+
         #region Constructors
 
-        public AsyncBindingList() : base()
+        public AsyncBindingList(IAppLogger logger) : base()
         {
+            _logger = logger;
             this._AsyncListChanged = new AsyncEvent<AsyncListChangedEventHandler<T>>(this.EventErrorHandler, "AsyncBindingList \n AsyncListChanged");
         }
 
         /// <summary>
         /// Constructor that allows substitution of the inner list with a custom list.
         /// </summary>
-        public AsyncBindingList(IList<T> list) : base(list)
+        public AsyncBindingList(IList<T> list, IAppLogger logger) : base(list)
         {
+            _logger = logger;
             this._AsyncListChanged = new AsyncEvent<AsyncListChangedEventHandler<T>>(this.EventErrorHandler, "AsyncBindingList \n AsyncListChanged");
         }
 
@@ -108,7 +113,7 @@ namespace FFXIVTataruHelper.TataruComponentModel
         private void EventErrorHandler(string evname, Exception ex)
         {
             string text = evname + Environment.NewLine + Convert.ToString(ex);
-            Logger.WriteLog(text);
+            _logger.WriteLog(text);
         }
     }
 }

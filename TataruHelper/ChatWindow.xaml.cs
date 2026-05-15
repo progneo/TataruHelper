@@ -2,8 +2,12 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 using FFXIVTataruHelper.EventArguments;
+using FFXIVTataruHelper.Services.Logging;
+using FFXIVTataruHelper.Services.Settings;
+using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.WinUtils;
+
 using System;
 using System.Linq;
 using System.Threading;
@@ -13,6 +17,8 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
+
+using FFXIVTataruHelper.TataruComponentModel;
 
 namespace FFXIVTataruHelper
 {
@@ -43,8 +49,17 @@ namespace FFXIVTataruHelper
         ChatWindowViewModel _ChatWindowViewModel;
 
         MainWindow _MainWindow;
+        readonly IAppLogger _Logger;
+        readonly ISettingsStore _SettingsStore;
+        readonly IUiDispatcher _UiDispatcher;
 
-        public ChatWindow(TataruModel tataruModel, ChatWindowViewModel chatWindowViewModel, MainWindow mainWindow)
+        public ChatWindow(
+            TataruModel tataruModel,
+            ChatWindowViewModel chatWindowViewModel,
+            MainWindow mainWindow,
+            IAppLogger logger,
+            ISettingsStore settingsStore,
+            IUiDispatcher uiDispatcher)
         {
             InitializeComponent();
 
@@ -54,10 +69,11 @@ namespace FFXIVTataruHelper
 
                 _TataruModel = tataruModel;
                 _ChatWindowViewModel = chatWindowViewModel;
+                _Logger = logger;
+                _SettingsStore = settingsStore;
+                _UiDispatcher = uiDispatcher;
 
                 this.DataContext = _ChatWindowViewModel;
-
-                _WindowResizer = new WindowResizer(this);
 
                 this.ShowInTaskbar = false;
 
@@ -73,10 +89,11 @@ namespace FFXIVTataruHelper
 
                 _KeepWorking = true;
                 _AutoHidden = false;
+                _WindowResizer = new WindowResizer(this, _Logger);
             }
             catch (Exception e)
             {
-                Logger.WriteLog(e);
+                _Logger.WriteLog(e);
             }
         }
 
@@ -101,9 +118,9 @@ namespace FFXIVTataruHelper
             _TataruModel.FFMemoryReader.AddExclusionWindowHandler((new WindowInteropHelper(this).Handle));
 
             if (_ChatWindowViewModel.IsClickThrough)
-                MakeWindowClickThrought();
+                MakeWindowClickThrough();
             else
-                MakeWindowClickbale();
+                MakeWindowClickable();
 
             _ChatWindowViewModel.AsyncPropertyChanged += OnSettingsWindowPropertyChange;
             _ChatWindowViewModel.RequestChatClear += OnChatClearRequest;
@@ -147,13 +164,13 @@ namespace FFXIVTataruHelper
 
             if (ea.ChatMessage.Text.Length > 0)
             {
-                while (translateTryCount < GlobalSettings.MaxTranslateTryCount && notTransalted)
+                while (translateTryCount < _SettingsStore.MaxTranslateTryCount && notTransalted)
                 {
                     var translationEngines = _TataruModel.ChatProcessor.TranslationEngines;
                     string translation = string.Empty;
 
 
-                    using (var translationCts = new CancellationTokenSource(GlobalSettings.TranslatorWaitTime))
+                    using (var translationCts = new CancellationTokenSource(_SettingsStore.TranslatorWaitTimeMs))
                     {
                         try
                         {
@@ -190,23 +207,23 @@ namespace FFXIVTataruHelper
                                 engineIndex = 0;
 
                             var tmpEngine = translationEngines[engineIndex];
-                            if (tmpEngine.SupportedLanguages.Contains(_ChatWindowViewModel.CurrentTranslateFromLanguague)
-                                && tmpEngine.SupportedLanguages.Contains(_ChatWindowViewModel.CurrentTranslateToLanguague))
+                            if (tmpEngine.SupportedLanguages.Contains(
+                                    _ChatWindowViewModel.CurrentTranslateFromLanguague)
+                                && tmpEngine.SupportedLanguages.Contains(_ChatWindowViewModel
+                                    .CurrentTranslateToLanguague))
                             {
                                 supported = true;
 
-                                UiWindow.Window.UIThread(() =>
+                                _UiDispatcher.Invoke(() =>
                                 {
                                     _ChatWindowViewModel.TranslationEngines.MoveCurrentToPosition(engineIndex);
                                 });
-
                             }
-
                         } while (!supported && iterCount <= translationEngines.Count);
 
-                        UiWindow.Window.UIThread(() =>
+                        _UiDispatcher.Invoke(() =>
                         {
-                            ShowErorrText(1, _ChatWindowViewModel.CurrentTransaltionEngine.Name, textColor);
+                            ShowErrorText(1, _ChatWindowViewModel.CurrentTransaltionEngine.Name, textColor);
                         });
                     }
                     else
@@ -215,7 +232,6 @@ namespace FFXIVTataruHelper
                         notTransalted = false;
                     }
                 }
-
             }
             else
             {
@@ -234,12 +250,11 @@ namespace FFXIVTataruHelper
                 if (_ChatWindowViewModel.IsHiddenByUser == false)
                     _TextArrivedTime = DateTime.UtcNow;
 
-                ShowTransaltedText(text, textColor, timeStamp);
+                ShowTranslatedText(text, textColor, timeStamp);
 
                 if (_ChatWindowViewModel.IsHiddenByUser == false)
                     _TextArrivedTime = DateTime.UtcNow;
             });
-
         }
 
         protected virtual async Task OnSettingsWindowPropertyChange(AsyncPropertyChangedEventArgs ea)
@@ -249,9 +264,9 @@ namespace FFXIVTataruHelper
                 case "IsClickThrough":
 
                     if (_ChatWindowViewModel.IsClickThrough)
-                        MakeWindowClickThrought();
+                        MakeWindowClickThrough();
                     else
-                        MakeWindowClickbale();
+                        MakeWindowClickable();
 
                     break;
                 case "IsAutoHide":
@@ -265,7 +280,6 @@ namespace FFXIVTataruHelper
                     {
                         if (_ChatWindowViewModel.IsWindowVisible == true)
                             _TextArrivedTime = DateTime.UtcNow;
-
                     }
                     break;
                 case "BackGroundColor":
@@ -277,8 +291,8 @@ namespace FFXIVTataruHelper
 
                         if (_ChatWindowViewModel.IsClickThrough)
                         {
-                            MakeWindowClickbale();
-                            MakeWindowClickThrought();
+                            MakeWindowClickable();
+                            MakeWindowClickThrough();
                         }
                     }
                     break;
@@ -324,7 +338,7 @@ namespace FFXIVTataruHelper
 
         #region **Transaltion.
 
-        void ShowTransaltedText(string translatedMsg, Color color, DateTime timeStamp = default(DateTime))
+        void ShowTranslatedText(string translatedMsg, Color color, DateTime timeStamp = default(DateTime))
         {
             try
             {
@@ -340,6 +354,7 @@ namespace FFXIVTataruHelper
                     {
                         whiteSpaces += " ";
                     }
+
                     ChatRtb.AppendText(whiteSpaces);
                 }
 
@@ -370,7 +385,7 @@ namespace FFXIVTataruHelper
 
                     tr2.Text = text;
                     tr2.ApplyPropertyValue(TextElement.ForegroundProperty, tmpColor);
-                    tr2.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Normal);//*/
+                    tr2.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Normal); //*/
                 }
                 else
                 {
@@ -387,11 +402,11 @@ namespace FFXIVTataruHelper
             }
             catch (Exception exc)
             {
-                Logger.WriteLog(Convert.ToString(exc));
+                _Logger.WriteLog(Convert.ToString(exc));
             }
         }
 
-        void ShowErorrText(int errorCode, string EngineName, Color textColor)
+        void ShowErrorText(int errorCode, string EngineName, Color textColor)
         {
             if (errorCode == 1)
             {
@@ -403,7 +418,7 @@ namespace FFXIVTataruHelper
                 if (_ChatWindowViewModel.IsHiddenByUser == false)
                     _TextArrivedTime = DateTime.UtcNow;
 
-                ShowTransaltedText(text, textColor);
+                ShowTranslatedText(text, textColor);
 
                 if (_ChatWindowViewModel.IsHiddenByUser == false)
                     _TextArrivedTime = DateTime.UtcNow;
@@ -447,7 +462,7 @@ namespace FFXIVTataruHelper
 
         #region **System.
 
-        protected void MakeWindowClickThrought()
+        protected void MakeWindowClickThrough()
         {
             try
             {
@@ -457,18 +472,19 @@ namespace FFXIVTataruHelper
                     {
                         var hwnd = new WindowInteropHelper(this).Handle;
                         var style = Win32Interfaces.GetWindowLong(hwnd, Win32Interfaces.GWL_EXSTYLE);
-                        Win32Interfaces.SetWindowLong(hwnd, Win32Interfaces.GWL_EXSTYLE, style | Win32Interfaces.WS_EX_LAYERED | Win32Interfaces.WS_EX_TRANSPARENT);
+                        Win32Interfaces.SetWindowLong(hwnd, Win32Interfaces.GWL_EXSTYLE,
+                            style | Win32Interfaces.WS_EX_LAYERED | Win32Interfaces.WS_EX_TRANSPARENT);
                         _IsClickThrought = true;
                     });
                 }
             }
             catch (Exception e)
             {
-                Logger.WriteLog(Convert.ToString(e));
+                _Logger.WriteLog(Convert.ToString(e));
             }
         }
 
-        protected void MakeWindowClickbale()
+        protected void MakeWindowClickable()
         {
             try
             {
@@ -478,14 +494,15 @@ namespace FFXIVTataruHelper
                     {
                         var hwnd = new WindowInteropHelper(this).Handle;
                         var style = Win32Interfaces.GetWindowLong(hwnd, Win32Interfaces.GWL_EXSTYLE);
-                        Win32Interfaces.SetWindowLong(hwnd, Win32Interfaces.GWL_EXSTYLE, style ^ Win32Interfaces.WS_EX_LAYERED ^ Win32Interfaces.WS_EX_TRANSPARENT);
+                        Win32Interfaces.SetWindowLong(hwnd, Win32Interfaces.GWL_EXSTYLE,
+                            style ^ Win32Interfaces.WS_EX_LAYERED ^ Win32Interfaces.WS_EX_TRANSPARENT);
                         _IsClickThrought = false;
                     });
                 }
             }
             catch (Exception e)
             {
-                Logger.WriteLog(Convert.ToString(e));
+                _Logger.WriteLog(Convert.ToString(e));
             }
         }
 
@@ -547,7 +564,7 @@ namespace FFXIVTataruHelper
                     else
                         _AutoHidden = false;
 
-                    await Task.Delay(GlobalSettings.AutoHideWatcherDelay);
+                    await Task.Delay(_SettingsStore.AutoHideWatcherDelayMs);
                 }
             }, TaskCreationOptions.LongRunning);
         }

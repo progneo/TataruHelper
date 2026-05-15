@@ -1,7 +1,7 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using BondTech.HotKeyManagement.WPF._4;
+
 using FFXIVTataruHelper.EventArguments;
 using FFXIVTataruHelper.Factories;
 using FFXIVTataruHelper.Services.Logging;
@@ -89,7 +89,6 @@ namespace FFXIVTataruHelper
             {
                 InitializeComponent();
 
-                UiWindow.Window = this;
                 _UiDispatcher.SetWindow(this);
             }
             catch (Exception ex)
@@ -215,7 +214,7 @@ namespace FFXIVTataruHelper
                 _OptimizeFootprint = new OptimizeFootprint();
                 _OptimizeFootprint.Start();
 
-                _WinMessagesHandler = new WinMessagesHandler(this);
+                _WinMessagesHandler = new WinMessagesHandler(this, _Logger);
                 _WinMessagesHandler.ShowFirstInstance += OnShowFirstInstance;
 
                 _Updater?.UpdateStateChanged += OnUpdaterEvent;
@@ -510,7 +509,7 @@ namespace FFXIVTataruHelper
             var mdl = _TataruModel.TataruViewModel.CurrentChatWindow;
             if (mdl != null)
             {
-                mdl.RegisterHotKeyDown(TatruHotkeyType.ClickThrought, e);
+                mdl.RegisterHotKeyDown(TatruHotkeyType.ClickThrough, e);
             }
         }
 
@@ -519,7 +518,7 @@ namespace FFXIVTataruHelper
             var mdl = _TataruModel.TataruViewModel.CurrentChatWindow;
             if (mdl != null)
             {
-                mdl.RegisterHotKeyUp(TatruHotkeyType.ClickThrought, e);
+                mdl.RegisterHotKeyUp(TatruHotkeyType.ClickThrough, e);
             }
         }
 

@@ -5,6 +5,7 @@ using FFXIVTataruHelper.EventArguments;
 using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.WinUtils;
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -14,9 +15,16 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
 using System.Windows.Data;
+
 using FFXIVTataruHelper.UIModel;
-using BondTech.HotKeyManagement.WPF._4;
+
+
+
 using System.Windows.Input;
+
+using FFXIVTataruHelper.Compatibility.HotKeys;
+using FFXIVTataruHelper.TataruComponentModel;
+
 using Translation;
 
 namespace FFXIVTataruHelper.ViewModel
@@ -24,37 +32,37 @@ namespace FFXIVTataruHelper.ViewModel
     public enum TatruHotkeyType : int
     {
         ShowHideChatWindow = 0,
-        ClickThrought = 1,
+        ClickThrough = 1,
         ClearChat = 2
     }
 
-    public class ChatWindowViewModel : INotifyPropertyChanged, IDisposable, FFXIVTataruHelper.TataruComponentModel.INotifyPropertyChangedAsync
+    public class ChatWindowViewModel : INotifyPropertyChanged, IDisposable, INotifyPropertyChangedAsync
     {
         #region **Events.
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         public event AsyncEventHandler<AsyncPropertyChangedEventArgs> AsyncPropertyChanged
         {
-            add { this._AsyncPropertyChanged.Register(value); }
-            remove { this._AsyncPropertyChanged.Unregister(value); }
+            add { this._asyncPropertyChanged.Register(value); }
+            remove { this._asyncPropertyChanged.Unregister(value); }
         }
-        private AsyncEvent<AsyncPropertyChangedEventArgs> _AsyncPropertyChanged;
+
+        private readonly AsyncEvent<AsyncPropertyChangedEventArgs> _asyncPropertyChanged;
 
         public event AsyncEventHandler<TatruEventArgs> RequestChatClear
         {
-            add { this._RequestChatClear.Register(value); }
-            remove { this._RequestChatClear.Unregister(value); }
+            add { this._requestChatClear.Register(value); }
+            remove { this._requestChatClear.Unregister(value); }
         }
-        private AsyncEvent<TatruEventArgs> _RequestChatClear;
+
+        private readonly AsyncEvent<TatruEventArgs> _requestChatClear;
 
         #endregion
 
         #region **Properties.
 
-        public long WinId
-        {
-            get { return _WinId; }
-        }
+        public long WinId { get; }
 
         public string Name
         {
@@ -372,7 +380,6 @@ namespace FFXIVTataruHelper.ViewModel
             get { return _TranslationEngines; }
             set
             {
-
                 if (_TranslationEngines != null)
                     _TranslationEngines.CurrentChanged -= OnTranslationEngineChange;
 
@@ -449,7 +456,6 @@ namespace FFXIVTataruHelper.ViewModel
                 _IsWindowVisible = value;
                 OnPropertyChanged();
             }
-
         }
 
         public TataruUICommand ShowChatWindowCommand { get; set; }
@@ -461,7 +467,6 @@ namespace FFXIVTataruHelper.ViewModel
         #region **LocalVariables.
 
         string _Name;
-        long _WinId;
 
         double _ChatFontSize;
         double _LineBreakHeight;
@@ -508,18 +513,20 @@ namespace FFXIVTataruHelper.ViewModel
         bool _disposed = false;
         readonly IAppLogger _Logger;
         readonly IHotKeyBindingService _HotKeyBindingService;
+
         #endregion
 
         public ChatWindowViewModel()
         {
             _Logger = new AppLogger();
             _HotKeyBindingService = new HotKeyBindingService(_Logger);
-            this._AsyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler, "ChatWindowViewModel \n AsyncPropertyChanged");
+            this._asyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler,
+                "ChatWindowViewModel \n AsyncPropertyChanged");
             ShowChatWindowCommand = new TataruUICommand(ShowChatWindow);
             RestChatWindowPositionCommand = new TataruUICommand(ResetChatWindowPosition);
 
             Random rnd = new Random(DateTime.UtcNow.Date.Millisecond);
-            _WinId = (DateTime.Now.Ticks * 100u) + ((uint)rnd.Next(0, 100));
+            WinId = (DateTime.Now.Ticks * 100u) + ((uint)rnd.Next(0, 100));
 
             Name = "2";
 
@@ -531,7 +538,7 @@ namespace FFXIVTataruHelper.ViewModel
 
             ChatCodes = new BindingList<ChatCodeViewModel>()
             {
-                new ChatCodeViewModel("0039","System", Colors.Aqua, true),
+                new ChatCodeViewModel("0039", "System", Colors.Aqua, true),
             };
         }
 
@@ -545,15 +552,17 @@ namespace FFXIVTataruHelper.ViewModel
         {
             _Logger = logger;
             _HotKeyBindingService = hotKeyBindingService;
-            this._AsyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler, "ChatWindowViewModel \n AsyncPropertyChanged");
-            this._RequestChatClear = new AsyncEvent<TatruEventArgs>(this.EventErrorHandler, "ChatWindowViewModel \n RequsetChatClear");
+            this._asyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler,
+                "ChatWindowViewModel \n AsyncPropertyChanged");
+            this._requestChatClear =
+                new AsyncEvent<TatruEventArgs>(this.EventErrorHandler, "ChatWindowViewModel \n RequsetChatClear");
             ShowChatWindowCommand = new TataruUICommand(ShowChatWindow);
             RestChatWindowPositionCommand = new TataruUICommand(ResetChatWindowPosition);
 
             _IsWindowVisible = true;
 
             Name = settings.Name;
-            _WinId = settings.WinId;
+            WinId = settings.WinId;
 
             ChatFontSize = settings.ChatFontSize;
             LineBreakHeight = settings.LineBreakHeight;
@@ -606,7 +615,7 @@ namespace FFXIVTataruHelper.ViewModel
             ChatWindowViewModelSettings settings = new ChatWindowViewModelSettings();
 
             settings.Name = this.Name;
-            settings.WinId = this._WinId;
+            settings.WinId = this.WinId;
 
             settings.ChatFontSize = this.ChatFontSize;
             settings.LineBreakHeight = this.LineBreakHeight;
@@ -651,7 +660,7 @@ namespace FFXIVTataruHelper.ViewModel
                     OnPropertyChanged("ShowHideChatKeys");
                     OnPropertyChanged("ShowHideChatKeysName");
                     break;
-                case TatruHotkeyType.ClickThrought:
+                case TatruHotkeyType.ClickThrough:
                     RegisterHotKeyDown(ref _ClickThoughtChat, _ClickThoughtChatKeys, e);
                     OnPropertyChanged("ClickThoughtChatKeys");
                     OnPropertyChanged("ClickThoughtChatKeysName");
@@ -662,7 +671,6 @@ namespace FFXIVTataruHelper.ViewModel
                     OnPropertyChanged("ClearChatKeysName");
                     break;
             }
-
         }
 
         public void RegisterHotKeyUp(TatruHotkeyType type, KeyEventArgs e)
@@ -674,7 +682,7 @@ namespace FFXIVTataruHelper.ViewModel
                     OnPropertyChanged("ShowHideChatKeys");
                     OnPropertyChanged("ShowHideChatKeysName");
                     break;
-                case TatruHotkeyType.ClickThrought:
+                case TatruHotkeyType.ClickThrough:
                     RegisterHotKeyUp(ref _ClickThoughtChat, _ClickThoughtChatKeys, e);
                     OnPropertyChanged("ClickThoughtChatKeys");
                     OnPropertyChanged("ClickThoughtChatKeysName");
@@ -687,17 +695,20 @@ namespace FFXIVTataruHelper.ViewModel
             }
         }
 
-        private void RegisterHotKeyDown(ref GlobalHotKey globalHotKey, HotKeyCombination hotKeyCombination, KeyEventArgs e)
+        private void RegisterHotKeyDown(ref GlobalHotKey globalHotKey, HotKeyCombination hotKeyCombination,
+            KeyEventArgs e)
         {
             _HotKeyBindingService.RegisterHotKeyDown(_HotKeyManager, ref globalHotKey, hotKeyCombination, e, _disposed);
         }
 
-        private void RegisterHotKeyUp(ref GlobalHotKey globalHotKey, HotKeyCombination hotKeyCombination, KeyEventArgs e)
+        private void RegisterHotKeyUp(ref GlobalHotKey globalHotKey, HotKeyCombination hotKeyCombination,
+            KeyEventArgs e)
         {
             _HotKeyBindingService.RegisterHotKeyUp(_HotKeyManager, ref globalHotKey, hotKeyCombination, e, _disposed);
         }
 
-        private void ReRegisterGlobalHotekey(HotKeyManager hotKeyManager, ref GlobalHotKey globalHotKey, HotKeyCombination hotKeyCombination)
+        private void ReRegisterGlobalHotekey(HotKeyManager hotKeyManager, ref GlobalHotKey globalHotKey,
+            HotKeyCombination hotKeyCombination)
         {
             _HotKeyBindingService.ReRegisterGlobalHotKey(hotKeyManager, ref globalHotKey, hotKeyCombination, _disposed);
         }
@@ -710,6 +721,7 @@ namespace FFXIVTataruHelper.ViewModel
                 prevFrom = (TranslatorLanguague)TranslateFromLanguagues.CurrentItem;
                 prevTo = (TranslatorLanguague)TranslateToLanguagues.CurrentItem;
             }
+
             OnPropertyChanged("TranslationEngineSelected");
             OnPropertyChanged("TranslationEngines");
 
@@ -719,11 +731,13 @@ namespace FFXIVTataruHelper.ViewModel
             if (_TranslateToLanguagues != null)
                 _TranslateToLanguagues.CurrentChanged -= OnTranslateToLanguageChange;
 
-            _TranslateFromLanguagues = new CollectionView(((TranslationEngine)_TranslationEngines.CurrentItem).SupportedLanguages.ToList());
+            _TranslateFromLanguagues =
+                new CollectionView(((TranslationEngine)_TranslationEngines.CurrentItem).SupportedLanguages.ToList());
             _TranslateFromLanguagues.CurrentChanged += OnTranslateFromLanguageChange;
             OnPropertyChanged("TranslateFromLanguagues");
 
-            List<TranslatorLanguague> supportedToLanguages = ((TranslationEngine)_TranslationEngines.CurrentItem).SupportedLanguages.ToList();
+            List<TranslatorLanguague> supportedToLanguages =
+                ((TranslationEngine)_TranslationEngines.CurrentItem).SupportedLanguages.ToList();
             var lang = supportedToLanguages.FirstOrDefault(x => x.SystemName == "Auto");
             if (lang != null)
                 supportedToLanguages.Remove(lang);
@@ -768,6 +782,7 @@ namespace FFXIVTataruHelper.ViewModel
                     IsWindowVisible = !IsWindowVisible;
                 }
             }
+
             if (ClickThoughtChatKeys != null)
             {
                 if (e.HotKey.Name == ClickThoughtChatKeys.Name)
@@ -775,16 +790,18 @@ namespace FFXIVTataruHelper.ViewModel
                     IsClickThrough = !IsClickThrough;
                 }
             }
+
             if (ClearChatKeys != null)
             {
                 if (e.HotKey.Name == ClearChatKeys.Name)
                 {
-                    _RequestChatClear.InvokeAsync(new TatruEventArgs(this));
+                    _requestChatClear.InvokeAsync(new TatruEventArgs(this));
                 }
             }
         }
 
-        private BindingList<ChatCodeViewModel> LoadChatCodes(List<ChatCodeViewModel> UserChatCodes, List<ChatMsgType> allChatCodes)
+        private BindingList<ChatCodeViewModel> LoadChatCodes(List<ChatCodeViewModel> UserChatCodes,
+            List<ChatMsgType> allChatCodes)
         {
             List<ChatMsgType> chatCodes = allChatCodes.Select(entry => new ChatMsgType(entry)).ToList();
             List<ChatCodeViewModel> chatCodesViewMode = new List<ChatCodeViewModel>();
@@ -845,10 +862,10 @@ namespace FFXIVTataruHelper.ViewModel
             return Name;
         }
 
-        private void OnPropertyChanged([CallerMemberName]string prop = "")
+        private void OnPropertyChanged([CallerMemberName] string prop = "")
         {
             var ea = new AsyncPropertyChangedEventArgs(this, prop);
-            _AsyncPropertyChanged.InvokeAsync(ea).Forget();
+            _asyncPropertyChanged.InvokeAsync(ea).Forget();
 
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(prop));
         }

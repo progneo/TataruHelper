@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Media;
+using FFXIVTataruHelper.TataruComponentModel;
 using Translation;
 
 namespace FFXIVTataruHelper.UIModel
@@ -422,7 +423,7 @@ namespace FFXIVTataruHelper.UIModel
         private void EventErrorHandler(string evname, Exception ex)
         {
             string text = evname + Environment.NewLine + Convert.ToString(ex);
-            Logger.WriteLog(text);
+            System.Diagnostics.Trace.TraceError(text);
         }
     }
 }

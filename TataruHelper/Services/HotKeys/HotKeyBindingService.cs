@@ -1,8 +1,10 @@
-using BondTech.HotKeyManagement.WPF._4;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.WinUtils;
+
 using System;
 using System.Windows.Input;
+
+using FFXIVTataruHelper.Compatibility.HotKeys;
 
 namespace FFXIVTataruHelper.Services.HotKeys
 {
@@ -15,7 +17,8 @@ namespace FFXIVTataruHelper.Services.HotKeys
             _logger = logger;
         }
 
-        public void RegisterHotKeyDown(HotKeyManager hotKeyManager, ref GlobalHotKey globalHotKey, HotKeyCombination hotKeyCombination, KeyEventArgs e, bool isDisposed)
+        public void RegisterHotKeyDown(HotKeyManager hotKeyManager, ref GlobalHotKey globalHotKey,
+            HotKeyCombination hotKeyCombination, KeyEventArgs e, bool isDisposed)
         {
             if (isDisposed)
             {
@@ -25,7 +28,7 @@ namespace FFXIVTataruHelper.Services.HotKeys
             try
             {
                 var key = Helper.RealKey(e);
-                var pressedKeys = Keys.ClearMousKeys(Keys.ClearRepeatedKeys(Keys.GetPressdKeys()));
+                var pressedKeys = Keys.ClearMouseKeys(Keys.ClearRepeatedKeys(Keys.GetPressedKeys()));
 
                 if (pressedKeys.Length <= 1)
                 {
@@ -45,7 +48,8 @@ namespace FFXIVTataruHelper.Services.HotKeys
             }
         }
 
-        public void RegisterHotKeyUp(HotKeyManager hotKeyManager, ref GlobalHotKey globalHotKey, HotKeyCombination hotKeyCombination, KeyEventArgs e, bool isDisposed)
+        public void RegisterHotKeyUp(HotKeyManager hotKeyManager, ref GlobalHotKey globalHotKey,
+            HotKeyCombination hotKeyCombination, KeyEventArgs e, bool isDisposed)
         {
             if (isDisposed)
             {
@@ -54,7 +58,7 @@ namespace FFXIVTataruHelper.Services.HotKeys
 
             try
             {
-                var pressedKeys = Keys.ClearMousKeys(Keys.ClearRepeatedKeys(Keys.GetPressdKeys()));
+                var pressedKeys = Keys.ClearMouseKeys(Keys.ClearRepeatedKeys(Keys.GetPressedKeys()));
 
                 if (pressedKeys.Length != 0)
                 {
@@ -83,7 +87,8 @@ namespace FFXIVTataruHelper.Services.HotKeys
             }
         }
 
-        public void ReRegisterGlobalHotKey(HotKeyManager hotKeyManager, ref GlobalHotKey globalHotKey, HotKeyCombination hotKeyCombination, bool isDisposed)
+        public void ReRegisterGlobalHotKey(HotKeyManager hotKeyManager, ref GlobalHotKey globalHotKey,
+            HotKeyCombination hotKeyCombination, bool isDisposed)
         {
             if (isDisposed)
             {

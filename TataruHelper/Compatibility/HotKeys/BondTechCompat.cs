@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows;
 using System.Windows.Input;
+
 using NHotkey;
 using NHotkey.Wpf;
 
-namespace BondTech.HotKeyManagement.WPF._4
+namespace FFXIVTataruHelper.Compatibility.HotKeys
 {
     public sealed class GlobalHotKey
     {
@@ -36,7 +37,8 @@ namespace BondTech.HotKeyManagement.WPF._4
 
     public sealed class HotKeyManager : IDisposable
     {
-        private readonly Dictionary<string, EventHandler<HotkeyEventArgs>> _handlersByName = new Dictionary<string, EventHandler<HotkeyEventArgs>>(StringComparer.Ordinal);
+        private readonly Dictionary<string, EventHandler<HotkeyEventArgs>>
+            _handlersByName = new(StringComparer.Ordinal);
 
         public event EventHandler<GlobalHotKeyEventArgs> GlobalHotKeyPressed;
 
@@ -58,7 +60,7 @@ namespace BondTech.HotKeyManagement.WPF._4
                 GlobalHotKeyPressed?.Invoke(this, new GlobalHotKeyEventArgs(hotKey));
             };
 
-            NHotkey.Wpf.HotkeyManager.Current.AddOrReplace(hotKey.Name, hotKey.Key, hotKey.ModifierKeys, handler);
+            HotkeyManager.Current.AddOrReplace(hotKey.Name, hotKey.Key, hotKey.ModifierKeys, handler);
             _handlersByName[hotKey.Name] = handler;
         }
 
@@ -69,7 +71,7 @@ namespace BondTech.HotKeyManagement.WPF._4
                 return;
             }
 
-            NHotkey.Wpf.HotkeyManager.Current.Remove(hotKey.Name);
+            HotkeyManager.Current.Remove(hotKey.Name);
             _handlersByName.Remove(hotKey.Name);
         }
 
@@ -77,7 +79,7 @@ namespace BondTech.HotKeyManagement.WPF._4
         {
             foreach (var name in _handlersByName.Keys.ToArray())
             {
-                NHotkey.Wpf.HotkeyManager.Current.Remove(name);
+                HotkeyManager.Current.Remove(name);
             }
 
             _handlersByName.Clear();
@@ -86,32 +88,21 @@ namespace BondTech.HotKeyManagement.WPF._4
 
     public static class Keys
     {
-        public static Key[] GetPressdKeys()
+        public static Key[] GetPressedKeys()
         {
-            return Enum.GetValues(typeof(Key))
-                .Cast<Key>()
+            return Enum.GetValues<Key>()
                 .Where(Keyboard.IsKeyDown)
                 .ToArray();
         }
 
-        public static Key[] ClearMousKeys(Key[] keys)
+        public static Key[] ClearMouseKeys(Key[] keys)
         {
-            if (keys == null)
-            {
-                return Array.Empty<Key>();
-            }
-
-            return keys.Where(key => key != Key.None && key != Key.Cancel).ToArray();
+            return keys == null ? [] : keys.Where(key => key != Key.None && key != Key.Cancel).ToArray();
         }
 
         public static Key[] ClearRepeatedKeys(Key[] keys)
         {
-            if (keys == null)
-            {
-                return Array.Empty<Key>();
-            }
-
-            return keys.Distinct().ToArray();
+            return keys == null ? [] : keys.Distinct().ToArray();
         }
 
         public static Key ConvertFromWpfKey(Key key)

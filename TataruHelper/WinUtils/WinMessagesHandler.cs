@@ -2,6 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 using FFXIVTataruHelper.EventArguments;
+using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Utils;
 using System;
 using System.Windows;
@@ -26,11 +27,13 @@ namespace FFXIVTataruHelper.WinUtils
 
         private HwndSource _HwndSource;
         private HwndSourceHook _Hook;
+        private readonly IAppLogger _logger;
 
         #endregion
 
-        public WinMessagesHandler(Window window)
+        public WinMessagesHandler(Window window, IAppLogger logger)
         {
+            _logger = logger;
             _ShowFirstInstance = new AsyncEvent<BooleanChangeEventArgs>(EventErrorHandler, "ShowFirstInstance");
 
             _HwndSource = (HwndSource)HwndSource.FromVisual(window);
@@ -61,7 +64,7 @@ namespace FFXIVTataruHelper.WinUtils
         private void EventErrorHandler(string evname, Exception ex)
         {
             string text = evname + Environment.NewLine + Convert.ToString(ex);
-            Logger.WriteLog(text);
+            _logger.WriteLog(text);
         }
 
     }

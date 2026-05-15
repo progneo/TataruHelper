@@ -18,6 +18,12 @@ namespace FFXIVTataruHelper.Services.Settings
 
         public int MemoryReaderDelayMs => GlobalSettings.MemoryReaderDelay;
 
+        public int AutoHideWatcherDelayMs => GlobalSettings.AutoHideWatcherDelay;
+
+        public int TranslatorWaitTimeMs => GlobalSettings.TranslatorWaitTime;
+
+        public int MaxTranslateTryCount => GlobalSettings.MaxTranslateTryCount;
+
         public bool LoadGlobalSettings(string fileName)
         {
             return Helper.LoadStaticFromJson(typeof(GlobalSettings), fileName);

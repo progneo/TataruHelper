@@ -13,10 +13,10 @@ namespace FFXIVTataruHelper.ViewModel
 {
     public class TataruUICommand : ICommand
     {
-        protected Action _action = null;
-        protected Action<object> _parameterizedAction = null;
+        private readonly Action _action = null;
+        private readonly Action<object> _parameterizedAction = null;
 
-        private bool _canExecute = false;
+        private readonly bool _canExecute = false;
 
         /// <summary>
         /// Creates instance of the command handler

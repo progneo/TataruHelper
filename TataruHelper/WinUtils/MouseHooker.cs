@@ -7,6 +7,7 @@ using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using FFXIVTataruHelper.EventArguments;
+using FFXIVTataruHelper.Services.Logging;
 
 namespace FFXIVTataruHelper.WinUtils
 {
@@ -18,9 +19,11 @@ namespace FFXIVTataruHelper.WinUtils
             remove { this._LowLevelMouseEvent.Unregister(value); }
         }
         private AsyncEvent<LowLevelMouseEventArgs> _LowLevelMouseEvent;
+        private readonly IAppLogger _logger;
 
-        public MouseHooker()
+        public MouseHooker(IAppLogger logger)
         {
+            _logger = logger;
             _proc = HookCallback;
 
             _hookID = SetHook(_proc);
@@ -50,7 +53,7 @@ namespace FFXIVTataruHelper.WinUtils
             }
             catch (Exception e)
             {
-                Logger.WriteLog(Convert.ToString(e));
+                _logger.WriteLog(Convert.ToString(e));
             }
         }
 
@@ -141,7 +144,7 @@ namespace FFXIVTataruHelper.WinUtils
         private void EventErrorHandler(string evname, Exception ex)
         {
             string text = evname + Environment.NewLine + Convert.ToString(ex);
-            Logger.WriteLog(text);
+            _logger.WriteLog(text);
         }
 
         ~MouseHooker()

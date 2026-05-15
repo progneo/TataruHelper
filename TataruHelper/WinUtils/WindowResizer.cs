@@ -1,8 +1,7 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-
-
+using FFXIVTataruHelper.Services.Logging;
 using System;
 using System.Windows;
 using System.Windows.Input;
@@ -17,18 +16,20 @@ namespace FFXIVTataruHelper.WinUtils
         private const int WM_SYSCOMMAND = 0x112;
         private HwndSource hwndSource;
         Window activeWin;
+        private readonly IAppLogger _logger;
 
-        public WindowResizer(Window activeW)
+        public WindowResizer(Window activeW, IAppLogger logger)
         {
             try
             {
                 activeWin = activeW;
+                _logger = logger;
 
                 activeWin.SourceInitialized += new EventHandler(InitializeWindowSource);
             }
             catch (Exception e)
             {
-                Logger.WriteLog(Convert.ToString(e));
+                _logger.WriteLog(Convert.ToString(e));
             }
         }
 
@@ -43,7 +44,7 @@ namespace FFXIVTataruHelper.WinUtils
             }
             catch (Exception e)
             {
-                Logger.WriteLog(Convert.ToString(e));
+                _logger.WriteLog(Convert.ToString(e));
             }
         }
 
@@ -72,7 +73,7 @@ namespace FFXIVTataruHelper.WinUtils
             }
             catch (Exception ex)
             {
-                Logger.WriteLog(Convert.ToString(ex));
+                _logger.WriteLog(Convert.ToString(ex));
             }
         }
 
@@ -86,7 +87,7 @@ namespace FFXIVTataruHelper.WinUtils
             }
             catch (Exception ex)
             {
-                Logger.WriteLog(Convert.ToString(ex));
+                _logger.WriteLog(Convert.ToString(ex));
             }
         }
 
@@ -126,7 +127,7 @@ namespace FFXIVTataruHelper.WinUtils
             }
             catch (Exception e)
             {
-                Logger.WriteLog(Convert.ToString(e));
+                _logger.WriteLog(Convert.ToString(e));
             }
         }
 
@@ -176,7 +177,7 @@ namespace FFXIVTataruHelper.WinUtils
             }
             catch (Exception e)
             {
-                Logger.WriteLog(Convert.ToString(e));
+                _logger.WriteLog(Convert.ToString(e));
             }
         }
 
@@ -218,7 +219,7 @@ namespace FFXIVTataruHelper.WinUtils
             }
             catch (Exception e)
             {
-                Logger.WriteLog(Convert.ToString(e));
+                _logger.WriteLog(Convert.ToString(e));
             }
         }
 
@@ -230,7 +231,7 @@ namespace FFXIVTataruHelper.WinUtils
             }
             catch (Exception e)
             {
-                Logger.WriteLog(Convert.ToString(e));
+                _logger.WriteLog(Convert.ToString(e));
             }
         }
 

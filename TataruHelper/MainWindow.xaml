@@ -69,14 +69,14 @@
             <Border BorderThickness="0,1,0,0" BorderBrush="LightGray"/>
         </DockPanel>
 
-        <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Top"  Margin="110,1,0,0" Height="46" Visibility="{Binding UpdatingBlockVisiblity,Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay, FallbackValue=Collapsed}">
+        <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Top"  Margin="110,1,0,0" Height="46" Visibility="{Binding UpdatingBlockVisibility,Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay, FallbackValue=Collapsed}">
             <WrapPanel Margin="0,0,10,0" Visibility="{Binding UserStartedUpdateTextVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}">
                 <TextBlock x:Name="UserStartedUpdateText" Text=""/>
             </WrapPanel>
             <WrapPanel Visibility="{Binding DownloadingUpdateVisibility,Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}">
                 <TextBlock Text="{DynamicResource DownloadingUpdate}"/>
                 <Grid Margin="5,2,0,0">
-                    <utils:CircularProgressBar x:Name="progressBar"
+                    <utils:CircularProgressBar x:Name="ProgressBar"
                              DockPanel.Dock="Left"
                              VerticalAlignment="Top"
                                            Height="45"

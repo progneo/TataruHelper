@@ -18,6 +18,12 @@ namespace FFXIVTataruHelper.Services.Settings
 
         int MemoryReaderDelayMs { get; }
 
+        int AutoHideWatcherDelayMs { get; }
+
+        int TranslatorWaitTimeMs { get; }
+
+        int MaxTranslateTryCount { get; }
+
         bool LoadGlobalSettings(string fileName);
 
         void SaveGlobalSettings(string fileName);
