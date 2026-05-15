@@ -1,29 +1,31 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Updater.EventArguments
 {
-    public class UpdatingState : UpdaterEventArgs
+    public class UpdateStateChangedEventArgs : EventArgs
     {
-        public string Text { get; internal set; }
+        public UpdateStateChangedEventArgs(UpdateState state, string text = "", Exception error = null)
+        {
+            State = state;
+            Text = text ?? string.Empty;
+            Error = error;
+        }
 
-        public UpdateSate UpdateSate { get; internal set; }
+        public UpdateState State { get; private set; }
 
-        public UpdatingState(Object sender) : base(sender) { }
+        public string Text { get; private set; }
+
+        public Exception Error { get; private set; }
     }
 
-    public enum UpdateSate
+    public enum UpdateState
     {
-        InitializingUpdater,
+        Initializing,
         LookingForUpdates,
         NoUpdatesFound,
-        UpdateFound,
-        DownloadingUpdate,
-        UpdateDownloaded,
-        UpdatingFinished,
+        Downloading,
         ReadyToRestart,
+        Finished,
+        Error
     }
 }

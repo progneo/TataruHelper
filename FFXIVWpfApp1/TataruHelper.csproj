@@ -135,6 +135,7 @@
     <Compile Include="FFHandlers\FFChatMsg.cs" />
     <Compile Include="FFHandlers\FFMemoryReader.cs" />
     <Compile Include="UIModel\ChatProcessor.cs" />
+    <Compile Include="UIModel\UpdateUiStateMapper.cs" />
     <Compile Include="UIModel\ChatWindowViewModelSettings.cs" />
     <Compile Include="UIModel\CmdArgsStatus.cs" />
     <Compile Include="UIModel\UserSettingsOld.cs" />
@@ -377,7 +378,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>REM  if $(ConfigurationName) == ReleaseDeploy powershell -NoProfile -ExecutionPolicy RemoteSigned -file "$(SolutionDir)\scripts\SmartAssemblyScript\SmartAssemblyPack.ps1"
-if $(ConfigurationName) == ReleaseDeploy powershell -NoProfile -ExecutionPolicy RemoteSigned -file "$(SolutionDir)\scripts\Squirrel_release.ps1"</PostBuildEvent>
+if $(ConfigurationName) == ReleaseDeploy powershell -NoProfile -ExecutionPolicy RemoteSigned -file "$(SolutionDir)\scripts\Velopack_release.ps1"</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
     <PreBuildEvent>if $(ConfigurationName) == ReleaseDeploy powershell -NoProfile -ExecutionPolicy RemoteSigned -file "$(SolutionDir)\scripts\CrowdinScript\Crowdin_download.ps1"</PreBuildEvent>
