@@ -110,10 +110,12 @@ namespace FFXIVTataruHelper.Services.Settings
         {
             try
             {
-                StopAsync().GetAwaiter().GetResult();
+                using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                StopAsync(cancellation.Token).GetAwaiter().GetResult();
             }
             catch (OperationCanceledException)
             {
+                _logger.WriteLog("SettingsSyncService.Dispose timed out.");
             }
         }
 

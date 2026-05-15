@@ -15,7 +15,7 @@ namespace TataruHelper.Tests
         public void Gateway_DelegatesDirectDialogAndEqualityToReader()
         {
             var directDialogReader = new FakeDirectDialogReader();
-            var gateway = CreateGateway(directDialogReader, () => SharlayanGameMemoryGateway.RealtimeDirectDialogReadResult.Unavailable());
+            var gateway = CreateGateway(directDialogReader, () => TalkAddonRealtimeDialogSnapshot.Unavailable());
 
             var dialog = gateway.GetDirectDialog();
             var equal = gateway.CheckChatEquality(new ChatLogItem(), new ChatLogItem());
@@ -38,8 +38,10 @@ namespace TataruHelper.Tests
 
             var gateway = CreateGateway(
                 directDialogReader,
-                () => SharlayanGameMemoryGateway.RealtimeDirectDialogReadResult.Available(
-                    new ChatLogItem { Code = "003D", Line = "LiveNpc:LiveText" }));
+                () => TalkAddonRealtimeDialogSnapshot.Available(
+                    "LiveText",
+                    "LiveNpc",
+                    new[] { "LiveNpc", "LiveText" }));
 
             var result = gateway.GetDirectDialog();
             var items = result.ChatLogItems.ToArray();
@@ -63,7 +65,7 @@ namespace TataruHelper.Tests
 
             var gateway = CreateGateway(
                 directDialogReader,
-                () => SharlayanGameMemoryGateway.RealtimeDirectDialogReadResult.Unavailable());
+                () => TalkAddonRealtimeDialogSnapshot.Unavailable());
 
             var result = gateway.GetDirectDialog();
             var items = result.ChatLogItems.ToArray();
@@ -81,10 +83,9 @@ namespace TataruHelper.Tests
                 DirectDialogResult = BuildResult(new ChatLogItem { Code = "003D", Line = "ChatlogNpc:ChatlogText" })
             };
 
-            var realtimeItem = new ChatLogItem { Code = "003D", Line = "LiveNpc:LiveText" };
-            var queue = new Queue<SharlayanGameMemoryGateway.RealtimeDirectDialogReadResult>();
-            queue.Enqueue(SharlayanGameMemoryGateway.RealtimeDirectDialogReadResult.Available(realtimeItem));
-            queue.Enqueue(SharlayanGameMemoryGateway.RealtimeDirectDialogReadResult.Available(realtimeItem));
+            var queue = new Queue<TalkAddonRealtimeDialogSnapshot>();
+            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("LiveText", "LiveNpc", new[] { "LiveNpc", "LiveText" }));
+            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("LiveText", "LiveNpc", new[] { "LiveNpc", "LiveText" }));
 
             var gateway = CreateGateway(directDialogReader, () => queue.Dequeue());
 
@@ -117,9 +118,42 @@ namespace TataruHelper.Tests
             Assert.That(signature, Is.EqualTo("Npc:Line"));
         }
 
+        [Test]
+        public void BuildRealtimeDialogLine_UsesSpeaker_WhenSpeakerMatchesNodeTexts()
+        {
+            var line = SharlayanGameMemoryGateway.BuildRealtimeDialogLine(
+                "  Hello there  ",
+                "  Alphinaud  ",
+                new[] { "noise", "Alphinaud", "Hello there" });
+
+            Assert.That(line, Is.EqualTo("Alphinaud:Hello there"));
+        }
+
+        [Test]
+        public void BuildRealtimeDialogLine_OmitsSpeaker_WhenSpeakerNotPresentInNodeTexts()
+        {
+            var line = SharlayanGameMemoryGateway.BuildRealtimeDialogLine(
+                "Hello there",
+                "Alphinaud",
+                new[] { "Someone Else", "Hello there" });
+
+            Assert.That(line, Is.EqualTo("Hello there"));
+        }
+
+        [Test]
+        public void BuildRealtimeDialogLine_OmitsSpeaker_WhenSpeakerIsEmpty()
+        {
+            var line = SharlayanGameMemoryGateway.BuildRealtimeDialogLine(
+                "Hello there",
+                "   ",
+                new[] { "Alphinaud", "Hello there" });
+
+            Assert.That(line, Is.EqualTo("Hello there"));
+        }
+
         private static SharlayanGameMemoryGateway CreateGateway(
             FakeDirectDialogReader directDialogReader,
-            Func<SharlayanGameMemoryGateway.RealtimeDirectDialogReadResult> realtimeReader)
+            Func<TalkAddonRealtimeDialogSnapshot> realtimeReader)
         {
             return new SharlayanGameMemoryGateway(
                 directDialogReader,

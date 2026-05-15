@@ -52,6 +52,7 @@ namespace FFXIVTataruHelper
         readonly ITataruModelFactory _TataruModelFactory;
         readonly IAppLogger _Logger;
         readonly IUiDispatcher _UiDispatcher;
+        private static readonly TimeSpan SaveSettingsTimeout = TimeSpan.FromSeconds(5);
 
         bool _IsShutDown;
 
@@ -274,11 +275,16 @@ namespace FFXIVTataruHelper
                     if (_TataruModel != null)
                         _TataruModel.Stop();
 
-                    Task.Run(async () =>
+                    var saveSettingsTask = Task.Run(async () =>
                     {
                         if (_TataruModel != null)
                             await _TataruModel.SaveSettings();
-                    }).Wait();
+                    });
+
+                    if (!saveSettingsTask.Wait(SaveSettingsTimeout))
+                    {
+                        _Logger.WriteLog("MainWindow.Window_Closing save settings timed out.");
+                    }
 
                     Utils.TataruSingleInstance.Stop();
 

@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -75,8 +76,13 @@ namespace FFXIVTataruHelper.FFHandlers
 
         #region **LocalVariables.
 
-        private bool _keepWorking;
-        private bool _keepReading;
+        private volatile bool _keepWorking;
+        private volatile bool _keepReading;
+        private readonly object _lifecycleSync = new object();
+        private CancellationTokenSource _lifecycleCts;
+        private Task _entryPointTask = Task.CompletedTask;
+        private Task _watchWindowStateTask = Task.CompletedTask;
+        private Task _chatMessageEventRiserTask = Task.CompletedTask;
 
         private readonly bool _useDirectReadingInternal;
 
@@ -120,27 +126,37 @@ namespace FFXIVTataruHelper.FFHandlers
 
         public void Start()
         {
-            _keepWorking = true;
-            _keepReading = true;
-
-            FFWindowState = WindowState.Minimized;
-
-            Task.Factory.StartNew(async () =>
+            lock (_lifecycleSync)
             {
-                try
+                if (_lifecycleCts != null && !_entryPointTask.IsCompleted)
                 {
-                    await EntryPoint();
+                    return;
                 }
-                catch (OperationCanceledException)
+
+                _keepWorking = true;
+                _keepReading = true;
+                _lifecycleCts = new CancellationTokenSource();
+                var lifecycleToken = _lifecycleCts.Token;
+
+                FFWindowState = WindowState.Minimized;
+
+                _entryPointTask = Task.Factory.StartNew(async () =>
                 {
-                    _logger.WriteLog("FFMemoryReader.Start/EntryPoint canceled.");
-                }
-                catch (Exception e)
-                {
-                    _logger.WriteLog("FFMemoryReader.Start/EntryPoint failed.");
-                    _logger.WriteLog(e);
-                }
-            }, TaskCreationOptions.LongRunning);
+                    try
+                    {
+                        await EntryPoint(lifecycleToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logger.WriteLog("FFMemoryReader.Start/EntryPoint canceled.");
+                    }
+                    catch (Exception e)
+                    {
+                        _logger.WriteLog("FFMemoryReader.Start/EntryPoint failed.");
+                        _logger.WriteLog(e);
+                    }
+                }, lifecycleToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+            }
         }
 
         public void AddExclusionWindowHandler(IntPtr handler)
@@ -148,21 +164,25 @@ namespace FFXIVTataruHelper.FFHandlers
             _exclusionWindowHandlers.Add(handler);
         }
 
-        private async Task EntryPoint()
+        private async Task EntryPoint(CancellationToken cancellationToken)
         {
-            ChatMessageEvetRiser();
+            StartChatMessageEvetRiser(cancellationToken);
 
-            while (_keepWorking)
+            while (_keepWorking && !cancellationToken.IsCancellationRequested)
             {
-                await InitMemoryReader();
+                await InitMemoryReader(cancellationToken);
 
-                WatchFFWindowState();
+                if (!_keepWorking || cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
 
-                await ChatReader();
+                StartWatchFFWindowState(cancellationToken);
+                await ChatReader(cancellationToken);
             }
         }
 
-        private async Task InitMemoryReader()
+        private async Task InitMemoryReader(CancellationToken cancellationToken)
         {
             try
             {
@@ -171,7 +191,7 @@ namespace FFXIVTataruHelper.FFHandlers
                 const string processName = "ffxiv_dx11";
                 _ffProcessName = processName;
 
-                while (_keepWorking && processNotFound)
+                while (_keepWorking && processNotFound && !cancellationToken.IsCancellationRequested)
                 {
                     var processes = Process.GetProcessesByName(_ffProcessName);
                     if (processes.Length > 0)
@@ -208,14 +228,14 @@ namespace FFXIVTataruHelper.FFHandlers
                         }
                         catch (Exception e)
                         {
-                            await Task.Delay(_settingsStore.LookForProcessDelayMs);
+                            await Task.Delay(_settingsStore.LookForProcessDelayMs, cancellationToken);
                             _logger.WriteLog("FFMemoryReader.InitMemoryReader process attach failed.");
                             _logger.WriteLog(e);
                         }
                     }
                     else
                     {
-                        await Task.Delay(_settingsStore.LookForProcessDelayMs);
+                        await Task.Delay(_settingsStore.LookForProcessDelayMs, cancellationToken);
                     }
                 }
             }
@@ -230,127 +250,137 @@ namespace FFXIVTataruHelper.FFHandlers
             }
         }
 
-        private void WatchFFWindowState()
+        private void StartWatchFFWindowState(CancellationToken cancellationToken)
         {
-            Task.Factory.StartNew(async () =>
+            if (_watchWindowStateTask != null && !_watchWindowStateTask.IsCompleted)
             {
-                var ffxivPrevWindowState = WindowState.Minimized;
-                FFWindowState = WindowState.Minimized;
+                return;
+            }
 
-                var isRunningPrev = false;
-                while (_keepWorking && _keepReading)
+            _watchWindowStateTask = Task.Factory.StartNew(async () =>
+            {
+                await WatchFFWindowStateLoop(cancellationToken);
+            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+        }
+
+        private async Task WatchFFWindowStateLoop(CancellationToken cancellationToken)
+        {
+            var ffxivPrevWindowState = WindowState.Minimized;
+            FFWindowState = WindowState.Minimized;
+
+            var isRunningPrev = false;
+            while (_keepWorking && _keepReading && !cancellationToken.IsCancellationRequested)
+            {
+                try
                 {
-                    try
+                    var ffxivWindowState = WindowState.Normal;
+                    var fgWindow = Win32Interfaces.GetForegroundWindow();
+
+                    if (_ffXivProcess != null)
                     {
-                        var ffxivWindowState = WindowState.Normal;
-                        var fgWindow = Win32Interfaces.GetForegroundWindow();
-
-                        if (_ffXivProcess != null)
+                        if (_ffXivProcess.MainWindowHandle != fgWindow)
                         {
-                            if (_ffXivProcess.MainWindowHandle != fgWindow)
-                            {
-                                ffxivWindowState = WindowState.Minimized;
-                            }
-                            else
-                            {
-                                ffxivWindowState = WindowState.Normal;
-                            }
+                            ffxivWindowState = WindowState.Minimized;
                         }
-
-                        var isExclusionWindow = _exclusionWindowHandlers.Any(handler => fgWindow == handler);
-
-                        if (!isExclusionWindow && fgWindow != IntPtr.Zero)
+                        else
                         {
-                            var oldValue = ffxivPrevWindowState;
-
-                            if (ffxivWindowState != ffxivPrevWindowState)
-                            {
-                                ffxivPrevWindowState = ffxivWindowState;
-
-                                var ea = new WindowStateChangeEventArgs(this)
-                                {
-                                    OldWindowState = oldValue,
-                                    NewWindowState = ffxivPrevWindowState,
-                                    IsRunningOld = isRunningPrev,
-                                    IsRunningNew = true,
-                                    Text = ""
-                                };
-
-                                _FFWindowStateChanged.InvokeAsync(ea).Forget();
-                            }
-
-                            FFWindowState = ffxivPrevWindowState;
+                            ffxivWindowState = WindowState.Normal;
                         }
+                    }
 
-                        var processes = Process.GetProcessesByName(_ffProcessName);
-                        if (processes.Length == 0)
+                    var isExclusionWindow = _exclusionWindowHandlers.Any(handler => fgWindow == handler);
+
+                    if (!isExclusionWindow && fgWindow != IntPtr.Zero)
+                    {
+                        var oldValue = ffxivPrevWindowState;
+
+                        if (ffxivWindowState != ffxivPrevWindowState)
                         {
-                            const WindowState oldState = WindowState.Normal;
+                            ffxivPrevWindowState = ffxivWindowState;
+
                             var ea = new WindowStateChangeEventArgs(this)
                             {
-                                OldWindowState = oldState,
+                                OldWindowState = oldValue,
                                 NewWindowState = ffxivPrevWindowState,
                                 IsRunningOld = isRunningPrev,
-                                IsRunningNew = false,
+                                IsRunningNew = true,
                                 Text = ""
                             };
 
                             _FFWindowStateChanged.InvokeAsync(ea).Forget();
-
-                            _keepReading = false;
-
-                            isRunningPrev = false;
-
-                            FFWindowState = WindowState.Minimized;
-
-                            _gameMemoryGateway.UnsetProcess();
                         }
-                        else
+
+                        FFWindowState = ffxivPrevWindowState;
+                    }
+
+                    var processes = Process.GetProcessesByName(_ffProcessName);
+                    if (processes.Length == 0)
+                    {
+                        const WindowState oldState = WindowState.Normal;
+                        var ea = new WindowStateChangeEventArgs(this)
                         {
-                            if (isRunningPrev == false)
+                            OldWindowState = oldState,
+                            NewWindowState = ffxivPrevWindowState,
+                            IsRunningOld = isRunningPrev,
+                            IsRunningNew = false,
+                            Text = ""
+                        };
+
+                        _FFWindowStateChanged.InvokeAsync(ea).Forget();
+
+                        _keepReading = false;
+
+                        isRunningPrev = false;
+
+                        FFWindowState = WindowState.Minimized;
+
+                        _gameMemoryGateway.UnsetProcess();
+                    }
+                    else
+                    {
+                        if (isRunningPrev == false)
+                        {
+                            const WindowState oldState = WindowState.Minimized;
+                            const WindowState newState = WindowState.Normal;
+                            var ea = new WindowStateChangeEventArgs(this)
                             {
-                                const WindowState oldState = WindowState.Minimized;
-                                const WindowState newState = WindowState.Normal;
-                                var ea = new WindowStateChangeEventArgs(this)
-                                {
-                                    OldWindowState = oldState,
-                                    NewWindowState = newState,
-                                    IsRunningOld = isRunningPrev,
-                                    IsRunningNew = true,
-                                    Text = processes[0].ProcessName + ".exe" + "  PID: " +
-                                           processes[0].Id.ToString()
-                                };
+                                OldWindowState = oldState,
+                                NewWindowState = newState,
+                                IsRunningOld = isRunningPrev,
+                                IsRunningNew = true,
+                                Text = processes[0].ProcessName + ".exe" + "  PID: " +
+                                       processes[0].Id.ToString()
+                            };
 
-                                _FFWindowStateChanged.InvokeAsync(ea).Forget();
+                            _FFWindowStateChanged.InvokeAsync(ea).Forget();
 
-                                FFWindowState = WindowState.Normal;
-                            }
-
-                            isRunningPrev = true;
+                            FFWindowState = WindowState.Normal;
                         }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        _logger.WriteLog("FFMemoryReader.WatchFFWindowState canceled.");
-                        break;
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.WriteLog("FFMemoryReader.WatchFFWindowState failed.");
-                        _logger.WriteLog(e);
-                    }
 
-                    await Task.Delay(_settingsStore.MemoryReaderDelayMs);
+                        isRunningPrev = true;
+                    }
                 }
-            }, TaskCreationOptions.LongRunning);
+                catch (OperationCanceledException)
+                {
+                    _logger.WriteLog("FFMemoryReader.WatchFFWindowState canceled.");
+                    break;
+                }
+                catch (Exception e)
+                {
+                    _logger.WriteLog("FFMemoryReader.WatchFFWindowState failed.");
+                    _logger.WriteLog(e);
+                }
+
+                await Task.Delay(_settingsStore.MemoryReaderDelayMs, cancellationToken);
+            }
         }
 
-        private async Task ChatReader()
+        private async Task ChatReader(CancellationToken cancellationToken)
         {
             var previousArrayIndex = 0;
             var previousOffset = 0;
 
-            while (_keepWorking && _keepReading)
+            while (_keepWorking && _keepReading && !cancellationToken.IsCancellationRequested)
             {
                 try
                 {
@@ -371,7 +401,7 @@ namespace FFXIVTataruHelper.FFHandlers
                     _logger.WriteLog(e);
                 }
 
-                await Task.Delay(_settingsStore.MemoryReaderDelayMs);
+                await Task.Delay(_settingsStore.MemoryReaderDelayMs, cancellationToken);
             }
         }
 
@@ -452,45 +482,56 @@ namespace FFXIVTataruHelper.FFHandlers
             return false;
         }
 
-        private void ChatMessageEvetRiser()
+        private void StartChatMessageEvetRiser(CancellationToken cancellationToken)
         {
-            Task.Factory.StartNew(async () =>
+            if (_chatMessageEventRiserTask != null && !_chatMessageEventRiserTask.IsCompleted)
             {
-                if (_FFChatMessageArrived.HandlersCount == 0)
+                return;
+            }
+
+            _chatMessageEventRiserTask = Task.Factory.StartNew(async () =>
+            {
+                await ChatMessageEvetRiserLoop(cancellationToken);
+            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+        }
+
+        private async Task ChatMessageEvetRiserLoop(CancellationToken cancellationToken)
+        {
+            if (_FFChatMessageArrived.HandlersCount == 0)
+            {
+                while (_keepWorking && _FFChatMessageArrived.HandlersCount == 0 &&
+                       !cancellationToken.IsCancellationRequested)
                 {
-                    while (_keepWorking && _FFChatMessageArrived.HandlersCount == 0)
+                    await Task.Delay(50, cancellationToken);
+                }
+            }
+
+            while (_keepWorking && !cancellationToken.IsCancellationRequested)
+            {
+                try
+                {
+                    if (_ffxivChat.TryDequeue(out var ffChatMsg))
                     {
-                        await Task.Delay(50);
+                        var ea = new ChatMessageArrivedEventArgs(this) { ChatMessage = ffChatMsg };
+
+                        await _FFChatMessageArrived.InvokeAsync(ea);
+                    }
+                    else
+                    {
+                        await Task.Delay(10, cancellationToken);
                     }
                 }
-
-                while (_keepWorking)
+                catch (OperationCanceledException)
                 {
-                    try
-                    {
-                        if (_ffxivChat.TryDequeue(out var ffChatMsg))
-                        {
-                            var ea = new ChatMessageArrivedEventArgs(this) { ChatMessage = ffChatMsg };
-
-                            await _FFChatMessageArrived.InvokeAsync(ea);
-                        }
-                        else
-                        {
-                            await Task.Delay(10);
-                        }
-                    }
-                    catch (OperationCanceledException)
-                    {
-                        _logger.WriteLog("FFMemoryReader.ChatMessageEvetRiser canceled.");
-                        break;
-                    }
-                    catch (Exception e)
-                    {
-                        _logger.WriteLog("FFMemoryReader.ChatMessageEvetRiser failed.");
-                        _logger.WriteLog(e);
-                    }
+                    _logger.WriteLog("FFMemoryReader.ChatMessageEvetRiser canceled.");
+                    break;
                 }
-            }, TaskCreationOptions.LongRunning);
+                catch (Exception e)
+                {
+                    _logger.WriteLog("FFMemoryReader.ChatMessageEvetRiser failed.");
+                    _logger.WriteLog(e);
+                }
+            }
         }
 
         private void ProcessChatMsg(ChatLogItem chatLogItem)
@@ -518,14 +559,91 @@ namespace FFXIVTataruHelper.FFHandlers
 
         public void Stop()
         {
-            _keepWorking = false;
-            _keepReading = false;
+            Task[] backgroundTasks;
+            CancellationTokenSource lifecycleCts;
+
+            lock (_lifecycleSync)
+            {
+                _keepWorking = false;
+                _keepReading = false;
+
+                lifecycleCts = _lifecycleCts;
+                _lifecycleCts = null;
+
+                backgroundTasks = new[] { _entryPointTask, _watchWindowStateTask, _chatMessageEventRiserTask };
+
+                _entryPointTask = Task.CompletedTask;
+                _watchWindowStateTask = Task.CompletedTask;
+                _chatMessageEventRiserTask = Task.CompletedTask;
+            }
+
+            try
+            {
+                lifecycleCts?.Cancel();
+            }
+            catch (Exception e)
+            {
+                _logger.WriteLog("FFMemoryReader.Stop cancel failed.");
+                _logger.WriteLog(e);
+            }
+
+            WaitForBackgroundTasks(backgroundTasks, TimeSpan.FromSeconds(5));
+
+            try
+            {
+                _gameMemoryGateway.UnsetProcess();
+            }
+            catch (Exception e)
+            {
+                _logger.WriteLog("FFMemoryReader.Stop UnsetProcess failed.");
+                _logger.WriteLog(e);
+            }
+            finally
+            {
+                lifecycleCts?.Dispose();
+            }
+        }
+
+        private void WaitForBackgroundTasks(Task[] backgroundTasks, TimeSpan timeout)
+        {
+            try
+            {
+                var tasksToWait = backgroundTasks?.Where(task => task != null).ToArray() ?? Array.Empty<Task>();
+                if (tasksToWait.Length == 0)
+                {
+                    return;
+                }
+
+                var aggregatedTask = Task.WhenAll(tasksToWait);
+                if (!aggregatedTask.Wait(timeout))
+                {
+                    _logger.WriteLog("FFMemoryReader.Stop timeout while waiting background tasks.");
+                }
+            }
+            catch (AggregateException aggregateException)
+            {
+                foreach (var innerException in aggregateException.Flatten().InnerExceptions)
+                {
+                    if (innerException is OperationCanceledException)
+                    {
+                        continue;
+                    }
+
+                    _logger.WriteLog("FFMemoryReader.Stop background task failed.");
+                    _logger.WriteLog(innerException);
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.WriteLog("FFMemoryReader.Stop wait failed.");
+                _logger.WriteLog(e);
+            }
         }
 
         public void Dispose()
         {
-            if (_ffXivProcess != null)
-                _ffXivProcess.Dispose();
+            Stop();
+            _ffXivProcess?.Dispose();
         }
     }
 }

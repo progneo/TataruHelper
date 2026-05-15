@@ -1,16 +1,20 @@
 using FFXIVTataruHelper.FFHandlers;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
-using FFXIVTataruHelper.UIModel;
 using FFXIVTataruHelper.ViewModel;
+
 using System;
+using System.Threading;
 using System.Threading.Tasks;
+
 using Translation;
 
 namespace FFXIVTataruHelper.Services.UI
 {
     public sealed class ApplicationCoordinator : IApplicationCoordinator
     {
+        private static readonly TimeSpan SettingsShutdownTimeout = TimeSpan.FromSeconds(5);
+
         private readonly IFFMemoryReaderService _ffMemoryReader;
         private readonly ITranslationPipelineCoordinator _translationPipelineCoordinator;
         private readonly IChatWindowsEventCoordinator _chatWindowsEventCoordinator;
@@ -34,7 +38,8 @@ namespace FFXIVTataruHelper.Services.UI
             _logger = logger;
         }
 
-        public async Task InitializeAsync(TataruModel tataruModel, MainWindow mainWindow, TataruUIModel uiModel, TataruViewModel viewModel)
+        public async Task InitializeAsync(TataruModel tataruModel, MainWindow mainWindow, TataruUIModel uiModel,
+            TataruViewModel viewModel)
         {
             await Task.Run(() =>
             {
@@ -48,29 +53,51 @@ namespace FFXIVTataruHelper.Services.UI
 
         public void Stop(IChatWindowCoordinator chatWindowCoordinator)
         {
+            StopBestEffort(_chatWindowsEventCoordinator.Stop, "chat windows events");
+            StopBestEffort(chatWindowCoordinator.CloseAll, "chat windows");
+            StopBestEffort(_translationPipelineCoordinator.Stop, "translation pipeline");
+            StopBestEffort(_ffMemoryReader.Stop, "ff memory reader");
+
             try
             {
-                _chatWindowsEventCoordinator.Stop();
-                chatWindowCoordinator.CloseAll();
-                _translationPipelineCoordinator.Stop();
-                _ffMemoryReader.Stop();
-                _settingsSyncService.StopAsync().GetAwaiter().GetResult();
+                using (var cancellation = new CancellationTokenSource(SettingsShutdownTimeout))
+                {
+                    _settingsSyncService.StopAsync(cancellation.Token).GetAwaiter().GetResult();
+                }
             }
             catch (OperationCanceledException)
             {
-                _logger.WriteLog("ApplicationCoordinator.Stop canceled.");
+                _logger.WriteLog("ApplicationCoordinator.Stop settings sync timed out.");
             }
             catch (Exception ex)
             {
-                _logger.WriteLog("ApplicationCoordinator.Stop failed.");
+                _logger.WriteLog("ApplicationCoordinator.Stop settings sync failed.");
                 _logger.WriteLog(ex);
-                throw;
             }
         }
 
-        public void LoadSettings(TataruUIModel uiModel, string systemSettingFileName, ChatProcessor chatProcessor, WebTranslator webTranslator, Func<Task> persistSettingsAsync)
+        private void StopBestEffort(Action action, string componentName)
         {
-            var userSettings = _settingsMigrationService.LoadUserSettings(systemSettingFileName, chatProcessor, webTranslator);
+            try
+            {
+                action();
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.WriteLog("ApplicationCoordinator.Stop canceled for " + componentName + ".");
+            }
+            catch (Exception ex)
+            {
+                _logger.WriteLog("ApplicationCoordinator.Stop failed for " + componentName + ".");
+                _logger.WriteLog(ex);
+            }
+        }
+
+        public void LoadSettings(TataruUIModel uiModel, string systemSettingFileName, ChatProcessor chatProcessor,
+            WebTranslator webTranslator, Func<Task> persistSettingsAsync)
+        {
+            var userSettings =
+                _settingsMigrationService.LoadUserSettings(systemSettingFileName, chatProcessor, webTranslator);
             uiModel.SetSettings(userSettings);
             _settingsSyncService.Start(uiModel, persistSettingsAsync);
         }
