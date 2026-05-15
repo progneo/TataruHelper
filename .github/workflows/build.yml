@@ -11,6 +11,7 @@ on:
       - develop
       - master
       - main
+  workflow_dispatch:
 
 jobs:
   build:
@@ -38,3 +39,46 @@ jobs:
         shell: pwsh
         run: |
           dotnet list TataruHelper.sln package --vulnerable --include-transitive
+
+  velopack-artifacts:
+    runs-on: windows-latest
+    if: github.event_name != 'pull_request'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Install vpk tool
+        shell: pwsh
+        run: |
+          dotnet tool install -g vpk --version 0.0.1298
+          "$env:USERPROFILE\.dotnet\tools" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: Build Velopack stable artifacts
+        shell: pwsh
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -file .\scripts\Velopack_release.ps1 -Channel stable
+
+      - name: Build Velopack prerelease artifacts
+        shell: pwsh
+        run: |
+          powershell -NoProfile -ExecutionPolicy Bypass -file .\scripts\Velopack_release.ps1 -Channel prerelease -SkipPublish
+
+      - name: Upload Velopack stable artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: velopack-stable
+          path: artifacts/velopack/stable/**
+          if-no-files-found: error
+
+      - name: Upload Velopack prerelease artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: velopack-prerelease
+          path: artifacts/velopack/prerelease/**
+          if-no-files-found: error

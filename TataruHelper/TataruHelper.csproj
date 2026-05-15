@@ -26,6 +26,7 @@
     <PackageReference Include="Hardcodet.NotifyIcon.Wpf" />
     <PackageReference Include="Sharlayan" />
     <PackageReference Include="Extended.Wpf.Toolkit" />
+    <PackageReference Include="Velopack"/>
   </ItemGroup>
 
   <ItemGroup>

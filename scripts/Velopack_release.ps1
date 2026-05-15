@@ -7,6 +7,7 @@ param(
     [string]$ProjectPath = "",
     [string]$PublishDir = "",
     [string]$OutputDir = "",
+    [bool]$IncludeMsiDeploymentTool = $true,
     [switch]$SkipPublish
 )
 
@@ -31,11 +32,11 @@ function Resolve-ProjectVersion {
 
 function Resolve-VpkCommand {
     if (Get-Command vpk -ErrorAction SilentlyContinue) {
-        return @("vpk")
+        return [string[]]@("vpk")
     }
 
     if (Get-Command dotnet -ErrorAction SilentlyContinue) {
-        return @("dotnet", "tool", "run", "vpk", "--")
+        return [string[]]@("dotnet", "tool", "run", "vpk", "--")
     }
 
     throw "Velopack CLI is not available. Install `vpk` (`dotnet tool install -g vpk --version 0.0.1298`) and retry."
@@ -81,7 +82,41 @@ if (-not (Test-Path (Join-Path $PublishDir $MainExe))) {
 
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
-$vpkPrefix = Resolve-VpkCommand
+[string[]]$vpkPrefix = Resolve-VpkCommand
+
+$msiFlag = $null
+if ($IncludeMsiDeploymentTool) {
+    $previousRollForwardForHelp = $env:DOTNET_ROLL_FORWARD
+    $env:DOTNET_ROLL_FORWARD = "LatestMajor"
+    try {
+        $packHelpOutput = if ($vpkPrefix.Count -eq 1) {
+            & $vpkPrefix[0] "pack" "-h" 2>&1
+        }
+        else {
+            & $vpkPrefix[0] $vpkPrefix[1] $vpkPrefix[2] $vpkPrefix[3] "pack" "-h" 2>&1
+        }
+    }
+    finally {
+        if ($null -eq $previousRollForwardForHelp) {
+            Remove-Item Env:DOTNET_ROLL_FORWARD -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:DOTNET_ROLL_FORWARD = $previousRollForwardForHelp
+        }
+    }
+
+    $packHelpText = ($packHelpOutput | Out-String)
+    if ($packHelpText -match "(?m)^\s*--msiDeploymentTool\b") {
+        $msiFlag = "--msiDeploymentTool"
+    }
+    elseif ($packHelpText -match "(?m)^\s*--msi\b") {
+        $msiFlag = "--msi"
+    }
+    else {
+        Write-Warning "MSI packaging flag was not found in current vpk build; Setup.exe only will be generated."
+    }
+}
+
 $vpkArgs = @(
     "pack",
     "--packId", $PackId,
@@ -93,14 +128,34 @@ $vpkArgs = @(
     "--icon", $iconPath
 )
 
-Write-Host "[Velopack] Packaging release..."
-Write-Host ("[Velopack] Command: " + (($vpkPrefix + $vpkArgs) -join " "))
-
-if ($vpkPrefix.Count -eq 1) {
-    & $vpkPrefix[0] @vpkArgs
+if ($msiFlag) {
+    $vpkArgs += $msiFlag
 }
-else {
-    & $vpkPrefix[0] $vpkPrefix[1] $vpkPrefix[2] $vpkPrefix[3] @vpkArgs
+
+Write-Host "[Velopack] Packaging release..."
+Write-Host ("[Velopack] Command: " + ((@($vpkPrefix) + $vpkArgs) -join " "))
+
+$previousRollForward = $env:DOTNET_ROLL_FORWARD
+$env:DOTNET_ROLL_FORWARD = "LatestMajor"
+try {
+    if ($vpkPrefix.Count -eq 1) {
+        & $vpkPrefix[0] @vpkArgs
+    }
+    else {
+        & $vpkPrefix[0] $vpkPrefix[1] $vpkPrefix[2] $vpkPrefix[3] @vpkArgs
+    }
+
+    if ($LASTEXITCODE -ne 0) {
+        throw "Velopack CLI failed with exit code $LASTEXITCODE."
+    }
+}
+finally {
+    if ($null -eq $previousRollForward) {
+        Remove-Item Env:DOTNET_ROLL_FORWARD -ErrorAction SilentlyContinue
+    }
+    else {
+        $env:DOTNET_ROLL_FORWARD = $previousRollForward
+    }
 }
 
 Write-Host "[Velopack] Done."

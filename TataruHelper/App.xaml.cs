@@ -2,9 +2,17 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Runtime.Versioning;
+using System.Security.Principal;
 using System.Windows;
+
 using FFXIVTataruHelper.Services.Logging;
+
 using Microsoft.Extensions.DependencyInjection;
+
+using Velopack;
 
 namespace FFXIVTataruHelper
 {
@@ -17,11 +25,18 @@ namespace FFXIVTataruHelper
 
         public App()
         {
+            VelopackApp.Build().Run();
             this.Dispatcher.UnhandledException += OnDispatcherUnhandledException;
         }
 
         protected override void OnStartup(StartupEventArgs e)
         {
+            if (ShouldElevateAfterVelopackInstall() && !TryRelaunchAsAdministrator(e))
+            {
+                Shutdown();
+                return;
+            }
+
             base.OnStartup(e);
 
             _serviceProvider = AppCompositionRoot.BuildServiceProvider();
@@ -40,7 +55,8 @@ namespace FFXIVTataruHelper
             base.OnExit(e);
         }
 
-        void OnDispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+        void OnDispatcherUnhandledException(object sender,
+            System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
         {
             string errorMessage = string.Format("An unhandled exception occurred: {0}", e.Exception.Message);
 
@@ -50,7 +66,55 @@ namespace FFXIVTataruHelper
                 logger.WriteLog(errorMessage);
                 logger.WriteLog(Convert.ToString(e.Exception));
             }
+
             e.Handled = true;
+        }
+
+        private static bool ShouldElevateAfterVelopackInstall()
+        {
+            var isFirstRun = string.Equals(
+                Environment.GetEnvironmentVariable("VELOPACK_FIRSTRUN"),
+                "true",
+                StringComparison.OrdinalIgnoreCase);
+
+            return isFirstRun && OperatingSystem.IsWindows() && !IsRunningAsAdministrator();
+        }
+
+        [SupportedOSPlatform("windows")]
+        private static bool IsRunningAsAdministrator()
+        {
+            using var identity = WindowsIdentity.GetCurrent();
+            var principal = new WindowsPrincipal(identity);
+            return principal.IsInRole(WindowsBuiltInRole.Administrator);
+        }
+
+        private static bool TryRelaunchAsAdministrator(StartupEventArgs e)
+        {
+            var executablePath = Environment.ProcessPath;
+            if (string.IsNullOrWhiteSpace(executablePath))
+                return false;
+
+            try
+            {
+                var startInfo = new ProcessStartInfo
+                {
+                    FileName = executablePath, UseShellExecute = true, Verb = "runas"
+                };
+
+                foreach (var arg in e.Args)
+                {
+                    startInfo.ArgumentList.Add(arg);
+                }
+
+                Process.Start(startInfo);
+
+                return true;
+            }
+            catch (Win32Exception)
+            {
+                // User canceled UAC prompt.
+                return false;
+            }
         }
     }
 }
