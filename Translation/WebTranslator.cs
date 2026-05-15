@@ -11,7 +11,6 @@ using Translation.Baidu;
 using Translation.Deepl;
 using Translation.Papago;
 using Translation.Google;
-using Translation.Yandex;
 using Translation.Utils;
 
 namespace Translation
@@ -26,8 +25,6 @@ namespace Translation
         private ReadOnlyCollection<TranslationEngine> _TranslationEngines;
 
         GoogleTranslator _GoogleTranslator;
-
-        YandexTranslator _YandexTranslator;
 
         BaiduTranslater _BaiduTranslator;
 
@@ -59,8 +56,6 @@ namespace Translation
 
             _GoogleTranslator = new GoogleTranslator(_Logger);
 
-            _YandexTranslator = new YandexTranslator(_Logger);
-
             _DeepLTranslator = new DeepLTranslator(_Logger);
 
             _PapagoTranslator = new PapagoTranslator(_Logger);
@@ -76,7 +71,6 @@ namespace Translation
             LoadLanguages(
                 GlobalTranslationSettings.GoogleTranslateLanguages,
                 GlobalTranslationSettings.DeeplLanguages,
-                GlobalTranslationSettings.YandexLanguages,
                 GlobalTranslationSettings.PapagoLanguages,
                 GlobalTranslationSettings.BaiduLanguages);
         }
@@ -156,11 +150,6 @@ namespace Translation
                         result = DeeplTranslate(inSentence, fromLangCode, toLangCode);
                         break;
                     }
-                case TranslationEngineName.Yandex:
-                    {
-                        result = YandexTranslate(inSentence, fromLangCode, toLangCode);
-                        break;
-                    }
                 case TranslationEngineName.Papago:
                     {
                         result = PapagoTranslate(inSentence, fromLangCode, toLangCode);
@@ -193,7 +182,7 @@ namespace Translation
             return result;
         }
 
-        private void LoadLanguages(string glTrPath, string deepPath, string YaTrPath, string PapagoTrPath, string baiduTrPath)
+        private void LoadLanguages(string glTrPath, string deepPath, string PapagoTrPath, string baiduTrPath)
         {
             try
             {
@@ -203,10 +192,6 @@ namespace Translation
 
                 tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(deepPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.DeepL, tmpList, 10));
-
-                /*
-                tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(YaTrPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.Yandex, tmpList, 8));//*/
 
                 tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(PapagoTrPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.Papago, tmpList, 6));
@@ -244,21 +229,6 @@ namespace Translation
         private string DeeplTranslate(string sentence, string inLang, string outLang)
         {
             return _DeepLTranslator.Translate(sentence, inLang, outLang);
-        }
-
-        private string YandexTranslate(string sentence, string inLang, string outLang)
-        {
-            string result = String.Empty;
-            try
-            {
-                result = _YandexTranslator.Translate(sentence, inLang, outLang);
-            }
-            catch (Exception e)
-            {
-                _Logger.WriteLog(Convert.ToString(e));
-            }
-
-            return result;
         }
 
         private string PapagoTranslate(string sentence, string inLang, string outLang)

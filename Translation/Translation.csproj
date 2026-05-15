@@ -83,14 +83,6 @@
     <Compile Include="TranslatorLanguague.cs" />
     <Compile Include="Utils\LanguageDetector.cs" />
     <Compile Include="WebTranslator.cs" />
-    <Compile Include="Yandex\API\TranslationResponse.cs" />
-    <Compile Include="Yandex\YandexAuthContainer.cs" />
-    <Compile Include="Yandex\API\YandexRequest.cs" />
-    <Compile Include="Yandex\YandexRequestsEncoder2.cs" />
-    <Compile Include="Yandex\YandexResponse.cs" />
-    <Compile Include="Yandex\YandexSession.cs" />
-    <Compile Include="Yandex\YandexTranslator.cs" />
-    <Compile Include="Yandex\YandexUser.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -112,21 +104,9 @@
     <None Include="TranslationResources\PapagoLanguages.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Include="TranslationResources\YandexAuth">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="TranslationResources\YandexAuth.json" />
-    <None Include="TranslationResources\YandexEncoder">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="TranslationResources\YandexTranslateLanguages.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Include="TranslationResources\YandexUsers.json" />
   </ItemGroup>
   <ItemGroup>
     <None Include="TranslationResources\BaiduEncoder.js" />
-    <None Include="TranslationResources\YandexEncoder.js" />
     <None Include="TranslationResources\Core14.profile.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
