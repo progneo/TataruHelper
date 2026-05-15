@@ -67,6 +67,7 @@
     <Compile Include="GlobalTranslationSettings.cs" />
     <Compile Include="Google\GoogleTranslator.cs" />
     <Compile Include="HttpUtils\HttpILogWrapper.cs" />
+    <Compile Include="ITranslationProvider.cs" />
     <Compile Include="Utils\Helper.cs" />
     <Compile Include="ILog.cs" />
     <Compile Include="Papago\PapagoDetectLanguageRequest.cs" />
@@ -78,6 +79,8 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="StringCipher.cs" />
     <Compile Include="TranslatedMsg.cs" />
+    <Compile Include="Providers\TranslationProviderAdapter.cs" />
+    <Compile Include="Providers\TranslationProviderFactory.cs" />
     <Compile Include="TranslationEngine.cs" />
     <Compile Include="TranslationRequset.cs" />
     <Compile Include="TranslatorLanguague.cs" />

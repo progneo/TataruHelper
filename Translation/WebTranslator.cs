@@ -7,10 +7,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 
-using Translation.Baidu;
-using Translation.Deepl;
-using Translation.Papago;
-using Translation.Google;
+using Translation.Providers;
 using Translation.Utils;
 
 namespace Translation
@@ -24,16 +21,10 @@ namespace Translation
 
         private ReadOnlyCollection<TranslationEngine> _TranslationEngines;
 
-        GoogleTranslator _GoogleTranslator;
-
-        BaiduTranslater _BaiduTranslator;
-
-        DeepLTranslator _DeepLTranslator;
-
-        PapagoTranslator _PapagoTranslator;
-
         List<KeyValuePair<TranslationRequest, string>> transaltionCache;
         KeyValuePair<TranslationRequest, string> defaultCachedResult = default(KeyValuePair<TranslationRequest, string>);
+
+        IReadOnlyDictionary<TranslationEngineName, ITranslationProvider> _TranslationProviders;
 
         LanguageDetector _LanguageDetector;
 
@@ -42,11 +33,21 @@ namespace Translation
         string _TransaltionSettingsPath = "TranslationSysSettings.json";
 
         public WebTranslator(ILog logger)
+            : this(logger, null, true)
         {
+        }
 
+        public WebTranslator(ILog logger, IEnumerable<ITranslationProvider> translationProviders)
+            : this(logger, translationProviders, true)
+        {
+        }
+
+        internal WebTranslator(ILog logger, IEnumerable<ITranslationProvider> translationProviders, bool usePersistedSettings)
+        {
             _Logger = logger;
 
-            if (!Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _TransaltionSettingsPath))
+            if (usePersistedSettings &&
+                !Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _TransaltionSettingsPath))
             {
                 Helper.SaveStaticToJson(typeof(GlobalTranslationSettings), _TransaltionSettingsPath);
                 Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _TransaltionSettingsPath);
@@ -54,13 +55,9 @@ namespace Translation
 
             transaltionCache = new List<KeyValuePair<TranslationRequest, string>>(GlobalTranslationSettings.TranslationCacheSize);
 
-            _GoogleTranslator = new GoogleTranslator(_Logger);
-
-            _DeepLTranslator = new DeepLTranslator(_Logger);
-
-            _PapagoTranslator = new PapagoTranslator(_Logger);
-
-            _BaiduTranslator = new BaiduTranslater(_Logger);
+            _TranslationProviders = translationProviders != null
+                ? translationProviders.ToDictionary(x => x.EngineName, x => x)
+                : TranslationProviderFactory.CreateDefaultProviders(_Logger);
 
             _LanguageDetector = new LanguageDetector(GlobalTranslationSettings.MaxSameLanguagePercent,
                 GlobalTranslationSettings.NTextCatLanguageModelsPath, _Logger);
@@ -137,34 +134,17 @@ namespace Translation
             var fromLangCode = fromLang.LanguageCode;
             var toLangCode = toLang.LanguageCode;
 
-            switch (translationEngine.EngineName)
+            ITranslationProvider provider = null;
+            if (_TranslationProviders.TryGetValue(translationEngine.EngineName, out provider))
             {
-                case TranslationEngineName.GoogleTranslate:
-                    {
-                        result = GoogleTranslate(inSentence, fromLangCode, toLangCode);
-                        break;
-                    }
+                result = TranslateWithProvider(provider, inSentence, fromLangCode, toLangCode);
+            }
 
-                case TranslationEngineName.DeepL:
-                    {
-                        result = DeeplTranslate(inSentence, fromLangCode, toLangCode);
-                        break;
-                    }
-                case TranslationEngineName.Papago:
-                    {
-                        result = PapagoTranslate(inSentence, fromLangCode, toLangCode);
-                        break;
-                    }
-                case TranslationEngineName.Baidu:
-                    {
-                        result = BaiduTranslate(inSentence, fromLangCode, toLangCode);
-                        break;
-                    }
-                default:
-                    {
-                        result = String.Empty;
-                        break;
-                    }
+            if (result.Length == 0 &&
+                translationEngine.EngineName != TranslationEngineName.GoogleTranslate &&
+                _TranslationProviders.TryGetValue(TranslationEngineName.GoogleTranslate, out provider))
+            {
+                result = TranslateWithProvider(provider, inSentence, fromLangCode, toLangCode);
             }
 
             if (result.Length > 1)
@@ -210,50 +190,13 @@ namespace Translation
             }
         }
 
-        private string GoogleTranslate(string sentence, string inLang, string outLang)
+        private string TranslateWithProvider(ITranslationProvider provider, string sentence, string inLang, string outLang)
         {
             string result = String.Empty;
 
             try
             {
-                result = _GoogleTranslator.Translate(sentence, inLang, outLang);
-            }
-            catch (Exception e)
-            {
-                _Logger.WriteLog(Convert.ToString(e));
-            }
-
-            return result;
-        }
-
-        private string DeeplTranslate(string sentence, string inLang, string outLang)
-        {
-            return _DeepLTranslator.Translate(sentence, inLang, outLang);
-        }
-
-        private string PapagoTranslate(string sentence, string inLang, string outLang)
-        {
-            string result = string.Empty;
-
-            try
-            {
-                result = _PapagoTranslator.Translate(sentence, inLang, outLang);
-            }
-            catch (Exception e)
-            {
-                _Logger.WriteLog(e.ToString());
-            }
-
-            return result;
-        }
-
-        private string BaiduTranslate(string sentence, string inLang, string outLang)
-        {
-            string result = string.Empty;
-
-            try
-            {
-                result = _BaiduTranslator.Translate(sentence, inLang, outLang);
+                result = provider.Translate(sentence, inLang, outLang);
             }
             catch (Exception e)
             {
