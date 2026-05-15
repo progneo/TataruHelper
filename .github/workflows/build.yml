@@ -62,7 +62,7 @@ jobs:
           }
 
       - name: Restore packages
-        run: nuget restore TataruHelper.sln
+        run: msbuild TataruHelper.sln /t:Restore /p:RestorePackagesConfig=true
 
       - name: Build solution (Release|Any CPU)
         shell: pwsh
@@ -74,6 +74,7 @@ jobs:
         shell: pwsh
         run: |
           $testProjects = Get-ChildItem -Path . -Recurse -Filter "*Test*.csproj"
+          $referencePath = Join-Path $PWD ".reference-assemblies\framework-root\Microsoft\Framework\"
           if (-not $testProjects) {
             Write-Host "No test projects found. Skipping test execution."
             exit 0
@@ -81,7 +82,7 @@ jobs:
 
           foreach ($project in $testProjects) {
             Write-Host "Running tests in $($project.FullName)"
-            dotnet test $project.FullName --configuration Release --no-build
+            dotnet test $project.FullName --configuration Release /p:TargetFrameworkRootPath="$referencePath"
           }
 
       - name: Dependency inventory and vulnerability check
