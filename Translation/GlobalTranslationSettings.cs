@@ -8,6 +8,18 @@ namespace Translation
     static class GlobalTranslationSettings
     {
         public static int TranslationCacheSize = 10000;
+        
+        public static int HttpRequestTimeoutMilliseconds = 10000;
+        
+        public static int HttpReadWriteTimeoutMilliseconds = 30000;
+        
+        public static int HttpRequestRetryCount = 2;
+        
+        public static int HttpRequestRetryDelayMilliseconds = 750;
+        
+        public static int TranslationRetryCount = 2;
+        
+        public static int TranslationRetryDelayMilliseconds = 500;
 
         public static double MaxSameLanguagePercent = 0.40;
 

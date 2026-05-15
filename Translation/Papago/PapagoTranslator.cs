@@ -5,8 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
+using Translation.HttpUtils;
 using Translation.Utils;
 
 namespace Translation.Papago
@@ -28,22 +28,16 @@ namespace Translation.Papago
         void CreatePapagoReader()
         {
             _PapagoReader = new HttpUtilities.HttpReader(new HttpUtils.HttpILogWrapper(_Logger));
+            TranslationHttpPolicy.ConfigureReader(_PapagoReader);
             _PapagoReader.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
         }
 
         public string Translate(string sentence, string inLang, string outLang)
         {
-            string result = string.Empty;
-
-            result = TranslateInternal(sentence, inLang, outLang);
-
-            if (result == string.Empty)
-            {
-                Thread.Sleep(2000);
-                result = TranslateInternal(sentence, inLang, outLang);
-            }
-
-            return result;
+            return TranslationHttpPolicy.ExecuteTranslationWithRetry(
+                () => TranslateInternal(sentence, inLang, outLang),
+                _Logger,
+                "Papago translate");
         }
 
         string TranslateInternal(string sentence, string inLang, string outLang)
@@ -98,7 +92,10 @@ namespace Translation.Papago
 
                         var requestBody = reqvObj.StringRequest + $"&authroization={Uri.EscapeDataString(reqvObj.AuthorizationHeader)}" + $"&timestamp={reqvObj.Timestamp}";
 
-                        var papagoWebResponse = _PapagoReader.RequestWebData(url, HttpUtilities.HttpMethods.POST, requestBody, true);
+                        var papagoWebResponse = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
+                            () => _PapagoReader.RequestWebData(url, HttpUtilities.HttpMethods.POST, requestBody, true),
+                            _Logger,
+                            "Papago translate");
 
                         if (papagoWebResponse.IsSuccessful)
                         {

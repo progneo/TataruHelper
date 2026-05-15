@@ -5,6 +5,7 @@ using System;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Translation.HttpUtils;
 using Translation.Utils;
 
 namespace Translation.Baidu
@@ -26,6 +27,7 @@ namespace Translation.Baidu
         {
             _Logger = logger;
             _BaiduWebRead = new HttpUtilities.HttpReader(new HttpUtils.HttpILogWrapper(_Logger));
+            TranslationHttpPolicy.ConfigureReader(_BaiduWebRead);
 
             InitTranslator();
         }
@@ -43,9 +45,15 @@ namespace Translation.Baidu
 
                     string url = "https://fanyi.baidu.com/";
 
-                    var tmpResult = _BaiduWebRead.RequestWebData(url, HttpUtilities.HttpMethods.GET);
+                    var tmpResult = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
+                        () => _BaiduWebRead.RequestWebData(url, HttpUtilities.HttpMethods.GET),
+                        _Logger,
+                        "Baidu init");
 
-                    tmpResult = _BaiduWebRead.RequestWebData(url, HttpUtilities.HttpMethods.GET, true);
+                    tmpResult = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
+                        () => _BaiduWebRead.RequestWebData(url, HttpUtilities.HttpMethods.GET, true),
+                        _Logger,
+                        "Baidu init cookies");
 
                     Regex tokenRegex = new Regex("token: '(.*)'");
                     Regex gtkRegex = new Regex("gtk = '(.*)'");
@@ -94,7 +102,10 @@ namespace Translation.Baidu
                     {
                         string reqv = _BaiduEncoder.Encode(sentence, inLang, outLang, _Gtk, _Token);
 
-                        var baiduResponse = _BaiduWebRead.RequestWebData(serviceUrl, HttpUtilities.HttpMethods.POST, reqv);
+                        var baiduResponse = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
+                            () => _BaiduWebRead.RequestWebData(serviceUrl, HttpUtilities.HttpMethods.POST, reqv),
+                            _Logger,
+                            "Baidu translate");
 
                         if (baiduResponse.IsSuccessful)
                         {

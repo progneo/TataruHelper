@@ -152,16 +152,17 @@ namespace FFXIVTataruHelper
                     string translation = string.Empty;
 
 
-                        var translationTask = _TataruModel.ChatProcessor.Translate(
-                            ea.ChatMessage.Text,
-                            _ChatWindowViewModel.CurrentTransaltionEngine,
-                            _ChatWindowViewModel.CurrentTranslateFromLanguague,
-                            _ChatWindowViewModel.CurrentTranslateToLanguague,
-                            chatCode.Code);
+                    var translationTask = _TataruModel.ChatProcessor.Translate(
+                        ea.ChatMessage.Text,
+                        _ChatWindowViewModel.CurrentTransaltionEngine,
+                        _ChatWindowViewModel.CurrentTranslateFromLanguague,
+                        _ChatWindowViewModel.CurrentTranslateToLanguague,
+                        chatCode.Code);
 
-                    if(translationTask.Wait(GlobalSettings.TranslatorWaitTime))
+                    var completedTask = await Task.WhenAny(translationTask, Task.Delay(GlobalSettings.TranslatorWaitTime));
+                    if (completedTask == translationTask)
                     {
-                        translation = translationTask.Result;
+                        translation = await translationTask;
                     }
 
                     translateTryCount++;

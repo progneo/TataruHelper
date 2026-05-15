@@ -9,6 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
+using Translation.HttpUtils;
 
 namespace Translation.Google
 {
@@ -33,6 +34,7 @@ namespace Translation.Google
         void CreateGoogleReader()
         {
             _GoogleWebReader = new HttpUtilities.HttpReader(new HttpUtils.HttpILogWrapper(_Logger));
+            TranslationHttpPolicy.ConfigureReader(_GoogleWebReader);
 
             _GoogleWebReader.UserAgent = "Opera/9.80 (Android; Opera Mini/11.0.1912/37.7549; U; pl) Presto/2.12.423 Version/12.16";
             _GoogleWebReader.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
@@ -45,7 +47,10 @@ namespace Translation.Google
             _GoogleWebReader.OptionalHeaders.Add("Pragma", "no-cache");
             _GoogleWebReader.OptionalHeaders.Add("Cache-Control", "no-cache");
 
-            var requestResult = _GoogleWebReader.RequestWebData("https://translate.google.com/m", HttpUtilities.HttpMethods.GET, true);
+            var requestResult = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
+                () => _GoogleWebReader.RequestWebData("https://translate.google.com/m", HttpUtilities.HttpMethods.GET, true),
+                _Logger,
+                "Google warmup");
         }
 
         public string Translate(string sentence, string inLang, string outLang)
@@ -78,7 +83,10 @@ namespace Translation.Google
                 string _baseUrl = "https://translate.google.com/m?hl=ru&sl={0}&tl={1}&ie=UTF-8&prev=_m&q={2}";
                 string url = string.Format(_baseUrl, _inLang, _outLang, HttpUtility.UrlEncode(sentence));
 
-                var requestResult = _GoogleWebReader.RequestWebData(url, HttpUtilities.HttpMethods.GET, true);
+                var requestResult = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
+                    () => _GoogleWebReader.RequestWebData(url, HttpUtilities.HttpMethods.GET, true),
+                    _Logger,
+                    "Google translate");
 
                 if (requestResult.IsSuccessful)
                 {

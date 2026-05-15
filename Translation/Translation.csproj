@@ -67,6 +67,7 @@
     <Compile Include="GlobalTranslationSettings.cs" />
     <Compile Include="Google\GoogleTranslator.cs" />
     <Compile Include="HttpUtils\HttpILogWrapper.cs" />
+    <Compile Include="HttpUtils\TranslationHttpPolicy.cs" />
     <Compile Include="ITranslationProvider.cs" />
     <Compile Include="Utils\Helper.cs" />
     <Compile Include="ILog.cs" />
