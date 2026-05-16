@@ -7,8 +7,12 @@ param(
     [string]$ProjectPath = "",
     [string]$PublishDir = "",
     [string]$OutputDir = "",
+    [string]$RepoUrl = "https://github.com/progneo/TataruHelper",
+    [string]$RepoToken = "",
     [bool]$IncludeMsiDeploymentTool = $true,
-    [switch]$SkipPublish
+    [switch]$SkipPublish,
+    [switch]$SkipDownloadLatest,
+    [switch]$InstallerOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -16,18 +20,44 @@ $ErrorActionPreference = "Stop"
 function Resolve-ProjectVersion {
     param(
         [Parameter(Mandatory = $true)]
-        [string]$AssemblyInfoPath
+        [string]$AssemblyInfoPath,
+        [Parameter(Mandatory = $true)]
+        [string]$ProjectPath
     )
 
-    $content = Get-Content -Path $AssemblyInfoPath -Raw
-    $regex = [regex]'Assembly(File)?Version\("(?<version>\d+\.\d+\.\d+\.\d+)"\)'
-    $match = $regex.Match($content)
-    if (-not $match.Success) {
-        throw "Cannot resolve assembly version from '$AssemblyInfoPath'."
+    if (Test-Path $AssemblyInfoPath) {
+        $content = Get-Content -Path $AssemblyInfoPath -Raw
+        $regex = [regex]'Assembly(File)?Version\("(?<version>\d+\.\d+\.\d+(?:\.\d+)?)"\)'
+        $match = $regex.Match($content)
+        if ($match.Success) {
+            $parts = $match.Groups["version"].Value.Split(".")
+            return "$($parts[0]).$($parts[1]).$($parts[2])"
+        }
     }
 
-    $parts = $match.Groups["version"].Value.Split(".")
-    return "$($parts[0]).$($parts[1]).$($parts[2])"
+    if (-not (Test-Path $ProjectPath)) {
+        throw "Cannot resolve project version: project file '$ProjectPath' was not found."
+    }
+
+    [xml]$projectXml = Get-Content -Path $ProjectPath -Raw
+    $versionNode = $projectXml.SelectSingleNode("//Project/PropertyGroup/Version")
+    if ($null -eq $versionNode -or [string]::IsNullOrWhiteSpace($versionNode.InnerText)) {
+        $versionNode = $projectXml.SelectSingleNode("//Project/PropertyGroup/AssemblyVersion")
+    }
+    if ($null -eq $versionNode -or [string]::IsNullOrWhiteSpace($versionNode.InnerText)) {
+        $versionNode = $projectXml.SelectSingleNode("//Project/PropertyGroup/FileVersion")
+    }
+
+    if ($null -eq $versionNode -or [string]::IsNullOrWhiteSpace($versionNode.InnerText)) {
+        throw "Cannot resolve project version from '$AssemblyInfoPath' or '$ProjectPath'. Specify explicit -Version (e.g. -Version 0.10.3) for this run."
+    }
+
+    $projectVersion = $versionNode.InnerText.Trim()
+    if ($projectVersion -notmatch '^(?<a>\d+)\.(?<b>\d+)\.(?<c>\d+)(?:\.\d+)?(?:[-+].*)?$') {
+        throw "Resolved version '$projectVersion' has unsupported format."
+    }
+
+    return "$($matches['a']).$($matches['b']).$($matches['c'])"
 }
 
 function Resolve-VpkCommand {
@@ -40,6 +70,22 @@ function Resolve-VpkCommand {
     }
 
     throw "Velopack CLI is not available. Install `vpk` (`dotnet tool install -g vpk --version 0.0.1298`) and retry."
+}
+
+function Invoke-VpkCommand {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string[]]$Prefix,
+        [Parameter(Mandatory = $true)]
+        [string[]]$Args
+    )
+
+    if ($Prefix.Count -eq 1) {
+        & $Prefix[0] @Args
+    }
+    else {
+        & $Prefix[0] $Prefix[1] $Prefix[2] $Prefix[3] @Args
+    }
 }
 
 $scriptRoot = Split-Path -Path $PSCommandPath -Parent
@@ -59,8 +105,9 @@ if ([string]::IsNullOrWhiteSpace($OutputDir)) {
 
 if ([string]::IsNullOrWhiteSpace($Version)) {
     $assemblyInfoPath = Join-Path $repoRoot "TataruHelper/Properties/AssemblyInfo.cs"
-    $Version = Resolve-ProjectVersion -AssemblyInfoPath $assemblyInfoPath
+    $Version = Resolve-ProjectVersion -AssemblyInfoPath $assemblyInfoPath -ProjectPath $ProjectPath
 }
+Write-Host "[Velopack] Resolved version: $Version"
 
 $vpkChannel = if ($Channel -eq "prerelease") { "prerelease" } else { "stable" }
 $iconPath = Join-Path $repoRoot "TataruHelper/app_icon2.ico"
@@ -82,7 +129,65 @@ if (-not (Test-Path (Join-Path $PublishDir $MainExe))) {
 
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
 
+if ($InstallerOnly) {
+    Write-Warning "-InstallerOnly switch is currently compatibility-only and does not change packaging outputs."
+}
+
+$fullCountBeforePack = @(Get-ChildItem -Path $OutputDir -Filter "*-full.nupkg" -File -ErrorAction SilentlyContinue).Count
+$deltaCountBeforePack = @(Get-ChildItem -Path $OutputDir -Filter "*-delta.nupkg" -File -ErrorAction SilentlyContinue).Count
+
 [string[]]$vpkPrefix = Resolve-VpkCommand
+Write-Host ("[Velopack] vpk invocation prefix: " + ($vpkPrefix -join " "))
+try {
+    $vpkVersionArgs = @("--version")
+    Write-Host ("[Velopack] Command: " + ((@($vpkPrefix) + $vpkVersionArgs) -join " "))
+    Invoke-VpkCommand -Prefix $vpkPrefix -Args $vpkVersionArgs
+}
+catch {
+    Write-Warning "Unable to print vpk version."
+}
+
+if (-not $SkipDownloadLatest) {
+    $downloadHelpOutput = if ($vpkPrefix.Count -eq 1) {
+        & $vpkPrefix[0] "download" "-h" 2>&1
+    }
+    else {
+        & $vpkPrefix[0] $vpkPrefix[1] $vpkPrefix[2] $vpkPrefix[3] "download" "-h" 2>&1
+    }
+
+    $downloadHelpText = ($downloadHelpOutput | Out-String)
+    Write-Host "[Velopack] download -h output:"
+    Write-Host $downloadHelpText
+    if ($downloadHelpText -notmatch "(?m)\bgithub\b") {
+        throw "Current vpk build does not expose 'download github' command. Verify CLI version compatibility."
+    }
+
+    $downloadArgs = @(
+        "download",
+        "github",
+        "--repoUrl", $RepoUrl,
+        "--channel", $vpkChannel,
+        "--outputDir", $OutputDir
+    )
+
+    if (-not [string]::IsNullOrWhiteSpace($RepoToken)) {
+        $downloadArgs += @("--token", $RepoToken)
+    }
+    elseif (-not [string]::IsNullOrWhiteSpace($env:GITHUB_TOKEN)) {
+        $downloadArgs += @("--token", $env:GITHUB_TOKEN)
+    }
+
+    Write-Host "[Velopack] Downloading latest published release for delta base..."
+    Write-Host ("[Velopack] Command: " + ((@($vpkPrefix) + $downloadArgs) -join " "))
+
+    try {
+        Invoke-VpkCommand -Prefix $vpkPrefix -Args $downloadArgs
+    }
+    catch {
+        Write-Warning "Unable to download latest published release. Delta package may not be generated."
+        Write-Warning $_
+    }
+}
 
 $msiFlag = $null
 if ($IncludeMsiDeploymentTool) {
@@ -138,12 +243,7 @@ Write-Host ("[Velopack] Command: " + ((@($vpkPrefix) + $vpkArgs) -join " "))
 $previousRollForward = $env:DOTNET_ROLL_FORWARD
 $env:DOTNET_ROLL_FORWARD = "LatestMajor"
 try {
-    if ($vpkPrefix.Count -eq 1) {
-        & $vpkPrefix[0] @vpkArgs
-    }
-    else {
-        & $vpkPrefix[0] $vpkPrefix[1] $vpkPrefix[2] $vpkPrefix[3] @vpkArgs
-    }
+    Invoke-VpkCommand -Prefix $vpkPrefix -Args $vpkArgs
 
     if ($LASTEXITCODE -ne 0) {
         throw "Velopack CLI failed with exit code $LASTEXITCODE."
@@ -163,3 +263,17 @@ Write-Host "[Velopack] Channel: $vpkChannel"
 Write-Host "[Velopack] Version: $Version"
 Write-Host "[Velopack] PublishDir: $PublishDir"
 Write-Host "[Velopack] OutputDir: $OutputDir"
+
+$fullCountAfterPack = @(Get-ChildItem -Path $OutputDir -Filter "*-full.nupkg" -File -ErrorAction SilentlyContinue).Count
+$deltaCountAfterPack = @(Get-ChildItem -Path $OutputDir -Filter "*-delta.nupkg" -File -ErrorAction SilentlyContinue).Count
+
+if ($fullCountBeforePack -gt 0) {
+    if ($deltaCountAfterPack -le $deltaCountBeforePack) {
+        throw "Delta package was expected (previous full package exists in outputDir), but no new *-delta.nupkg was produced."
+    }
+
+    Write-Host "[Velopack] Delta package generated successfully."
+}
+else {
+    Write-Host "[Velopack] No previous full package in outputDir before pack; delta package is not expected for first release in this environment."
+}

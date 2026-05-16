@@ -5,7 +5,7 @@ This repository is a maintained fork.
 > - Original repository: https://github.com/NightlyRevenger/TataruHelper
 
 
-[![Current Version](https://img.shields.io/github/release/progneo/TataruHelper)](https://github.com/progneo/TataruHelper/releases) ![GitHub Releases (by Asset)](https://img.shields.io/github/downloads/progneo/TataruHelper/latest/TataruHelper-0.9.106-delta.nupkg?label=Downloads)  [![Crowdin](https://badges.crowdin.net/tataru-helper/localized.svg)](https://crowdin.com/project/tataru-helper)  ![Discord Shield](https://discordapp.com/api/guilds/592039000538349569/widget.png?style=shield)
+[![Current Version](https://img.shields.io/github/release/progneo/TataruHelper)](https://github.com/progneo/TataruHelper/releases) ![GitHub Releases (by Asset)](https://img.shields.io/github/downloads/progneo/TataruHelper/latest/Setup.exe?label=Downloads)  [![Crowdin](https://badges.crowdin.net/tataru-helper/localized.svg)](https://crowdin.com/project/tataru-helper)  ![Discord Shield](https://discordapp.com/api/guilds/592039000538349569/widget.png?style=shield)
 
 
 [Download Now](https://github.com/progneo/TataruHelper/releases/latest/download/Setup.exe)( \---> Download Setup.exe)

@@ -78,8 +78,10 @@ jobs:
 
       - name: Build Velopack stable artifacts
         shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          powershell -NoProfile -ExecutionPolicy Bypass -file .\scripts\Velopack_release.ps1 -Channel stable -InstallerOnly
+          powershell -NoProfile -ExecutionPolicy Bypass -file .\scripts\Velopack_release.ps1 -Channel stable
 
       - name: Upload Velopack stable artifacts
         uses: actions/upload-artifact@v4
@@ -115,8 +117,10 @@ jobs:
 
       - name: Build Velopack prerelease artifacts
         shell: pwsh
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          powershell -NoProfile -ExecutionPolicy Bypass -file .\scripts\Velopack_release.ps1 -Channel prerelease -InstallerOnly
+          powershell -NoProfile -ExecutionPolicy Bypass -file .\scripts\Velopack_release.ps1 -Channel prerelease
 
       - name: Upload Velopack prerelease artifacts
         uses: actions/upload-artifact@v4
