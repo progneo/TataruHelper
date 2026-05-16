@@ -8,7 +8,7 @@
         MinHeight="30"
         MinWidth="30"
         ResizeMode="NoResize"
-        Title="{DynamicResource DockHelp}" Height="340" Width="805">
+        Title="{DynamicResource DockHelp}" Height="360" Width="805">
     <Grid>
         <Grid Width="206" HorizontalAlignment="Left" Margin="15,15">
             <StackPanel>
@@ -29,7 +29,7 @@
             <TextBlock x:Name="TataruVersionBlock" FontSize="16" Text="TataruHelper v:">
             </TextBlock>
         </Grid>
-        <Grid Margin="240,65,10,0" VerticalAlignment="Top" Height="161">
+        <Grid Margin="240,65,10,0" VerticalAlignment="Top" Height="181">
             <StackPanel x:Name="ParentStackPanel">
                 <TextBlock FontSize="16" Margin="0,10,0,0">
                     Fork repository on GitHub:
@@ -53,7 +53,7 @@
                 </TextBlock>
                 <TextBlock FontSize="14" Margin="0,20,0,0">
                     Want to help?
-                    <Hyperlink NavigateUri="https://www.patreon.com/TataruHelper"
+                    <Hyperlink NavigateUri="https://boosty.to/progneo"
                                RequestNavigate="Hyperlink_RequestNavigate">
                         Make a donation
                     </Hyperlink>
