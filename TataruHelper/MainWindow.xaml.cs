@@ -7,20 +7,18 @@ using FFXIVTataruHelper.Factories;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.Services.Update;
+using FFXIVTataruHelper.Utils;
 using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.WinUtils;
+
 using System;
-using System.Collections.ObjectModel;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Interop;
-using System.Windows.Media;
-using System.Timers;
-using Xceed.Wpf.Toolkit;
+
 using Updater;
 using Updater.EventArguments;
 
@@ -52,22 +50,19 @@ namespace FFXIVTataruHelper
         readonly ITataruModelFactory _TataruModelFactory;
         readonly IAppLogger _Logger;
         readonly IUiDispatcher _UiDispatcher;
-        private static readonly TimeSpan SaveSettingsTimeout = TimeSpan.FromSeconds(5);
-
-        bool _IsShutDown;
+        bool _IsShutdownCleanupCompleted;
 
         OptimizeFootprint _OptimizeFootprint;
 
         WinMessagesHandler _WinMessagesHandler;
 
-        public MainWindow(ITataruModelFactory tataruModelFactory, IUpdateService updater, IAppLogger logger, IUiDispatcher uiDispatcher)
+        public MainWindow(ITataruModelFactory tataruModelFactory, IUpdateService updater, IAppLogger logger,
+            IUiDispatcher uiDispatcher)
         {
             _TataruModelFactory = tataruModelFactory;
             _Updater = updater;
             _Logger = logger;
             _UiDispatcher = uiDispatcher;
-            _IsShutDown = false;
-
             if (Utils.TataruSingleInstance.IsOnlyInstance == false)
             {
                 ShutDown();
@@ -79,7 +74,8 @@ namespace FFXIVTataruHelper
                 _LogWriter = new LogWriter();
                 _LogWriter.StartWriting();
 
-                _Logger.WriteLog("TataruHelper v" + Convert.ToString(System.Reflection.Assembly.GetEntryAssembly().GetName().Version));
+                _Logger.WriteLog("TataruHelper v" +
+                                 Convert.ToString(System.Reflection.Assembly.GetEntryAssembly().GetName().Version));
             }
             catch (Exception ex)
             {
@@ -131,7 +127,10 @@ namespace FFXIVTataruHelper
         private void Discord_Click(object sender, RoutedEventArgs e)
         {
             var uri = new Uri("https://discord.gg/bSrpbd9");
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(uri.AbsoluteUri));
+            if (!ExternalLinkOpener.TryOpen(uri))
+            {
+                _Logger.WriteLog($"Failed to open external link: {uri.AbsoluteUri}");
+            }
         }
 
         private void HideToTray_Changed(object sender, RoutedEventArgs e)
@@ -144,7 +143,6 @@ namespace FFXIVTataruHelper
         {
             var isDirectMemoryReading = (bool)((CheckBox)sender).IsChecked;
             _TataruUIModel.IsDirecMemoryReading = isDirectMemoryReading;
-
         }
 
         private void RestartApp_Click(object sender, RoutedEventArgs e)
@@ -171,7 +169,11 @@ namespace FFXIVTataruHelper
 
         private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
         {
-            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(e.Uri.AbsoluteUri));
+            if (!ExternalLinkOpener.TryOpen(e.Uri))
+            {
+                _Logger.WriteLog($"Failed to open external link: {e.Uri?.AbsoluteUri}");
+            }
+
             e.Handled = true;
         }
 
@@ -183,7 +185,8 @@ namespace FFXIVTataruHelper
         {
             try
             {
-                _Logger.WriteLog("TataruHelper v" + Convert.ToString(System.Reflection.Assembly.GetEntryAssembly().GetName().Version));
+                _Logger.WriteLog("TataruHelper v" +
+                                 Convert.ToString(System.Reflection.Assembly.GetEntryAssembly().GetName().Version));
             }
             catch (Exception) { }
 
@@ -256,16 +259,13 @@ namespace FFXIVTataruHelper
         {
             try
             {
-                if (_IsShutDown == false)
-                {
-                    e.Cancel = true;
-                    this.Hide();
-                }
-                else
-                    e.Cancel = false;
+                // Closing from the window X should terminate the app deterministically.
+                e.Cancel = false;
 
-                if (e.Cancel == false)
+                if (!_IsShutdownCleanupCompleted)
                 {
+                    _IsShutdownCleanupCompleted = true;
+
                     _UpdaterTimer?.Stop();
                     _Updater?.StopUpdate();
 
@@ -275,13 +275,8 @@ namespace FFXIVTataruHelper
                     if (_TataruModel != null)
                         _TataruModel.Stop();
 
-                    var saveSettingsTask = Task.Run(async () =>
-                    {
-                        if (_TataruModel != null)
-                            await _TataruModel.SaveSettings();
-                    });
-
-                    if (!saveSettingsTask.Wait(SaveSettingsTimeout))
+                    var saveSettingsTask = _TataruModel?.SaveSettings();
+                    if (saveSettingsTask != null && !saveSettingsTask.Wait(TimeSpan.FromMilliseconds(500)))
                     {
                         _Logger.WriteLog("MainWindow.Window_Closing save settings timed out.");
                     }
@@ -292,6 +287,7 @@ namespace FFXIVTataruHelper
                         _LogWriter.Stop();
 
                     _Updater?.Dispose();
+                    TaskBarIcon?.Dispose();
                 }
             }
             catch (Exception ex)
@@ -307,12 +303,12 @@ namespace FFXIVTataruHelper
         private async Task OnUiLanguageChange(IntegerValueChangeEventArgs ea)
         {
             await this.UIThreadAsync(() =>
-             {
-                 if (ea.NewValue != ea.OldValue)
-                 {
-                     _LanguagueWrapper.CurrentLanguage = (LanguagueWrapper.Languages)ea.NewValue;
-                 }
-             });
+            {
+                if (ea.NewValue != ea.OldValue)
+                {
+                    _LanguagueWrapper.CurrentLanguage = (LanguagueWrapper.Languages)ea.NewValue;
+                }
+            });
         }
 
         private async Task OnHideSettingsToTrayChange(BooleanChangeEventArgs ea)
@@ -428,7 +424,8 @@ namespace FFXIVTataruHelper
                     if (stateTransition.ShowRestartReady)
                     {
                         _TataruModel.TataruViewModel.RestartReadyVisibility = true;
-                        TaskBarIcon.ShowBalloonTip((string)this.Resources["NotifyUpdateTitle"], (string)this.Resources["NotifyUpdateText"],
+                        TaskBarIcon.ShowBalloonTip((string)this.Resources["NotifyUpdateTitle"],
+                            (string)this.Resources["NotifyUpdateText"],
                             Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
                     }
 
@@ -569,8 +566,12 @@ namespace FFXIVTataruHelper
 
         private void TBDoubleClick(object sender, RoutedEventArgs e)
         {
-
             ShowSettingsWindow();
+        }
+
+        private void TBMenuExit_Click(object sender, RoutedEventArgs e)
+        {
+            ShutDown();
         }
 
         public void ShowSettingsWindow()
@@ -612,18 +613,8 @@ namespace FFXIVTataruHelper
 
         protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
         {
-            e.Cancel = true;
-            _IsShutDown = true;
-
-            if (_IsShutDown)
-            {
-                e.Cancel = false;
-                base.OnClosing(e);
-            }
-            else
-            {
-                this.Hide();
-            }
+            e.Cancel = false;
+            base.OnClosing(e);
         }
 
         private void Window_Closed(object sender, EventArgs e)
@@ -633,7 +624,6 @@ namespace FFXIVTataruHelper
 
         public void ShutDown()
         {
-            _IsShutDown = true;
             Application.Current.Shutdown();
         }
 

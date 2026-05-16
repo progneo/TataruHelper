@@ -4,7 +4,7 @@
                     xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
-    <Style TargetType="ToolTip" >
+    <Style TargetType="ToolTip">
         <Style.Resources>
             <Style TargetType="ContentPresenter">
                 <Style.Resources>
@@ -14,65 +14,60 @@
                 </Style.Resources>
             </Style>
         </Style.Resources>
-        <Setter Property="MaxWidth" Value="400"  />
+        <Setter Property="MaxWidth" Value="400" />
     </Style>
 
     <DataTemplate x:Key="newTabButtonContentTemplate">
-        <Grid/>
+        <Grid />
     </DataTemplate>
 
     <DataTemplate x:Key="itemContentTemplate">
-        <Grid/>
+        <Grid />
     </DataTemplate>
 
     <DataTemplate x:Key="newTabButtonHeaderTemplate">
         <Button Content="+"
                 Command="{Binding ElementName=TataruSettingsWindow, Path=DataContext.AddNewChatWindowCommand}"
-                Width="20" Height="20"/>
+                Width="20" Height="20" />
     </DataTemplate>
 
     <DataTemplate x:Key="itemHeaderTemplate">
         <StackPanel Orientation="Horizontal">
             <Label Content="{Binding Name}" />
-            <Button Visibility="{Binding IsSelected, Converter={utils:BooleanToVisibilityConverter}, Mode=TwoWay}" FontSize="8" Width="15" Height="15"
+            <Button Visibility="{Binding IsSelected, Converter={utils:BooleanToVisibilityConverter}, Mode=TwoWay}"
+                    FontSize="8" Width="15" Height="15"
                     Command="{Binding ElementName=TataruSettingsWindow, Path=DataContext.DeleteChatWindowCommand}">
                 <Button.Content>
-                    <TextBlock Text="✖"/>
+                    <TextBlock Text="✖" />
                 </Button.Content>
             </Button>
         </StackPanel>
     </DataTemplate>
 
     <utils:ChatWindowTabHeaderTemplateSelector x:Key="headerTemplateSelector"
-                           NewButtonTemplate="{StaticResource newTabButtonHeaderTemplate}"
-                           ItemTemplate="{StaticResource itemHeaderTemplate}"/>
+                                               NewButtonTemplate="{StaticResource newTabButtonHeaderTemplate}"
+                                               ItemTemplate="{StaticResource itemHeaderTemplate}" />
 
     <utils:ChatWindowTabHeaderTemplateSelector x:Key="contentTemplateSelector"
-                            NewButtonTemplate="{StaticResource newTabButtonContentTemplate}"
-                            ItemTemplate="{StaticResource itemContentTemplate}"/>
+                                               NewButtonTemplate="{StaticResource newTabButtonContentTemplate}"
+                                               ItemTemplate="{StaticResource itemContentTemplate}" />
 
     <DataTemplate x:Key="itemHeaderTemplateTB">
-        <MenuItem  Command="{Binding ShowChatWindowCommand}" InputGestureText=" ">
+        <MenuItem Command="{Binding ShowChatWindowCommand}" InputGestureText=" ">
             <MenuItem.Template>
                 <ControlTemplate>
-                    <TextBlock Text="{Binding Name}" MinWidth="50"/>
+                    <TextBlock Text="{Binding Name}" MinWidth="50" />
                 </ControlTemplate>
             </MenuItem.Template>
         </MenuItem>
     </DataTemplate>
 
     <DataTemplate x:Key="exitButtonTempalateTB">
-        <MenuItem Command="{Binding RelativeSource={RelativeSource AncestorType={x:Type ContextMenu}}, Path=DataContext.ShutDownRequestedCommand }">
-            <MenuItem.Template>
-                <ControlTemplate>
-                    <TextBlock Text="{DynamicResource SettingsExit}" MinWidth="50" />
-                </ControlTemplate>
-            </MenuItem.Template>
-        </MenuItem>
+        <Separator Visibility="Collapsed" />
     </DataTemplate>
 
     <utils:ChatWindowTabHeaderTemplateSelector x:Key="headerTemplateSelectorTB"
-                           NewButtonTemplate="{StaticResource exitButtonTempalateTB}"
-                           ItemTemplate="{StaticResource itemHeaderTemplateTB}"/>
+                                               NewButtonTemplate="{StaticResource exitButtonTempalateTB}"
+                                               ItemTemplate="{StaticResource itemHeaderTemplateTB}" />
 
 </ResourceDictionary>
