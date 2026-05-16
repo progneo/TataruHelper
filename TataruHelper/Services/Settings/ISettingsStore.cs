@@ -8,6 +8,8 @@ namespace FFXIVTataruHelper.Services.Settings
 
         string IgnoreNickNameChatCodesPath { get; }
 
+        string SystemSettingsPath { get; }
+
         string SettingsPath { get; }
 
         string OldSettingsPath { get; }

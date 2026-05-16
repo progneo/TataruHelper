@@ -69,8 +69,6 @@ namespace FFXIVTataruHelper
 
         #region **LocalVariables.
 
-        string SystemSettingFileName = "AppSysSettings.json";
-
         MainWindow _MainWindow;
 
         TataruViewModel _TataruViewModel;
@@ -151,7 +149,12 @@ namespace FFXIVTataruHelper
         {
             try
             {
-                _ApplicationCoordinator.LoadSettings(_TataruUIModel, SystemSettingFileName, _ChatProcessor, _WebTranslator, SaveSettings);
+                _ApplicationCoordinator.LoadSettings(
+                    _TataruUIModel,
+                    _SettingsStore.SystemSettingsPath,
+                    _ChatProcessor,
+                    _WebTranslator,
+                    SaveSettings);
             }
             catch (Exception e)
             {

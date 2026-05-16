@@ -1,7 +1,9 @@
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.UIModel;
+
 using NUnit.Framework;
+
 using System.ComponentModel;
 using System.Threading.Tasks;
 
@@ -58,6 +60,7 @@ namespace TataruHelper.Tests
             public string ChatCodesFilePath => string.Empty;
             public string BlackListPath => string.Empty;
             public string IgnoreNickNameChatCodesPath => string.Empty;
+            public string SystemSettingsPath => string.Empty;
             public string SettingsPath => string.Empty;
             public string OldSettingsPath => string.Empty;
             public int SettingsSaveDelayMs => 60_000;
