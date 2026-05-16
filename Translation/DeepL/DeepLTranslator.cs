@@ -2,13 +2,14 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 using HttpUtilities;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using Translation.HttpUtils;
 using Translation.Deepl.Requests;
 using Translation.Deepl.Responses;
+using Translation.Utils;
 
 namespace Translation.Deepl
 {
@@ -41,6 +42,7 @@ namespace Translation.Deepl
         {
             long baseIdMult = 10000;
             _DeeplReader = new HttpReader(new HttpUtils.HttpILogWrapper(_Logger));
+            TranslationHttpPolicy.ConfigureReader(_DeeplReader);
 
             _DeeplReader.Referer = "https://www.deepl.com/translator";
             _DeeplReader.ContentType = "application/json";
@@ -86,12 +88,15 @@ namespace Translation.Deepl
                 var reqv = new DeepLTranslatorRequest(_DeepLId, sentence, inLang, outLang);
                 var reqvBody = reqv.ToJsonString();
 
-                var strDeepLTranslationResponse = _DeeplReader.RequestWebData(deeplApiUrl, HttpMethods.POST, reqvBody, true);
+                var strDeepLTranslationResponse = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
+                    () => _DeeplReader.RequestWebData(deeplApiUrl, HttpMethods.POST, reqvBody, true),
+                    _Logger,
+                    "DeepL translate");
                 _DeepLId++;
 
                 if (strDeepLTranslationResponse.IsSuccessful)
                 {
-                    var deepLTranslationResponse = JsonConvert.DeserializeObject<DeepLTranslationResponse>(strDeepLTranslationResponse.Body);
+                    var deepLTranslationResponse = SafeJson.DeserializeExternal<DeepLTranslationResponse>(strDeepLTranslationResponse.Body);
 
                     if (deepLTranslationResponse?.Result?.Translations != null)
                     {
@@ -131,4 +136,3 @@ namespace Translation.Deepl
         }
     }
 }
-

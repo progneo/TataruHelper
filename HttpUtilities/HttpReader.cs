@@ -21,6 +21,10 @@ namespace HttpUtilities
 
         public string Referer { get; set; } = null;
 
+        public int TimeoutMilliseconds { get; set; } = 100000;
+
+        public int ReadWriteTimeoutMilliseconds { get; set; } = 300000;
+
         public bool ThrowExceptions { get => _ThrowExceptions; set => _ThrowExceptions = value; }
 
         public IDictionary<string, string> OptionalHeaders { get => _OptionalHeaders; set => _OptionalHeaders = value; }
@@ -202,6 +206,12 @@ namespace HttpUtilities
 
             if (this.Referer != null)
                 localHttpWebRequest.Referer = this.Referer;
+
+            if (TimeoutMilliseconds > 0)
+                localHttpWebRequest.Timeout = TimeoutMilliseconds;
+
+            if (ReadWriteTimeoutMilliseconds > 0)
+                localHttpWebRequest.ReadWriteTimeout = ReadWriteTimeoutMilliseconds;
 
             if (cookie != null)
                 localHttpWebRequest.CookieContainer = cookie;
