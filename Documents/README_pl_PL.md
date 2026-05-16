@@ -1,8 +1,13 @@
 # Tataru Helper
 
+> Informacja o forku: to repozytorium jest aktywnie utrzymywanym forkiem.
+>
+> - Oryginalne repozytorium: https://github.com/NightlyRevenger/TataruHelper
+
+
 [![Crowdin](https://badges.crowdin.net/tataru-helper/localized.svg)](https://crowdin.com/project/tataru-helper) ![Discord Shield](https://discordapp.com/api/guilds/592039000538349569/widget.png?style=shield)
 
-## [Pobieranie](https://github.com/NightlyRevenger/TataruHelper/releases/latest) ( \---> Pobierz Setup.exe)
+## [Pobieranie](https://github.com/progneo/TataruHelper/releases/latest) ( \---> Pobierz Setup.exe)
 
 ## [Serwer Discord Tataru Helper](https://discord.gg/bSrpbd9)
 
@@ -12,7 +17,7 @@
 
 ## [Przykład działania](https://youtu.be/7HiQXzmkQuw)
 
-## [Dotacja](https://github.com/NightlyRevenger/TataruHelper/blob/master/README.md#support)
+## [Dotacja](https://github.com/progneo/TataruHelper/blob/master/README.md#support)
 
 * * *
 
@@ -48,7 +53,7 @@ Windows 7 **64 bit** lub nowszy(**tylko systemy 64-bitowe**).
 [Microsoft .NET Framework 4.6.2](https://www.microsoft.com/net/download/dotnet-framework-runtime) lub nowsze.  
 Final Fantasy XIV z **DirectX 11** w wersji **64 bitowej**.
 
-1. Pobierz [stąd](https://github.com/NightlyRevenger/TataruHelper/releases/latest) najnowszą wersję aplikacji (plik Setup.exe).
+1. Pobierz [stąd](https://github.com/progneo/TataruHelper/releases/latest) najnowszą wersję aplikacji (plik Setup.exe).
 2. Uruchom plik Setup.exe, po otrzymaniu powiadomienia "Windows ochronił twój komputer", wciśnij "więcej informacji", a następnie "uruchom pomimo to". Skrót do aplikacji zostanie umieszczony na pulpicie.
 3. Tataru Helper uruchomi się automatycznie, ustaw język gry, docelowy język tłumaczenia, oraz przeprowadź instalację wstępną.
 4. Zamknij okno ustawień, i przeciągnij aplikację w wybrane miejsce.
@@ -74,31 +79,23 @@ Jeśli chcesz pomóc z tłumaczeniem aplikacji, przejdź [tutaj](https://crowdin
 
 Podziękowania dla wielu osób, które przyłączają się do projektów open-source. Następujące projekty były kluczowe dla powstania tej aplikacji:  
 [WPF Toolkit™](https://github.com/xceedsoftware/wpftoolkit)  
-[BondTech.HotKeyManagement](https://github.com/bondtech/HotKey-Manager-for-WinForm-and-WPF-Apps)  
+[NHotKey.Wpf](https://github.com/thomaslevesque/NHotkey)  
 [NotifyIcon WPF](https://bitbucket.org/hardcodet/notifyicon-wpf/)  
 [Sharlayan](https://github.com/FFXIVAPP/sharlayan)  
 [Tataru Art by Nezusagi](https://www.deviantart.com/nezusagi)  
-[Squirrel.Windows](https://github.com/Squirrel/Squirrel.Windows)
-
+[Velopack](https://github.com/velopack/velopack)
 ## Kontakt
 
 Nasz serwer discord: [tutaj](https://discord.gg/bSrpbd9)
 
 Jeśli masz jakieś pytania, możesz się skontaktować tutaj:  
-xDarkOne:  
-Discord: xDarkOne#6486  
-Telegram: [click](https://t.me/xDarkOne)  
-VK: [click](https://vk.com/velikov_ra)  
-Twitch: [xDark0ne](https://www.twitch.tv/xdark0ne)  
-  
-NightlyRevenger(developer):<0/> <nightlyrevenger@yandex.ru>
+Discord: progneo
+Telegram: [click](https://t.me/progneo)
+Email: prograneo@gmail.com
 
 ## Wsparcie
 
 Jeśli chcesz wesprzeć ten projekt, użyj linków poniżej:  
-MasterCard(Sberbank): 5469 3800 2554 9048   
-Yandex.Money: [4100172621059](https://money.yandex.ru/to/4100172621059)  
-PayPal: [paypal.me/xdarkone](https://www.paypal.me/xdarkone)  
-Patreon: [TataruHelper](https://www.patreon.com/TataruHelper)
+Boosty: [progneo](https://boosty.to/progneo)
 
 * * *

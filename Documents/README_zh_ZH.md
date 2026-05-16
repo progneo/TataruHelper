@@ -1,10 +1,15 @@
 # Tataru Helper
 
-[![Current Version](https://img.shields.io/github/release/NightlyRevenger/TataruHelper)](https://github.com/NightlyRevenger/TataruHelper/releases) ![GitHub Releases (by Asset)](https://img.shields.io/github/downloads/NightlyRevenger/TataruHelper/latest/TataruHelper-0.9.40-full.nupkg?label=Downloads)  [![Crowdin](https://badges.crowdin.net/tataru-helper/localized.svg)](https://crowdin.com/project/tataru-helper) <a href="https://discord.gg/bSrpbd9">
+> Fork 说明：该仓库是一个持续活跃维护的分支（fork）。
+>
+> - 原始仓库： https://github.com/NightlyRevenger/TataruHelper
+
+
+[![Current Version](https://img.shields.io/github/release/progneo/TataruHelper)](https://github.com/progneo/TataruHelper/releases) ![GitHub Releases (by Asset)](https://img.shields.io/github/downloads/progneo/TataruHelper/latest/TataruHelper-0.9.40-full.nupkg?label=Downloads)  [![Crowdin](https://badges.crowdin.net/tataru-helper/localized.svg)](https://crowdin.com/project/tataru-helper) <a href="https://discord.gg/bSrpbd9">
         <img src="https://img.shields.io/discord/592039000538349569?logo=discord"
             alt="chat on Discord"></a>
             
-[下载链接](https://github.com/NightlyRevenger/TataruHelper/releases/latest/download/Setup.exe)( ---> 下载 Setup.exe)  
+[下载链接](https://github.com/progneo/TataruHelper/releases/latest/download/Setup.exe)( ---> 下载 Setup.exe)  
 -
 [Tataru's Discord Server](https://discord.gg/bSrpbd9)  
 -
@@ -14,7 +19,7 @@
  
 ## [使用演示](https://youtu.be/7HiQXzmkQuw)  
 
-## [捐赠支持作者](https://github.com/NightlyRevenger/TataruHelper/blob/master/README.md#support)  
+## [捐赠支持作者](https://github.com/progneo/TataruHelper/blob/master/README.md#support)  
 
 ---
 ## APP介绍
@@ -48,7 +53,7 @@ Windows 7 **x64**或之后版本系统 (**只支持64位系统**).
 [Microsoft .NET Framework 4.6.2 ](https://www.microsoft.com/net/download/dotnet-framework-runtime)或之后版本.   
 游戏本体：Final Fantasy XIV with **DirectX 11** and **x64**.  
 
-1. 下载最新版本：[点击这里](https://github.com/NightlyRevenger/TataruHelper/releases/latest) (Setup.exe).
+1. 下载最新版本：[点击这里](https://github.com/progneo/TataruHelper/releases/latest) (Setup.exe).
 2. 运行Setup.exe文件，如果跳出Windows正在保护您的电脑（Windows protected your PC）提示， 点击更多信息（more info）并选择继续安装（run anyway）。快捷方式将出现在桌面上。
 3. 安装完成后Tataru Helper将会自动启动，届时您可以设置待译语言和译后语言和初始化设置
 4. 将浮动窗口拖到合适的位置
@@ -78,31 +83,22 @@ P.S. 安装完成后，无需再从Setup.exe启动软件，那只是个安装文
 
 感谢各位为这个开源项目做贡献的老铁！以下是本项目的基石:  
 [WPF Toolkit™](https://github.com/xceedsoftware/wpftoolkit)  
-[BondTech.HotKeyManagement](https://github.com/bondtech/HotKey-Manager-for-WinForm-and-WPF-Apps)  
+[NHotKey.Wpf](https://github.com/thomaslevesque/NHotkey)  
 [NotifyIcon WPF](https://bitbucket.org/hardcodet/notifyicon-wpf/)  
 [Sharlayan](https://github.com/FFXIVAPP/sharlayan)  
 [Tataru Art by Nezusagi](https://www.deviantart.com/nezusagi)  
-[Squirrel.Windows](https://github.com/Squirrel/Squirrel.Windows)  
-
+[Velopack](https://github.com/velopack/velopack)
 ## 联系人
 
 来Discord找我们吧: [discord](https://discord.gg/bSrpbd9)  
 
 如果你有任何问题，请找这个人：（不要找翻译本人）
-xDarkOne:  
-Discord: xDarkOne#6486  
-Telegram: [click](https://t.me/xDarkOne)  
-VK: [click](https://vk.com/velikov_ra)  
-Twitch: [xDark0ne](https://www.twitch.tv/xdark0ne)  
-NightlyRevenger(developer):  
-[nightlyrevenger@yandex.ru](mailto:nightlyrevenger@yandex.ru)  
-
+Discord: progneo
+Telegram: [click](https://t.me/progneo)
+Email: prograneo@gmail.com
 ## 支持我们
 
 如果你想帮助支持我们，请使用以下方法：  
-MasterCard(Sberbank): 5469 3800 2554 9048  
-Yandex.Money: [4100172621059](https://money.yandex.ru/to/4100172621059)  
-PayPal: [paypal.me/xdarkone](https://www.paypal.me/xdarkone)  
-Patreon: [TataruHelper](https://www.patreon.com/TataruHelper)  
+Boosty: [progneo](https://boosty.to/progneo)  
 
 ---
