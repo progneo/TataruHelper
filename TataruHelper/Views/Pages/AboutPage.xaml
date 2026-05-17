@@ -5,7 +5,32 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d">
     <Grid Background="{DynamicResource Brush.Background}">
-        <TextBlock Text="About page placeholder"
-                   Style="{DynamicResource BaseTextBlockStyle}" />
+        <StackPanel>
+            <TextBlock Text="About"
+                       Style="{DynamicResource BaseTextBlockStyle}"
+                       FontSize="{DynamicResource FontSize.Subtitle}"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,8" />
+            <TextBlock Style="{DynamicResource BaseTextBlockStyle}" Margin="0,0,0,6">
+                Fork repository:
+                <Hyperlink NavigateUri="https://github.com/progneo/TataruHelper"
+                           RequestNavigate="Hyperlink_RequestNavigate">
+                    https://github.com/progneo/TataruHelper
+                </Hyperlink>
+            </TextBlock>
+            <TextBlock Style="{DynamicResource BaseTextBlockStyle}" Margin="0,0,0,6">
+                Original repository:
+                <Hyperlink NavigateUri="https://github.com/NightlyRevenger/TataruHelper"
+                           RequestNavigate="Hyperlink_RequestNavigate">
+                    https://github.com/NightlyRevenger/TataruHelper
+                </Hyperlink>
+            </TextBlock>
+            <TextBlock Style="{DynamicResource BaseTextBlockStyle}">
+                Community Discord:
+                <Hyperlink NavigateUri="https://discord.gg/bSrpbd9" RequestNavigate="Hyperlink_RequestNavigate">
+                    https://discord.gg/bSrpbd9
+                </Hyperlink>
+            </TextBlock>
+        </StackPanel>
     </Grid>
 </UserControl>

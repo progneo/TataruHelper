@@ -3,9 +3,65 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
              mc:Ignorable="d">
     <Grid Background="{DynamicResource Brush.Background}">
-        <TextBlock Text="Translation page placeholder"
-                   Style="{DynamicResource BaseTextBlockStyle}" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="Translation"
+                   Style="{DynamicResource BaseTextBlockStyle}"
+                   FontSize="{DynamicResource FontSize.Subtitle}"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,8" />
+
+        <WrapPanel Grid.Row="1" Orientation="Horizontal">
+            <GroupBox Style="{DynamicResource CardGroupBoxStyle}" Header="{DynamicResource ChatCodes}" Width="340">
+                <ScrollViewer VerticalScrollBarVisibility="Auto">
+                    <ItemsControl ItemsSource="{Binding CurrentChatWindow.ChatCodes}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid Height="25" Margin="0,0,0,2">
+                                    <CheckBox Margin="0,0,36,0"
+                                              IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                              Content="{utils:ResourceBinding Name}" />
+                                    <xctk:ColorPicker Margin="0,0,6,0"
+                                                      Height="20"
+                                                      Width="20"
+                                                      VerticalAlignment="Top"
+                                                      ShowDropDownButton="False"
+                                                      SelectedColor="{Binding Color}"
+                                                      HorizontalAlignment="Right" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </ScrollViewer>
+            </GroupBox>
+
+            <GroupBox Style="{DynamicResource CardGroupBoxStyle}" Header="{DynamicResource TranslationSettings}"
+                      Width="320">
+                <StackPanel>
+                    <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource TranslationEngine}" />
+                    <ComboBox ItemsSource="{Binding CurrentChatWindow.TranslationEngines}"
+                              DisplayMemberPath="Name"
+                              IsSynchronizedWithCurrentItem="True" />
+
+                    <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FFLanguage}" />
+                    <ComboBox ItemsSource="{Binding CurrentChatWindow.TranslateFromLanguagues}"
+                              DisplayMemberPath="ShownName"
+                              IsSynchronizedWithCurrentItem="True" />
+
+                    <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource TraslateTo}" />
+                    <ComboBox ItemsSource="{Binding CurrentChatWindow.TranslateToLanguagues}"
+                              DisplayMemberPath="ShownName"
+                              IsSynchronizedWithCurrentItem="True" />
+                </StackPanel>
+            </GroupBox>
+        </WrapPanel>
     </Grid>
 </UserControl>

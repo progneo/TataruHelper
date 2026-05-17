@@ -3,9 +3,59 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d">
-    <Grid Background="{DynamicResource Brush.Background}">
-        <TextBlock Text="Appearance page placeholder"
-                   Style="{DynamicResource BaseTextBlockStyle}" />
-    </Grid>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource Brush.Background}">
+        <Grid Margin="0,0,0,8">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Text="Chat appearance"
+                       Style="{DynamicResource BaseTextBlockStyle}"
+                       FontSize="{DynamicResource FontSize.Subtitle}"
+                       FontWeight="SemiBold"
+                       Margin="0,0,0,8" />
+
+            <WrapPanel Grid.Row="1" Orientation="Horizontal">
+                <GroupBox Style="{DynamicResource CardGroupBoxStyle}" Header="{DynamicResource FontSettings}"
+                          Width="300">
+                    <StackPanel>
+                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontSize}" />
+                        <xctk:IntegerUpDown Value="{Binding CurrentChatWindow.ChatFontSize, Mode=TwoWay}" Minimum="1"
+                                            Maximum="100" />
+
+                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource BackgroundColor}" />
+                        <xctk:ColorPicker SelectedColor="{Binding CurrentChatWindow.BackGroundColor, Mode=TwoWay}"
+                                          ShowAvailableColors="False"
+                                          ShowStandardColors="True"
+                                          ShowRecentColors="True" />
+
+                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontFamily}" />
+                        <ComboBox ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}"
+                                  SelectedItem="{Binding CurrentChatWindow.ChatFont, Mode=TwoWay}" />
+                    </StackPanel>
+                </GroupBox>
+
+                <GroupBox Style="{DynamicResource CardGroupBoxStyle}" Header="{DynamicResource ParagraphSettings}"
+                          Width="300">
+                    <StackPanel>
+                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource IntervalWidth}" />
+                        <xctk:IntegerUpDown Value="{Binding CurrentChatWindow.SpacingCount, Mode=TwoWay}" Minimum="0"
+                                            Maximum="100" />
+
+                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource LineBreakHeight}" />
+                        <xctk:IntegerUpDown Value="{Binding CurrentChatWindow.LineBreakHeight, Mode=TwoWay}"
+                                            Minimum="0" Maximum="100" />
+
+                        <CheckBox IsChecked="{Binding CurrentChatWindow.ShowTimestamps, Mode=TwoWay}"
+                                  Content="{DynamicResource ShowTimestampsCb}"
+                                  Margin="0,8,0,0" />
+                    </StackPanel>
+                </GroupBox>
+            </WrapPanel>
+        </Grid>
+    </ScrollViewer>
 </UserControl>

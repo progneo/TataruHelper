@@ -3,41 +3,59 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:pages="clr-namespace:FFXIVTataruHelper.Views.Pages"
         mc:Ignorable="d"
-        Title="Tataru Helper"
-        Width="980"
-        Height="640"
-        MinWidth="840"
-        MinHeight="520"
+        Title="Modern Settings Preview"
+        Width="1100"
+        Height="740"
+        MinWidth="900"
+        MinHeight="620"
         Background="{DynamicResource Brush.Background}"
         FontFamily="{DynamicResource Font.Ui}"
         FontSize="{DynamicResource FontSize.Body}">
-    <Grid>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="240" />
-            <ColumnDefinition Width="*" />
-        </Grid.ColumnDefinitions>
+    <Grid Margin="16">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
 
-        <Border Grid.Column="0"
+        <Border Grid.Row="0"
                 Background="{DynamicResource Brush.Surface}"
                 BorderBrush="{DynamicResource Brush.Border}"
-                BorderThickness="0,0,1,0"
-                Padding="16">
-            <StackPanel>
-                <TextBlock Text="Settings"
-                           Style="{DynamicResource BaseTextBlockStyle}"
-                           FontSize="{DynamicResource FontSize.Title}"
-                           FontWeight="SemiBold"
-                           Margin="0,0,0,16" />
-                <ListBox ItemsSource="{Binding NavigationItems}"
-                         SelectedItem="{Binding SelectedNavigationItem, Mode=TwoWay}" />
-            </StackPanel>
+                BorderThickness="1"
+                Padding="12"
+                Margin="0,0,0,12">
+            <TextBlock Text="Settings (Modern Preview)"
+                       Style="{DynamicResource BaseTextBlockStyle}"
+                       FontSize="{DynamicResource FontSize.Title}"
+                       FontWeight="SemiBold" />
         </Border>
 
-        <Border Grid.Column="1"
-                Padding="20"
-                Background="{DynamicResource Brush.Background}">
-            <ContentControl Content="{Binding CurrentPageView}" />
+        <Border Grid.Row="1"
+                Background="{DynamicResource Brush.Surface}"
+                BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="1"
+                Padding="12">
+            <TabControl>
+                <TabItem Header="General">
+                    <pages:GeneralPage />
+                </TabItem>
+                <TabItem Header="Chat Windows">
+                    <pages:ChatWindowsPage />
+                </TabItem>
+                <TabItem Header="Translation">
+                    <pages:TranslationPage />
+                </TabItem>
+                <TabItem Header="Appearance">
+                    <pages:AppearancePage />
+                </TabItem>
+                <TabItem Header="Hotkeys">
+                    <pages:HotkeysPage />
+                </TabItem>
+                <TabItem Header="About">
+                    <pages:AboutPage />
+                </TabItem>
+            </TabControl>
         </Border>
     </Grid>
 </Window>

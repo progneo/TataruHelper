@@ -2,6 +2,18 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 
+using System;
+using System.ComponentModel;
+using System.Drawing;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Navigation;
+
 using FFXIVTataruHelper.EventArguments;
 using FFXIVTataruHelper.Factories;
 using FFXIVTataruHelper.Services.Logging;
@@ -9,18 +21,16 @@ using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.Services.Update;
 using FFXIVTataruHelper.Utils;
 using FFXIVTataruHelper.ViewModel;
+using FFXIVTataruHelper.ViewModel.Shell;
+using FFXIVTataruHelper.Views.Shell;
 using FFXIVTataruHelper.WinUtils;
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Interop;
+using Hardcodet.Wpf.TaskbarNotification;
 
 using Updater;
 using Updater.EventArguments;
+
+using Timer = System.Timers.Timer;
 
 namespace FFXIVTataruHelper
 {
@@ -40,7 +50,7 @@ namespace FFXIVTataruHelper
         TataruModel _TataruModel;
         TataruUIModel _TataruUIModel;
 
-        System.Timers.Timer _UpdaterTimer = null;
+        Timer _UpdaterTimer = null;
 
         ///////////////////////////////////////////////////
 
@@ -55,6 +65,7 @@ namespace FFXIVTataruHelper
         OptimizeFootprint _OptimizeFootprint;
 
         WinMessagesHandler _WinMessagesHandler;
+        MainShellWindow _ModernSettingsWindow;
 
         public MainWindow(ITataruModelFactory tataruModelFactory, IUpdateService updater, IAppLogger logger,
             IUiDispatcher uiDispatcher)
@@ -63,7 +74,7 @@ namespace FFXIVTataruHelper
             _Updater = updater;
             _Logger = logger;
             _UiDispatcher = uiDispatcher;
-            if (Utils.TataruSingleInstance.IsOnlyInstance == false)
+            if (TataruSingleInstance.IsOnlyInstance == false)
             {
                 ShutDown();
                 return;
@@ -75,7 +86,7 @@ namespace FFXIVTataruHelper
                 _LogWriter.StartWriting();
 
                 _Logger.WriteLog("TataruHelper v" +
-                                 Convert.ToString(System.Reflection.Assembly.GetEntryAssembly().GetName().Version));
+                                 Convert.ToString(Assembly.GetEntryAssembly().GetName().Version));
             }
             catch (Exception ex)
             {
@@ -133,6 +144,36 @@ namespace FFXIVTataruHelper
             }
         }
 
+        private void OpenModernSettingsPreview_Click(object sender, RoutedEventArgs e)
+        {
+            if (_TataruModel == null || _TataruUIModel == null)
+            {
+                return;
+            }
+
+            if (_ModernSettingsWindow == null || !_ModernSettingsWindow.IsLoaded)
+            {
+                var shellViewModel = new MainShellViewModel(_TataruModel.TataruViewModel, _TataruUIModel);
+
+                _ModernSettingsWindow = new MainShellWindow(shellViewModel) { Owner = this };
+
+                _ModernSettingsWindow.Closed += (_, _) =>
+                {
+                    shellViewModel.Dispose();
+                    _ModernSettingsWindow = null;
+                };
+                _ModernSettingsWindow.Show();
+                return;
+            }
+
+            if (_ModernSettingsWindow.WindowState == WindowState.Minimized)
+            {
+                _ModernSettingsWindow.WindowState = WindowState.Normal;
+            }
+
+            _ModernSettingsWindow.Activate();
+        }
+
         private void HideToTray_Changed(object sender, RoutedEventArgs e)
         {
             var isHideToTray = (bool)((CheckBox)sender).IsChecked;
@@ -167,7 +208,7 @@ namespace FFXIVTataruHelper
             _Updater.CheckAndInstallUpdatesAsync(CmdArgsStatus.IsPreRelease, CancellationToken.None).Forget();
         }
 
-        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
         {
             if (!ExternalLinkOpener.TryOpen(e.Uri))
             {
@@ -186,7 +227,7 @@ namespace FFXIVTataruHelper
             try
             {
                 _Logger.WriteLog("TataruHelper v" +
-                                 Convert.ToString(System.Reflection.Assembly.GetEntryAssembly().GetName().Version));
+                                 Convert.ToString(Assembly.GetEntryAssembly().GetName().Version));
             }
             catch (Exception) { }
 
@@ -248,14 +289,14 @@ namespace FFXIVTataruHelper
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
         {
-            System.Drawing.PointD winSize = new System.Drawing.PointD(this.Width, this.Height);
+            PointD winSize = new PointD(this.Width, this.Height);
 
             if (_TataruUIModel != null)
                 if (_TataruUIModel.SettingsWindowSize != winSize)
                     _TataruUIModel.SettingsWindowSize = winSize;
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
             try
             {
@@ -281,7 +322,7 @@ namespace FFXIVTataruHelper
                         _Logger.WriteLog("MainWindow.Window_Closing save settings timed out.");
                     }
 
-                    Utils.TataruSingleInstance.Stop();
+                    TataruSingleInstance.Stop();
 
                     if (_LogWriter != null)
                         _LogWriter.Stop();
@@ -339,7 +380,7 @@ namespace FFXIVTataruHelper
         {
             await this.UIThreadAsync(() =>
             {
-                System.Drawing.PointD winSize = new System.Drawing.PointD(this.Width, this.Height);
+                PointD winSize = new PointD(this.Width, this.Height);
 
                 var UIModel = ((TataruUIModel)ea.Sender);
 
@@ -426,7 +467,7 @@ namespace FFXIVTataruHelper
                         _TataruModel.TataruViewModel.RestartReadyVisibility = true;
                         TaskBarIcon.ShowBalloonTip((string)this.Resources["NotifyUpdateTitle"],
                             (string)this.Resources["NotifyUpdateText"],
-                            Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
+                            BalloonIcon.Info);
                     }
 
                     if (stateTransition.HideDownloading)
@@ -602,7 +643,7 @@ namespace FFXIVTataruHelper
 
         protected override void OnStateChanged(EventArgs e)
         {
-            if (WindowState == System.Windows.WindowState.Minimized)
+            if (WindowState == WindowState.Minimized)
             {
                 if ((bool)HideToTray.IsChecked)
                     this.Hide();
@@ -611,7 +652,7 @@ namespace FFXIVTataruHelper
             base.OnStateChanged(e);
         }
 
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        protected override void OnClosing(CancelEventArgs e)
         {
             e.Cancel = false;
             base.OnClosing(e);

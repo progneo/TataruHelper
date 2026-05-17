@@ -5,7 +5,45 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d">
     <Grid Background="{DynamicResource Brush.Background}">
-        <TextBlock Text="Chat windows page placeholder"
-                   Style="{DynamicResource BaseTextBlockStyle}" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="Chat windows"
+                   Style="{DynamicResource BaseTextBlockStyle}"
+                   FontSize="{DynamicResource FontSize.Subtitle}"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,8" />
+
+        <GroupBox Grid.Row="1" Style="{DynamicResource CardGroupBoxStyle}" Header="Windows">
+            <ListBox ItemsSource="{Binding SettingsViewModel.ChatWindows}"
+                     SelectedIndex="{Binding SettingsViewModel.SelectedTabIndex, Mode=TwoWay}"
+                     DisplayMemberPath="Name" />
+        </GroupBox>
+
+        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
+            <Button Style="{DynamicResource BaseButtonStyle}"
+                    Content="Add"
+                    Width="120"
+                    Command="{Binding SettingsViewModel.AddNewChatWindowCommand}" />
+            <Button Style="{DynamicResource BaseButtonStyle}"
+                    Content="Delete"
+                    Width="120"
+                    Margin="8,0,0,0"
+                    Command="{Binding SettingsViewModel.DeleteChatWindowCommand}" />
+            <Button Style="{DynamicResource BaseButtonStyle}"
+                    Content="{DynamicResource ShowChatBox}"
+                    Width="150"
+                    Margin="8,0,0,0"
+                    Command="{Binding CurrentChatWindow.ShowChatWindowCommand}" />
+            <Button Style="{DynamicResource BaseButtonStyle}"
+                    Content="{DynamicResource ResetChatPosition}"
+                    Width="160"
+                    Margin="8,0,0,0"
+                    Command="{Binding CurrentChatWindow.RestChatWindowPositionCommand}" />
+        </StackPanel>
     </Grid>
 </UserControl>

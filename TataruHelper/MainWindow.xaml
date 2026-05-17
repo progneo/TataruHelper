@@ -90,6 +90,8 @@
                 </MenuItem>
                 <MenuItem Header="{DynamicResource DockHelp}" Grid.Column="1">
                     <MenuItem Header="{DynamicResource DockAbout}" Click="About_Click" />
+                    <MenuItem Header="{DynamicResource DockModernSettingsPreview}"
+                              Click="OpenModernSettingsPreview_Click" />
                     <MenuItem x:Name="CheckUpdatesButton" Header="{DynamicResource CheckUpdatesText}"
                               Click="CheckUpdates_Click" />
                 </MenuItem>

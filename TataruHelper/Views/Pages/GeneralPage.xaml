@@ -5,7 +5,27 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d">
     <Grid Background="{DynamicResource Brush.Background}">
-        <TextBlock Text="General settings page placeholder"
-                   Style="{DynamicResource BaseTextBlockStyle}" />
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Text="Runtime behavior"
+                   Style="{DynamicResource BaseTextBlockStyle}"
+                   FontSize="{DynamicResource FontSize.Subtitle}"
+                   FontWeight="SemiBold"
+                   Margin="0,0,0,8" />
+
+        <GroupBox Grid.Row="1"
+                  Style="{DynamicResource CardGroupBoxStyle}"
+                  Header="General">
+            <StackPanel>
+                <CheckBox Content="{DynamicResource DirectMemoryCB}"
+                          IsChecked="{Binding IsDirectMemoryReading, Mode=TwoWay}" />
+                <CheckBox Content="{DynamicResource HideToTrayCB}"
+                          IsChecked="{Binding IsHideSettingsToTray, Mode=TwoWay}" />
+            </StackPanel>
+        </GroupBox>
     </Grid>
 </UserControl>

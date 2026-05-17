@@ -1,6 +1,5 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:FFXIVTataruHelper"
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
     <system:String x:Key="SettingsWindowName">Settings</system:String>
@@ -25,6 +24,7 @@
     <system:String x:Key="DockHelp">Help</system:String>
 
     <system:String x:Key="DockAbout">About</system:String>
+    <system:String x:Key="DockModernSettingsPreview">Modern settings (preview)</system:String>
 
     <system:String x:Key="DockPatrons">Patrons</system:String>
     <system:String x:Key="DockDiscrod">Discord</system:String>
@@ -120,7 +120,7 @@
     <system:String x:Key="CkNoviceNetwork">NoviceNetwork</system:String>
 
     <system:String x:Key="CkServerInfo">Server Info</system:String>
-    
+
     <system:String x:Key="CkCWLS1">CWLS1</system:String>
     <system:String x:Key="CkCWLS2">CWLS2</system:String>
     <system:String x:Key="CkCWLS3">CWLS3</system:String>
@@ -132,7 +132,7 @@
 
     <system:String x:Key="CkEmotes">Emotes</system:String>
     <system:String x:Key="CkCustomEmotes">Custom Emotes</system:String>
-    
+
     <system:String x:Key="DearPatrons">Dear Patrons!</system:String>
     <system:String x:Key="PatronsMsg">We express our great appreciation to the people who support our project and motivate us for new achievements.</system:String>
     <system:String x:Key="PatronsThankYou">Thank you</system:String>
