@@ -14,13 +14,18 @@
         Deactivated="Window_Deactivated"
         Top="{Binding ChatWindowTop, Mode=TwoWay}" Left="{Binding ChatWindowLeft, Mode=TwoWay}"
         Width="{Binding ChatWindowWidth, Mode=TwoWay}" Height="{Binding ChatWindowHeight, Mode=TwoWay}"
-        Background="{Binding BackGroundColor , Converter={utils:ColorToSolidColorBrush}, Mode=OneWay}"
+        Background="Transparent"
         Visibility="{Binding IsWindowVisible, Converter={utils:BooleanToVisibilityConverter}, Mode=TwoWay}"
         Topmost="{Binding IsAlwaysOnTop, Mode=OneWay}">
     <Grid x:Name="RootGrid">
+        <Border x:Name="WindowSurface"
+                Background="{Binding BackGroundColor, Converter={utils:ColorToSolidColorBrush}, Mode=OneWay}"
+                CornerRadius="{Binding WindowCornerRadius, Mode=OneWay}"
+                IsHitTestVisible="False" />
+
         <Border x:Name="HoverChrome"
                 Margin="1"
-                CornerRadius="6"
+                CornerRadius="{Binding WindowCornerRadius, Mode=OneWay}"
                 BorderBrush="{DynamicResource Brush.Accent}"
                 BorderThickness="1"
                 Opacity="0"

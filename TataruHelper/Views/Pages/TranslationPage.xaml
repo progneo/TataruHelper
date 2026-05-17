@@ -4,7 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:ctrl="clr-namespace:FFXIVTataruHelper.Controls"
              xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
              mc:Ignorable="d">
     <Grid Background="Transparent">
@@ -76,14 +76,11 @@
                                             </Style>
                                         </Border.Style>
                                         <DockPanel>
-                                            <xctk:ColorPicker Style="{DynamicResource BaseColorPickerStyle}"
-                                                              Width="24" Height="24"
-                                                              ShowDropDownButton="False"
-                                                              ShowTabHeaders="False"
-                                                              Margin="8,0,0,0"
-                                                              HorizontalAlignment="Right"
-                                                              DockPanel.Dock="Right"
-                                                              SelectedColor="{Binding Color}" />
+                                            <ctrl:ColorSwatchPicker SwatchWidth="22" SwatchHeight="22"
+                                                                    Margin="8,0,0,0"
+                                                                    HorizontalAlignment="Right"
+                                                                    DockPanel.Dock="Right"
+                                                                    SelectedColor="{Binding Color, Mode=TwoWay}" />
                                             <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
                                                       Content="{utils:ResourceBinding Name}"
                                                       VerticalAlignment="Center"

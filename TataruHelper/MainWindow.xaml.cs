@@ -373,10 +373,9 @@ public partial class MainWindow : FluentWindow
             _tataruModel.TataruViewModel.RestartReadyVisibility,
             _tataruModel.TataruViewModel.DownloadingUpdateVisibility);
 
-        if (stateTransition.DisableCheckButton)
-        {
-            await this.UIThreadAsync(() => { CheckUpdatesButton.IsEnabled = false; });
-        }
+        // Check Updates button now lives on About page; enable/disable plumbing
+        // would need a shared bindable property — deferred.
+        _ = stateTransition.DisableCheckButton;
 
         if (stateTransition.ShowDownloading ||
             stateTransition.ShowRestartReady ||
@@ -440,7 +439,6 @@ public partial class MainWindow : FluentWindow
             await this.UIThreadAsync(() =>
             {
                 _tataruModel.TataruViewModel.UserStartedUpdateTextVisibility = false;
-                CheckUpdatesButton.IsEnabled = true;
             });
         });
     }

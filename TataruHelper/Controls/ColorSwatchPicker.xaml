@@ -1,0 +1,109 @@
+<UserControl x:Class="FFXIVTataruHelper.Controls.ColorSwatchPicker"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             x:Name="Root"
+             mc:Ignorable="d"
+             Background="Transparent">
+
+    <Grid>
+        <ToggleButton x:Name="SwatchToggle"
+                      Width="{Binding SwatchWidth, ElementName=Root}"
+                      Height="{Binding SwatchHeight, ElementName=Root}"
+                      Padding="0"
+                      Background="Transparent"
+                      BorderBrush="{DynamicResource Brush.BorderStrong}"
+                      BorderThickness="1"
+                      Cursor="Hand">
+            <ToggleButton.Template>
+                <ControlTemplate TargetType="ToggleButton">
+                    <Grid>
+                        <!-- Checker background to make alpha visible -->
+                        <Border CornerRadius="6"
+                                ClipToBounds="True"
+                                Background="{DynamicResource Brush.Surface}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}">
+                            <Border.OpacityMask>
+                                <VisualBrush>
+                                    <VisualBrush.Visual>
+                                        <Border Width="100" Height="100" CornerRadius="6" Background="White" />
+                                    </VisualBrush.Visual>
+                                </VisualBrush>
+                            </Border.OpacityMask>
+                            <Grid>
+                                <Rectangle>
+                                    <Rectangle.Fill>
+                                        <DrawingBrush TileMode="Tile" Viewport="0,0,8,8"
+                                                      ViewportUnits="Absolute">
+                                            <DrawingBrush.Drawing>
+                                                <DrawingGroup>
+                                                    <GeometryDrawing Brush="#FFE5E5E5">
+                                                        <GeometryDrawing.Geometry>
+                                                            <RectangleGeometry Rect="0,0,8,8" />
+                                                        </GeometryDrawing.Geometry>
+                                                    </GeometryDrawing>
+                                                    <GeometryDrawing Brush="#FFC0C0C0">
+                                                        <GeometryDrawing.Geometry>
+                                                            <GeometryGroup>
+                                                                <RectangleGeometry Rect="0,0,4,4" />
+                                                                <RectangleGeometry Rect="4,4,4,4" />
+                                                            </GeometryGroup>
+                                                        </GeometryDrawing.Geometry>
+                                                    </GeometryDrawing>
+                                                </DrawingGroup>
+                                            </DrawingBrush.Drawing>
+                                        </DrawingBrush>
+                                    </Rectangle.Fill>
+                                </Rectangle>
+                                <Rectangle Fill="{Binding SelectedColorBrush, ElementName=Root}" />
+                            </Grid>
+                        </Border>
+                        <Border CornerRadius="6"
+                                BorderBrush="{DynamicResource Brush.Accent}"
+                                BorderThickness="0"
+                                x:Name="HoverRing">
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Setter Property="BorderThickness" Value="0" />
+                                    <Style.Triggers>
+                                        <DataTrigger
+                                            Binding="{Binding IsMouseOver,
+                                                     RelativeSource={RelativeSource AncestorType=ToggleButton}}"
+                                            Value="True">
+                                            <Setter Property="BorderThickness" Value="1" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                        </Border>
+                    </Grid>
+                </ControlTemplate>
+            </ToggleButton.Template>
+        </ToggleButton>
+
+        <Popup x:Name="EditorPopup"
+               StaysOpen="False"
+               Placement="Bottom"
+               PlacementTarget="{Binding ElementName=SwatchToggle}"
+               IsOpen="{Binding IsChecked, ElementName=SwatchToggle, Mode=TwoWay}"
+               AllowsTransparency="True">
+            <Border Background="{DynamicResource Brush.Surface}"
+                    BorderBrush="{DynamicResource Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Padding="8"
+                    Margin="0,6,0,0"
+                    Effect="{x:Null}">
+                <StackPanel>
+                    <xctk:ColorCanvas x:Name="Canvas"
+                                      UsingAlphaChannel="True"
+                                      Width="248"
+                                      SelectedColor="{Binding SelectedColor, ElementName=Root, Mode=TwoWay}" />
+                </StackPanel>
+            </Border>
+        </Popup>
+    </Grid>
+</UserControl>

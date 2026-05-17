@@ -4,7 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:ctrl="clr-namespace:FFXIVTataruHelper.Controls"
              mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Background="Transparent">
         <Grid>
@@ -74,9 +74,10 @@
                                   Margin="0,0,0,12" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontSize}" />
-                        <xctk:IntegerUpDown Style="{DynamicResource BaseNumericUpDownStyle}"
-                                            Value="{Binding BoundWindow.ChatFontSize, Mode=TwoWay}" Minimum="1"
-                                            Maximum="100" Margin="0,0,0,12" />
+                        <ui:NumberBox Value="{Binding BoundWindow.ChatFontSize, Mode=TwoWay}"
+                                      Minimum="1" Maximum="100"
+                                      ClearButtonEnabled="False"
+                                      Margin="0,0,0,12" />
 
                         <ui:ToggleSwitch IsChecked="{Binding BoundWindow.ShowTimestamps, Mode=TwoWay}"
                                          Content="{DynamicResource ShowTimestampsCb}" />
@@ -96,22 +97,29 @@
                         </StackPanel>
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource BackgroundColor}" />
-                        <xctk:ColorPicker Style="{DynamicResource BaseColorPickerStyle}"
-                                          SelectedColor="{Binding BoundWindow.BackGroundColor, Mode=TwoWay}"
-                                          ShowAvailableColors="False"
-                                          ShowStandardColors="True"
-                                          ShowRecentColors="True"
-                                          Margin="0,0,0,12" />
+                        <ctrl:ColorSwatchPicker SwatchWidth="160"
+                                                SwatchHeight="32"
+                                                HorizontalAlignment="Left"
+                                                SelectedColor="{Binding BoundWindow.BackGroundColor, Mode=TwoWay}"
+                                                Margin="0,0,0,12" />
+
+                        <Label Style="{DynamicResource BaseLabelStyle}"
+                               Content="{DynamicResource WindowCornerRadiusLabel}" />
+                        <ui:NumberBox Value="{Binding BoundWindow.WindowCornerRadius, Mode=TwoWay}"
+                                      Minimum="0" Maximum="64"
+                                      ClearButtonEnabled="False"
+                                      Margin="0,0,0,12" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource IntervalWidth}" />
-                        <xctk:IntegerUpDown Style="{DynamicResource BaseNumericUpDownStyle}"
-                                            Value="{Binding BoundWindow.SpacingCount, Mode=TwoWay}" Minimum="0"
-                                            Maximum="100" Margin="0,0,0,12" />
+                        <ui:NumberBox Value="{Binding BoundWindow.SpacingCount, Mode=TwoWay}"
+                                      Minimum="0" Maximum="100"
+                                      ClearButtonEnabled="False"
+                                      Margin="0,0,0,12" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource LineBreakHeight}" />
-                        <xctk:IntegerUpDown Style="{DynamicResource BaseNumericUpDownStyle}"
-                                            Value="{Binding BoundWindow.LineBreakHeight, Mode=TwoWay}" Minimum="0"
-                                            Maximum="100" />
+                        <ui:NumberBox Value="{Binding BoundWindow.LineBreakHeight, Mode=TwoWay}"
+                                      Minimum="0" Maximum="100"
+                                      ClearButtonEnabled="False" />
                     </StackPanel>
                 </ui:Card>
             </Grid>

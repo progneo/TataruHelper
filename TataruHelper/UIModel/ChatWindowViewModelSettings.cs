@@ -1,24 +1,27 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using FFXIVTataruHelper.ViewModel;
-using FFXIVTataruHelper.WinUtils;
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Windows.Media;
 
 using FFXIVTataruHelper.TataruComponentModel;
+using FFXIVTataruHelper.ViewModel;
+using FFXIVTataruHelper.WinUtils;
 
 using Translation;
+
+using Color = System.Windows.Media.Color;
+using FontFamily = System.Windows.Media.FontFamily;
 
 namespace FFXIVTataruHelper.UIModel
 {
     public class ChatWindowViewModelSettings : INotifyPropertyChanged,
-        FFXIVTataruHelper.TataruComponentModel.INotifyPropertyChangedAsync
+        INotifyPropertyChangedAsync
     {
         public event PropertyChangedEventHandler PropertyChanged;
 
@@ -37,7 +40,7 @@ namespace FFXIVTataruHelper.UIModel
         private double _lineBreakHeight;
         private int _spacingCount;
 
-        System.Windows.Media.FontFamily _ChatFont;
+        FontFamily _ChatFont;
 
         private bool _isAlwaysOnTop;
         private bool _isClickThrough;
@@ -51,11 +54,12 @@ namespace FFXIVTataruHelper.UIModel
         private TranslatorLanguague _fromLanguague;
         private TranslatorLanguague _toLanguague;
 
-        private System.Drawing.RectangleD _chatWindowRectangle;
+        private RectangleD _chatWindowRectangle;
 
         private List<ChatCodeViewModel> _chatCodes;
 
         private bool _ShowTimestamps;
+        private double _windowCornerRadius;
 
         private HotKeyCombination _showHideChatKeys;
         private HotKeyCombination _clickThoughtChatKeys;
@@ -223,6 +227,18 @@ namespace FFXIVTataruHelper.UIModel
             }
         }
 
+        public double WindowCornerRadius
+        {
+            get => _windowCornerRadius;
+            set
+            {
+                if (_windowCornerRadius == value) return;
+
+                _windowCornerRadius = value;
+                OnPropertyChanged();
+            }
+        }
+
         public TranslationEngineName TranslationEngineName
         {
             get => _translationEngineName;
@@ -259,7 +275,7 @@ namespace FFXIVTataruHelper.UIModel
             }
         }
 
-        public System.Drawing.RectangleD ChatWindowRectangle
+        public RectangleD ChatWindowRectangle
         {
             get => _chatWindowRectangle;
             set
@@ -346,9 +362,11 @@ namespace FFXIVTataruHelper.UIModel
             FromLanguague = null;
             ToLanguague = null;
 
-            ChatWindowRectangle = new System.Drawing.RectangleD(0, 0, 480, 320);
+            ChatWindowRectangle = new RectangleD(0, 0, 480, 320);
 
             ChatCodes = new List<ChatCodeViewModel>();
+
+            WindowCornerRadius = 12;
 
             ShowHideChatKeys = new HotKeyCombination();
             ClickThoughtChatKeys = new HotKeyCombination();
@@ -381,9 +399,11 @@ namespace FFXIVTataruHelper.UIModel
             FromLanguague = null;
             ToLanguague = null;
 
-            ChatWindowRectangle = new System.Drawing.RectangleD(0, 0, 480, 320);
+            ChatWindowRectangle = new RectangleD(0, 0, 480, 320);
 
             ChatCodes = new List<ChatCodeViewModel>();
+
+            WindowCornerRadius = 12;
 
             ShowHideChatKeys = new HotKeyCombination("ShowHideChatKeys" + Convert.ToString(WinId));
             ClickThoughtChatKeys = new HotKeyCombination("ClickThoughtChatKeys" + Convert.ToString(WinId));
@@ -424,6 +444,8 @@ namespace FFXIVTataruHelper.UIModel
 
             ShowTimestamps = settings.ShowTimestamps;
 
+            WindowCornerRadius = settings.WindowCornerRadius;
+
             ShowHideChatKeys = new HotKeyCombination(settings.ShowHideChatKeys);
             ClickThoughtChatKeys = new HotKeyCombination(settings.ClickThoughtChatKeys);
             ClearChatKeys = new HotKeyCombination(settings.ClearChatKeys);
@@ -440,7 +462,7 @@ namespace FFXIVTataruHelper.UIModel
         private void EventErrorHandler(string evname, Exception ex)
         {
             string text = evname + Environment.NewLine + Convert.ToString(ex);
-            System.Diagnostics.Trace.TraceError(text);
+            Trace.TraceError(text);
         }
     }
 }

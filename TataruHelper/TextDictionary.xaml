@@ -196,4 +196,8 @@
     <system:String x:Key="DirectMemoryDescription">Read FFXIV chat directly from process memory using Sharlayan.</system:String>
     <system:String x:Key="HideToTrayDescription">Hide the settings window to the system tray when minimized.</system:String>
 
+    <system:String x:Key="UpdatesGroupTitle">Updates</system:String>
+    <system:String x:Key="UpdatesGroupHint">Check whether a newer release of Tataru Helper is available.</system:String>
+    <system:String x:Key="LanguageGroupHint">Interface language for the settings window and overlays.</system:String>
+    <system:String x:Key="WindowCornerRadiusLabel">Corner radius</system:String>
 </ResourceDictionary>

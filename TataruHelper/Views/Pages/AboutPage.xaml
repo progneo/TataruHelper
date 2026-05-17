@@ -1,86 +1,120 @@
-﻿<UserControl x:Class="FFXIVTataruHelper.Views.Pages.AboutPage"
+<UserControl x:Class="FFXIVTataruHelper.Views.Pages.AboutPage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              mc:Ignorable="d">
-    <Grid Background="Transparent">
-        <Grid.RowDefinitions>
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="Auto" />
-            <RowDefinition Height="*" />
-        </Grid.RowDefinitions>
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="Transparent">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+            </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Style="{DynamicResource SectionTitleStyle}"
-                   Text="{DynamicResource DockAbout}" />
-        <TextBlock Grid.Row="1"
-                   Style="{DynamicResource CaptionTextStyle}"
-                   Margin="0,0,0,16"
-                   Text="{DynamicResource AboutPageDescription}" />
+            <TextBlock Grid.Row="0"
+                       Style="{DynamicResource SectionTitleStyle}"
+                       Text="{DynamicResource DockAbout}" />
+            <TextBlock Grid.Row="1"
+                       Style="{DynamicResource CaptionTextStyle}"
+                       Margin="0,0,0,16"
+                       Text="{DynamicResource AboutPageDescription}" />
 
-        <ui:Card Grid.Row="2" Padding="20" VerticalAlignment="Top">
-            <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                    <Image Source="pack://application:,,,/Resources/tray_icon.ico"
-                           Width="40" Height="40"
-                           Margin="0,0,12,0" VerticalAlignment="Center" />
-                    <StackPanel VerticalAlignment="Center">
-                        <TextBlock Text="Tataru Helper" FontSize="{DynamicResource FontSize.Title}"
-                                   FontWeight="SemiBold" />
-                        <TextBlock Style="{DynamicResource CaptionTextStyle}" Text="Real-time FFXIV chat translator" />
+            <!-- Updates card -->
+            <ui:Card Grid.Row="2" Padding="16" Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <ui:SymbolIcon Symbol="ArrowSync24" FontSize="16"
+                                           Margin="0,0,8,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Accent}" />
+                            <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                       Margin="0"
+                                       Text="{DynamicResource UpdatesGroupTitle}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                   Text="{DynamicResource UpdatesGroupHint}" />
                     </StackPanel>
+                    <ui:Button Grid.Column="1"
+                               x:Name="CheckUpdatesButton"
+                               Appearance="Primary"
+                               Icon="{ui:SymbolIcon Symbol=ArrowSync24}"
+                               Content="{DynamicResource CheckUpdatesText}"
+                               Command="{Binding Shell.CheckUpdatesCommand}"
+                               VerticalAlignment="Center" />
+                </Grid>
+            </ui:Card>
+
+            <ui:Card Grid.Row="3" Padding="20">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <Image Source="pack://application:,,,/Resources/tray_icon.ico"
+                               Width="40" Height="40"
+                               Margin="0,0,12,0" VerticalAlignment="Center" />
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Tataru Helper" FontSize="{DynamicResource FontSize.Title}"
+                                       FontWeight="SemiBold" />
+                            <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                       Text="Real-time FFXIV chat translator" />
+                        </StackPanel>
+                    </StackPanel>
+
+                    <Border Background="{DynamicResource Brush.SurfaceSubtle}"
+                            BorderBrush="{DynamicResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="12">
+                        <StackPanel>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="160" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="{DynamicResource ForkRepositoryLabel}"
+                                           Foreground="{DynamicResource Brush.TextSecondary}"
+                                           VerticalAlignment="Center" />
+                                <ui:HyperlinkButton Grid.Column="1"
+                                                    Content="github.com/progneo/TataruHelper"
+                                                    NavigateUri="https://github.com/progneo/TataruHelper" />
+                            </Grid>
+                            <Grid Margin="0,0,0,8">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="160" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="{DynamicResource OriginalRepositoryLabel}"
+                                           Foreground="{DynamicResource Brush.TextSecondary}"
+                                           VerticalAlignment="Center" />
+                                <ui:HyperlinkButton Grid.Column="1"
+                                                    Content="github.com/NightlyRevenger/TataruHelper"
+                                                    NavigateUri="https://github.com/NightlyRevenger/TataruHelper" />
+                            </Grid>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="160" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="{DynamicResource CommunityDiscordLabel}"
+                                           Foreground="{DynamicResource Brush.TextSecondary}"
+                                           VerticalAlignment="Center" />
+                                <ui:HyperlinkButton Grid.Column="1"
+                                                    Content="discord.gg/bSrpbd9"
+                                                    NavigateUri="https://discord.gg/bSrpbd9" />
+                            </Grid>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
-
-                <Border Background="{DynamicResource Brush.SurfaceSubtle}"
-                        BorderBrush="{DynamicResource Brush.Border}"
-                        BorderThickness="1"
-                        CornerRadius="6"
-                        Padding="12">
-                    <StackPanel>
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="160" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="{DynamicResource ForkRepositoryLabel}"
-                                       Foreground="{DynamicResource Brush.TextSecondary}"
-                                       VerticalAlignment="Center" />
-                            <ui:HyperlinkButton Grid.Column="1"
-                                                Content="github.com/progneo/TataruHelper"
-                                                NavigateUri="https://github.com/progneo/TataruHelper" />
-                        </Grid>
-                        <Grid Margin="0,0,0,8">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="160" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="{DynamicResource OriginalRepositoryLabel}"
-                                       Foreground="{DynamicResource Brush.TextSecondary}"
-                                       VerticalAlignment="Center" />
-                            <ui:HyperlinkButton Grid.Column="1"
-                                                Content="github.com/NightlyRevenger/TataruHelper"
-                                                NavigateUri="https://github.com/NightlyRevenger/TataruHelper" />
-                        </Grid>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="160" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                            <TextBlock Grid.Column="0"
-                                       Text="{DynamicResource CommunityDiscordLabel}"
-                                       Foreground="{DynamicResource Brush.TextSecondary}"
-                                       VerticalAlignment="Center" />
-                            <ui:HyperlinkButton Grid.Column="1"
-                                                Content="discord.gg/bSrpbd9"
-                                                NavigateUri="https://discord.gg/bSrpbd9" />
-                        </Grid>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </ui:Card>
-    </Grid>
+            </ui:Card>
+        </Grid>
+    </ScrollViewer>
 </UserControl>

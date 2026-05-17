@@ -434,6 +434,18 @@ namespace FFXIVTataruHelper.ViewModel
             }
         }
 
+        public double WindowCornerRadius
+        {
+            get => _windowCornerRadius;
+            set
+            {
+                if (_windowCornerRadius == value) return;
+
+                _windowCornerRadius = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool IsSelected
         {
             get { return _IsSelected; }
@@ -501,6 +513,7 @@ namespace FFXIVTataruHelper.ViewModel
         HotKeyManager _HotKeyManager;
 
         bool _ShowTimestamps;
+        double _windowCornerRadius = 12;
 
         bool _IsSelected;
 
@@ -578,6 +591,8 @@ namespace FFXIVTataruHelper.ViewModel
 
             ShowTimestamps = settings.ShowTimestamps;
 
+            WindowCornerRadius = settings.WindowCornerRadius > 0 ? settings.WindowCornerRadius : 12;
+
             BackGroundColor = settings.BackGroundColor;
 
             TranslationEngines = new CollectionView(translationEngines);
@@ -628,6 +643,9 @@ namespace FFXIVTataruHelper.ViewModel
             //settings.IsHiddenByUser = this.IsHiddenByUser;
 
             settings.BackGroundColor = this.BackGroundColor;
+
+            settings.WindowCornerRadius = this.WindowCornerRadius;
+            settings.ShowTimestamps = this.ShowTimestamps;
 
             TranslationEngine engine = (TranslationEngine)this.TranslationEngines.CurrentItem;
             if (engine != null)

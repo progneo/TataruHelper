@@ -4,7 +4,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
-             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Background="Transparent">
         <Grid>
@@ -134,13 +133,13 @@
                                          IsChecked="{Binding BoundWindow.IsAutoHide, Mode=TwoWay}"
                                          Content="{DynamicResource AutoHideCB}"
                                          VerticalAlignment="Center" />
-                        <xctk:IntegerUpDown Grid.Column="1"
-                                            Style="{DynamicResource BaseNumericUpDownStyle}"
-                                            Value="{Binding BoundWindow.AutoHideTimeoutSeconds, Mode=TwoWay}"
-                                            Width="120"
-                                            VerticalAlignment="Center"
-                                            Minimum="1"
-                                            Maximum="36000" />
+                        <ui:NumberBox Grid.Column="1"
+                                      Value="{Binding BoundWindow.AutoHideTimeoutSeconds, Mode=TwoWay}"
+                                      Width="140"
+                                      VerticalAlignment="Center"
+                                      Minimum="1"
+                                      Maximum="36000"
+                                      ClearButtonEnabled="False" />
                     </Grid>
                 </StackPanel>
             </ui:Card>

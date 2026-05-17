@@ -124,6 +124,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
             _selectedSection = value;
             OnPropertyChanged();
             OnPropertyChanged(nameof(SelectedSectionKey));
+            OnPropertyChanged(nameof(ShowActiveWindowSelector));
         }
     }
 
@@ -188,6 +189,29 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
             _ffStatusText = value;
             OnPropertyChanged();
+            OnPropertyChanged(nameof(FfStatusActive));
+        }
+    }
+
+    public bool FfStatusActive
+    {
+        get
+        {
+            var foundPrefix = Application.Current?.Resources?["FFStatusTextFound"] as string;
+            return !string.IsNullOrEmpty(_ffStatusText)
+                   && !string.IsNullOrEmpty(foundPrefix)
+                   && _ffStatusText.StartsWith(foundPrefix, StringComparison.Ordinal);
+        }
+    }
+
+    public bool ShowActiveWindowSelector
+    {
+        get
+        {
+            var section = SelectedSection?.Section;
+            return section == SettingsSection.Translation
+                   || section == SettingsSection.Appearance
+                   || section == SettingsSection.Hotkeys;
         }
     }
 
