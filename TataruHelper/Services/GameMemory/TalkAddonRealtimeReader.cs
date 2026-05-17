@@ -60,16 +60,6 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 return TalkAddonRealtimeDialogSnapshot.Unavailable();
             }
 
-            var speakerCandidate = string.Empty;
-            var speakerOffset = _uiDirectDialogOffsets.Value.LastTalkNameOffset;
-            if (speakerOffset >= 0)
-            {
-                if (TryReadUtf8String(uiModuleAddress, speakerOffset, out var speaker))
-                {
-                    speakerCandidate = SharlayanGameMemoryGateway.NormalizeDialogToken(speaker);
-                }
-            }
-
             var raptureAtkModuleAddress =
                 AddAddress(uiModuleAddress, _uiDirectDialogOffsets.Value.RaptureAtkModuleOffset);
             if (raptureAtkModuleAddress == IntPtr.Zero)
@@ -91,7 +81,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
             if (talkAddonAddress == IntPtr.Zero)
             {
-                return TalkAddonRealtimeDialogSnapshot.Available(string.Empty, speakerCandidate, Array.Empty<string>());
+                return TalkAddonRealtimeDialogSnapshot.Available(string.Empty);
             }
 
             if (!TryReadAddonTalkNodeTexts(talkAddonAddress, out var nodeTexts))
@@ -100,7 +90,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             var talkText = SharlayanGameMemoryGateway.SelectBestTalkText(nodeTexts);
-            return TalkAddonRealtimeDialogSnapshot.Available(talkText, speakerCandidate, nodeTexts);
+            return TalkAddonRealtimeDialogSnapshot.Available(talkText);
         }
 
         private bool TryGetTalkAddonAddress(IntPtr atkUnitManagerAddress, out IntPtr talkAddonAddress)
@@ -284,7 +274,6 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             var raptureLogModuleOffset = ResolveFieldOffset(uiModuleType, "RaptureLogModule");
-            var lastTalkNameOffset = ResolveFieldOffset(uiModuleType, "LastTalkName");
             var raptureAtkModuleOffset = ResolveFieldOffset(uiModuleType, "RaptureAtkModule");
 
             var raptureAtkModuleType = Type.GetType("FFXIVClientStructs.FFXIV.Client.UI.RaptureAtkModule, Sharlayan");
@@ -337,8 +326,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 atkUnitBaseNameOffset,
                 atkUnitBaseNameLength,
                 atkTextNodeNodeTextOffset,
-                addonTalkTextNodeOffsets,
-                lastTalkNameOffset);
+                addonTalkTextNodeOffsets);
         }
 
         private static long ResolveFieldOffset(Type type, string fieldName)
@@ -401,7 +389,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
         private readonly struct UiDirectDialogOffsets
         {
             public static UiDirectDialogOffsets Empty =>
-                new UiDirectDialogOffsets(-1, -1, -1, -1, -1, -1, -1, 0, -1, Array.Empty<long>(), -1);
+                new UiDirectDialogOffsets(-1, -1, -1, -1, -1, -1, -1, 0, -1, Array.Empty<long>());
 
             public long RaptureLogModuleOffset { get; }
             public long RaptureAtkModuleOffset { get; }
@@ -413,7 +401,6 @@ namespace FFXIVTataruHelper.Services.GameMemory
             public int AtkUnitBaseNameLength { get; }
             public long AtkTextNodeNodeTextOffset { get; }
             public long[] AddonTalkTextNodeOffsets { get; }
-            public long LastTalkNameOffset { get; }
 
             public bool IsValid =>
                 RaptureLogModuleOffset >= 0 &&
@@ -438,8 +425,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 long atkUnitBaseNameOffset,
                 int atkUnitBaseNameLength,
                 long atkTextNodeNodeTextOffset,
-                long[] addonTalkTextNodeOffsets,
-                long lastTalkNameOffset)
+                long[] addonTalkTextNodeOffsets)
             {
                 RaptureLogModuleOffset = raptureLogModuleOffset;
                 RaptureAtkModuleOffset = raptureAtkModuleOffset;
@@ -451,7 +437,6 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 AtkUnitBaseNameLength = atkUnitBaseNameLength;
                 AtkTextNodeNodeTextOffset = atkTextNodeNodeTextOffset;
                 AddonTalkTextNodeOffsets = addonTalkTextNodeOffsets;
-                LastTalkNameOffset = lastTalkNameOffset;
             }
         }
     }
@@ -460,27 +445,21 @@ namespace FFXIVTataruHelper.Services.GameMemory
     {
         public bool SourceAvailable { get; }
         public string TalkText { get; }
-        public string SpeakerCandidate { get; }
-        public string[] NodeTexts { get; }
 
-        private TalkAddonRealtimeDialogSnapshot(bool sourceAvailable, string talkText, string speakerCandidate,
-            string[] nodeTexts)
+        private TalkAddonRealtimeDialogSnapshot(bool sourceAvailable, string talkText)
         {
             SourceAvailable = sourceAvailable;
             TalkText = talkText ?? string.Empty;
-            SpeakerCandidate = speakerCandidate ?? string.Empty;
-            NodeTexts = nodeTexts ?? Array.Empty<string>();
         }
 
         public static TalkAddonRealtimeDialogSnapshot Unavailable()
         {
-            return new TalkAddonRealtimeDialogSnapshot(false, string.Empty, string.Empty, Array.Empty<string>());
+            return new TalkAddonRealtimeDialogSnapshot(false, string.Empty);
         }
 
-        public static TalkAddonRealtimeDialogSnapshot Available(string talkText, string speakerCandidate,
-            string[] nodeTexts)
+        public static TalkAddonRealtimeDialogSnapshot Available(string talkText)
         {
-            return new TalkAddonRealtimeDialogSnapshot(true, talkText, speakerCandidate, nodeTexts);
+            return new TalkAddonRealtimeDialogSnapshot(true, talkText);
         }
     }
 }
