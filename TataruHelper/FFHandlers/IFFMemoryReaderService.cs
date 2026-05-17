@@ -1,7 +1,8 @@
-using FFXIVTataruHelper.EventArguments;
-using FFXIVTataruHelper.TataruComponentModel;
 using System;
 using System.Windows;
+
+using FFXIVTataruHelper.EventArguments;
+using FFXIVTataruHelper.TataruComponentModel;
 
 namespace FFXIVTataruHelper.FFHandlers
 {
@@ -12,6 +13,8 @@ namespace FFXIVTataruHelper.FFHandlers
         event AsyncEventHandler<ChatMessageArrivedEventArgs> FFChatMessageArrived;
 
         WindowState FFWindowState { get; }
+
+        bool IsGameWindowForeground { get; }
 
         bool UseDirectReading { get; set; }
 

@@ -1,14 +1,8 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using FFXIVTataruHelper.EventArguments;
-using FFXIVTataruHelper.Services.Logging;
-using FFXIVTataruHelper.Services.Settings;
-using FFXIVTataruHelper.Services.UI;
-using FFXIVTataruHelper.ViewModel;
-using FFXIVTataruHelper.WinUtils;
-
 using System;
+using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,7 +12,13 @@ using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
 
+using FFXIVTataruHelper.EventArguments;
+using FFXIVTataruHelper.Services.Logging;
+using FFXIVTataruHelper.Services.Settings;
+using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.TataruComponentModel;
+using FFXIVTataruHelper.ViewModel;
+using FFXIVTataruHelper.WinUtils;
 
 namespace FFXIVTataruHelper
 {
@@ -44,6 +44,12 @@ namespace FFXIVTataruHelper
         private DateTime _TextArrivedTime;
         protected bool _KeepWorking;
         private bool _AutoHidden;
+
+        private const uint TopMostSetWindowPosFlags =
+            Win32Interfaces.SWP_NOMOVE |
+            Win32Interfaces.SWP_NOSIZE |
+            Win32Interfaces.SWP_NOACTIVATE |
+            Win32Interfaces.SWP_NOOWNERZORDER;
 
         TataruModel _TataruModel;
         ChatWindowViewModel _ChatWindowViewModel;
@@ -122,14 +128,17 @@ namespace FFXIVTataruHelper
             else
                 MakeWindowClickable();
 
+            ApplyAlwaysOnTop();
+
             _ChatWindowViewModel.AsyncPropertyChanged += OnSettingsWindowPropertyChange;
             _ChatWindowViewModel.RequestChatClear += OnChatClearRequest;
+            _TataruModel.FFMemoryReader.AsyncPropertyChanged += OnMemoryReaderPropertyChange;
 
             _TataruModel.ChatProcessor.TextArrived += OnTextArrived;
             _TataruModel.FFMemoryReader.FFWindowStateChanged += OnFFWindowStateChange;
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void Window_Closing(object sender, CancelEventArgs e)
         {
             _KeepWorking = false;
         }
@@ -269,6 +278,17 @@ namespace FFXIVTataruHelper
                         MakeWindowClickable();
 
                     break;
+                case "IsAlwaysOnTop":
+                    {
+                        ApplyAlwaysOnTop();
+
+                        if (!_ChatWindowViewModel.IsAlwaysOnTop &&
+                            !_TataruModel.FFMemoryReader.IsGameWindowForeground)
+                        {
+                            _ChatWindowViewModel.IsWindowVisible = false;
+                        }
+                    }
+                    break;
                 case "IsAutoHide":
                     {
                         _TextArrivedTime = DateTime.UtcNow;
@@ -279,7 +299,11 @@ namespace FFXIVTataruHelper
                 case "IsWindowVisible":
                     {
                         if (_ChatWindowViewModel.IsWindowVisible == true)
+                        {
                             _TextArrivedTime = DateTime.UtcNow;
+                            ShowWindow();
+                            ApplyAlwaysOnTop();
+                        }
                     }
                     break;
                 case "BackGroundColor":
@@ -331,6 +355,33 @@ namespace FFXIVTataruHelper
                             _ChatWindowViewModel.IsWindowVisible = true;
                     }
                 }
+            });
+        }
+
+        protected virtual async Task OnMemoryReaderPropertyChange(AsyncPropertyChangedEventArgs ea)
+        {
+            if (!string.Equals(ea.PropertyName, "IsGameWindowForeground", StringComparison.Ordinal))
+                return;
+
+            await this.UIThreadAsync(() =>
+            {
+                if (_ChatWindowViewModel.IsAlwaysOnTop)
+                {
+                    ApplyAlwaysOnTop();
+                    return;
+                }
+
+                if (_TataruModel.FFMemoryReader.IsGameWindowForeground)
+                {
+                    if (!_ChatWindowViewModel.IsHiddenByUser && !_AutoHidden)
+                        _ChatWindowViewModel.IsWindowVisible = true;
+                }
+                else
+                {
+                    _ChatWindowViewModel.IsWindowVisible = false;
+                }
+
+                ApplyAlwaysOnTop();
             });
         }
 
@@ -529,15 +580,73 @@ namespace FFXIVTataruHelper
             Application.Current.Shutdown();
         }
 
+        private void ApplyAlwaysOnTop()
+        {
+            try
+            {
+                this.UIThread(() =>
+                {
+                    bool isAlwaysOnTop = _ChatWindowViewModel.IsAlwaysOnTop ||
+                                         _TataruModel.FFMemoryReader.IsGameWindowForeground;
+                    this.Topmost = isAlwaysOnTop;
+
+                    var thisHandle = new WindowInteropHelper(this).Handle;
+                    if (thisHandle == IntPtr.Zero)
+                        return;
+
+                    ApplyTopMostToHandle(thisHandle, isAlwaysOnTop);
+
+                    // WPF can create a hidden owner when ShowInTaskbar=false.
+                    // Keep that owner in the same topmost band as this window.
+                    var hiddenOwnerHandle = Win32Interfaces.GetWindow(thisHandle, Win32Interfaces.GW_OWNER);
+                    if (hiddenOwnerHandle != IntPtr.Zero)
+                    {
+                        ApplyTopMostToHandle(hiddenOwnerHandle, isAlwaysOnTop);
+                    }
+                });
+            }
+            catch (Exception e)
+            {
+                _Logger.WriteLog(Convert.ToString(e));
+            }
+        }
+
+        private static void ApplyTopMostToHandle(IntPtr handle, bool isAlwaysOnTop)
+        {
+            var insertAfter = isAlwaysOnTop
+                ? Win32Interfaces.HWND_TOPMOST
+                : Win32Interfaces.HWND_NOTOPMOST;
+
+            Win32Interfaces.SetWindowPos(
+                handle,
+                insertAfter,
+                0,
+                0,
+                0,
+                0,
+                TopMostSetWindowPosFlags);
+        }
+
         private void ShowWindow()
         {
-            if (this.Visibility != Visibility.Visible)
+            if (_ChatWindowViewModel.IsHiddenByUser == false)
             {
-                if (_ChatWindowViewModel.IsHiddenByUser == false)
+                if (_TataruModel.FFMemoryReader.FFWindowState == WindowState.Minimized)
+                    return;
+
+                if (!_ChatWindowViewModel.IsAlwaysOnTop &&
+                    !_TataruModel.FFMemoryReader.IsGameWindowForeground)
                 {
-                    if (_TataruModel.FFMemoryReader.FFWindowState != WindowState.Minimized)
-                        this.Show();
+                    return;
                 }
+
+                if (this.WindowState == WindowState.Minimized)
+                    this.WindowState = WindowState.Normal;
+
+                if (this.Visibility != Visibility.Visible)
+                    this.Show();
+
+                ApplyAlwaysOnTop();
             }
         }
 
@@ -573,6 +682,7 @@ namespace FFXIVTataruHelper
         {
             _ChatWindowViewModel.AsyncPropertyChanged -= OnSettingsWindowPropertyChange;
             _ChatWindowViewModel.RequestChatClear -= OnChatClearRequest;
+            _TataruModel.FFMemoryReader.AsyncPropertyChanged -= OnMemoryReaderPropertyChange;
 
             _TataruModel.ChatProcessor.TextArrived -= OnTextArrived;
             _TataruModel.FFMemoryReader.FFWindowStateChanged -= OnFFWindowStateChange;
