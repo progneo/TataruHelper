@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
 using FFXIVTataruHelper.Services.Logging;
+
 using Sharlayan;
 using Sharlayan.Core;
 using Sharlayan.Enums;
@@ -44,7 +46,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
             _timestampProvider = timestampProvider ?? (() => DateTime.Now);
         }
 
-        public void SetProcess(ProcessModel processModel, string gameLanguage, string patchVersion, bool useLocalCache, bool scanAllMemoryRegions)
+        public void SetProcess(ProcessModel processModel, string gameLanguage, string patchVersion, bool useLocalCache,
+            bool scanAllMemoryRegions)
         {
             var configuration = new SharlayanConfiguration
             {
@@ -82,7 +85,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         public ChatLogResult GetDirectDialog()
         {
-            var fallbackDirectDialog = _directDialogReader.ExtractDirectDialog(_lastChatLogResult) ?? new ChatLogResult();
+            var fallbackDirectDialog =
+                _directDialogReader.ExtractDirectDialog(_lastChatLogResult) ?? new ChatLogResult();
             var realtimeSnapshot = _realtimeDialogSnapshotOverride != null
                 ? _realtimeDialogSnapshotOverride()
                 : (_talkAddonRealtimeReader?.TryReadSnapshot() ?? TalkAddonRealtimeDialogSnapshot.Unavailable());
@@ -100,14 +104,12 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 if (!string.Equals(_lastRealtimeDialogSignature, signature, StringComparison.Ordinal))
                 {
                     _lastRealtimeDialogSignature = signature;
-                    var line = BuildRealtimeDialogLine(talkText, realtimeSnapshot.SpeakerCandidate, realtimeSnapshot.NodeTexts);
+                    var line = BuildRealtimeDialogLine(talkText);
                     if (line.Length > 0)
                     {
                         result.ChatLogItems.Enqueue(new ChatLogItem
                         {
-                            Code = DirectDialogCode,
-                            Line = line,
-                            TimeStamp = _timestampProvider()
+                            Code = DirectDialogCode, Line = line, TimeStamp = _timestampProvider()
                         });
                     }
                 }
@@ -183,7 +185,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
             return (value ?? string.Empty).Trim();
         }
 
-        internal static string BuildRealtimeDialogLine(string talkText, string speakerCandidate, IEnumerable<string> nodeTexts)
+        internal static string BuildRealtimeDialogLine(string talkText)
         {
             var normalizedTalkText = NormalizeDialogToken(talkText);
             if (normalizedTalkText.Length == 0)
@@ -191,25 +193,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 return string.Empty;
             }
 
-            var normalizedSpeaker = NormalizeDialogToken(speakerCandidate);
-            if (!IsSpeakerConfirmed(normalizedSpeaker, nodeTexts))
-            {
-                return normalizedTalkText;
-            }
-
-            return normalizedSpeaker + ":" + normalizedTalkText;
-        }
-
-        private static bool IsSpeakerConfirmed(string normalizedSpeaker, IEnumerable<string> nodeTexts)
-        {
-            if (normalizedSpeaker.Length == 0 || nodeTexts == null)
-            {
-                return false;
-            }
-
-            return nodeTexts
-                .Select(NormalizeDialogToken)
-                .Any(node => string.Equals(node, normalizedSpeaker, StringComparison.Ordinal));
+            return normalizedTalkText;
         }
 
         private static GameLanguage ParseGameLanguage(string gameLanguage)

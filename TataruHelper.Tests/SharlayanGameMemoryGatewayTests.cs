@@ -1,9 +1,12 @@
-using FFXIVTataruHelper.Services.GameMemory;
-using FFXIVTataruHelper.Services.Logging;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+
+using FFXIVTataruHelper.Services.GameMemory;
+using FFXIVTataruHelper.Services.Logging;
+
+using NUnit.Framework;
+
 using Sharlayan.Core;
 using Sharlayan.Models.ReadResults;
 
@@ -38,17 +41,14 @@ namespace TataruHelper.Tests
 
             var gateway = CreateGateway(
                 directDialogReader,
-                () => TalkAddonRealtimeDialogSnapshot.Available(
-                    "LiveText",
-                    "LiveNpc",
-                    new[] { "LiveNpc", "LiveText" }));
+                () => TalkAddonRealtimeDialogSnapshot.Available("LiveText"));
 
             var result = gateway.GetDirectDialog();
             var items = result.ChatLogItems.ToArray();
 
             Assert.That(items.Length, Is.EqualTo(2));
             Assert.That(items.Count(item => item.Code == "003D"), Is.EqualTo(1));
-            Assert.That(items.Any(item => item.Code == "003D" && item.Line == "LiveNpc:LiveText"), Is.True);
+            Assert.That(items.Any(item => item.Code == "003D" && item.Line == "LiveText"), Is.True);
             Assert.That(items.Any(item => item.Code == "0044" && item.Line == "CutsceneNpc:FromChatLog"), Is.True);
             Assert.That(items.Any(item => item.Code == "003D" && item.Line == "OldNpc:FromChatLog"), Is.False);
         }
@@ -72,7 +72,8 @@ namespace TataruHelper.Tests
 
             Assert.That(items.Length, Is.EqualTo(2));
             Assert.That(items.Any(item => item.Code == "003D" && item.Line == "FallbackNpc:FallbackText"), Is.True);
-            Assert.That(items.Any(item => item.Code == "0044" && item.Line == "FallbackCutscene:FallbackText"), Is.True);
+            Assert.That(items.Any(item => item.Code == "0044" && item.Line == "FallbackCutscene:FallbackText"),
+                Is.True);
         }
 
         [Test]
@@ -84,8 +85,8 @@ namespace TataruHelper.Tests
             };
 
             var queue = new Queue<TalkAddonRealtimeDialogSnapshot>();
-            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("LiveText", "LiveNpc", new[] { "LiveNpc", "LiveText" }));
-            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("LiveText", "LiveNpc", new[] { "LiveNpc", "LiveText" }));
+            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("LiveText"));
+            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("LiveText"));
 
             var gateway = CreateGateway(directDialogReader, () => queue.Dequeue());
 
@@ -93,7 +94,7 @@ namespace TataruHelper.Tests
             var secondTick = gateway.GetDirectDialog().ChatLogItems.ToArray();
 
             Assert.That(firstTick.Length, Is.EqualTo(1));
-            Assert.That(firstTick[0].Line, Is.EqualTo("LiveNpc:LiveText"));
+            Assert.That(firstTick[0].Line, Is.EqualTo("LiveText"));
             Assert.That(secondTick.Length, Is.EqualTo(0));
         }
 
@@ -119,36 +120,30 @@ namespace TataruHelper.Tests
         }
 
         [Test]
-        public void BuildRealtimeDialogLine_UsesSpeaker_WhenSpeakerMatchesNodeTexts()
+        public void BuildRealtimeDialogLine_ReturnsTrimmedTalkText()
         {
             var line = SharlayanGameMemoryGateway.BuildRealtimeDialogLine(
-                "  Hello there  ",
-                "  Alphinaud  ",
-                new[] { "noise", "Alphinaud", "Hello there" });
-
-            Assert.That(line, Is.EqualTo("Alphinaud:Hello there"));
-        }
-
-        [Test]
-        public void BuildRealtimeDialogLine_OmitsSpeaker_WhenSpeakerNotPresentInNodeTexts()
-        {
-            var line = SharlayanGameMemoryGateway.BuildRealtimeDialogLine(
-                "Hello there",
-                "Alphinaud",
-                new[] { "Someone Else", "Hello there" });
+                "  Hello there  ");
 
             Assert.That(line, Is.EqualTo("Hello there"));
         }
 
         [Test]
-        public void BuildRealtimeDialogLine_OmitsSpeaker_WhenSpeakerIsEmpty()
+        public void BuildRealtimeDialogLine_ReturnsTalkText_WhenAlreadyNormalized()
         {
             var line = SharlayanGameMemoryGateway.BuildRealtimeDialogLine(
-                "Hello there",
-                "   ",
-                new[] { "Alphinaud", "Hello there" });
+                "Hello there");
 
             Assert.That(line, Is.EqualTo("Hello there"));
+        }
+
+        [Test]
+        public void BuildRealtimeDialogLine_ReturnsEmpty_WhenTalkTextIsWhitespace()
+        {
+            var line = SharlayanGameMemoryGateway.BuildRealtimeDialogLine(
+                "   ");
+
+            Assert.That(line, Is.EqualTo(string.Empty));
         }
 
         private static SharlayanGameMemoryGateway CreateGateway(
