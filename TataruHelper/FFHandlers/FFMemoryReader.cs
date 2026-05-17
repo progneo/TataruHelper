@@ -56,7 +56,7 @@ namespace FFXIVTataruHelper.FFHandlers
 
         #region **Properties.
 
-        public System.Windows.WindowState FFWindowState
+        public WindowState FFWindowState
         {
             get;
             private set
@@ -70,6 +70,21 @@ namespace FFXIVTataruHelper.FFHandlers
         {
             get => _useDirectReading;
             set => _useDirectReading = value;
+        }
+
+        public bool IsGameWindowForeground
+        {
+            get;
+            private set
+            {
+                if (field == value)
+                {
+                    return;
+                }
+
+                field = value;
+                OnPropertyChanged();
+            }
         }
 
         #endregion
@@ -139,6 +154,7 @@ namespace FFXIVTataruHelper.FFHandlers
                 var lifecycleToken = _lifecycleCts.Token;
 
                 FFWindowState = WindowState.Minimized;
+                IsGameWindowForeground = false;
 
                 _entryPointTask = Task.Factory.StartNew(async () =>
                 {
@@ -267,51 +283,58 @@ namespace FFXIVTataruHelper.FFHandlers
         {
             var ffxivPrevWindowState = WindowState.Minimized;
             FFWindowState = WindowState.Minimized;
+            IsGameWindowForeground = false;
 
             var isRunningPrev = false;
             while (_keepWorking && _keepReading && !cancellationToken.IsCancellationRequested)
             {
                 try
                 {
-                    var ffxivWindowState = WindowState.Normal;
+                    var ffxivWindowState = WindowState.Minimized;
                     var fgWindow = Win32Interfaces.GetForegroundWindow();
+                    var isExclusionWindow = _exclusionWindowHandlers.Any(handler => handler == fgWindow);
+                    var isGameWindowForeground = false;
 
                     if (_ffXivProcess != null)
                     {
-                        if (_ffXivProcess.MainWindowHandle != fgWindow)
+                        var processWindowHandle = _ffXivProcess.MainWindowHandle;
+                        if (processWindowHandle != IntPtr.Zero)
                         {
-                            ffxivWindowState = WindowState.Minimized;
-                        }
-                        else
-                        {
-                            ffxivWindowState = WindowState.Normal;
-                        }
-                    }
+                            ffxivWindowState = Win32Interfaces.IsIconic(processWindowHandle)
+                                ? WindowState.Minimized
+                                : WindowState.Normal;
 
-                    var isExclusionWindow = _exclusionWindowHandlers.Any(handler => fgWindow == handler);
-
-                    if (!isExclusionWindow && fgWindow != IntPtr.Zero)
-                    {
-                        var oldValue = ffxivPrevWindowState;
-
-                        if (ffxivWindowState != ffxivPrevWindowState)
-                        {
-                            ffxivPrevWindowState = ffxivWindowState;
-
-                            var ea = new WindowStateChangeEventArgs(this)
+                            if (isExclusionWindow)
                             {
-                                OldWindowState = oldValue,
-                                NewWindowState = ffxivPrevWindowState,
-                                IsRunningOld = isRunningPrev,
-                                IsRunningNew = true,
-                                Text = ""
-                            };
-
-                            _FFWindowStateChanged.InvokeAsync(ea).Forget();
+                                isGameWindowForeground = IsGameWindowForeground;
+                            }
+                            else
+                            {
+                                isGameWindowForeground = processWindowHandle == fgWindow;
+                            }
                         }
-
-                        FFWindowState = ffxivPrevWindowState;
                     }
+
+                    IsGameWindowForeground = isGameWindowForeground;
+
+                    var oldValue = ffxivPrevWindowState;
+                    if (ffxivWindowState != ffxivPrevWindowState)
+                    {
+                        ffxivPrevWindowState = ffxivWindowState;
+
+                        var ea = new WindowStateChangeEventArgs(this)
+                        {
+                            OldWindowState = oldValue,
+                            NewWindowState = ffxivPrevWindowState,
+                            IsRunningOld = isRunningPrev,
+                            IsRunningNew = true,
+                            Text = ""
+                        };
+
+                        _FFWindowStateChanged.InvokeAsync(ea).Forget();
+                    }
+
+                    FFWindowState = ffxivPrevWindowState;
 
                     var processes = Process.GetProcessesByName(_ffProcessName);
                     if (processes.Length == 0)
@@ -333,6 +356,7 @@ namespace FFXIVTataruHelper.FFHandlers
                         isRunningPrev = false;
 
                         FFWindowState = WindowState.Minimized;
+                        IsGameWindowForeground = false;
 
                         _gameMemoryGateway.UnsetProcess();
                     }
