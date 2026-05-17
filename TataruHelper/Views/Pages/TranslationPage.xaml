@@ -12,56 +12,80 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Text="Translation"
-                   Style="{DynamicResource BaseTextBlockStyle}"
-                   FontSize="{DynamicResource FontSize.Subtitle}"
-                   FontWeight="SemiBold"
-                   Margin="0,0,0,8" />
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="Translation"
+                       Style="{DynamicResource BaseTextBlockStyle}"
+                       FontSize="{DynamicResource FontSize.Subtitle}"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="Engine and language routing apply only to the selected chat window."
+                       Style="{DynamicResource BaseTextBlockStyle}"
+                       Foreground="{DynamicResource Brush.TextSecondary}" />
+        </StackPanel>
 
-        <WrapPanel Grid.Row="1" Orientation="Horizontal">
-            <GroupBox Style="{DynamicResource CardGroupBoxStyle}" Header="{DynamicResource ChatCodes}" Width="340">
-                <ScrollViewer VerticalScrollBarVisibility="Auto">
-                    <ItemsControl ItemsSource="{Binding CurrentChatWindow.ChatCodes}">
-                        <ItemsControl.ItemTemplate>
-                            <DataTemplate>
-                                <Grid Height="25" Margin="0,0,0,2">
-                                    <CheckBox Margin="0,0,36,0"
-                                              IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                              Content="{utils:ResourceBinding Name}" />
-                                    <xctk:ColorPicker Margin="0,0,6,0"
-                                                      Height="20"
-                                                      Width="20"
-                                                      VerticalAlignment="Top"
-                                                      ShowDropDownButton="False"
-                                                      SelectedColor="{Binding Color}"
-                                                      HorizontalAlignment="Right" />
-                                </Grid>
-                            </DataTemplate>
-                        </ItemsControl.ItemTemplate>
-                    </ItemsControl>
-                </ScrollViewer>
-            </GroupBox>
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="380" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-            <GroupBox Style="{DynamicResource CardGroupBoxStyle}" Header="{DynamicResource TranslationSettings}"
-                      Width="320">
+            <Border Grid.Column="0" Style="{DynamicResource CardBorderStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Chat code filters" FontWeight="SemiBold" Margin="0,0,0,8" />
+
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding BoundWindow.ChatCodes}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="0,0,0,4">
+                                        <xctk:ColorPicker Width="22"
+                                                          Height="22"
+                                                          ShowDropDownButton="False"
+                                                          ShowTabHeaders="False"
+                                                          Margin="8,0,0,0"
+                                                          HorizontalAlignment="Right"
+                                                          DockPanel.Dock="Right"
+                                                          SelectedColor="{Binding Color}" />
+                                        <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
+                                                  Margin="0"
+                                                  IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                                  Content="{utils:ResourceBinding Name}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}">
                 <StackPanel>
+                    <TextBlock Text="Engine routing" FontWeight="SemiBold" Margin="0,0,0,8" />
+
                     <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource TranslationEngine}" />
-                    <ComboBox ItemsSource="{Binding CurrentChatWindow.TranslationEngines}"
+                    <ComboBox Style="{DynamicResource BaseComboBoxStyle}"
+                              ItemsSource="{Binding BoundWindow.TranslationEngines}"
                               DisplayMemberPath="Name"
                               IsSynchronizedWithCurrentItem="True" />
 
                     <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FFLanguage}" />
-                    <ComboBox ItemsSource="{Binding CurrentChatWindow.TranslateFromLanguagues}"
+                    <ComboBox Style="{DynamicResource BaseComboBoxStyle}"
+                              ItemsSource="{Binding BoundWindow.TranslateFromLanguagues}"
                               DisplayMemberPath="ShownName"
                               IsSynchronizedWithCurrentItem="True" />
 
                     <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource TraslateTo}" />
-                    <ComboBox ItemsSource="{Binding CurrentChatWindow.TranslateToLanguagues}"
+                    <ComboBox Style="{DynamicResource BaseComboBoxStyle}"
+                              ItemsSource="{Binding BoundWindow.TranslateToLanguagues}"
                               DisplayMemberPath="ShownName"
                               IsSynchronizedWithCurrentItem="True" />
                 </StackPanel>
-            </GroupBox>
-        </WrapPanel>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

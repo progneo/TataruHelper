@@ -1,31 +1,29 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using FFXIVTataruHelper.EventArguments;
-using FFXIVTataruHelper.Services.HotKeys;
-using FFXIVTataruHelper.Services.Logging;
-using FFXIVTataruHelper.WinUtils;
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
 using System.Windows.Data;
-
-using FFXIVTataruHelper.UIModel;
-
-
-
 using System.Windows.Input;
+using System.Windows.Media;
 
 using FFXIVTataruHelper.Compatibility.HotKeys;
+using FFXIVTataruHelper.EventArguments;
+using FFXIVTataruHelper.Services.HotKeys;
+using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.TataruComponentModel;
+using FFXIVTataruHelper.UIModel;
+using FFXIVTataruHelper.WinUtils;
 
 using Translation;
+
+using Color = System.Windows.Media.Color;
+using FontFamily = System.Windows.Media.FontFamily;
 
 namespace FFXIVTataruHelper.ViewModel
 {
@@ -67,7 +65,7 @@ namespace FFXIVTataruHelper.ViewModel
         public string Name
         {
             get { return _Name; }
-            private set
+            set
             {
                 if (_Name == value) return;
 
@@ -202,7 +200,7 @@ namespace FFXIVTataruHelper.ViewModel
             }
         }
 
-        public System.Drawing.RectangleD ChatWindowRectangle
+        public RectangleD ChatWindowRectangle
         {
             get { return _ChatWindowRectangle; }
             set
@@ -488,7 +486,7 @@ namespace FFXIVTataruHelper.ViewModel
         CollectionView _TranslateFromLanguagues;
         CollectionView _TranslateToLanguagues;
 
-        System.Drawing.RectangleD _ChatWindowRectangle;
+        RectangleD _ChatWindowRectangle;
 
         BindingList<ChatCodeViewModel> _ChatCodes;
 
@@ -534,7 +532,7 @@ namespace FFXIVTataruHelper.ViewModel
             LineBreakHeight = 1;
             SpacingCount = 1;
             BackGroundColor = Color.FromArgb(255, 0, 255, 128);
-            ChatWindowRectangle = new System.Drawing.RectangleD(0, 0, 480, 320);
+            ChatWindowRectangle = new RectangleD(0, 0, 480, 320);
 
             ChatCodes = new BindingList<ChatCodeViewModel>()
             {

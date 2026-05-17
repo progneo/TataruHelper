@@ -4,401 +4,227 @@
     xmlns:tb="http://www.hardcodet.net/taskbar"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-    xmlns:draw="clr-namespace:System.Drawing;assembly=System.Drawing"
     xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
-    xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit" x:Class="FFXIVTataruHelper.MainWindow"
+    x:Class="FFXIVTataruHelper.MainWindow"
     mc:Ignorable="d"
     Icon="Resources/tray_icon.ico"
-    MinHeight="375"
-    MinWidth="644"
-    MaxWidth="1920"
-    MaxHeight="1080"
+    MinHeight="700"
+    MinWidth="1100"
+    MaxWidth="2560"
+    MaxHeight="1440"
     x:Name="TataruSettingsWindow"
-    Title="{DynamicResource SettingsWindowName}" Height="509" Width="644" ResizeMode="CanResize"
+    Title="{DynamicResource SettingsWindowName}" Height="820" Width="1280" ResizeMode="CanResize"
     Background="{DynamicResource Brush.Background}"
     Foreground="{DynamicResource Brush.TextPrimary}"
     FontFamily="{DynamicResource Font.Ui}"
     FontSize="{DynamicResource FontSize.Body}"
     Closing="Window_Closing" Closed="Window_Closed" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged">
+
     <Grid Background="{DynamicResource Brush.Background}">
         <tb:TaskbarIcon x:Name="TaskBarIcon" IconSource="Resources/tray_icon.ico" TrayMouseDoubleClick="TBDoubleClick"
                         ToolTipText="Tataru Helper">
             <tb:TaskbarIcon.ContextMenu>
-                <ContextMenu x:Name="TrayMenu"
-                             DataContext="{Binding ElementName=TataruSettingsWindow, Path=DataContext}"
-                             ItemTemplateSelector="{StaticResource headerTemplateSelectorTB}">
-                    <ContextMenu.ItemsSource>
-                        <CompositeCollection>
-                            <CollectionContainer Collection="{Binding ChatWindows}" />
-                            <MenuItem Header="{DynamicResource SettingsExit}" Click="TBMenuExit_Click" />
-                        </CompositeCollection>
-                    </ContextMenu.ItemsSource>
+                <ContextMenu DataContext="{Binding ElementName=TataruSettingsWindow, Path=DataContext}">
+                    <MenuItem Header="{DynamicResource ChatWindowsTab}" IsEnabled="False" />
+                    <ItemsControl ItemsSource="{Binding SettingsViewModel.ChatWindows}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <MenuItem Header="{Binding Name}" Command="{Binding ShowChatWindowCommand}" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Separator />
+                    <MenuItem Header="{DynamicResource SettingsExit}" Click="TBMenuExit_Click" />
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
 
-        <DockPanel HorizontalAlignment="Stretch">
-            <Menu Background="{DynamicResource Brush.Surface}"
-                  BorderBrush="{DynamicResource Brush.Border}"
-                  BorderThickness="0,0,0,1"
-                  DockPanel.Dock="Top">
-                <Menu.ItemsPanel>
-                    <ItemsPanelTemplate>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-                        </Grid>
-                    </ItemsPanelTemplate>
-                </Menu.ItemsPanel>
+        <Grid Margin="14">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
 
-                <MenuItem Header="{DynamicResource DocLanguage}" Grid.Column="0">
-                    <MenuItem Header="{DynamicResource DocLanguageEn}" Command="{Binding SwitchLanguageCommand}"
-                              CommandParameter="English" />
-                    <MenuItem Header="{DynamicResource DocLanguageRu}" Command="{Binding SwitchLanguageCommand}"
-                              CommandParameter="Russian" />
-                    <MenuItem Header="{DynamicResource DocLanguageEs}" Command="{Binding SwitchLanguageCommand}"
-                              CommandParameter="Spanish" />
-                    <MenuItem Header="{DynamicResource DocLanguagePl}" Command="{Binding SwitchLanguageCommand}"
-                              CommandParameter="Polish" />
-                    <MenuItem Header="{DynamicResource DocLanguageKr}" Command="{Binding SwitchLanguageCommand}"
-                              CommandParameter="Korean" />
-                    <MenuItem Header="{DynamicResource DocLanguagePtBr}" Command="{Binding SwitchLanguageCommand}"
-                              CommandParameter="PortugueseBR" />
-                    <MenuItem Header="{DynamicResource DocLanguageCat}" Command="{Binding SwitchLanguageCommand}"
-                              CommandParameter="Catalan" />
-                    <MenuItem Header="{DynamicResource DocLanguageIta}" Command="{Binding SwitchLanguageCommand}"
-                              CommandParameter="Italian" />
-                    <MenuItem Header="{DynamicResource DocLanguageJa}" Command="{Binding SwitchLanguageCommand}"
-                              CommandParameter="Japanese" />
-                    <MenuItem Header="{DynamicResource DocLanguageUkr}" Command="{Binding SwitchLanguageCommand}"
-                              CommandParameter="Ukrainian" />
-                    <MenuItem Header="{DynamicResource DocLanguageZhCN}" Command="{Binding SwitchLanguageCommand}"
-                              CommandParameter="Chinese" />
-                    <MenuItem Header="{DynamicResource DocLanguageZhTW}" Command="{Binding SwitchLanguageCommand}"
-                              CommandParameter="ChineseTR" />
-                    <MenuItem>
-                        <MenuItem.Header>
-                            <Hyperlink NavigateUri="https://crowdin.com/project/tataru-helper"
-                                       RequestNavigate="Hyperlink_RequestNavigate">
-                                <TextBlock Text="https://crowdin.com" />
-                            </Hyperlink>
-                        </MenuItem.Header>
-                    </MenuItem>
-                </MenuItem>
-                <MenuItem Header="{DynamicResource DockHelp}" Grid.Column="1">
-                    <MenuItem Header="{DynamicResource DockAbout}" Click="About_Click" />
-                    <MenuItem Header="{DynamicResource DockModernSettingsPreview}"
-                              Click="OpenModernSettingsPreview_Click" />
-                    <MenuItem x:Name="CheckUpdatesButton" Header="{DynamicResource CheckUpdatesText}"
-                              Click="CheckUpdates_Click" />
-                </MenuItem>
-                <MenuItem Header="{DynamicResource DockPatrons}" Click="Patrons_Click" Background="#FFF96854"
-                          HorizontalAlignment="Right" Grid.Column="2" Margin="0,0,55,0" />
-                <MenuItem Header="{DynamicResource DockDiscrod}" Click="Discord_Click" Background="#FF313138"
-                          Foreground="White" HorizontalAlignment="Right" Grid.Column="2" />
-            </Menu>
-            <Border BorderThickness="0,1,0,0" BorderBrush="LightGray" />
-        </DockPanel>
+            <Border Grid.Row="0" Style="{DynamicResource CardBorderStyle}" Padding="12,10">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
 
-        <WrapPanel HorizontalAlignment="Left" VerticalAlignment="Top" Margin="110,1,0,0" Height="46"
-                   Visibility="{Binding UpdatingBlockVisibility,Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay, FallbackValue=Collapsed}">
-            <WrapPanel Margin="0,0,10,0"
-                       Visibility="{Binding UserStartedUpdateTextVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}">
-                <TextBlock x:Name="UserStartedUpdateText" Text="" />
-            </WrapPanel>
-            <WrapPanel
-                Visibility="{Binding DownloadingUpdateVisibility,Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}">
-                <TextBlock Text="{DynamicResource DownloadingUpdate}" />
-                <Grid Margin="5,2,0,0">
-                    <utils:CircularProgressBar x:Name="ProgressBar"
-                                               DockPanel.Dock="Left"
-                                               VerticalAlignment="Top"
-                                               Height="45"
-                                               Width="45">
-                    </utils:CircularProgressBar>
-                    <Grid.RenderTransform>
-                        <ScaleTransform ScaleX="0.3" ScaleY="0.3" />
-                    </Grid.RenderTransform>
-                </Grid>
-            </WrapPanel>
-            <WrapPanel Margin="0,0,10,0"
-                       Visibility="{Binding RestartReadyVisibility,Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}">
-                <TextBlock Text="{DynamicResource UpdateInstalled}" Cursor="Hand" TextDecorations="Underline"
-                           PreviewMouseDown="RestartApp_Click" />
-            </WrapPanel>
-        </WrapPanel>
+                    <TextBlock Grid.Column="0"
+                               Text="Settings"
+                               FontSize="{DynamicResource FontSize.Title}"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center" />
 
-        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FFStatusLable}" Width="66"
-               Height="31" Margin="10,26,0,0"
-               HorizontalAlignment="Left" VerticalAlignment="Top" />
-        <Label x:Name="FFStatusText" Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FFStatusText}"
-               Height="31" Margin="81,26,10,0"
-               VerticalAlignment="Top" />
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,8,0" VerticalAlignment="Center">
+                        <TextBlock Text="Language" Margin="0,0,8,0" />
+                        <ComboBox Width="210"
+                                  Style="{DynamicResource BaseComboBoxStyle}"
+                                  Margin="0"
+                                  ItemsSource="{Binding Languages}"
+                                  SelectedItem="{Binding SelectedLanguageOption, Mode=TwoWay}"
+                                  DisplayMemberPath="Title" />
+                    </StackPanel>
 
-        <TabControl x:Name="ChatWindowsTabs" Margin="10,62,0,5" Width="400" HorizontalAlignment="Left"
-                    ItemsSource="{Binding ChatWindows}" SelectedIndex="{Binding SelectedTabIndex, Mode=TwoWay}"
-                    ItemTemplateSelector="{StaticResource headerTemplateSelector}"
-                    ContentTemplateSelector="{StaticResource contentTemplateSelector}">
+                    <Button Grid.Column="2" x:Name="CheckUpdatesButton"
+                            Style="{DynamicResource AccentButtonStyle}"
+                            Content="{DynamicResource CheckUpdatesText}"
+                            Command="{Binding CheckUpdatesCommand}" />
 
-            <TabControl.ContentTemplate>
-                <DataTemplate>
-                    <WrapPanel FlowDirection="LeftToRight">
-                        <TabControl
-                            Visibility="{Binding Path=DataContext.InnerVisibility, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type TabControl}}, Converter={utils:BooleanToVisibilityConverter}, Mode=TwoWay}"
-                            MinHeight="200">
-                            <TabItem Header="{DynamicResource ChatAppearance}">
-                                <WrapPanel Orientation="Horizontal">
-                                    <GroupBox Style="{DynamicResource CardGroupBoxStyle}"
-                                              Header="{DynamicResource FontSettings}" Margin="5,5,5,5" Height="210"
-                                              VerticalAlignment="Top" Width="180">
-                                        <StackPanel Margin="0">
-                                            <Label Content="{DynamicResource FontSize}" HorizontalAlignment="Left"
-                                                   Height="31" VerticalAlignment="Top" Width="158" />
-                                            <xctk:IntegerUpDown Value="{Binding ChatFontSize, Mode=TwoWay}"
-                                                                HorizontalAlignment="Left" Height="31"
-                                                                VerticalAlignment="Top" Width="140" Minimum="1"
-                                                                Maximum="100" />
-
-                                            <Label Content="{DynamicResource BackgroundColor}"
-                                                   HorizontalAlignment="Left" Height="31" VerticalAlignment="Top"
-                                                   Width="152" />
-                                            <xctk:ColorPicker SelectedColor="{Binding BackGroundColor,Mode=TwoWay}"
-                                                              HorizontalAlignment="Left" Height="31"
-                                                              VerticalAlignment="Top" Width="140"
-                                                              ShowAvailableColors="False" ShowStandardColors="True"
-                                                              ShowRecentColors="True" />
-
-                                            <Label Content="{DynamicResource FontFamily}" HorizontalAlignment="Left"
-                                                   Height="31" VerticalAlignment="Top" Width="152" />
-                                            <ComboBox
-                                                ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}"
-                                                SelectedItem="{Binding ChatFont, Mode=TwoWay}" />
-
-                                        </StackPanel>
-                                    </GroupBox>
-                                    <GroupBox Style="{DynamicResource CardGroupBoxStyle}"
-                                              Header="{DynamicResource ParagraphSettings}" Margin="5,5,5,5"
-                                              HorizontalAlignment="Left" Height="210" VerticalAlignment="Top"
-                                              Width="180">
-                                        <StackPanel Margin="0">
-                                            <Label Content="{DynamicResource IntervalWidth}" HorizontalAlignment="Left"
-                                                   Height="31" VerticalAlignment="Top" Width="158" />
-                                            <xctk:IntegerUpDown Value="{Binding SpacingCount, Mode=TwoWay}"
-                                                                HorizontalAlignment="Left" Height="31"
-                                                                VerticalAlignment="Top" Width="140" Minimum="0"
-                                                                Maximum="100" />
-
-                                            <Label Content="{DynamicResource LineBreakHeight}"
-                                                   HorizontalAlignment="Left" Margin="0" Height="31"
-                                                   VerticalAlignment="Top" Width="158" />
-                                            <xctk:IntegerUpDown Value="{Binding LineBreakHeight, Mode=TwoWay}"
-                                                                HorizontalAlignment="Left" Height="31"
-                                                                VerticalAlignment="Top" Width="140" Minimum="0"
-                                                                Maximum="100" />
-                                        </StackPanel>
-                                    </GroupBox>
-                                </WrapPanel>
-                            </TabItem>
-                            <TabItem Header="{DynamicResource TranslationSettings}">
-                                <WrapPanel>
-                                    <GroupBox Style="{DynamicResource CardGroupBoxStyle}"
-                                              Header="{DynamicResource ChatCodes}" HorizontalAlignment="Left"
-                                              Margin="5,5,5,5" Width="180">
-                                        <ScrollViewer HorizontalScrollBarVisibility="Disabled"
-                                                      VerticalScrollBarVisibility="Visible" CanContentScroll="True">
-                                            <ItemsControl ItemsSource="{Binding ChatCodes}">
-                                                <ItemsControl.ItemTemplate>
-                                                    <DataTemplate>
-                                                        <Grid Height="25" Width="145" Margin="0,0,0,1">
-                                                            <CheckBox Margin="0,0,10,0"
-                                                                      IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                                                      Content="{utils:ResourceBinding Name}">
-                                                            </CheckBox>
-                                                            <xctk:ColorPicker Margin="0,0,5,0" Height="20" Width="20"
-                                                                              VerticalAlignment="Top"
-                                                                              ShowDropDownButton="False"
-                                                                              SelectedColor="{Binding Color}"
-                                                                              HorizontalAlignment="Right" />
-                                                        </Grid>
-                                                    </DataTemplate>
-                                                </ItemsControl.ItemTemplate>
-                                            </ItemsControl>
-                                        </ScrollViewer>
-                                    </GroupBox>
-                                    <GroupBox Style="{DynamicResource CardGroupBoxStyle}" HorizontalAlignment="Left"
-                                              Height="190" Margin="5,5,5,5"
-                                              VerticalAlignment="Top" Width="180">
-                                        <StackPanel Margin="0">
-                                            <Label Content="{DynamicResource TranslationEngine}"
-                                                   HorizontalAlignment="Left" Height="30" VerticalAlignment="Top"
-                                                   Width="154" Margin="0" />
-                                            <ComboBox HorizontalAlignment="Left" Height="24" Margin="0" Width="154"
-                                                      ItemsSource="{Binding TranslationEngines}"
-                                                      DisplayMemberPath="Name" />
-
-                                            <Label Content="{DynamicResource FFLanguage}" HorizontalAlignment="Left"
-                                                   Height="30" VerticalAlignment="Top" Width="154" Margin="0" />
-
-                                            <ComboBox HorizontalAlignment="Left" Height="24" Margin="0" Width="154"
-                                                      ItemsSource="{Binding TranslateFromLanguagues}"
-                                                      DisplayMemberPath="ShownName" />
-
-                                            <Label Content="{DynamicResource TraslateTo}" HorizontalAlignment="Left"
-                                                   Height="30" VerticalAlignment="Top" Width="154" Margin="0" />
-                                            <ComboBox HorizontalAlignment="Left" Height="24" Margin="0" Width="154"
-                                                      ItemsSource="{Binding TranslateToLanguagues}"
-                                                      DisplayMemberPath="ShownName" />
-                                        </StackPanel>
-                                    </GroupBox>
-                                </WrapPanel>
-                            </TabItem>
-                            <TabItem Header="{DynamicResource ChatWindowBehavior}">
-                                <WrapPanel>
-                                    <GroupBox Style="{DynamicResource CardGroupBoxStyle}"
-                                              Header="{DynamicResource ChatWindowHotkeys}" Width="180" Margin="5,5,5,5">
-                                        <StackPanel MinHeight="150">
-                                            <Label Content="{DynamicResource ShowHideChatWindowHK}"
-                                                   HorizontalAlignment="Left" Margin="0" Height="31"
-                                                   VerticalAlignment="Top" />
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBox Text="{Binding ShowHideChatKeysName, Mode=OneWay}"
-                                                         HorizontalAlignment="Left" Height="27" TextWrapping="Wrap"
-                                                         Width="140" VerticalAlignment="Top" UndoLimit="2"
-                                                         IsReadOnlyCaretVisible="True" IsReadOnly="True"
-                                                         IsUndoEnabled="False"
-                                                         KeyDown="ShowHideChatWinHotKey_KeyDown"
-                                                         KeyUp="ShowHideChatWinHotKeyBox_KeyUp" />
-                                                <Image Height="20" Width="20"
-                                                       Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={utils:IconToImageSourceConverter}, Mode=OneWay}"
-                                                       Margin="4,0,0,0">
-                                                    <Image.ToolTip>
-                                                        <DynamicResource ResourceKey="ShowHideChatWindowHKToolTip" />
-                                                    </Image.ToolTip>
-                                                </Image>
-                                            </StackPanel>
-
-                                            <Label Content="{DynamicResource ClickThroughHK}"
-                                                   HorizontalAlignment="Left" Margin="0" Height="31"
-                                                   VerticalAlignment="Top" Width="140" />
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBox Text="{Binding ClickThoughtChatKeysName, Mode=OneWay}"
-                                                         HorizontalAlignment="Left" Height="27" TextWrapping="Wrap"
-                                                         Width="140" VerticalAlignment="Top" UndoLimit="2"
-                                                         IsReadOnlyCaretVisible="True" IsReadOnly="True"
-                                                         IsUndoEnabled="False"
-                                                         KeyDown="ClickThroughHotKey_KeyDown"
-                                                         KeyUp="ClickThroughHotKey_KeyUp" />
-                                                <Image Height="20" Width="20"
-                                                       Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={utils:IconToImageSourceConverter}, Mode=OneWay}"
-                                                       Margin="4,0,0,0">
-                                                    <Image.ToolTip>
-                                                        <DynamicResource ResourceKey="ClickThroughHKToolTip" />
-                                                    </Image.ToolTip>
-                                                </Image>
-                                            </StackPanel>
-
-                                            <Label Content="{DynamicResource ClearChatHK}" HorizontalAlignment="Left"
-                                                   Margin="0" Height="31" VerticalAlignment="Top" Width="140" />
-                                            <StackPanel Orientation="Horizontal">
-                                                <TextBox Text="{Binding ClearChatKeysName, Mode=OneWay}"
-                                                         HorizontalAlignment="Left" Height="27" TextWrapping="Wrap"
-                                                         Width="140" VerticalAlignment="Top" UndoLimit="2"
-                                                         IsReadOnlyCaretVisible="True" IsReadOnly="True"
-                                                         IsUndoEnabled="False"
-                                                         KeyDown="ClearChatHotKey_KeyDown"
-                                                         KeyUp="ClearChatHotKey_KeyUp" />
-                                                <Image Height="20" Width="20"
-                                                       Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={utils:IconToImageSourceConverter}, Mode=OneWay}"
-                                                       Margin="4,0,0,0">
-                                                    <Image.ToolTip>
-                                                        <DynamicResource ResourceKey="ClearChatHKToolTip" />
-                                                    </Image.ToolTip>
-                                                </Image>
-                                            </StackPanel>
-
-                                        </StackPanel>
-                                    </GroupBox>
-                                    <GroupBox Style="{DynamicResource CardGroupBoxStyle}"
-                                              Header="{DynamicResource OtherSett}" Width="180" Margin="5,5,5,5">
-                                        <StackPanel>
-                                            <CheckBox KeyboardNavigation.TabIndex="0"
-                                                      IsChecked="{Binding IsAlwaysOnTop, Mode=TwoWay}"
-                                                      Content="{DynamicResource AlwaysOnTopCB}"
-                                                      HorizontalAlignment="Left" Height="21" VerticalAlignment="Top" />
-                                            <CheckBox IsChecked="{Binding IsClickThrough, Mode=TwoWay}"
-                                                      Content="{DynamicResource ClickThroughCB}"
-                                                      HorizontalAlignment="Left" Height="21" VerticalAlignment="Top" />
-
-                                            <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
-                                                <CheckBox IsChecked="{Binding IsAutoHide, Mode=TwoWay}"
-                                                          Content="{DynamicResource AutoHideCB}"
-                                                          HorizontalAlignment="Left" Height="21"
-                                                          VerticalAlignment="Top" Width="80" Margin="0,5,0,0" />
-                                                <xctk:IntegerUpDown
-                                                    Value="{Binding AutoHideTimeoutSeconds,Mode=TwoWay}"
-                                                    HorizontalAlignment="Left" Height="31" VerticalAlignment="Top"
-                                                    Width="86" Minimum="1" Maximum="36000" />
-                                            </StackPanel>
-
-                                            <CheckBox IsChecked="{Binding ShowTimestamps, Mode=TwoWay}"
-                                                      Content="{DynamicResource ShowTimestampsCb}"
-                                                      HorizontalAlignment="Left" Height="21" VerticalAlignment="Top"
-                                                      Margin="0,5,0,0" />
-                                        </StackPanel>
-                                    </GroupBox>
-                                </WrapPanel>
-                            </TabItem>
-                        </TabControl>
-                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                            <Button x:Name="Button2" Style="{DynamicResource BaseButtonStyle}"
-                                    Content="{DynamicResource ShowChatBox}"
-                                    Command="{Binding ShowChatWindowCommand}" HorizontalAlignment="Left" Height="28"
-                                    Width="144" Margin="0,0,5,0" />
-                            <Button x:Name="Button1" Style="{DynamicResource BaseButtonStyle}"
-                                    Content="{DynamicResource ResetChatPosition}"
-                                    Command="{Binding RestChatWindowPositionCommand}" HorizontalAlignment="Left"
-                                    Height="28" Width="142" />
+                    <Border Grid.Column="3"
+                            Background="{DynamicResource Brush.SurfaceSubtle}"
+                            BorderBrush="{DynamicResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="6"
+                            Padding="10,6"
+                            Margin="8,0,0,0"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="{DynamicResource FFStatusLable}" Margin="0,0,6,0" />
+                            <TextBlock x:Name="FFStatusText" Text="{Binding FfStatusText}" FontWeight="SemiBold" />
                         </StackPanel>
-                    </WrapPanel>
-                </DataTemplate>
-            </TabControl.ContentTemplate>
-        </TabControl>
-
-        <TabControl Width="225" HorizontalAlignment="Right" Margin="0,62,8,5">
-            <TabItem Header="{DynamicResource GeneralBehavior}">
-                <Grid Background="#FFFFFFFF">
-                    <WrapPanel>
-                        <GroupBox Style="{DynamicResource CardGroupBoxStyle}" Header="{DynamicResource OtherSett}"
-                                  Margin="5,5,5,5" VerticalAlignment="Top"
-                                  Height="210" Width="207" HorizontalAlignment="Left">
-                            <StackPanel>
-                                <CheckBox x:Name="DirectMemoryBox" Visibility="Visible" HorizontalAlignment="Left"
-                                          Height="21" VerticalAlignment="Bottom" Checked="DirectMemoryReading_Changed"
-                                          Unchecked="DirectMemoryReading_Changed">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{DynamicResource DirectMemoryCB}" />
-                                        <Image Height="20" Width="20"
-                                               Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={utils:IconToImageSourceConverter}, Mode=OneWay}"
-                                               Margin="4,0,0,0">
-                                            <Image.ToolTip>
-                                                <DynamicResource ResourceKey="DirectMemoryToolTip" />
-                                            </Image.ToolTip>
-                                        </Image>
-                                    </StackPanel>
-                                </CheckBox>
-                                <CheckBox x:Name="HideToTray" Content="{DynamicResource HideToTrayCB}"
-                                          HorizontalAlignment="Left" Height="21" VerticalAlignment="Bottom" Width="158"
-                                          Checked="HideToTray_Changed" Unchecked="HideToTray_Changed" Margin="0,0,0,2" />
-                            </StackPanel>
-                        </GroupBox>
-
-                    </WrapPanel>
+                    </Border>
                 </Grid>
-            </TabItem>
-        </TabControl>
+            </Border>
 
+            <Border Grid.Row="1"
+                    Margin="0,8,0,10"
+                    Padding="10,8"
+                    Background="{DynamicResource Brush.AccentMuted}"
+                    BorderBrush="{DynamicResource Brush.Border}"
+                    BorderThickness="1"
+                    CornerRadius="8"
+                    Visibility="{Binding SettingsViewModel.UpdatingBlockVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock x:Name="UserStartedUpdateText"
+                               Visibility="{Binding SettingsViewModel.UserStartedUpdateTextVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}" />
+                    <TextBlock Margin="10,0,0,0"
+                               Text="{DynamicResource DownloadingUpdate}"
+                               Visibility="{Binding SettingsViewModel.DownloadingUpdateVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}" />
+                    <TextBlock Margin="10,0,0,0"
+                               Text="{DynamicResource UpdateInstalled}"
+                               Cursor="Hand"
+                               FontWeight="SemiBold"
+                               TextDecorations="Underline"
+                               Visibility="{Binding SettingsViewModel.RestartReadyVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}"
+                               PreviewMouseDown="RestartApp_Click" />
+                </StackPanel>
+            </Border>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="310" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{DynamicResource CardBorderStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <TextBlock Grid.Row="0"
+                                   Text="Chat windows"
+                                   FontSize="{DynamicResource FontSize.Subtitle}"
+                                   FontWeight="SemiBold" />
+
+                        <ComboBox Grid.Row="1"
+                                  Margin="0,8,0,6"
+                                  Style="{DynamicResource BaseComboBoxStyle}"
+                                  ItemsSource="{Binding SettingsViewModel.ChatWindows}"
+                                  DisplayMemberPath="Name"
+                                  SelectedValuePath="WinId"
+                                  SelectedValue="{Binding SelectedChatWindowId, Mode=TwoWay}" />
+
+                        <WrapPanel Grid.Row="2" Margin="0,0,0,8">
+                            <Button Style="{DynamicResource SidebarActionButtonStyle}" Content="Add"
+                                    Command="{Binding AddWindowCommand}" />
+                            <Button Style="{DynamicResource SidebarActionButtonStyle}" Content="Delete"
+                                    Command="{Binding DeleteWindowCommand}" />
+                            <Button Style="{DynamicResource SidebarActionButtonStyle}" Content="Show/Hide"
+                                    Command="{Binding ShowHideWindowCommand}" />
+                            <Button Style="{DynamicResource SidebarActionButtonStyle}" Content="Reset"
+                                    Command="{Binding ResetPositionCommand}" />
+                        </WrapPanel>
+
+                        <Separator Grid.Row="3" Margin="0,0,0,8" Background="{DynamicResource Brush.Border}" Height="1" />
+
+                        <ListBox Grid.Row="4"
+                                 Style="{DynamicResource SidebarSectionListStyle}"
+                                 ItemContainerStyle="{DynamicResource SidebarSectionItemStyle}"
+                                 ItemsSource="{Binding Sections}"
+                                 SelectedItem="{Binding SelectedSection, Mode=TwoWay}">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                    </Grid>
+                </Border>
+
+                <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Border Grid.Row="0"
+                                Background="{DynamicResource Brush.SurfaceSubtle}"
+                                BorderBrush="{DynamicResource Brush.Border}"
+                                BorderThickness="1"
+                                CornerRadius="8"
+                                Padding="10"
+                                Margin="0,0,0,10">
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto" />
+                                    <ColumnDefinition Width="260" />
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="Auto" />
+                                </Grid.ColumnDefinitions>
+
+                                <TextBlock Grid.Column="0" Text="Active Chat Window" FontWeight="SemiBold"
+                                           Margin="0,0,10,0" />
+
+                                <ComboBox Grid.Column="1"
+                                          Style="{DynamicResource BaseComboBoxStyle}"
+                                          Margin="0"
+                                          ItemsSource="{Binding SettingsViewModel.ChatWindows}"
+                                          DisplayMemberPath="Name"
+                                          SelectedValuePath="WinId"
+                                          SelectedValue="{Binding SelectedChatWindowId, Mode=TwoWay}" />
+
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding CurrentChatWindow.Name}"
+                                           Margin="12,0,0,0"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.TextSecondary}" />
+
+                                <WrapPanel Grid.Column="3" HorizontalAlignment="Right">
+                                    <Button Style="{DynamicResource SidebarActionButtonStyle}" Content="Show/Hide"
+                                            Command="{Binding ShowHideWindowCommand}" />
+                                    <Button Style="{DynamicResource SidebarActionButtonStyle}" Content="Reset"
+                                            Margin="0,0,0,0" Command="{Binding ResetPositionCommand}" />
+                                </WrapPanel>
+                            </Grid>
+                        </Border>
+
+                        <ContentControl x:Name="SectionContentHost" Grid.Row="1" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
     </Grid>
 </Window>

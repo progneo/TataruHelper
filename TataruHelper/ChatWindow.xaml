@@ -4,47 +4,100 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
-        xmlns:local="clr-namespace:FFXIVTataruHelper"
         mc:Ignorable="d"
         AllowsTransparency="True"
         WindowStyle="None"
         MinHeight="30"
         MinWidth="30"
-        Title="{DynamicResource ChatWindowName}" Loaded="Window_Loaded" Closing="Window_Closing" Deactivated="Window_Deactivated"
-        Top="{Binding ChatWindowTop, Mode=TwoWay}" Left="{Binding ChatWindowLeft, Mode=TwoWay}" Width="{Binding ChatWindowWidth, Mode=TwoWay}" Height="{Binding ChatWindowHeight, Mode=TwoWay}"
-        Background="{Binding BackGroundColor , Converter={utils:ColorToSolidColorBrush}, Mode=OneWay}" 
+        Title="{DynamicResource ChatWindowName}" Loaded="Window_Loaded" Closing="Window_Closing"
+        Deactivated="Window_Deactivated"
+        Top="{Binding ChatWindowTop, Mode=TwoWay}" Left="{Binding ChatWindowLeft, Mode=TwoWay}"
+        Width="{Binding ChatWindowWidth, Mode=TwoWay}" Height="{Binding ChatWindowHeight, Mode=TwoWay}"
+        Background="{Binding BackGroundColor , Converter={utils:ColorToSolidColorBrush}, Mode=OneWay}"
         Visibility="{Binding IsWindowVisible, Converter={utils:BooleanToVisibilityConverter}, Mode=TwoWay}"
         Topmost="{Binding IsAlwaysOnTop, Mode=OneWay}">
-    <Grid>
-        <RichTextBox x:Name="ChatRtb" Margin="15,15,15,15" Background="#00000000" IsReadOnly="True" IsUndoEnabled="False" 
+    <Grid x:Name="RootGrid">
+        <Border x:Name="HoverChrome"
+                Margin="1"
+                CornerRadius="4"
+                BorderBrush="#660F7C98"
+                BorderThickness="1"
+                Opacity="0"
+                IsHitTestVisible="False">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Opacity" Value="0" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsMouseOver, ElementName=RootGrid}" Value="True">
+                            <Setter Property="Opacity" Value="1" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+        </Border>
+
+        <RichTextBox x:Name="ChatRtb" Margin="12" Background="#00000000" IsReadOnly="True" IsUndoEnabled="False"
                      FontFamily="{Binding Path=DataContext.ChatFont, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
                      FontSize="{Binding Path=DataContext.ChatFontSize, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}">
             <FlowDocument>
                 <Paragraph>
-                    <Run Text="RichTextBox"/>
+                    <Run Text="RichTextBox" />
                 </Paragraph>
             </FlowDocument>
             <RichTextBox.Resources>
                 <Style TargetType="{x:Type Paragraph}">
-                    <Setter Property="Margin" Value="0"/>
+                    <Setter Property="Margin" Value="0" />
                 </Style>
             </RichTextBox.Resources>
         </RichTextBox>
-        <Rectangle x:Name="top" Opacity="0.0" Fill="#00000000" Height="15" Margin="0" Stroke="Black" VerticalAlignment="Top" MouseEnter="DisplayDragCursor" MouseLeave="ResetCursor" PreviewMouseDown="Drag" />
-        <Rectangle x:Name="left" Opacity="0.0" Fill="#00000000" HorizontalAlignment="Left" Margin="0" Stroke="Black" Width="15" MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor" PreviewMouseDown="Resize" />
-        <Rectangle x:Name="right" Opacity="0.0" Fill="#00000000" HorizontalAlignment="Right" Margin="0" Stroke="Black" Width="15" MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor" PreviewMouseDown="Resize"/>
-        <Rectangle x:Name="bottom" Opacity="0.0" Fill="#00000000" Height="15" Margin="0" Stroke="Black" VerticalAlignment="Bottom" MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor" PreviewMouseDown="Resize"/>
-        <Rectangle x:Name="topLeft" Opacity="0.0" Fill="#00000000" HorizontalAlignment="Left" Height="15" Margin="0" Stroke="Black" VerticalAlignment="Top" Width="15" MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor" PreviewMouseDown="Resize" />
-        <Rectangle x:Name="topRight" Opacity="0.0" Fill="#00000000" HorizontalAlignment="Right" Height="15" Margin="0" Stroke="Black" VerticalAlignment="Top" Width="15" MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor" PreviewMouseDown="Resize"/>
-        <Rectangle x:Name="bottomRight" Opacity="0.0" Fill="#00000000" HorizontalAlignment="Right" Height="15" Margin="0" Stroke="Black" VerticalAlignment="Bottom" Width="15" MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor" PreviewMouseDown="Resize" />
-        <Rectangle x:Name="bottomLeft" Opacity="0.0" Fill="#00000000" HorizontalAlignment="Left" Height="15" Margin="0" Stroke="Black" VerticalAlignment="Bottom" Width="15" MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor" PreviewMouseDown="Resize" />
+
+        <Border x:Name="TopGripHint"
+                Height="2"
+                Margin="10,6,10,0"
+                VerticalAlignment="Top"
+                Background="#7A0F7C98"
+                CornerRadius="1"
+                Opacity="0"
+                IsHitTestVisible="False">
+            <Border.Style>
+                <Style TargetType="Border">
+                    <Setter Property="Opacity" Value="0" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsMouseOver, ElementName=RootGrid}" Value="True">
+                            <Setter Property="Opacity" Value="1" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </Border.Style>
+        </Border>
+
+        <Rectangle x:Name="top" Opacity="0.0" Fill="#00000000" Height="14" Margin="0" VerticalAlignment="Top"
+                   MouseEnter="DisplayDragCursor" MouseLeave="ResetCursor" PreviewMouseDown="Drag" />
+        <Rectangle x:Name="left" Opacity="0.0" Fill="#00000000" HorizontalAlignment="Left" Margin="0" Width="14"
+                   MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor" PreviewMouseDown="Resize" />
+        <Rectangle x:Name="right" Opacity="0.0" Fill="#00000000" HorizontalAlignment="Right" Margin="0" Width="14"
+                   MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor" PreviewMouseDown="Resize" />
+        <Rectangle x:Name="bottom" Opacity="0.0" Fill="#00000000" Height="14" Margin="0" VerticalAlignment="Bottom"
+                   MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor" PreviewMouseDown="Resize" />
+        <Rectangle x:Name="topLeft" Opacity="0.0" Fill="#00000000" HorizontalAlignment="Left" Height="14" Margin="0"
+                   VerticalAlignment="Top" Width="14" MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor"
+                   PreviewMouseDown="Resize" />
+        <Rectangle x:Name="topRight" Opacity="0.0" Fill="#00000000" HorizontalAlignment="Right" Height="14" Margin="0"
+                   VerticalAlignment="Top" Width="14" MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor"
+                   PreviewMouseDown="Resize" />
+        <Rectangle x:Name="bottomRight" Opacity="0.0" Fill="#00000000" HorizontalAlignment="Right" Height="14"
+                   Margin="0" VerticalAlignment="Bottom" Width="14" MouseEnter="DisplayResizeCursor"
+                   MouseLeave="ResetCursor" PreviewMouseDown="Resize" />
+        <Rectangle x:Name="bottomLeft" Opacity="0.0" Fill="#00000000" HorizontalAlignment="Left" Height="14" Margin="0"
+                   VerticalAlignment="Bottom" Width="14" MouseEnter="DisplayResizeCursor" MouseLeave="ResetCursor"
+                   PreviewMouseDown="Resize" />
+
         <Grid.ContextMenu>
             <ContextMenu>
                 <MenuItem Header="{DynamicResource SettingsHide}" Click="HideThisWindow_Click" />
                 <MenuItem Header="Settings" Click="Settings_Click" />
-                <MenuItem Header="{DynamicResource SettingsExit}" Click="Exit_Click"/>
+                <MenuItem Header="{DynamicResource SettingsExit}" Click="Exit_Click" />
             </ContextMenu>
         </Grid.ContextMenu>
-
     </Grid>
 </Window>

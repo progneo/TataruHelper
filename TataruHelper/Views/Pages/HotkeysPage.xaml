@@ -13,87 +13,111 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Text="Behavior and hotkeys"
-                   Style="{DynamicResource BaseTextBlockStyle}"
-                   FontSize="{DynamicResource FontSize.Subtitle}"
-                   FontWeight="SemiBold"
-                   Margin="0,0,0,8" />
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="Hotkeys and behavior"
+                       Style="{DynamicResource BaseTextBlockStyle}"
+                       FontSize="{DynamicResource FontSize.Subtitle}"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="Capture shortcuts directly in the active window context."
+                       Style="{DynamicResource BaseTextBlockStyle}"
+                       Foreground="{DynamicResource Brush.TextSecondary}" />
+        </StackPanel>
 
-        <WrapPanel Grid.Row="1" Orientation="Horizontal">
-            <GroupBox Style="{DynamicResource CardGroupBoxStyle}" Header="{DynamicResource ChatWindowHotkeys}"
-                      Width="320">
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{DynamicResource CardBorderStyle}">
                 <StackPanel>
+                    <TextBlock Text="Shortcut capture" FontWeight="SemiBold" Margin="0,0,0,8" />
+
                     <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource ShowHideChatWindowHK}" />
-                    <StackPanel Orientation="Horizontal">
-                        <TextBox Text="{Binding CurrentChatWindow.ShowHideChatKeysName, Mode=OneWay}"
-                                 Width="220"
-                                 IsReadOnly="True"
-                                 IsUndoEnabled="False"
-                                 KeyDown="ShowHideChatWinHotKey_KeyDown"
-                                 KeyUp="ShowHideChatWinHotKey_KeyUp" />
-                        <Image Height="20" Width="20"
+                    <DockPanel Margin="0,0,0,8">
+                        <Image Height="18" Width="18"
                                Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={utils:IconToImageSourceConverter}, Mode=OneWay}"
-                               Margin="4,0,0,0">
+                               Margin="6,0,0,0"
+                               DockPanel.Dock="Right">
                             <Image.ToolTip>
                                 <DynamicResource ResourceKey="ShowHideChatWindowHKToolTip" />
                             </Image.ToolTip>
                         </Image>
-                    </StackPanel>
-
-                    <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource ClickThroughHK}" />
-                    <StackPanel Orientation="Horizontal">
-                        <TextBox Text="{Binding CurrentChatWindow.ClickThoughtChatKeysName, Mode=OneWay}"
-                                 Width="220"
+                        <TextBox Style="{DynamicResource BaseTextBoxStyle}"
+                                 Margin="0"
+                                 Text="{Binding BoundWindow.ShowHideChatKeysName, Mode=OneWay}"
                                  IsReadOnly="True"
                                  IsUndoEnabled="False"
-                                 KeyDown="ClickThroughHotKey_KeyDown"
-                                 KeyUp="ClickThroughHotKey_KeyUp" />
-                        <Image Height="20" Width="20"
+                                 KeyDown="ShowHideChatWinHotKey_KeyDown"
+                                 KeyUp="ShowHideChatWinHotKey_KeyUp" />
+                    </DockPanel>
+
+                    <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource ClickThroughHK}" />
+                    <DockPanel Margin="0,0,0,8">
+                        <Image Height="18" Width="18"
                                Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={utils:IconToImageSourceConverter}, Mode=OneWay}"
-                               Margin="4,0,0,0">
+                               Margin="6,0,0,0"
+                               DockPanel.Dock="Right">
                             <Image.ToolTip>
                                 <DynamicResource ResourceKey="ClickThroughHKToolTip" />
                             </Image.ToolTip>
                         </Image>
-                    </StackPanel>
-
-                    <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource ClearChatHK}" />
-                    <StackPanel Orientation="Horizontal">
-                        <TextBox Text="{Binding CurrentChatWindow.ClearChatKeysName, Mode=OneWay}"
-                                 Width="220"
+                        <TextBox Style="{DynamicResource BaseTextBoxStyle}"
+                                 Margin="0"
+                                 Text="{Binding BoundWindow.ClickThoughtChatKeysName, Mode=OneWay}"
                                  IsReadOnly="True"
                                  IsUndoEnabled="False"
-                                 KeyDown="ClearChatHotKey_KeyDown"
-                                 KeyUp="ClearChatHotKey_KeyUp" />
-                        <Image Height="20" Width="20"
+                                 KeyDown="ClickThroughHotKey_KeyDown"
+                                 KeyUp="ClickThroughHotKey_KeyUp" />
+                    </DockPanel>
+
+                    <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource ClearChatHK}" />
+                    <DockPanel>
+                        <Image Height="18" Width="18"
                                Source="{Binding Source={x:Static draw:SystemIcons.Question}, Converter={utils:IconToImageSourceConverter}, Mode=OneWay}"
-                               Margin="4,0,0,0">
+                               Margin="6,0,0,0"
+                               DockPanel.Dock="Right">
                             <Image.ToolTip>
                                 <DynamicResource ResourceKey="ClearChatHKToolTip" />
                             </Image.ToolTip>
                         </Image>
-                    </StackPanel>
+                        <TextBox Style="{DynamicResource BaseTextBoxStyle}"
+                                 Margin="0"
+                                 Text="{Binding BoundWindow.ClearChatKeysName, Mode=OneWay}"
+                                 IsReadOnly="True"
+                                 IsUndoEnabled="False"
+                                 KeyDown="ClearChatHotKey_KeyDown"
+                                 KeyUp="ClearChatHotKey_KeyUp" />
+                    </DockPanel>
                 </StackPanel>
-            </GroupBox>
+            </Border>
 
-            <GroupBox Style="{DynamicResource CardGroupBoxStyle}" Header="{DynamicResource OtherSett}" Width="320">
+            <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}">
                 <StackPanel>
-                    <CheckBox IsChecked="{Binding CurrentChatWindow.IsAlwaysOnTop, Mode=TwoWay}"
+                    <TextBlock Text="Overlay behavior" FontWeight="SemiBold" Margin="0,0,0,8" />
+
+                    <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
+                              IsChecked="{Binding BoundWindow.IsAlwaysOnTop, Mode=TwoWay}"
                               Content="{DynamicResource AlwaysOnTopCB}" />
-                    <CheckBox IsChecked="{Binding CurrentChatWindow.IsClickThrough, Mode=TwoWay}"
+                    <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
+                              IsChecked="{Binding BoundWindow.IsClickThrough, Mode=TwoWay}"
                               Content="{DynamicResource ClickThroughCB}" />
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                        <CheckBox IsChecked="{Binding CurrentChatWindow.IsAutoHide, Mode=TwoWay}"
-                                  Content="{DynamicResource AutoHideCB}"
-                                  Width="120" />
-                        <xctk:IntegerUpDown Value="{Binding CurrentChatWindow.AutoHideTimeoutSeconds, Mode=TwoWay}"
+
+                    <DockPanel>
+                        <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
+                                  Margin="0"
+                                  VerticalAlignment="Center"
+                                  IsChecked="{Binding BoundWindow.IsAutoHide, Mode=TwoWay}"
+                                  Content="{DynamicResource AutoHideCB}" />
+                        <xctk:IntegerUpDown Value="{Binding BoundWindow.AutoHideTimeoutSeconds, Mode=TwoWay}"
                                             Width="120"
+                                            Margin="12,0,0,0"
                                             Minimum="1"
                                             Maximum="36000" />
-                    </StackPanel>
+                    </DockPanel>
                 </StackPanel>
-            </GroupBox>
-        </WrapPanel>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

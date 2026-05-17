@@ -8,42 +8,76 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Text="Chat windows"
-                   Style="{DynamicResource BaseTextBlockStyle}"
-                   FontSize="{DynamicResource FontSize.Subtitle}"
-                   FontWeight="SemiBold"
-                   Margin="0,0,0,8" />
-
-        <GroupBox Grid.Row="1" Style="{DynamicResource CardGroupBoxStyle}" Header="Windows">
-            <ListBox ItemsSource="{Binding SettingsViewModel.ChatWindows}"
-                     SelectedIndex="{Binding SettingsViewModel.SelectedTabIndex, Mode=TwoWay}"
-                     DisplayMemberPath="Name" />
-        </GroupBox>
-
-        <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="0,8,0,0">
-            <Button Style="{DynamicResource BaseButtonStyle}"
-                    Content="Add"
-                    Width="120"
-                    Command="{Binding SettingsViewModel.AddNewChatWindowCommand}" />
-            <Button Style="{DynamicResource BaseButtonStyle}"
-                    Content="Delete"
-                    Width="120"
-                    Margin="8,0,0,0"
-                    Command="{Binding SettingsViewModel.DeleteChatWindowCommand}" />
-            <Button Style="{DynamicResource BaseButtonStyle}"
-                    Content="{DynamicResource ShowChatBox}"
-                    Width="150"
-                    Margin="8,0,0,0"
-                    Command="{Binding CurrentChatWindow.ShowChatWindowCommand}" />
-            <Button Style="{DynamicResource BaseButtonStyle}"
-                    Content="{DynamicResource ResetChatPosition}"
-                    Width="160"
-                    Margin="8,0,0,0"
-                    Command="{Binding CurrentChatWindow.RestChatWindowPositionCommand}" />
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="Chat windows"
+                       Style="{DynamicResource BaseTextBlockStyle}"
+                       FontSize="{DynamicResource FontSize.Subtitle}"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="Each window keeps independent behavior, translation and appearance settings."
+                       Style="{DynamicResource BaseTextBlockStyle}"
+                       Foreground="{DynamicResource Brush.TextSecondary}" />
         </StackPanel>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="320" />
+                <ColumnDefinition Width="10" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Style="{DynamicResource CardBorderStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Window list" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <ListBox Grid.Row="1"
+                             Style="{DynamicResource SidebarSectionListStyle}"
+                             ItemContainerStyle="{DynamicResource SidebarSectionItemStyle}"
+                             ItemsSource="{Binding Shell.SettingsViewModel.ChatWindows}"
+                             SelectedIndex="{Binding Shell.SettingsViewModel.SelectedTabIndex, Mode=TwoWay}"
+                             DisplayMemberPath="Name" />
+                </Grid>
+            </Border>
+
+            <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" Text="Window details" FontWeight="SemiBold" />
+
+                    <StackPanel Grid.Row="1" Margin="0,10,0,10">
+                        <Label Style="{DynamicResource BaseLabelStyle}" Content="Window name" />
+                        <TextBox Style="{DynamicResource BaseTextBoxStyle}"
+                                 Width="260"
+                                 Text="{Binding BoundWindow.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+                    </StackPanel>
+
+                    <WrapPanel Grid.Row="2" Margin="0,0,0,8">
+                        <Button Style="{DynamicResource BaseButtonStyle}" Content="Add" Width="110"
+                                Command="{Binding Shell.AddWindowCommand}" />
+                        <Button Style="{DynamicResource BaseButtonStyle}" Content="Delete" Width="110"
+                                Command="{Binding Shell.DeleteWindowCommand}" />
+                        <Button Style="{DynamicResource BaseButtonStyle}" Content="Show/Hide" Width="120"
+                                Command="{Binding Shell.ShowHideWindowCommand}" />
+                        <Button Style="{DynamicResource BaseButtonStyle}" Content="Reset position" Width="130"
+                                Command="{Binding Shell.ResetPositionCommand}" />
+                    </WrapPanel>
+
+                    <TextBlock Grid.Row="3"
+                               Text="Use this page to create a focused layout per chat context (raid, party, linkshell, etc.)."
+                               Foreground="{DynamicResource Brush.TextSecondary}" />
+                </Grid>
+            </Border>
+        </Grid>
     </Grid>
 </UserControl>

@@ -6,56 +6,69 @@
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource Brush.Background}">
-        <Grid Margin="0,0,0,8">
+        <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <TextBlock Grid.Row="0"
-                       Text="Chat appearance"
-                       Style="{DynamicResource BaseTextBlockStyle}"
-                       FontSize="{DynamicResource FontSize.Subtitle}"
-                       FontWeight="SemiBold"
-                       Margin="0,0,0,8" />
+            <StackPanel Grid.Row="0" Margin="0,0,0,10">
+                <TextBlock Text="Appearance"
+                           Style="{DynamicResource BaseTextBlockStyle}"
+                           FontSize="{DynamicResource FontSize.Subtitle}"
+                           FontWeight="SemiBold" />
+                <TextBlock Text="Typography and readability settings are window-scoped."
+                           Style="{DynamicResource BaseTextBlockStyle}"
+                           Foreground="{DynamicResource Brush.TextSecondary}" />
+            </StackPanel>
 
-            <WrapPanel Grid.Row="1" Orientation="Horizontal">
-                <GroupBox Style="{DynamicResource CardGroupBoxStyle}" Header="{DynamicResource FontSettings}"
-                          Width="300">
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+
+                <Border Grid.Column="0" Style="{DynamicResource CardBorderStyle}">
                     <StackPanel>
-                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontSize}" />
-                        <xctk:IntegerUpDown Value="{Binding CurrentChatWindow.ChatFontSize, Mode=TwoWay}" Minimum="1"
-                                            Maximum="100" />
+                        <TextBlock Text="Typography" FontWeight="SemiBold" Margin="0,0,0,8" />
 
-                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource BackgroundColor}" />
-                        <xctk:ColorPicker SelectedColor="{Binding CurrentChatWindow.BackGroundColor, Mode=TwoWay}"
-                                          ShowAvailableColors="False"
-                                          ShowStandardColors="True"
-                                          ShowRecentColors="True" />
+                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontSize}" />
+                        <xctk:IntegerUpDown Value="{Binding BoundWindow.ChatFontSize, Mode=TwoWay}" Minimum="1"
+                                            Maximum="100" Margin="0,0,0,8" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontFamily}" />
-                        <ComboBox ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}"
-                                  SelectedItem="{Binding CurrentChatWindow.ChatFont, Mode=TwoWay}" />
-                    </StackPanel>
-                </GroupBox>
+                        <ComboBox Style="{DynamicResource BaseComboBoxStyle}"
+                                  ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}"
+                                  SelectedItem="{Binding BoundWindow.ChatFont, Mode=TwoWay}" />
 
-                <GroupBox Style="{DynamicResource CardGroupBoxStyle}" Header="{DynamicResource ParagraphSettings}"
-                          Width="300">
+                        <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
+                                  IsChecked="{Binding BoundWindow.ShowTimestamps, Mode=TwoWay}"
+                                  Content="{DynamicResource ShowTimestampsCb}" />
+                    </StackPanel>
+                </Border>
+
+                <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}">
                     <StackPanel>
+                        <TextBlock Text="Window surface" FontWeight="SemiBold" Margin="0,0,0,8" />
+
+                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource BackgroundColor}" />
+                        <xctk:ColorPicker SelectedColor="{Binding BoundWindow.BackGroundColor, Mode=TwoWay}"
+                                          ShowAvailableColors="False"
+                                          ShowStandardColors="True"
+                                          ShowRecentColors="True"
+                                          Margin="0,0,0,8" />
+
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource IntervalWidth}" />
-                        <xctk:IntegerUpDown Value="{Binding CurrentChatWindow.SpacingCount, Mode=TwoWay}" Minimum="0"
-                                            Maximum="100" />
+                        <xctk:IntegerUpDown Value="{Binding BoundWindow.SpacingCount, Mode=TwoWay}" Minimum="0"
+                                            Maximum="100" Margin="0,0,0,8" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource LineBreakHeight}" />
-                        <xctk:IntegerUpDown Value="{Binding CurrentChatWindow.LineBreakHeight, Mode=TwoWay}"
-                                            Minimum="0" Maximum="100" />
-
-                        <CheckBox IsChecked="{Binding CurrentChatWindow.ShowTimestamps, Mode=TwoWay}"
-                                  Content="{DynamicResource ShowTimestampsCb}"
-                                  Margin="0,8,0,0" />
+                        <xctk:IntegerUpDown Value="{Binding BoundWindow.LineBreakHeight, Mode=TwoWay}" Minimum="0"
+                                            Maximum="100" Margin="0,0,0,8" />
                     </StackPanel>
-                </GroupBox>
-            </WrapPanel>
+                </Border>
+            </Grid>
         </Grid>
     </ScrollViewer>
 </UserControl>

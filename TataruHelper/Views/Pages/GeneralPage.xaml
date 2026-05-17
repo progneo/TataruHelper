@@ -10,22 +10,26 @@
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <TextBlock Grid.Row="0"
-                   Text="Runtime behavior"
-                   Style="{DynamicResource BaseTextBlockStyle}"
-                   FontSize="{DynamicResource FontSize.Subtitle}"
-                   FontWeight="SemiBold"
-                   Margin="0,0,0,8" />
+        <StackPanel Grid.Row="0" Margin="0,0,0,10">
+            <TextBlock Text="General"
+                       Style="{DynamicResource BaseTextBlockStyle}"
+                       FontSize="{DynamicResource FontSize.Subtitle}"
+                       FontWeight="SemiBold" />
+            <TextBlock Text="Global behavior that is shared across all chat windows."
+                       Style="{DynamicResource BaseTextBlockStyle}"
+                       Foreground="{DynamicResource Brush.TextSecondary}" />
+        </StackPanel>
 
-        <GroupBox Grid.Row="1"
-                  Style="{DynamicResource CardGroupBoxStyle}"
-                  Header="General">
+        <Border Grid.Row="1" Style="{DynamicResource CardBorderStyle}">
             <StackPanel>
-                <CheckBox Content="{DynamicResource DirectMemoryCB}"
-                          IsChecked="{Binding IsDirectMemoryReading, Mode=TwoWay}" />
-                <CheckBox Content="{DynamicResource HideToTrayCB}"
-                          IsChecked="{Binding IsHideSettingsToTray, Mode=TwoWay}" />
+                <TextBlock Text="Application flags" FontWeight="SemiBold" Margin="0,0,0,8" />
+                <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
+                          Content="{DynamicResource DirectMemoryCB}"
+                          IsChecked="{Binding Shell.IsDirectMemoryReading, Mode=TwoWay}" />
+                <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
+                          Content="{DynamicResource HideToTrayCB}"
+                          IsChecked="{Binding Shell.IsHideSettingsToTray, Mode=TwoWay}" />
             </StackPanel>
-        </GroupBox>
+        </Border>
     </Grid>
 </UserControl>

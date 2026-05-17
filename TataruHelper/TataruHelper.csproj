@@ -27,6 +27,7 @@
     <PackageReference Include="Sharlayan" />
     <PackageReference Include="Extended.Wpf.Toolkit" />
     <PackageReference Include="Velopack"/>
+    <PackageReference Include="Wpf.Ui"/>
   </ItemGroup>
 
   <ItemGroup>
