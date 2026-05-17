@@ -7,8 +7,10 @@ using System.Diagnostics;
 using System.Runtime.Versioning;
 using System.Security.Principal;
 using System.Windows;
+using System.Windows.Threading;
 
 using FFXIVTataruHelper.Services.Logging;
+using FFXIVTataruHelper.Theme;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -45,6 +47,15 @@ namespace FFXIVTataruHelper
 
             base.OnStartup(e);
 
+            try
+            {
+                AppThemeService.Apply(AppThemeMode.System);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+            }
+
             _serviceProvider = AppCompositionRoot.BuildServiceProvider();
             var mainWindow = _serviceProvider.GetRequiredService<MainWindow>();
             MainWindow = mainWindow;
@@ -62,7 +73,7 @@ namespace FFXIVTataruHelper
         }
 
         void OnDispatcherUnhandledException(object sender,
-            System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e)
+            DispatcherUnhandledExceptionEventArgs e)
         {
             string errorMessage = string.Format("An unhandled exception occurred: {0}", e.Exception.Message);
 

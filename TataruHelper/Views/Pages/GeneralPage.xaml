@@ -3,30 +3,65 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              mc:Ignorable="d">
     <Grid Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <TextBlock Text="{DynamicResource SectionGeneral}"
-                       Style="{DynamicResource BaseTextBlockStyle}"
-                       FontSize="{DynamicResource FontSize.Subtitle}"
-                       FontWeight="SemiBold" />
-        </StackPanel>
+        <TextBlock Grid.Row="0"
+                   Style="{DynamicResource SectionTitleStyle}"
+                   Text="{DynamicResource SectionGeneral}" />
+        <TextBlock Grid.Row="1"
+                   Style="{DynamicResource CaptionTextStyle}"
+                   Margin="0,0,0,16"
+                   Text="{DynamicResource GeneralPageDescription}" />
 
-        <Border Grid.Row="1" Style="{DynamicResource CardBorderStyle}">
+        <ui:Card Grid.Row="2" Padding="16" VerticalAlignment="Top">
             <StackPanel>
-                <TextBlock Text="{DynamicResource ApplicationFlagsLabel}" FontWeight="SemiBold" Margin="0,0,0,8" />
-                <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
-                          Content="{DynamicResource DirectMemoryCB}"
-                          IsChecked="{Binding Shell.IsDirectMemoryReading, Mode=TwoWay}" />
-                <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
-                          Content="{DynamicResource HideToTrayCB}"
-                          IsChecked="{Binding Shell.IsHideSettingsToTray, Mode=TwoWay}" />
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                    <ui:SymbolIcon Symbol="Settings24" FontSize="16"
+                                   Margin="0,0,8,0" VerticalAlignment="Center"
+                                   Foreground="{DynamicResource Brush.Accent}" />
+                    <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                               Margin="0"
+                               Text="{DynamicResource ApplicationFlagsLabel}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+
+                <Grid Margin="0,0,0,10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="{DynamicResource DirectMemoryCB}" FontWeight="SemiBold" />
+                        <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                   Text="{DynamicResource DirectMemoryDescription}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                     IsChecked="{Binding Shell.IsDirectMemoryReading, Mode=TwoWay}" />
+                </Grid>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="{DynamicResource HideToTrayCB}" FontWeight="SemiBold" />
+                        <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                   Text="{DynamicResource HideToTrayDescription}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                     IsChecked="{Binding Shell.IsHideSettingsToTray, Mode=TwoWay}" />
+                </Grid>
             </StackPanel>
-        </Border>
+        </ui:Card>
     </Grid>
 </UserControl>

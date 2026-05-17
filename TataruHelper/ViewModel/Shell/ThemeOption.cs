@@ -1,33 +1,28 @@
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Windows;
 
-using Wpf.Ui.Controls;
+using FFXIVTataruHelper.Theme;
 
 namespace FFXIVTataruHelper.ViewModel.Shell;
 
-public sealed class SettingsSectionItem : INotifyPropertyChanged
+public sealed class ThemeOption : INotifyPropertyChanged
 {
     private string _title;
 
-    public SettingsSectionItem(
-        SettingsSection section,
-        string resourceKey,
-        string fallbackTitle,
-        SymbolRegular icon)
+    public ThemeOption(AppThemeMode mode, string resourceKey, string fallbackTitle)
     {
-        Section = section;
+        Mode = mode;
         ResourceKey = resourceKey;
         _title = fallbackTitle;
-        Icon = icon;
+        RefreshTitleFromResources();
     }
 
     public event PropertyChangedEventHandler PropertyChanged;
 
-    public SettingsSection Section { get; }
+    public AppThemeMode Mode { get; }
 
     public string ResourceKey { get; }
-
-    public SymbolRegular Icon { get; }
 
     public string Title
     {
@@ -44,9 +39,12 @@ public sealed class SettingsSectionItem : INotifyPropertyChanged
         }
     }
 
-    public void RefreshTitle(string localizedTitle)
+    public void RefreshTitleFromResources()
     {
-        Title = localizedTitle;
+        if (Application.Current?.Resources[ResourceKey] is string localized && !string.IsNullOrWhiteSpace(localized))
+        {
+            Title = localized;
+        }
     }
 
     private void OnPropertyChanged([CallerMemberName] string propertyName = "")

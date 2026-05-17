@@ -1,6 +1,7 @@
-﻿<Window
+<ui:FluentWindow
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
     xmlns:tb="http://www.hardcodet.net/taskbar"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
@@ -8,20 +9,79 @@
     x:Class="FFXIVTataruHelper.MainWindow"
     mc:Ignorable="d"
     Icon="Resources/tray_icon.ico"
-    MinHeight="700"
-    MinWidth="1100"
+    MinHeight="640"
+    MinWidth="980"
     MaxWidth="2560"
     MaxHeight="1440"
     x:Name="TataruSettingsWindow"
-    Title="{DynamicResource SettingsWindowName}" Height="820" Width="1280" ResizeMode="CanResize"
+    Title="{DynamicResource SettingsWindowName}"
+    Height="780"
+    Width="1180"
+    ResizeMode="CanResize"
+    WindowBackdropType="Mica"
+    ExtendsContentIntoTitleBar="True"
     Background="{DynamicResource Brush.Background}"
     Foreground="{DynamicResource Brush.TextPrimary}"
     FontFamily="{DynamicResource Font.Ui}"
     FontSize="{DynamicResource FontSize.Body}"
     Closing="Window_Closing" Closed="Window_Closed" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged">
 
-    <Grid Background="{DynamicResource Brush.Background}">
-        <tb:TaskbarIcon x:Name="TaskBarIcon" IconSource="Resources/tray_icon.ico" TrayMouseDoubleClick="TBDoubleClick"
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <ui:TitleBar Grid.Row="0"
+                     Title="{DynamicResource SettingsWindowName}"
+                     ShowMaximize="True"
+                     ShowMinimize="True"
+                     CanMaximize="True"
+                     Icon="{ui:ImageIcon 'pack://application:,,,/Resources/tray_icon.ico'}">
+            <ui:TitleBar.Header>
+                <StackPanel Orientation="Horizontal" Margin="12,0,12,0" VerticalAlignment="Center">
+                    <Border Background="{DynamicResource Brush.SurfaceSubtle}"
+                            BorderBrush="{DynamicResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="14"
+                            Padding="10,4"
+                            Margin="0,0,8,0"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal">
+                            <ui:SymbolIcon Symbol="GameChat20" FontSize="14" Margin="0,0,6,0"
+                                           Foreground="{DynamicResource Brush.TextSecondary}" />
+                            <TextBlock Text="{DynamicResource FFStatusLable}"
+                                       Foreground="{DynamicResource Brush.TextSecondary}"
+                                       VerticalAlignment="Center" />
+                            <TextBlock x:Name="FFStatusText"
+                                       Text="{Binding FfStatusText}"
+                                       Margin="6,0,0,0"
+                                       FontWeight="SemiBold"
+                                       Foreground="{DynamicResource Brush.TextPrimary}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+
+                    <ComboBox Width="170"
+                              Margin="0,0,8,0"
+                              ItemsSource="{Binding Languages}"
+                              SelectedItem="{Binding SelectedLanguageOption, Mode=TwoWay}"
+                              DisplayMemberPath="Title"
+                              VerticalAlignment="Center" />
+
+                    <ui:Button x:Name="CheckUpdatesButton"
+                               Appearance="Primary"
+                               Icon="{ui:SymbolIcon Symbol=ArrowSync24}"
+                               Content="{DynamicResource CheckUpdatesText}"
+                               Command="{Binding CheckUpdatesCommand}"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </ui:TitleBar.Header>
+        </ui:TitleBar>
+
+        <tb:TaskbarIcon Grid.Row="0" x:Name="TaskBarIcon" IconSource="Resources/tray_icon.ico"
+                        TrayMouseDoubleClick="TBDoubleClick"
                         ToolTipText="{DynamicResource TrayTooltipText}">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu DataContext="{Binding ElementName=TataruSettingsWindow, Path=DataContext}">
@@ -39,148 +99,69 @@
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
 
-        <Grid Margin="14">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
-            </Grid.RowDefinitions>
+        <Border Grid.Row="1"
+                Margin="16,0,16,10"
+                Padding="12,8"
+                Background="{DynamicResource Brush.AccentMuted}"
+                BorderBrush="{DynamicResource Brush.Border}"
+                BorderThickness="1"
+                CornerRadius="8"
+                Visibility="{Binding SettingsViewModel.UpdatingBlockVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}">
+            <StackPanel Orientation="Horizontal">
+                <ui:SymbolIcon Symbol="ArrowDownload24" Margin="0,0,8,0"
+                               Foreground="{DynamicResource Brush.Accent}" VerticalAlignment="Center" />
+                <TextBlock x:Name="UserStartedUpdateText"
+                           VerticalAlignment="Center"
+                           Visibility="{Binding SettingsViewModel.UserStartedUpdateTextVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}" />
+                <TextBlock Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           Text="{DynamicResource DownloadingUpdate}"
+                           Visibility="{Binding SettingsViewModel.DownloadingUpdateVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}" />
+                <TextBlock Margin="10,0,0,0"
+                           VerticalAlignment="Center"
+                           Text="{DynamicResource UpdateInstalled}"
+                           Cursor="Hand"
+                           FontWeight="SemiBold"
+                           TextDecorations="Underline"
+                           Visibility="{Binding SettingsViewModel.RestartReadyVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}"
+                           PreviewMouseDown="RestartApp_Click" />
+            </StackPanel>
+        </Border>
 
-            <Border Grid.Row="0" Style="{DynamicResource CardBorderStyle}" Padding="12,10">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
+        <Grid Grid.Row="2" Margin="16,4,16,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="220" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
 
-                    <TextBlock Grid.Column="0"
-                               Text="{DynamicResource SettingsWindowName}"
-                               FontSize="{DynamicResource FontSize.Title}"
-                               FontWeight="SemiBold"
-                               VerticalAlignment="Center" />
-
-                    <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,8,0" VerticalAlignment="Center">
-                        <TextBlock Text="{DynamicResource DocLanguage}" Margin="0,0,8,0" />
-                        <ComboBox Width="210"
-                                  Style="{DynamicResource BaseComboBoxStyle}"
-                                  Margin="0"
-                                  ItemsSource="{Binding Languages}"
-                                  SelectedItem="{Binding SelectedLanguageOption, Mode=TwoWay}"
-                                  DisplayMemberPath="Title" />
-                    </StackPanel>
-
-                    <Button Grid.Column="2" x:Name="CheckUpdatesButton"
-                            Style="{DynamicResource AccentButtonStyle}"
-                            Content="{DynamicResource CheckUpdatesText}"
-                            Command="{Binding CheckUpdatesCommand}" />
-
-                    <Border Grid.Column="3"
-                            Background="{DynamicResource Brush.SurfaceSubtle}"
-                            BorderBrush="{DynamicResource Brush.Border}"
-                            BorderThickness="1"
-                            CornerRadius="6"
-                            Padding="10,6"
-                            Margin="8,0,0,0"
-                            VerticalAlignment="Center">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="{DynamicResource FFStatusLable}" Margin="0,0,6,0" />
-                            <TextBlock x:Name="FFStatusText" Text="{Binding FfStatusText}" FontWeight="SemiBold" />
-                        </StackPanel>
-                    </Border>
-                </Grid>
+            <Border Grid.Column="0" Style="{DynamicResource CardBorderStyle}" Padding="8">
+                <ListBox x:Name="SectionList"
+                         Style="{DynamicResource SidebarSectionListStyle}"
+                         ItemContainerStyle="{DynamicResource SidebarSectionItemStyle}"
+                         ItemsSource="{Binding Sections}"
+                         SelectedItem="{Binding SelectedSection, Mode=TwoWay}">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <StackPanel Orientation="Horizontal">
+                                <ui:SymbolIcon Symbol="{Binding Icon}"
+                                               FontSize="18"
+                                               Margin="0,0,12,0"
+                                               VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.TextPrimary}" />
+                                <TextBlock Text="{Binding Title}"
+                                           FontSize="{DynamicResource FontSize.Body}"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.TextPrimary}" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
             </Border>
 
-            <Border Grid.Row="1"
-                    Margin="0,8,0,10"
-                    Padding="10,8"
-                    Background="{DynamicResource Brush.AccentMuted}"
-                    BorderBrush="{DynamicResource Brush.Border}"
-                    BorderThickness="1"
-                    CornerRadius="8"
-                    Visibility="{Binding SettingsViewModel.UpdatingBlockVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock x:Name="UserStartedUpdateText"
-                               Visibility="{Binding SettingsViewModel.UserStartedUpdateTextVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}" />
-                    <TextBlock Margin="10,0,0,0"
-                               Text="{DynamicResource DownloadingUpdate}"
-                               Visibility="{Binding SettingsViewModel.DownloadingUpdateVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}" />
-                    <TextBlock Margin="10,0,0,0"
-                               Text="{DynamicResource UpdateInstalled}"
-                               Cursor="Hand"
-                               FontWeight="SemiBold"
-                               TextDecorations="Underline"
-                               Visibility="{Binding SettingsViewModel.RestartReadyVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}"
-                               PreviewMouseDown="RestartApp_Click" />
-                </StackPanel>
+            <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}" Padding="20">
+                <ContentControl x:Name="SectionContentHost" />
             </Border>
-
-            <Grid Grid.Row="2">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="310" />
-                    <ColumnDefinition Width="10" />
-                    <ColumnDefinition Width="*" />
-                </Grid.ColumnDefinitions>
-
-                <Border Grid.Column="0" Style="{DynamicResource CardBorderStyle}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <TextBlock Grid.Row="0"
-                                   Text="{DynamicResource ChatWindowsTab}"
-                                   FontSize="{DynamicResource FontSize.Subtitle}"
-                                   FontWeight="SemiBold" />
-
-                        <ComboBox Grid.Row="1"
-                                  Margin="0,8,0,6"
-                                  Style="{DynamicResource BaseComboBoxStyle}"
-                                  ItemsSource="{Binding SettingsViewModel.ChatWindows}"
-                                  DisplayMemberPath="Name"
-                                  SelectedValuePath="WinId"
-                                  SelectedValue="{Binding SelectedChatWindowId, Mode=TwoWay}" />
-
-                        <UniformGrid Grid.Row="2" Columns="2" Margin="0,0,0,8">
-                            <Button Style="{DynamicResource SidebarActionButtonStyle}"
-                                    Content="{DynamicResource AddButtonText}"
-                                    Command="{Binding AddWindowCommand}" />
-                            <Button Style="{DynamicResource SidebarActionButtonStyle}"
-                                    Content="{DynamicResource DeleteButtonText}"
-                                    Command="{Binding DeleteWindowCommand}" />
-                            <Button Style="{DynamicResource SidebarActionButtonStyle}"
-                                    Content="{DynamicResource ShowHideButtonText}"
-                                    Command="{Binding ShowHideWindowCommand}" />
-                            <Button Style="{DynamicResource SidebarActionButtonStyle}"
-                                    Content="{DynamicResource ResetButtonText}"
-                                    Command="{Binding ResetPositionCommand}" />
-                        </UniformGrid>
-
-                        <Separator Grid.Row="3" Margin="0,0,0,8" Background="{DynamicResource Brush.Border}" Height="1" />
-
-                        <ListBox Grid.Row="4"
-                                 Style="{DynamicResource SidebarSectionListStyle}"
-                                 ItemContainerStyle="{DynamicResource SidebarSectionItemStyle}"
-                                 ItemsSource="{Binding Sections}"
-                                 SelectedItem="{Binding SelectedSection, Mode=TwoWay}">
-                            <ListBox.ItemTemplate>
-                                <DataTemplate>
-                                    <TextBlock Text="{Binding Title}" FontWeight="SemiBold" />
-                                </DataTemplate>
-                            </ListBox.ItemTemplate>
-                        </ListBox>
-                    </Grid>
-                </Border>
-
-                <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}">
-                    <ContentControl x:Name="SectionContentHost" />
-                </Border>
-            </Grid>
         </Grid>
     </Grid>
-</Window>
+</ui:FluentWindow>

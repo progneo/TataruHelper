@@ -7,6 +7,9 @@ using System.Windows;
 using System.Windows.Input;
 
 using FFXIVTataruHelper.Services.HotKeys;
+using FFXIVTataruHelper.Theme;
+
+using Wpf.Ui.Controls;
 
 namespace FFXIVTataruHelper.ViewModel.Shell;
 
@@ -34,12 +37,19 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
         Sections = new ObservableCollection<SettingsSectionItem>
         {
-            new(SettingsSection.ChatWindows, "ChatWindowsTab", "Chat Windows"),
-            new(SettingsSection.Translation, "SectionTranslation", "Translation"),
-            new(SettingsSection.Appearance, "SectionAppearance", "Appearance"),
-            new(SettingsSection.Hotkeys, "ChatWindowHotkeys", "Hotkeys"),
-            new(SettingsSection.General, "SectionGeneral", "General"),
-            new(SettingsSection.About, "DockAbout", "About")
+            new(SettingsSection.ChatWindows, "ChatWindowsTab", "Chat Windows", SymbolRegular.Chat24),
+            new(SettingsSection.Translation, "SectionTranslation", "Translation", SymbolRegular.Translate24),
+            new(SettingsSection.Appearance, "SectionAppearance", "Appearance", SymbolRegular.ColorBackground24),
+            new(SettingsSection.Hotkeys, "ChatWindowHotkeys", "Hotkeys", SymbolRegular.Keyboard24),
+            new(SettingsSection.General, "SectionGeneral", "General", SymbolRegular.Settings24),
+            new(SettingsSection.About, "DockAbout", "About", SymbolRegular.Info24)
+        };
+
+        ThemeOptions = new ObservableCollection<ThemeOption>
+        {
+            new(AppThemeMode.System, "ThemeSystem", "System"),
+            new(AppThemeMode.Light, "ThemeLight", "Light"),
+            new(AppThemeMode.Dark, "ThemeDark", "Dark")
         };
 
         Languages = new ObservableCollection<LanguageOption>
@@ -81,6 +91,23 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     public ObservableCollection<SettingsSectionItem> Sections { get; }
 
     public ObservableCollection<LanguageOption> Languages { get; }
+
+    public ObservableCollection<ThemeOption> ThemeOptions { get; }
+
+    public ThemeOption SelectedThemeOption
+    {
+        get => ThemeOptions.FirstOrDefault(o => o.Mode == AppThemeService.CurrentMode) ?? ThemeOptions[0];
+        set
+        {
+            if (value == null || value.Mode == AppThemeService.CurrentMode)
+            {
+                return;
+            }
+
+            AppThemeService.Apply(value.Mode);
+            OnPropertyChanged();
+        }
+    }
 
     public TataruViewModel SettingsViewModel => _settingsViewModel;
 
@@ -307,6 +334,11 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
             {
                 section.RefreshTitle(resourceValue);
             }
+        }
+
+        foreach (var option in ThemeOptions)
+        {
+            option.RefreshTitleFromResources();
         }
     }
 

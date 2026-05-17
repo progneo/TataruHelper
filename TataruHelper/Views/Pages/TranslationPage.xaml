@@ -3,87 +3,137 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
              mc:Ignorable="d">
     <Grid Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
         </Grid.RowDefinitions>
 
-        <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <TextBlock Text="{DynamicResource SectionTranslation}"
-                       Style="{DynamicResource BaseTextBlockStyle}"
-                       FontSize="{DynamicResource FontSize.Subtitle}"
-                       FontWeight="SemiBold" />
-        </StackPanel>
+        <TextBlock Grid.Row="0"
+                   Style="{DynamicResource SectionTitleStyle}"
+                   Text="{DynamicResource SectionTranslation}" />
 
-        <Grid Grid.Row="1">
+        <TextBlock Grid.Row="1"
+                   Style="{DynamicResource CaptionTextStyle}"
+                   Margin="0,0,0,16"
+                   Text="{DynamicResource TranslationPageDescription}" />
+
+        <Grid Grid.Row="2">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="380" />
-                <ColumnDefinition Width="10" />
                 <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="360" />
             </Grid.ColumnDefinitions>
 
-            <Border Grid.Column="0" Style="{DynamicResource CardBorderStyle}">
+            <!-- Chat code filters -->
+            <ui:Card Grid.Column="0" Padding="0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="{DynamicResource ChatCodeFiltersLabel}" FontWeight="SemiBold"
-                               Margin="0,0,0,8" />
+                    <StackPanel Grid.Row="0" Margin="16,16,16,8">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <ui:SymbolIcon Symbol="FilterDismiss24" FontSize="16"
+                                           Margin="0,0,8,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Accent}" />
+                            <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                       Margin="0"
+                                       Text="{DynamicResource ChatCodeFiltersLabel}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                   Text="{DynamicResource ChatCodeFiltersHint}" />
+                    </StackPanel>
 
-                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer Grid.Row="1" Margin="8,0,8,12" VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding BoundWindow.ChatCodes}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <DockPanel Margin="0,0,0,4">
-                                        <xctk:ColorPicker Style="{DynamicResource BaseColorPickerStyle}" Width="22"
-                                                          Height="22"
-                                                          ShowDropDownButton="False"
-                                                          ShowTabHeaders="False"
-                                                          Margin="8,0,0,0"
-                                                          HorizontalAlignment="Right"
-                                                          DockPanel.Dock="Right"
-                                                          SelectedColor="{Binding Color}" />
-                                        <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
-                                                  Margin="0"
-                                                  IsChecked="{Binding IsChecked, Mode=TwoWay}"
-                                                  Content="{utils:ResourceBinding Name}" />
-                                    </DockPanel>
+                                    <Border Padding="8,6"
+                                            Margin="0,1"
+                                            CornerRadius="6"
+                                            Background="Transparent">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background"
+                                                                Value="{DynamicResource Brush.SurfaceSubtle}" />
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <DockPanel>
+                                            <xctk:ColorPicker Style="{DynamicResource BaseColorPickerStyle}"
+                                                              Width="24" Height="24"
+                                                              ShowDropDownButton="False"
+                                                              ShowTabHeaders="False"
+                                                              Margin="8,0,0,0"
+                                                              HorizontalAlignment="Right"
+                                                              DockPanel.Dock="Right"
+                                                              SelectedColor="{Binding Color}" />
+                                            <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                                      Content="{utils:ResourceBinding Name}"
+                                                      VerticalAlignment="Center"
+                                                      Foreground="{DynamicResource Brush.TextPrimary}" />
+                                        </DockPanel>
+                                    </Border>
                                 </DataTemplate>
                             </ItemsControl.ItemTemplate>
                         </ItemsControl>
                     </ScrollViewer>
                 </Grid>
-            </Border>
+            </ui:Card>
 
-            <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}">
+            <!-- Engine routing -->
+            <ui:Card Grid.Column="2" Padding="16" VerticalAlignment="Top">
                 <StackPanel>
-                    <TextBlock Text="{DynamicResource EngineRoutingLabel}" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <ui:SymbolIcon Symbol="Globe24" FontSize="16"
+                                       Margin="0,0,8,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Accent}" />
+                        <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                   Margin="0"
+                                   Text="{DynamicResource EngineRoutingLabel}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                               Margin="0,0,0,12"
+                               Text="{DynamicResource EngineRoutingHint}" />
 
-                    <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource TranslationEngine}" />
-                    <ComboBox Style="{DynamicResource BaseComboBoxStyle}"
-                              ItemsSource="{Binding BoundWindow.TranslationEngines}"
+                    <Label Style="{DynamicResource BaseLabelStyle}"
+                           Content="{DynamicResource TranslationEngine}" />
+                    <ComboBox ItemsSource="{Binding BoundWindow.TranslationEngines}"
                               DisplayMemberPath="Name"
-                              IsSynchronizedWithCurrentItem="True" />
+                              IsSynchronizedWithCurrentItem="True"
+                              Margin="0,0,0,12" />
 
-                    <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FFLanguage}" />
-                    <ComboBox Style="{DynamicResource BaseComboBoxStyle}"
-                              ItemsSource="{Binding BoundWindow.TranslateFromLanguagues}"
+                    <Label Style="{DynamicResource BaseLabelStyle}"
+                           Content="{DynamicResource FFLanguage}" />
+                    <ComboBox ItemsSource="{Binding BoundWindow.TranslateFromLanguagues}"
                               DisplayMemberPath="ShownName"
-                              IsSynchronizedWithCurrentItem="True" />
+                              IsSynchronizedWithCurrentItem="True"
+                              Margin="0,0,0,12" />
 
-                    <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource TraslateTo}" />
-                    <ComboBox Style="{DynamicResource BaseComboBoxStyle}"
-                              ItemsSource="{Binding BoundWindow.TranslateToLanguagues}"
+                    <Label Style="{DynamicResource BaseLabelStyle}"
+                           Content="{DynamicResource TraslateTo}" />
+                    <ComboBox ItemsSource="{Binding BoundWindow.TranslateToLanguagues}"
                               DisplayMemberPath="ShownName"
                               IsSynchronizedWithCurrentItem="True" />
                 </StackPanel>
-            </Border>
+            </ui:Card>
         </Grid>
     </Grid>
 </UserControl>

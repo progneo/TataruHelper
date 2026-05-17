@@ -28,6 +28,9 @@ using Hardcodet.Wpf.TaskbarNotification;
 using Updater;
 using Updater.EventArguments;
 
+using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls;
+
 using Timer = System.Timers.Timer;
 
 namespace FFXIVTataruHelper;
@@ -35,7 +38,7 @@ namespace FFXIVTataruHelper;
 /// <summary>
 /// Interaction logic for MainWindow.xaml//
 /// </summary>
-public partial class MainWindow : Window
+public partial class MainWindow : FluentWindow
 {
     private readonly ITataruModelFactory _tataruModelFactory;
     private readonly IUpdateService _updater;
@@ -121,6 +124,15 @@ public partial class MainWindow : Window
         }
         catch (Exception)
         {
+        }
+
+        try
+        {
+            SystemThemeWatcher.Watch(this, WindowBackdropType.Mica, updateAccents: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.WriteLog(ex);
         }
 
         try

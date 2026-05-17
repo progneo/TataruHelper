@@ -173,4 +173,27 @@
     <system:String x:Key="LookingForUpdates">Looking for updates...</system:String>
     <system:String x:Key="NoUpdatesFound">No updates found.</system:String>
 
+    <!-- New UI keys -->
+    <system:String x:Key="ChatWindowsPageDescription">Manage your in-game chat overlay windows. Each tab is an independent overlay.</system:String>
+    <system:String x:Key="ChatWindowsTabHint">Switch tabs to edit a window's translation, appearance, hotkeys, and behavior in the other sections.</system:String>
+    <system:String x:Key="TranslationPageDescription">Engine and language routing apply only to the selected chat window.</system:String>
+    <system:String x:Key="ChatCodeFiltersHint">Pick which chat channels are translated and the colour each one is rendered in.</system:String>
+    <system:String x:Key="EngineRoutingHint">Choose the translation provider and source/target languages.</system:String>
+    <system:String x:Key="AppearancePageDescription">Customize how the overlay looks and how text is laid out.</system:String>
+    <system:String x:Key="HotkeysPageDescription">Record system-wide shortcuts and control how the overlay reacts.</system:String>
+    <system:String x:Key="GeneralPageDescription">Application-wide options that affect every chat window.</system:String>
+    <system:String x:Key="AboutPageDescription">Project links and credits.</system:String>
+
+    <system:String x:Key="ThemeGroupTitle">Theme</system:String>
+    <system:String x:Key="ThemeGroupHint">Choose how the settings window and overlay should be coloured.</system:String>
+    <system:String x:Key="ThemeSystem">Use system theme</system:String>
+    <system:String x:Key="ThemeLight">Light</system:String>
+    <system:String x:Key="ThemeDark">Dark</system:String>
+
+    <system:String x:Key="HotkeyRecordHint">Press a key combination…</system:String>
+    <system:String x:Key="HotkeyClear">Clear</system:String>
+
+    <system:String x:Key="DirectMemoryDescription">Read FFXIV chat directly from process memory using Sharlayan.</system:String>
+    <system:String x:Key="HideToTrayDescription">Hide the settings window to the system tray when minimized.</system:String>
+
 </ResourceDictionary>

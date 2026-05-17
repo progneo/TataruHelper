@@ -1,54 +1,99 @@
-﻿<UserControl x:Class="FFXIVTataruHelper.Views.Pages.AppearancePage"
+<UserControl x:Class="FFXIVTataruHelper.Views.Pages.AppearancePage"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Background="Transparent">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
-            <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                <TextBlock Text="{DynamicResource SectionAppearance}"
-                           Style="{DynamicResource BaseTextBlockStyle}"
-                           FontSize="{DynamicResource FontSize.Subtitle}"
-                           FontWeight="SemiBold" />
-            </StackPanel>
+            <TextBlock Grid.Row="0"
+                       Style="{DynamicResource SectionTitleStyle}"
+                       Text="{DynamicResource SectionAppearance}" />
 
-            <Grid Grid.Row="1">
+            <TextBlock Grid.Row="1"
+                       Style="{DynamicResource CaptionTextStyle}"
+                       Margin="0,0,0,16"
+                       Text="{DynamicResource AppearancePageDescription}" />
+
+            <!-- App theme selector -->
+            <ui:Card Grid.Row="2" Padding="16" Margin="0,0,0,12">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <ui:SymbolIcon Symbol="DarkTheme24" FontSize="16"
+                                       Margin="0,0,8,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Accent}" />
+                        <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                   Margin="0"
+                                   Text="{DynamicResource ThemeGroupTitle}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                               Margin="0,0,0,12"
+                               Text="{DynamicResource ThemeGroupHint}" />
+
+                    <ComboBox Width="220"
+                              HorizontalAlignment="Left"
+                              ItemsSource="{Binding Shell.ThemeOptions}"
+                              DisplayMemberPath="Title"
+                              SelectedItem="{Binding Shell.SelectedThemeOption, Mode=TwoWay}" />
+                </StackPanel>
+            </ui:Card>
+
+            <Grid Grid.Row="3">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="10" />
+                    <ColumnDefinition Width="16" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Style="{DynamicResource CardBorderStyle}">
+                <ui:Card Grid.Column="0" Padding="16">
                     <StackPanel>
-                        <TextBlock Text="{DynamicResource TypographyLabel}" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <ui:SymbolIcon Symbol="TextFont24" FontSize="16"
+                                           Margin="0,0,8,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Accent}" />
+                            <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                       Margin="0"
+                                       Text="{DynamicResource TypographyLabel}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+
+                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontFamily}" />
+                        <ComboBox ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}"
+                                  SelectedItem="{Binding BoundWindow.ChatFont, Mode=TwoWay}"
+                                  Margin="0,0,0,12" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontSize}" />
                         <xctk:IntegerUpDown Style="{DynamicResource BaseNumericUpDownStyle}"
                                             Value="{Binding BoundWindow.ChatFontSize, Mode=TwoWay}" Minimum="1"
-                                            Maximum="100" Margin="0,0,0,8" />
+                                            Maximum="100" Margin="0,0,0,12" />
 
-                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontFamily}" />
-                        <ComboBox Style="{DynamicResource BaseComboBoxStyle}"
-                                  ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}"
-                                  SelectedItem="{Binding BoundWindow.ChatFont, Mode=TwoWay}" />
-
-                        <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
-                                  IsChecked="{Binding BoundWindow.ShowTimestamps, Mode=TwoWay}"
-                                  Content="{DynamicResource ShowTimestampsCb}" />
+                        <ui:ToggleSwitch IsChecked="{Binding BoundWindow.ShowTimestamps, Mode=TwoWay}"
+                                         Content="{DynamicResource ShowTimestampsCb}" />
                     </StackPanel>
-                </Border>
+                </ui:Card>
 
-                <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}">
+                <ui:Card Grid.Column="2" Padding="16">
                     <StackPanel>
-                        <TextBlock Text="{DynamicResource WindowSurfaceLabel}" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                            <ui:SymbolIcon Symbol="Color24" FontSize="16"
+                                           Margin="0,0,8,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Accent}" />
+                            <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                       Margin="0"
+                                       Text="{DynamicResource WindowSurfaceLabel}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource BackgroundColor}" />
                         <xctk:ColorPicker Style="{DynamicResource BaseColorPickerStyle}"
@@ -56,18 +101,19 @@
                                           ShowAvailableColors="False"
                                           ShowStandardColors="True"
                                           ShowRecentColors="True"
-                                          Margin="0,0,0,8" />
+                                          Margin="0,0,0,12" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource IntervalWidth}" />
-                        <xctk:IntegerUpDown Value="{Binding BoundWindow.SpacingCount, Mode=TwoWay}" Minimum="0"
-                                            Maximum="100" Margin="0,0,0,8" />
+                        <xctk:IntegerUpDown Style="{DynamicResource BaseNumericUpDownStyle}"
+                                            Value="{Binding BoundWindow.SpacingCount, Mode=TwoWay}" Minimum="0"
+                                            Maximum="100" Margin="0,0,0,12" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource LineBreakHeight}" />
                         <xctk:IntegerUpDown Style="{DynamicResource BaseNumericUpDownStyle}"
                                             Value="{Binding BoundWindow.LineBreakHeight, Mode=TwoWay}" Minimum="0"
-                                            Maximum="100" Margin="0,0,0,8" />
+                                            Maximum="100" />
                     </StackPanel>
-                </Border>
+                </ui:Card>
             </Grid>
         </Grid>
     </ScrollViewer>
