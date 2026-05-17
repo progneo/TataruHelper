@@ -5,7 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d">
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="{DynamicResource Brush.Background}">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="Transparent">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -31,7 +31,8 @@
                         <TextBlock Text="{DynamicResource TypographyLabel}" FontWeight="SemiBold" Margin="0,0,0,8" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontSize}" />
-                        <xctk:IntegerUpDown Value="{Binding BoundWindow.ChatFontSize, Mode=TwoWay}" Minimum="1"
+                        <xctk:IntegerUpDown Style="{DynamicResource BaseNumericUpDownStyle}"
+                                            Value="{Binding BoundWindow.ChatFontSize, Mode=TwoWay}" Minimum="1"
                                             Maximum="100" Margin="0,0,0,8" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontFamily}" />
@@ -50,7 +51,8 @@
                         <TextBlock Text="{DynamicResource WindowSurfaceLabel}" FontWeight="SemiBold" Margin="0,0,0,8" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource BackgroundColor}" />
-                        <xctk:ColorPicker SelectedColor="{Binding BoundWindow.BackGroundColor, Mode=TwoWay}"
+                        <xctk:ColorPicker Style="{DynamicResource BaseColorPickerStyle}"
+                                          SelectedColor="{Binding BoundWindow.BackGroundColor, Mode=TwoWay}"
                                           ShowAvailableColors="False"
                                           ShowStandardColors="True"
                                           ShowRecentColors="True"
@@ -61,7 +63,8 @@
                                             Maximum="100" Margin="0,0,0,8" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource LineBreakHeight}" />
-                        <xctk:IntegerUpDown Value="{Binding BoundWindow.LineBreakHeight, Mode=TwoWay}" Minimum="0"
+                        <xctk:IntegerUpDown Style="{DynamicResource BaseNumericUpDownStyle}"
+                                            Value="{Binding BoundWindow.LineBreakHeight, Mode=TwoWay}" Minimum="0"
                                             Maximum="100" Margin="0,0,0,8" />
                     </StackPanel>
                 </Border>

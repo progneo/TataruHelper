@@ -6,7 +6,7 @@
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
              mc:Ignorable="d">
-    <Grid Background="{DynamicResource Brush.Background}">
+    <Grid Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -41,7 +41,7 @@
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <DockPanel Margin="0,0,0,4">
-                                        <xctk:ColorPicker Width="22"
+                                        <xctk:ColorPicker Style="{DynamicResource BaseColorPickerStyle}" Width="22"
                                                           Height="22"
                                                           ShowDropDownButton="False"
                                                           ShowTabHeaders="False"

@@ -3,6 +3,7 @@
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
     <system:String x:Key="SettingsWindowName">Settings</system:String>
+    <system:String x:Key="TrayTooltipText">Tataru Helper</system:String>
     <system:String x:Key="ChatWindowName">Chat Window</system:String>
     <system:String x:Key="StreamWindowName">Stream Chat Window</system:String>
     <system:String x:Key="PatreonWindowName">Patrons</system:String>
@@ -31,7 +32,7 @@
 
     <system:String x:Key="FFStatusLable">FF Status:</system:String>
 
-    <system:String x:Key="FFStatusText">FFXIV process not found. Make sure that FFXIV is running using DirectX 11.</system:String>
+    <system:String x:Key="FFStatusText">Not found</system:String>
     <system:String x:Key="FFStatusTextFound">Process found:</system:String>
 
     <system:String x:Key="ChatWindowsTab">Chat Windows</system:String>

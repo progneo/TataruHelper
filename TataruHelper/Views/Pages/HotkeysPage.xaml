@@ -7,7 +7,7 @@
              xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
              xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
              mc:Ignorable="d">
-    <Grid Background="{DynamicResource Brush.Background}">
+    <Grid Background="Transparent">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
             <RowDefinition Height="*" />
@@ -107,7 +107,8 @@
                                   VerticalAlignment="Center"
                                   IsChecked="{Binding BoundWindow.IsAutoHide, Mode=TwoWay}"
                                   Content="{DynamicResource AutoHideCB}" />
-                        <xctk:IntegerUpDown Value="{Binding BoundWindow.AutoHideTimeoutSeconds, Mode=TwoWay}"
+                        <xctk:IntegerUpDown Style="{DynamicResource BaseNumericUpDownStyle}"
+                                            Value="{Binding BoundWindow.AutoHideTimeoutSeconds, Mode=TwoWay}"
                                             Width="120"
                                             Margin="12,0,0,0"
                                             Minimum="1"

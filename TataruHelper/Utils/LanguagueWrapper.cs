@@ -110,12 +110,12 @@ namespace FFXIVTataruHelper
                         break;
                 }
 
-                LoadDynamicTranslation(path);
+                LoadDynamicTranslation(path, languague);
             }
         }
 
 
-        private void LoadDynamicTranslation(string path)
+        private void LoadDynamicTranslation(string path, Languages requestedLanguage)
         {
             ICatalog catalog = new Catalog();
             try
@@ -131,6 +131,7 @@ namespace FFXIVTataruHelper
             }
 
             _SettingsWindow.Resources["SettingsWindowName"] = catalog.GetString("Settings");
+            _SettingsWindow.Resources["TrayTooltipText"] = catalog.GetString("Tataru Helper");
             _SettingsWindow.Resources["ChatWindowName"] = catalog.GetString("Chat Window");
             _SettingsWindow.Resources["StreamWindowName"] = catalog.GetString("Stream Chat Window");
 
@@ -237,8 +238,14 @@ namespace FFXIVTataruHelper
 
             _SettingsWindow.Resources["FFStatusLable"] = catalog.GetString("FF Status:");
 
-            _SettingsWindow.Resources["FFStatusText"] =
-                catalog.GetString("FFXIV process not found. Make sure that FFXIV is running using DirectX 11.");
+            var ffNotFound = catalog.GetString("Not found");
+            if (string.Equals(ffNotFound, "Not found", StringComparison.Ordinal) &&
+                requestedLanguage == Languages.Russian)
+            {
+                ffNotFound = "Не найден";
+            }
+
+            _SettingsWindow.Resources["FFStatusText"] = ffNotFound;
 
             _SettingsWindow.Resources["FFStatusTextFound"] = catalog.GetString("Process found:");
 

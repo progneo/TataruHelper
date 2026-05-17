@@ -22,7 +22,7 @@
 
     <Grid Background="{DynamicResource Brush.Background}">
         <tb:TaskbarIcon x:Name="TaskBarIcon" IconSource="Resources/tray_icon.ico" TrayMouseDoubleClick="TBDoubleClick"
-                        ToolTipText="Tataru Helper">
+                        ToolTipText="{DynamicResource TrayTooltipText}">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu DataContext="{Binding ElementName=TataruSettingsWindow, Path=DataContext}">
                     <MenuItem Header="{DynamicResource ChatWindowsTab}" IsEnabled="False" />
@@ -178,40 +178,7 @@
                 </Border>
 
                 <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-
-                        <Border Grid.Row="0"
-                                Background="{DynamicResource Brush.Surface}"
-                                BorderBrush="{DynamicResource Brush.Border}"
-                                BorderThickness="1"
-                                CornerRadius="8"
-                                Padding="10"
-                                Margin="0,0,0,10">
-                            <Grid>
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-
-                                <TextBlock Grid.Column="0" Text="{DynamicResource ActiveChatWindowLabel}"
-                                           FontWeight="SemiBold"
-                                           Margin="0,0,10,0" />
-
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding CurrentChatWindow.Name}"
-                                           Margin="0,0,0,0"
-                                           VerticalAlignment="Center"
-                                           Foreground="{DynamicResource Brush.TextSecondary}" />
-
-                            </Grid>
-                        </Border>
-
-                        <ContentControl x:Name="SectionContentHost" Grid.Row="1" />
-                    </Grid>
+                    <ContentControl x:Name="SectionContentHost" />
                 </Border>
             </Grid>
         </Grid>
