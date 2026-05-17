@@ -11,13 +11,10 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <TextBlock Text="Chat windows"
+            <TextBlock Text="{DynamicResource ChatWindowsTab}"
                        Style="{DynamicResource BaseTextBlockStyle}"
                        FontSize="{DynamicResource FontSize.Subtitle}"
                        FontWeight="SemiBold" />
-            <TextBlock Text="Each window keeps independent behavior, translation and appearance settings."
-                       Style="{DynamicResource BaseTextBlockStyle}"
-                       Foreground="{DynamicResource Brush.TextSecondary}" />
         </StackPanel>
 
         <Grid Grid.Row="1">
@@ -34,7 +31,8 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Window list" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <TextBlock Grid.Row="0" Text="{DynamicResource WindowListLabel}" FontWeight="SemiBold"
+                               Margin="0,0,0,8" />
                     <ListBox Grid.Row="1"
                              Style="{DynamicResource SidebarSectionListStyle}"
                              ItemContainerStyle="{DynamicResource SidebarSectionItemStyle}"
@@ -53,29 +51,26 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Window details" FontWeight="SemiBold" />
+                    <TextBlock Grid.Row="0" Text="{DynamicResource WindowDetailsLabel}" FontWeight="SemiBold" />
 
                     <StackPanel Grid.Row="1" Margin="0,10,0,10">
-                        <Label Style="{DynamicResource BaseLabelStyle}" Content="Window name" />
+                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource WindowNameLabel}" />
                         <TextBox Style="{DynamicResource BaseTextBoxStyle}"
                                  Width="260"
                                  Text="{Binding BoundWindow.Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
                     </StackPanel>
 
-                    <WrapPanel Grid.Row="2" Margin="0,0,0,8">
-                        <Button Style="{DynamicResource BaseButtonStyle}" Content="Add" Width="110"
+                    <UniformGrid Grid.Row="2" Columns="2" Margin="0,0,0,8">
+                        <Button Style="{DynamicResource BaseButtonStyle}" Content="{DynamicResource AddButtonText}"
                                 Command="{Binding Shell.AddWindowCommand}" />
-                        <Button Style="{DynamicResource BaseButtonStyle}" Content="Delete" Width="110"
+                        <Button Style="{DynamicResource BaseButtonStyle}" Content="{DynamicResource DeleteButtonText}"
                                 Command="{Binding Shell.DeleteWindowCommand}" />
-                        <Button Style="{DynamicResource BaseButtonStyle}" Content="Show/Hide" Width="120"
+                        <Button Style="{DynamicResource BaseButtonStyle}"
+                                Content="{DynamicResource ShowHideButtonText}"
                                 Command="{Binding Shell.ShowHideWindowCommand}" />
-                        <Button Style="{DynamicResource BaseButtonStyle}" Content="Reset position" Width="130"
+                        <Button Style="{DynamicResource BaseButtonStyle}" Content="{DynamicResource ResetButtonText}"
                                 Command="{Binding Shell.ResetPositionCommand}" />
-                    </WrapPanel>
-
-                    <TextBlock Grid.Row="3"
-                               Text="Use this page to create a focused layout per chat context (raid, party, linkshell, etc.)."
-                               Foreground="{DynamicResource Brush.TextSecondary}" />
+                    </UniformGrid>
                 </Grid>
             </Border>
         </Grid>

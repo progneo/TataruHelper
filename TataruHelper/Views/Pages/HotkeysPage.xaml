@@ -14,13 +14,10 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <TextBlock Text="Hotkeys and behavior"
+            <TextBlock Text="{DynamicResource ChatWindowHotkeys}"
                        Style="{DynamicResource BaseTextBlockStyle}"
                        FontSize="{DynamicResource FontSize.Subtitle}"
                        FontWeight="SemiBold" />
-            <TextBlock Text="Capture shortcuts directly in the active window context."
-                       Style="{DynamicResource BaseTextBlockStyle}"
-                       Foreground="{DynamicResource Brush.TextSecondary}" />
         </StackPanel>
 
         <Grid Grid.Row="1">
@@ -32,7 +29,7 @@
 
             <Border Grid.Column="0" Style="{DynamicResource CardBorderStyle}">
                 <StackPanel>
-                    <TextBlock Text="Shortcut capture" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <TextBlock Text="{DynamicResource ShortcutCaptureLabel}" FontWeight="SemiBold" Margin="0,0,0,8" />
 
                     <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource ShowHideChatWindowHK}" />
                     <DockPanel Margin="0,0,0,8">
@@ -95,7 +92,7 @@
 
             <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}">
                 <StackPanel>
-                    <TextBlock Text="Overlay behavior" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <TextBlock Text="{DynamicResource OverlayBehaviorLabel}" FontWeight="SemiBold" Margin="0,0,0,8" />
 
                     <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
                               IsChecked="{Binding BoundWindow.IsAlwaysOnTop, Mode=TwoWay}"

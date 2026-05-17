@@ -56,13 +56,13 @@
                     </Grid.ColumnDefinitions>
 
                     <TextBlock Grid.Column="0"
-                               Text="Settings"
+                               Text="{DynamicResource SettingsWindowName}"
                                FontSize="{DynamicResource FontSize.Title}"
                                FontWeight="SemiBold"
                                VerticalAlignment="Center" />
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,8,0" VerticalAlignment="Center">
-                        <TextBlock Text="Language" Margin="0,0,8,0" />
+                        <TextBlock Text="{DynamicResource DocLanguage}" Margin="0,0,8,0" />
                         <ComboBox Width="210"
                                   Style="{DynamicResource BaseComboBoxStyle}"
                                   Margin="0"
@@ -134,7 +134,7 @@
                         </Grid.RowDefinitions>
 
                         <TextBlock Grid.Row="0"
-                                   Text="Chat windows"
+                                   Text="{DynamicResource ChatWindowsTab}"
                                    FontSize="{DynamicResource FontSize.Subtitle}"
                                    FontWeight="SemiBold" />
 
@@ -146,16 +146,20 @@
                                   SelectedValuePath="WinId"
                                   SelectedValue="{Binding SelectedChatWindowId, Mode=TwoWay}" />
 
-                        <WrapPanel Grid.Row="2" Margin="0,0,0,8">
-                            <Button Style="{DynamicResource SidebarActionButtonStyle}" Content="Add"
+                        <UniformGrid Grid.Row="2" Columns="2" Margin="0,0,0,8">
+                            <Button Style="{DynamicResource SidebarActionButtonStyle}"
+                                    Content="{DynamicResource AddButtonText}"
                                     Command="{Binding AddWindowCommand}" />
-                            <Button Style="{DynamicResource SidebarActionButtonStyle}" Content="Delete"
+                            <Button Style="{DynamicResource SidebarActionButtonStyle}"
+                                    Content="{DynamicResource DeleteButtonText}"
                                     Command="{Binding DeleteWindowCommand}" />
-                            <Button Style="{DynamicResource SidebarActionButtonStyle}" Content="Show/Hide"
+                            <Button Style="{DynamicResource SidebarActionButtonStyle}"
+                                    Content="{DynamicResource ShowHideButtonText}"
                                     Command="{Binding ShowHideWindowCommand}" />
-                            <Button Style="{DynamicResource SidebarActionButtonStyle}" Content="Reset"
+                            <Button Style="{DynamicResource SidebarActionButtonStyle}"
+                                    Content="{DynamicResource ResetButtonText}"
                                     Command="{Binding ResetPositionCommand}" />
-                        </WrapPanel>
+                        </UniformGrid>
 
                         <Separator Grid.Row="3" Margin="0,0,0,8" Background="{DynamicResource Brush.Border}" Height="1" />
 
@@ -181,7 +185,7 @@
                         </Grid.RowDefinitions>
 
                         <Border Grid.Row="0"
-                                Background="{DynamicResource Brush.SurfaceSubtle}"
+                                Background="{DynamicResource Brush.Surface}"
                                 BorderBrush="{DynamicResource Brush.Border}"
                                 BorderThickness="1"
                                 CornerRadius="8"
@@ -190,34 +194,19 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
-                                    <ColumnDefinition Width="260" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="Auto" />
                                 </Grid.ColumnDefinitions>
 
-                                <TextBlock Grid.Column="0" Text="Active Chat Window" FontWeight="SemiBold"
+                                <TextBlock Grid.Column="0" Text="{DynamicResource ActiveChatWindowLabel}"
+                                           FontWeight="SemiBold"
                                            Margin="0,0,10,0" />
 
-                                <ComboBox Grid.Column="1"
-                                          Style="{DynamicResource BaseComboBoxStyle}"
-                                          Margin="0"
-                                          ItemsSource="{Binding SettingsViewModel.ChatWindows}"
-                                          DisplayMemberPath="Name"
-                                          SelectedValuePath="WinId"
-                                          SelectedValue="{Binding SelectedChatWindowId, Mode=TwoWay}" />
-
-                                <TextBlock Grid.Column="2"
+                                <TextBlock Grid.Column="1"
                                            Text="{Binding CurrentChatWindow.Name}"
-                                           Margin="12,0,0,0"
+                                           Margin="0,0,0,0"
                                            VerticalAlignment="Center"
                                            Foreground="{DynamicResource Brush.TextSecondary}" />
 
-                                <WrapPanel Grid.Column="3" HorizontalAlignment="Right">
-                                    <Button Style="{DynamicResource SidebarActionButtonStyle}" Content="Show/Hide"
-                                            Command="{Binding ShowHideWindowCommand}" />
-                                    <Button Style="{DynamicResource SidebarActionButtonStyle}" Content="Reset"
-                                            Margin="0,0,0,0" Command="{Binding ResetPositionCommand}" />
-                                </WrapPanel>
                             </Grid>
                         </Border>
 

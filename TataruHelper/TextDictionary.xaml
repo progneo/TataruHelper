@@ -35,6 +35,27 @@
     <system:String x:Key="FFStatusTextFound">Process found:</system:String>
 
     <system:String x:Key="ChatWindowsTab">Chat Windows</system:String>
+    <system:String x:Key="SectionTranslation">Translation</system:String>
+    <system:String x:Key="SectionAppearance">Appearance</system:String>
+    <system:String x:Key="SectionGeneral">General</system:String>
+    <system:String x:Key="ActiveChatWindowLabel">Active Chat Window</system:String>
+    <system:String x:Key="AddButtonText">Add</system:String>
+    <system:String x:Key="DeleteButtonText">Delete</system:String>
+    <system:String x:Key="ShowHideButtonText">Show/Hide</system:String>
+    <system:String x:Key="ResetButtonText">Reset</system:String>
+    <system:String x:Key="WindowListLabel">Window list</system:String>
+    <system:String x:Key="WindowDetailsLabel">Window details</system:String>
+    <system:String x:Key="WindowNameLabel">Window name</system:String>
+    <system:String x:Key="ChatCodeFiltersLabel">Chat code filters</system:String>
+    <system:String x:Key="EngineRoutingLabel">Engine routing</system:String>
+    <system:String x:Key="TypographyLabel">Typography</system:String>
+    <system:String x:Key="WindowSurfaceLabel">Window surface</system:String>
+    <system:String x:Key="ShortcutCaptureLabel">Shortcut capture</system:String>
+    <system:String x:Key="OverlayBehaviorLabel">Overlay behavior</system:String>
+    <system:String x:Key="ApplicationFlagsLabel">Application flags</system:String>
+    <system:String x:Key="ForkRepositoryLabel">Fork repository:</system:String>
+    <system:String x:Key="OriginalRepositoryLabel">Original repository:</system:String>
+    <system:String x:Key="CommunityDiscordLabel">Community Discord:</system:String>
     <system:String x:Key="ChatAppearance">Chat Appearance</system:String>
     <system:String x:Key="TranslationSettings">Translation Settings</system:String>
     <system:String x:Key="GeneralBehavior">General Behavior</system:String>

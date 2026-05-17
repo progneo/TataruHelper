@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Windows;
 using System.Windows.Input;
 
 using FFXIVTataruHelper.Services.HotKeys;
@@ -33,12 +34,12 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
         Sections = new ObservableCollection<SettingsSectionItem>
         {
-            new(SettingsSection.ChatWindows, "Chat Windows"),
-            new(SettingsSection.Translation, "Translation"),
-            new(SettingsSection.Appearance, "Appearance"),
-            new(SettingsSection.Hotkeys, "Hotkeys"),
-            new(SettingsSection.General, "General"),
-            new(SettingsSection.About, "About")
+            new(SettingsSection.ChatWindows, "ChatWindowsTab", "Chat Windows"),
+            new(SettingsSection.Translation, "SectionTranslation", "Translation"),
+            new(SettingsSection.Appearance, "SectionAppearance", "Appearance"),
+            new(SettingsSection.Hotkeys, "ChatWindowHotkeys", "Hotkeys"),
+            new(SettingsSection.General, "SectionGeneral", "General"),
+            new(SettingsSection.About, "DockAbout", "About")
         };
 
         Languages = new ObservableCollection<LanguageOption>
@@ -68,6 +69,8 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         _selectedSection = Sections.First(x => x.Section == SettingsSection.ChatWindows);
         _selectedLanguageOption = ResolveLanguageOption(_uiModel.UiLanguage);
         _ffStatusText = string.Empty;
+
+        RefreshSectionTitles();
 
         _settingsViewModel.PropertyChanged += OnSettingsViewModelPropertyChanged;
         _uiModel.PropertyChanged += OnUiModelPropertyChanged;
@@ -291,6 +294,19 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         {
             _selectedLanguageOption = ResolveLanguageOption(_uiModel.UiLanguage);
             OnPropertyChanged(nameof(SelectedLanguageOption));
+            RefreshSectionTitles();
+        }
+    }
+
+    private void RefreshSectionTitles()
+    {
+        foreach (var section in Sections)
+        {
+            var resourceValue = Application.Current?.Resources?[section.ResourceKey] as string;
+            if (!string.IsNullOrWhiteSpace(resourceValue))
+            {
+                section.RefreshTitle(resourceValue);
+            }
         }
     }
 

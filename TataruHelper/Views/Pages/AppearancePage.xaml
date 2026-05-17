@@ -13,13 +13,10 @@
             </Grid.RowDefinitions>
 
             <StackPanel Grid.Row="0" Margin="0,0,0,10">
-                <TextBlock Text="Appearance"
+                <TextBlock Text="{DynamicResource SectionAppearance}"
                            Style="{DynamicResource BaseTextBlockStyle}"
                            FontSize="{DynamicResource FontSize.Subtitle}"
                            FontWeight="SemiBold" />
-                <TextBlock Text="Typography and readability settings are window-scoped."
-                           Style="{DynamicResource BaseTextBlockStyle}"
-                           Foreground="{DynamicResource Brush.TextSecondary}" />
             </StackPanel>
 
             <Grid Grid.Row="1">
@@ -31,7 +28,7 @@
 
                 <Border Grid.Column="0" Style="{DynamicResource CardBorderStyle}">
                     <StackPanel>
-                        <TextBlock Text="Typography" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        <TextBlock Text="{DynamicResource TypographyLabel}" FontWeight="SemiBold" Margin="0,0,0,8" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontSize}" />
                         <xctk:IntegerUpDown Value="{Binding BoundWindow.ChatFontSize, Mode=TwoWay}" Minimum="1"
@@ -50,7 +47,7 @@
 
                 <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}">
                     <StackPanel>
-                        <TextBlock Text="Window surface" FontWeight="SemiBold" Margin="0,0,0,8" />
+                        <TextBlock Text="{DynamicResource WindowSurfaceLabel}" FontWeight="SemiBold" Margin="0,0,0,8" />
 
                         <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource BackgroundColor}" />
                         <xctk:ColorPicker SelectedColor="{Binding BoundWindow.BackGroundColor, Mode=TwoWay}"

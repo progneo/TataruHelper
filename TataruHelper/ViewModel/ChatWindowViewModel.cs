@@ -851,6 +851,8 @@ namespace FFXIVTataruHelper.ViewModel
             var rect = ChatWindowRectangle;
             rect.X = 0;
             rect.Y = 0;
+            rect.Width = 480;
+            rect.Height = 320;
 
             ChatWindowRectangle = rect;
         }

@@ -11,23 +11,16 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <TextBlock Text="About"
+            <TextBlock Text="{DynamicResource DockAbout}"
                        Style="{DynamicResource BaseTextBlockStyle}"
                        FontSize="{DynamicResource FontSize.Subtitle}"
                        FontWeight="SemiBold" />
-            <TextBlock Text="Project links and support channels."
-                       Style="{DynamicResource BaseTextBlockStyle}"
-                       Foreground="{DynamicResource Brush.TextSecondary}" />
         </StackPanel>
 
         <Border Grid.Row="1" Style="{DynamicResource CardBorderStyle}">
             <StackPanel>
-                <TextBlock Style="{DynamicResource BaseTextBlockStyle}" Margin="0,0,0,10">
-                    This build focuses on modern UX, stable overlays and translation reliability.
-                </TextBlock>
-
                 <TextBlock Style="{DynamicResource BaseTextBlockStyle}" Margin="0,0,0,8">
-                    Fork repository:
+                    <Run Text="{DynamicResource ForkRepositoryLabel}" />
                     <Hyperlink NavigateUri="https://github.com/progneo/TataruHelper"
                                RequestNavigate="Hyperlink_RequestNavigate">
                         https://github.com/progneo/TataruHelper
@@ -35,7 +28,7 @@
                 </TextBlock>
 
                 <TextBlock Style="{DynamicResource BaseTextBlockStyle}" Margin="0,0,0,8">
-                    Original repository:
+                    <Run Text="{DynamicResource OriginalRepositoryLabel}" />
                     <Hyperlink NavigateUri="https://github.com/NightlyRevenger/TataruHelper"
                                RequestNavigate="Hyperlink_RequestNavigate">
                         https://github.com/NightlyRevenger/TataruHelper
@@ -43,7 +36,7 @@
                 </TextBlock>
 
                 <TextBlock Style="{DynamicResource BaseTextBlockStyle}">
-                    Community Discord:
+                    <Run Text="{DynamicResource CommunityDiscordLabel}" />
                     <Hyperlink NavigateUri="https://discord.gg/bSrpbd9" RequestNavigate="Hyperlink_RequestNavigate">
                         https://discord.gg/bSrpbd9
                     </Hyperlink>

@@ -13,13 +13,10 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <TextBlock Text="Translation"
+            <TextBlock Text="{DynamicResource SectionTranslation}"
                        Style="{DynamicResource BaseTextBlockStyle}"
                        FontSize="{DynamicResource FontSize.Subtitle}"
                        FontWeight="SemiBold" />
-            <TextBlock Text="Engine and language routing apply only to the selected chat window."
-                       Style="{DynamicResource BaseTextBlockStyle}"
-                       Foreground="{DynamicResource Brush.TextSecondary}" />
         </StackPanel>
 
         <Grid Grid.Row="1">
@@ -36,7 +33,8 @@
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
 
-                    <TextBlock Grid.Row="0" Text="Chat code filters" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <TextBlock Grid.Row="0" Text="{DynamicResource ChatCodeFiltersLabel}" FontWeight="SemiBold"
+                               Margin="0,0,0,8" />
 
                     <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
                         <ItemsControl ItemsSource="{Binding BoundWindow.ChatCodes}">
@@ -65,7 +63,7 @@
 
             <Border Grid.Column="2" Style="{DynamicResource CardBorderStyle}">
                 <StackPanel>
-                    <TextBlock Text="Engine routing" FontWeight="SemiBold" Margin="0,0,0,8" />
+                    <TextBlock Text="{DynamicResource EngineRoutingLabel}" FontWeight="SemiBold" Margin="0,0,0,8" />
 
                     <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource TranslationEngine}" />
                     <ComboBox Style="{DynamicResource BaseComboBoxStyle}"

@@ -1,11 +1,11 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using NGettext;
-
 using System;
 using System.IO;
 using System.Windows;
+
+using NGettext;
 
 namespace FFXIVTataruHelper
 {
@@ -120,7 +120,7 @@ namespace FFXIVTataruHelper
             ICatalog catalog = new Catalog();
             try
             {
-                using (var fs = File.Open(path, System.IO.FileMode.Open))
+                using (var fs = File.Open(path, FileMode.Open))
                 {
                     catalog = new Catalog(fs);
                 }
@@ -139,10 +139,33 @@ namespace FFXIVTataruHelper
             //_SettingsWindow.Resources["DocLanguageRu"] = catalog.GetString("Russian");
 
             _SettingsWindow.Resources["DockHelp"] = catalog.GetString("Help");
+            _SettingsWindow.Resources["DockAbout"] = catalog.GetString("About");
+            _SettingsWindow.Resources["ChatWindowsTab"] = catalog.GetString("Chat Windows");
 
             _SettingsWindow.Resources["ChatAppearance"] = catalog.GetString("Chat Appearance");
             _SettingsWindow.Resources["TranslationSettings"] = catalog.GetString("Translation Settings");
             _SettingsWindow.Resources["GeneralBehavior"] = catalog.GetString("General");
+            _SettingsWindow.Resources["SectionTranslation"] = catalog.GetString("Translation");
+            _SettingsWindow.Resources["SectionAppearance"] = catalog.GetString("Appearance");
+            _SettingsWindow.Resources["SectionGeneral"] = catalog.GetString("General");
+            _SettingsWindow.Resources["ActiveChatWindowLabel"] = catalog.GetString("Active Chat Window");
+            _SettingsWindow.Resources["AddButtonText"] = catalog.GetString("Add");
+            _SettingsWindow.Resources["DeleteButtonText"] = catalog.GetString("Delete");
+            _SettingsWindow.Resources["ShowHideButtonText"] = catalog.GetString("Show/Hide");
+            _SettingsWindow.Resources["ResetButtonText"] = catalog.GetString("Reset");
+            _SettingsWindow.Resources["WindowListLabel"] = catalog.GetString("Window list");
+            _SettingsWindow.Resources["WindowDetailsLabel"] = catalog.GetString("Window details");
+            _SettingsWindow.Resources["WindowNameLabel"] = catalog.GetString("Window name");
+            _SettingsWindow.Resources["ChatCodeFiltersLabel"] = catalog.GetString("Chat code filters");
+            _SettingsWindow.Resources["EngineRoutingLabel"] = catalog.GetString("Engine routing");
+            _SettingsWindow.Resources["TypographyLabel"] = catalog.GetString("Typography");
+            _SettingsWindow.Resources["WindowSurfaceLabel"] = catalog.GetString("Window surface");
+            _SettingsWindow.Resources["ShortcutCaptureLabel"] = catalog.GetString("Shortcut capture");
+            _SettingsWindow.Resources["OverlayBehaviorLabel"] = catalog.GetString("Overlay behavior");
+            _SettingsWindow.Resources["ApplicationFlagsLabel"] = catalog.GetString("Application flags");
+            _SettingsWindow.Resources["ForkRepositoryLabel"] = catalog.GetString("Fork repository:");
+            _SettingsWindow.Resources["OriginalRepositoryLabel"] = catalog.GetString("Original repository:");
+            _SettingsWindow.Resources["CommunityDiscordLabel"] = catalog.GetString("Community Discord:");
 
             _SettingsWindow.Resources["ChatWindowBehavior"] = catalog.GetString("Behavior");
             _SettingsWindow.Resources["ChatWindowHotkeys"] = catalog.GetString("Hotkeys");

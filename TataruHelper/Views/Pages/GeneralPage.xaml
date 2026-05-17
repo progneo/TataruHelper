@@ -11,18 +11,15 @@
         </Grid.RowDefinitions>
 
         <StackPanel Grid.Row="0" Margin="0,0,0,10">
-            <TextBlock Text="General"
+            <TextBlock Text="{DynamicResource SectionGeneral}"
                        Style="{DynamicResource BaseTextBlockStyle}"
                        FontSize="{DynamicResource FontSize.Subtitle}"
                        FontWeight="SemiBold" />
-            <TextBlock Text="Global behavior that is shared across all chat windows."
-                       Style="{DynamicResource BaseTextBlockStyle}"
-                       Foreground="{DynamicResource Brush.TextSecondary}" />
         </StackPanel>
 
         <Border Grid.Row="1" Style="{DynamicResource CardBorderStyle}">
             <StackPanel>
-                <TextBlock Text="Application flags" FontWeight="SemiBold" Margin="0,0,0,8" />
+                <TextBlock Text="{DynamicResource ApplicationFlagsLabel}" FontWeight="SemiBold" Margin="0,0,0,8" />
                 <CheckBox Style="{DynamicResource BaseCheckBoxStyle}"
                           Content="{DynamicResource DirectMemoryCB}"
                           IsChecked="{Binding Shell.IsDirectMemoryReading, Mode=TwoWay}" />
