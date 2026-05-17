@@ -1,8 +1,6 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:FFXIVTataruHelper"
-                    xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
-                    xmlns:system="clr-namespace:System;assembly=mscorlib">
+                    xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions">
 
     <Style TargetType="ToolTip">
         <Style.Resources>
@@ -26,15 +24,19 @@
     </DataTemplate>
 
     <DataTemplate x:Key="newTabButtonHeaderTemplate">
-        <Button Content="+"
+        <Button Style="{DynamicResource BaseButtonStyle}"
+                Content="+"
                 Command="{Binding ElementName=TataruSettingsWindow, Path=DataContext.AddNewChatWindowCommand}"
+                Margin="0"
                 Width="20" Height="20" />
     </DataTemplate>
 
     <DataTemplate x:Key="itemHeaderTemplate">
         <StackPanel Orientation="Horizontal">
-            <Label Content="{Binding Name}" />
+            <Label Style="{DynamicResource BaseLabelStyle}" Content="{Binding Name}" />
             <Button Visibility="{Binding IsSelected, Converter={utils:BooleanToVisibilityConverter}, Mode=TwoWay}"
+                    Style="{DynamicResource BaseButtonStyle}"
+                    Margin="2,0,0,0"
                     FontSize="8" Width="15" Height="15"
                     Command="{Binding ElementName=TataruSettingsWindow, Path=DataContext.DeleteChatWindowCommand}">
                 <Button.Content>
