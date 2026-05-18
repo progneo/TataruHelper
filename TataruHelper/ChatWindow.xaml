@@ -60,7 +60,9 @@
         <RichTextBox x:Name="ChatRtb" Margin="12" Background="#00000000" IsReadOnly="True" IsUndoEnabled="False"
                      FontFamily="{Binding ChatFont, Mode=OneWay}"
                      FontSize="{Binding ChatFontSize, Mode=OneWay}">
-            <FlowDocument>
+            <FlowDocument TextAlignment="Left"
+                          PagePadding="0"
+                          ColumnWidth="{Binding ActualWidth, ElementName=ChatRtb}">
                 <Paragraph>
                     <Run Text="RichTextBox" />
                 </Paragraph>
@@ -68,6 +70,7 @@
             <RichTextBox.Resources>
                 <Style TargetType="{x:Type Paragraph}">
                     <Setter Property="Margin" Value="0" />
+                    <Setter Property="TextAlignment" Value="Left" />
                 </Style>
             </RichTextBox.Resources>
         </RichTextBox>
