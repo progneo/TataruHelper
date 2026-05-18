@@ -1,8 +1,6 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using FFXIVTataruHelper.WinUtils;
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -14,10 +12,21 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Interop;
 
+using FFXIVTataruHelper.Utils;
+using FFXIVTataruHelper.WinUtils;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 namespace FFXIVTataruHelper
 {
     static class Helper
     {
+        private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings
+        {
+            Formatting = Formatting.Indented, Converters = { new MediaColorJsonConverter() },
+        };
+
         public static T LoadJsonData<T>(string path)
         {
             T result = (T)Activator.CreateInstance(typeof(T));
@@ -26,7 +35,7 @@ namespace FFXIVTataruHelper
             {
                 using (TextReader reader = new StreamReader(path))
                 {
-                    result = JsonConvert.DeserializeObject<T>(reader.ReadToEnd());
+                    result = JsonConvert.DeserializeObject<T>(reader.ReadToEnd(), JsonSettings);
                 }
             }
             catch (Exception e)
@@ -37,11 +46,13 @@ namespace FFXIVTataruHelper
                 {
                     using (TextWriter writer = new StreamWriter(path))
                     {
-                        writer.WriteLine(JsonConvert.SerializeObject(result, Formatting.Indented));
+                        writer.WriteLine(JsonConvert.SerializeObject(result, JsonSettings));
                     }
                 }
                 catch (Exception e1)
-                { Logger.WriteLog(Convert.ToString(e1)); }
+                {
+                    Logger.WriteLog(Convert.ToString(e1));
+                }
             }
 
             return result;
@@ -53,12 +64,14 @@ namespace FFXIVTataruHelper
             {
                 using (TextWriter writer = new StreamWriter(path))
                 {
-                    writer.WriteLine(JsonConvert.SerializeObject(obj, Formatting.Indented));
+                    writer.WriteLine(JsonConvert.SerializeObject(obj, JsonSettings));
                     writer.Flush();
                 }
             }
             catch (Exception e)
-            { Logger.WriteLog(Convert.ToString(e)); }
+            {
+                Logger.WriteLog(Convert.ToString(e));
+            }
         }
 
         public static bool SaveStaticToJson(Type static_class, string filename)
@@ -80,6 +93,7 @@ namespace FFXIVTataruHelper
                 {
                     sw.WriteLine(output);
                 }
+
                 return true;
             }
             catch (Exception e)
@@ -105,18 +119,18 @@ namespace FFXIVTataruHelper
                     {
                         if (field.FieldType.Name.Contains("List"))
                         {
-
                             var filedVal = field.GetValue(null);
 
                             Type itemType = filedVal.GetType().GetProperty("Item").PropertyType;
 
-                            var backUpList = Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType), filedVal);
+                            var backUpList =
+                                Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType), filedVal);
 
                             try
                             {
                                 Type typeTest = a[i, 1].GetType();
 
-                                var arr = (Newtonsoft.Json.Linq.JArray)(a[i, 1]);
+                                var arr = (JArray)(a[i, 1]);
 
                                 int len = arr.Count;
 
@@ -139,7 +153,6 @@ namespace FFXIVTataruHelper
                                 Logger.WriteLog(Convert.ToString(e));
                                 filedVal = backUpList;
                             }
-
                         }
                         else
                             field.SetValue(null, Convert.ChangeType(a[i, 1], field.FieldType));
@@ -148,8 +161,9 @@ namespace FFXIVTataruHelper
                     {
                         throw new ArgumentException("Wrong Settings File. Rolling to default");
                     }
+
                     i++;
-                };
+                }
 
                 return true;
             }
@@ -158,7 +172,6 @@ namespace FFXIVTataruHelper
                 Logger.WriteLog(Convert.ToString(e));
                 return false;
             }
-
         }
 
         public static T GetLast<T>(this IList<T> list)
@@ -184,9 +197,7 @@ namespace FFXIVTataruHelper
 
         public static IList<T> Swap<T>(this IList<T> list, int indexA, int indexB)
         {
-            T tmp = list[indexA];
-            list[indexA] = list[indexB];
-            list[indexB] = tmp;
+            (list[indexA], list[indexB]) = (list[indexB], list[indexA]);
             return list;
         }
 
@@ -235,19 +246,18 @@ namespace FFXIVTataruHelper
 
         public static string Base64Encode(string plainText)
         {
-            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-            return System.Convert.ToBase64String(plainTextBytes);
+            var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
+            return Convert.ToBase64String(plainTextBytes);
         }
 
         public static string Base64Decode(string base64EncodedData)
         {
-            var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
-            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+            var base64EncodedBytes = Convert.FromBase64String(base64EncodedData);
+            return Encoding.UTF8.GetString(base64EncodedBytes);
         }
 
         public static string GetHash(HashAlgorithm hashAlgorithm, string input)
         {
-
             // Convert the input string to a byte array and compute the hash.
             byte[] data = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(input));
 
@@ -281,7 +291,7 @@ namespace FFXIVTataruHelper
         public static string ConvertISOLangugueNameToSystemName(string lang)
         {
             string result = string.Empty;
-            switch(lang)
+            switch (lang)
             {
                 case "eng":
                     result = "English";

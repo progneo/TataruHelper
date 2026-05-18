@@ -834,19 +834,11 @@ namespace FFXIVTataruHelper.ViewModel
                 if (code != null)
                 {
                     code.IsChecked = userCode.IsChecked;
-                    code.Color = userCode.Color;
-                }
-            }
 
-            foreach (var code in chatCodesViewMode)
-            {
-                if (code.Color.A == 0)
-                {
-                    var rgb = code.Color;
-                    if (rgb.R == 0 && rgb.G == 0 && rgb.B == 0)
-                        code.Color = Color.FromArgb(255, 0xCC, 0xCC, 0xCC);
-                    else
-                        code.Color = Color.FromArgb(255, rgb.R, rgb.G, rgb.B);
+                    if (userCode.Color.A != 0)
+                    {
+                        code.Color = userCode.Color;
+                    }
                 }
             }
 

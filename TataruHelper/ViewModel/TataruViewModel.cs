@@ -103,6 +103,7 @@ namespace FFXIVTataruHelper.ViewModel
                     _DownloadingUpdateVisibility = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(UpdatingBlockVisibility));
+                    OnPropertyChanged(nameof(HasPendingUpdate));
                 }
             }
         }
@@ -117,6 +118,7 @@ namespace FFXIVTataruHelper.ViewModel
                     _RestartReadyVisibility = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(UpdatingBlockVisibility));
+                    OnPropertyChanged(nameof(HasPendingUpdate));
                 }
             }
         }
@@ -124,6 +126,11 @@ namespace FFXIVTataruHelper.ViewModel
         public bool UpdatingBlockVisibility
         {
             get => DownloadingUpdateVisibility || RestartReadyVisibility || UserStartedUpdateTextVisibility;
+        }
+
+        public bool HasPendingUpdate
+        {
+            get => DownloadingUpdateVisibility || RestartReadyVisibility;
         }
 
         public AsyncBindingList<ChatWindowViewModel> ChatWindows
