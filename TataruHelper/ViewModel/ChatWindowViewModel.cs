@@ -834,7 +834,10 @@ namespace FFXIVTataruHelper.ViewModel
                 if (code != null)
                 {
                     code.IsChecked = userCode.IsChecked;
-                    code.Color = userCode.Color;
+                    if (userCode.Color.A != 0)
+                    {
+                        code.Color = userCode.Color;
+                    }
                 }
             }
 
