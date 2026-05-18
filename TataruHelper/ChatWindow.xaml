@@ -58,8 +58,8 @@
         </Border>
 
         <RichTextBox x:Name="ChatRtb" Margin="12" Background="#00000000" IsReadOnly="True" IsUndoEnabled="False"
-                     FontFamily="{Binding Path=DataContext.ChatFont, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}"
-                     FontSize="{Binding Path=DataContext.ChatFontSize, RelativeSource={RelativeSource Mode=FindAncestor, AncestorType={x:Type Window}}}">
+                     FontFamily="{Binding ChatFont, Mode=OneWay}"
+                     FontSize="{Binding ChatFontSize, Mode=OneWay}">
             <FlowDocument>
                 <Paragraph>
                     <Run Text="RichTextBox" />

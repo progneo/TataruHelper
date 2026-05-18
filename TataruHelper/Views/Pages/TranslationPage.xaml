@@ -52,7 +52,9 @@
                                    Text="{DynamicResource ChatCodeFiltersHint}" />
                     </StackPanel>
 
-                    <ScrollViewer Grid.Row="1" Margin="8,0,8,12" VerticalScrollBarVisibility="Auto">
+                    <ScrollViewer Grid.Row="1" Margin="8,0,4,12"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="0,0,8,0">
                         <ItemsControl ItemsSource="{Binding BoundWindow.ChatCodes}">
                             <ItemsControl.ItemsPanel>
                                 <ItemsPanelTemplate>
@@ -61,7 +63,7 @@
                             </ItemsControl.ItemsPanel>
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
-                                    <Border Padding="8,6"
+                                    <Border Padding="10,6,10,6"
                                             Margin="0,1"
                                             CornerRadius="6"
                                             Background="Transparent">

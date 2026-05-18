@@ -282,10 +282,14 @@ namespace FFXIVTataruHelper
                     {
                         ApplyAlwaysOnTop();
 
-                        if (!_ChatWindowViewModel.IsAlwaysOnTop &&
-                            !_TataruModel.FFMemoryReader.IsGameWindowForeground)
+                        if (!_ChatWindowViewModel.IsAlwaysOnTop && !_TataruModel.FFMemoryReader.IsGameWindowForeground)
                         {
                             _ChatWindowViewModel.IsWindowVisible = false;
+                        }
+                        else if (_ChatWindowViewModel.IsAlwaysOnTop && !_ChatWindowViewModel.IsHiddenByUser)
+                        {
+                            _ChatWindowViewModel.IsWindowVisible = true;
+                            ShowWindow();
                         }
                     }
                     break;
@@ -431,12 +435,16 @@ namespace FFXIVTataruHelper
                     tr1.Text = name;
                     tr1.ApplyPropertyValue(TextElement.ForegroundProperty, tmpColor);
                     tr1.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
+                    tr1.ApplyPropertyValue(TextElement.FontFamilyProperty, _ChatWindowViewModel.ChatFont);
+                    tr1.ApplyPropertyValue(TextElement.FontSizeProperty, _ChatWindowViewModel.ChatFontSize);
 
                     TextRange tr2 = new TextRange(ChatRtb.Document.ContentEnd, ChatRtb.Document.ContentEnd);
 
                     tr2.Text = text;
                     tr2.ApplyPropertyValue(TextElement.ForegroundProperty, tmpColor);
-                    tr2.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Normal); //*/
+                    tr2.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Normal);
+                    tr2.ApplyPropertyValue(TextElement.FontFamilyProperty, _ChatWindowViewModel.ChatFont);
+                    tr2.ApplyPropertyValue(TextElement.FontSizeProperty, _ChatWindowViewModel.ChatFontSize);
                 }
                 else
                 {
@@ -447,6 +455,8 @@ namespace FFXIVTataruHelper
                     tr.Text = translatedMsg;
 
                     tr.ApplyPropertyValue(TextElement.ForegroundProperty, tmpColor);
+                    tr.ApplyPropertyValue(TextElement.FontFamilyProperty, _ChatWindowViewModel.ChatFont);
+                    tr.ApplyPropertyValue(TextElement.FontSizeProperty, _ChatWindowViewModel.ChatFontSize);
                 }
 
                 ChatRtb.ScrollToEnd();
