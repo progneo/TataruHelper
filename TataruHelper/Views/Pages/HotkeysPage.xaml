@@ -134,7 +134,7 @@
                                          Content="{DynamicResource AutoHideCB}"
                                          VerticalAlignment="Center" />
                         <ui:NumberBox Grid.Column="1"
-                                      Value="{Binding BoundWindow.AutoHideTimeoutSeconds, Mode=TwoWay}"
+                                      Value="{Binding BoundWindow.AutoHideTimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                       Width="140"
                                       VerticalAlignment="Center"
                                       Minimum="1"

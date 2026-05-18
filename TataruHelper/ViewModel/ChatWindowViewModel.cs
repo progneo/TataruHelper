@@ -70,6 +70,10 @@ namespace FFXIVTataruHelper.ViewModel
                 if (_Name == value) return;
 
                 _Name = value;
+
+                if (_BoundSettings != null && _BoundSettings.Name != value)
+                    _BoundSettings.Name = value;
+
                 OnPropertyChanged();
             }
         }
@@ -476,6 +480,8 @@ namespace FFXIVTataruHelper.ViewModel
 
         #region **LocalVariables.
 
+        private ChatWindowViewModelSettings _BoundSettings;
+
         string _Name;
 
         double _ChatFontSize;
@@ -571,6 +577,8 @@ namespace FFXIVTataruHelper.ViewModel
             RestChatWindowPositionCommand = new TataruUICommand(ResetChatWindowPosition);
 
             _IsWindowVisible = true;
+
+            _BoundSettings = settings;
 
             Name = settings.Name;
             WinId = settings.WinId;
