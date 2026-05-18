@@ -193,7 +193,7 @@
     <system:String x:Key="HotkeyRecordHint">Press a key combination…</system:String>
     <system:String x:Key="HotkeyClear">Clear</system:String>
 
-    <system:String x:Key="DirectMemoryDescription">Read FFXIV chat directly from process memory using Sharlayan.</system:String>
+    <system:String x:Key="DirectMemoryDescription">Try to read dialogs without delay (currently doesn't shows speaker name).</system:String>
     <system:String x:Key="HideToTrayDescription">Hide the settings window to the system tray when minimized.</system:String>
 
     <system:String x:Key="UpdatesGroupTitle">Updates</system:String>

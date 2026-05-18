@@ -191,16 +191,72 @@
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <TabControl Grid.Row="0"
-                            Background="Transparent"
-                            BorderThickness="0"
-                            Padding="0"
-                            Margin="0,0,0,8"
-                            ItemsSource="{Binding SettingsViewModel.ChatWindows}"
-                            SelectedValuePath="WinId"
-                            SelectedValue="{Binding SelectedChatWindowId, Mode=TwoWay}"
-                            Visibility="{Binding ShowActiveWindowSelector, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}">
-                    <TabControl.ItemTemplate>
+                <ListBox Grid.Row="0"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         Padding="0"
+                         Margin="0,0,0,12"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Disabled"
+                         ItemsSource="{Binding SettingsViewModel.ChatWindows}"
+                         SelectedValuePath="WinId"
+                         SelectedValue="{Binding SelectedChatWindowId, Mode=TwoWay}"
+                         Visibility="{Binding ShowActiveWindowSelector, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}">
+                    <ListBox.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <WrapPanel Orientation="Horizontal" HorizontalAlignment="Left" />
+                        </ItemsPanelTemplate>
+                    </ListBox.ItemsPanel>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="Margin" Value="0,4,6,4" />
+                            <Setter Property="Padding" Value="14,6" />
+                            <Setter Property="Background" Value="{DynamicResource Brush.SurfaceSubtle}" />
+                            <Setter Property="BorderBrush" Value="{DynamicResource Brush.Border}" />
+                            <Setter Property="BorderThickness" Value="1" />
+                            <Setter Property="Foreground" Value="{DynamicResource Brush.TextSecondary}" />
+                            <Setter Property="Cursor" Value="Hand" />
+                            <Setter Property="HorizontalContentAlignment" Value="Center" />
+                            <Setter Property="VerticalContentAlignment" Value="Center" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="TabBorder"
+                                                Background="{TemplateBinding Background}"
+                                                BorderBrush="{TemplateBinding BorderBrush}"
+                                                BorderThickness="{TemplateBinding BorderThickness}"
+                                                CornerRadius="16"
+                                                Padding="{TemplateBinding Padding}"
+                                                SnapsToDevicePixels="True">
+                                            <ContentPresenter VerticalAlignment="Center"
+                                                              HorizontalAlignment="Center" />
+                                        </Border>
+                                        <ControlTemplate.Triggers>
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="TabBorder" Property="Background"
+                                                        Value="{DynamicResource Brush.Surface}" />
+                                                <Setter TargetName="TabBorder" Property="BorderBrush"
+                                                        Value="{DynamicResource Brush.Accent}" />
+                                                <Setter Property="Foreground"
+                                                        Value="{DynamicResource Brush.TextPrimary}" />
+                                            </Trigger>
+                                            <MultiTrigger>
+                                                <MultiTrigger.Conditions>
+                                                    <Condition Property="IsSelected" Value="False" />
+                                                    <Condition Property="IsMouseOver" Value="True" />
+                                                </MultiTrigger.Conditions>
+                                                <Setter TargetName="TabBorder" Property="BorderBrush"
+                                                        Value="{DynamicResource Brush.BorderStrong}" />
+                                                <Setter Property="Foreground"
+                                                        Value="{DynamicResource Brush.TextPrimary}" />
+                                            </MultiTrigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
                                 <ui:SymbolIcon Symbol="Chat24"
@@ -210,13 +266,8 @@
                                 <TextBlock Text="{Binding Name}" VerticalAlignment="Center" />
                             </StackPanel>
                         </DataTemplate>
-                    </TabControl.ItemTemplate>
-                    <TabControl.ContentTemplate>
-                        <DataTemplate>
-                            <Grid Height="0" />
-                        </DataTemplate>
-                    </TabControl.ContentTemplate>
-                </TabControl>
+                    </ListBox.ItemTemplate>
+                </ListBox>
 
                 <Border Grid.Row="1" Style="{DynamicResource CardBorderStyle}" Padding="20">
                     <ContentControl x:Name="SectionContentHost" />
