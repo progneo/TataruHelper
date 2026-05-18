@@ -40,33 +40,69 @@
                      CanMaximize="True"
                      Icon="{ui:ImageIcon 'pack://application:,,,/Resources/tray_icon.ico'}">
             <ui:TitleBar.Header>
-                <Border Background="{DynamicResource Brush.SurfaceSubtle}"
-                        BorderBrush="{DynamicResource Brush.Border}"
-                        BorderThickness="1"
-                        CornerRadius="12"
-                        Padding="10,3"
-                        Margin="12,0,12,0"
-                        VerticalAlignment="Center">
-                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                        <Ellipse Width="8" Height="8"
-                                 Margin="0,0,6,0"
-                                 VerticalAlignment="Center"
-                                 Fill="{Binding FfStatusActive, Converter={utils:BooleanToBrushConverter}, ConverterParameter='#FF2EA043|#FFB53D44'}" />
-                        <TextBlock Text="FF"
-                                   Foreground="{DynamicResource Brush.TextSecondary}"
-                                   FontWeight="SemiBold"
-                                   VerticalAlignment="Center" />
-                        <TextBlock Text=" · "
-                                   Foreground="{DynamicResource Brush.TextSecondary}"
-                                   VerticalAlignment="Center" />
-                        <TextBlock x:Name="FFStatusText"
-                                   Text="{Binding FfStatusText}"
-                                   Foreground="{DynamicResource Brush.TextPrimary}"
-                                   VerticalAlignment="Center"
-                                   TextTrimming="CharacterEllipsis"
-                                   MaxWidth="220" />
-                    </StackPanel>
-                </Border>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,12,0">
+                    <Border Background="{DynamicResource Brush.SurfaceSubtle}"
+                            BorderBrush="{DynamicResource Brush.Border}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="10,3"
+                            VerticalAlignment="Center">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <Ellipse Width="8" Height="8"
+                                     Margin="0,0,6,0"
+                                     VerticalAlignment="Center"
+                                     Fill="{Binding FfStatusActive, Converter={utils:BooleanToBrushConverter}, ConverterParameter='#FF2EA043|#FFB53D44'}" />
+                            <TextBlock Text="FF"
+                                       Foreground="{DynamicResource Brush.TextSecondary}"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <StackPanel.Style>
+                                    <Style TargetType="StackPanel">
+                                        <Setter Property="Visibility" Value="Visible" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding FfStatusActive}" Value="True">
+                                                <Setter Property="Visibility" Value="Collapsed" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </StackPanel.Style>
+                                <TextBlock Text=" · "
+                                           Foreground="{DynamicResource Brush.TextSecondary}"
+                                           VerticalAlignment="Center" />
+                                <TextBlock x:Name="FFStatusText"
+                                           Text="{Binding FfStatusText}"
+                                           Foreground="{DynamicResource Brush.TextPrimary}"
+                                           VerticalAlignment="Center"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxWidth="220" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Update available notification (visible whenever an update is being processed) -->
+                    <Border Margin="8,0,0,0"
+                            Background="{DynamicResource Brush.AccentMuted}"
+                            BorderBrush="{DynamicResource Brush.Accent}"
+                            BorderThickness="1"
+                            CornerRadius="12"
+                            Padding="10,3"
+                            VerticalAlignment="Center"
+                            Cursor="Hand"
+                            PreviewMouseDown="RestartApp_Click"
+                            Visibility="{Binding SettingsViewModel.UpdatingBlockVisibility, Converter={utils:BooleanToVisibilityConverterCollapse}, Mode=OneWay}">
+                        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                            <ui:SymbolIcon Symbol="ArrowDownload24" FontSize="14"
+                                           Margin="0,0,6,0"
+                                           VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Accent}" />
+                            <TextBlock Text="{DynamicResource UpdateAvailableChip}"
+                                       Foreground="{DynamicResource Brush.TextPrimary}"
+                                       FontWeight="SemiBold"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
             </ui:TitleBar.Header>
         </ui:TitleBar>
 

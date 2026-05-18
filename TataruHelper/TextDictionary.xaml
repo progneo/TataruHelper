@@ -200,4 +200,5 @@
     <system:String x:Key="UpdatesGroupHint">Check whether a newer release of Tataru Helper is available.</system:String>
     <system:String x:Key="LanguageGroupHint">Interface language for the settings window and overlays.</system:String>
     <system:String x:Key="WindowCornerRadiusLabel">Corner radius</system:String>
+    <system:String x:Key="UpdateAvailableChip">Update available</system:String>
 </ResourceDictionary>

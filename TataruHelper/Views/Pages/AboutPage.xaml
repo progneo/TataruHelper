@@ -11,7 +11,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
@@ -22,37 +21,7 @@
                        Margin="0,0,0,16"
                        Text="{DynamicResource AboutPageDescription}" />
 
-            <!-- Updates card -->
-            <ui:Card Grid.Row="2" Padding="16" Margin="0,0,0,12">
-                <Grid>
-                    <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="Auto" />
-                    </Grid.ColumnDefinitions>
-                    <StackPanel Grid.Column="0">
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
-                            <ui:SymbolIcon Symbol="ArrowSync24" FontSize="16"
-                                           Margin="0,0,8,0" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource Brush.Accent}" />
-                            <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
-                                       Margin="0"
-                                       Text="{DynamicResource UpdatesGroupTitle}"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
-                        <TextBlock Style="{DynamicResource CaptionTextStyle}"
-                                   Text="{DynamicResource UpdatesGroupHint}" />
-                    </StackPanel>
-                    <ui:Button Grid.Column="1"
-                               x:Name="CheckUpdatesButton"
-                               Appearance="Primary"
-                               Icon="{ui:SymbolIcon Symbol=ArrowSync24}"
-                               Content="{DynamicResource CheckUpdatesText}"
-                               Command="{Binding Shell.CheckUpdatesCommand}"
-                               VerticalAlignment="Center" />
-                </Grid>
-            </ui:Card>
-
-            <ui:Card Grid.Row="3" Padding="20">
+            <ui:Card Grid.Row="2" Padding="20">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                         <Image Source="pack://application:,,,/Resources/tray_icon.ico"

@@ -13,7 +13,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
@@ -49,14 +48,14 @@
                 </StackPanel>
             </ui:Card>
 
-            <Grid Grid.Row="3">
+            <Grid Grid.Row="3" VerticalAlignment="Top">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="16" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <ui:Card Grid.Column="0" Padding="16">
+                <ui:Card Grid.Column="0" Padding="16" VerticalAlignment="Top">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                             <ui:SymbolIcon Symbol="TextFont24" FontSize="16"
@@ -84,7 +83,7 @@
                     </StackPanel>
                 </ui:Card>
 
-                <ui:Card Grid.Column="2" Padding="16">
+                <ui:Card Grid.Column="2" Padding="16" VerticalAlignment="Top">
                     <StackPanel>
                         <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                             <ui:SymbolIcon Symbol="Color24" FontSize="16"
