@@ -86,17 +86,6 @@ public partial class MainWindow : FluentWindow
 
         try
         {
-            _logWriter = new LogWriter();
-            _logWriter.StartWriting();
-            _logger.WriteLog("TataruHelper v" + Convert.ToString(Assembly.GetEntryAssembly()?.GetName().Version));
-        }
-        catch (Exception ex)
-        {
-            _logger.WriteLog(ex);
-        }
-
-        try
-        {
             InitializeComponent();
             _uiDispatcher.SetWindow(this);
         }
@@ -120,10 +109,13 @@ public partial class MainWindow : FluentWindow
     {
         try
         {
+            _logWriter = new LogWriter();
+            _logWriter.StartWriting();
             _logger.WriteLog("TataruHelper v" + Convert.ToString(Assembly.GetEntryAssembly()?.GetName().Version));
         }
-        catch (Exception)
+        catch (Exception ex)
         {
+            _logger.WriteLog(ex);
         }
 
         try
@@ -261,41 +253,76 @@ public partial class MainWindow : FluentWindow
         }
     }
 
-    private void Window_Closing(object sender, CancelEventArgs e)
+    private async void Window_Closing(object sender, CancelEventArgs e)
+    {
+        if (_isShutdownCleanupCompleted)
+        {
+            e.Cancel = false;
+            return;
+        }
+
+        e.Cancel = true;
+
+        try
+        {
+            var cleanup = Task.Run(RunShutdownCleanupAsync);
+            var winner = await Task.WhenAny(cleanup, Task.Delay(TimeSpan.FromSeconds(3))).ConfigureAwait(true);
+            if (winner != cleanup)
+            {
+                _logger.WriteLog("MainWindow.Window_Closing forced shutdown after 3s timeout.");
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.WriteLog("MainWindow.Window_Closing cleanup failed.");
+            _logger.WriteLog(Convert.ToString(ex));
+        }
+        finally
+        {
+            _isShutdownCleanupCompleted = true;
+            Application.Current?.Shutdown();
+        }
+    }
+
+    private async Task RunShutdownCleanupAsync()
     {
         try
         {
-            e.Cancel = false;
-
-            if (_isShutdownCleanupCompleted)
-            {
-                return;
-            }
-
-            _isShutdownCleanupCompleted = true;
-
             _updaterTimer?.Stop();
             _updater?.StopUpdate();
 
             _optimizeFootprint?.Stop();
-            _tataruModel?.Stop();
 
-            var saveSettingsTask = _tataruModel?.SaveSettings();
-            if (saveSettingsTask != null && !saveSettingsTask.Wait(TimeSpan.FromMilliseconds(500)))
+            if (_tataruModel != null)
             {
-                _logger.WriteLog("MainWindow.Window_Closing save settings timed out.");
+                await _tataruModel.StopAsync().ConfigureAwait(false);
+
+                try
+                {
+                    await _tataruModel.SaveSettings().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.WriteLog("MainWindow shutdown save settings failed.");
+                    _logger.WriteLog(ex);
+                }
             }
 
-            _settingsShellViewModel?.Dispose();
+            await _uiDispatcher.InvokeAsync(() =>
+            {
+                _settingsShellViewModel?.Dispose();
+                TaskBarIcon?.Dispose();
+            }).ConfigureAwait(false);
 
             TataruSingleInstance.Stop();
-            _logWriter?.Stop();
 
             _updater?.Dispose();
-            TaskBarIcon?.Dispose();
+
+            _logWriter?.Stop();
         }
         catch (Exception ex)
         {
+            _logger.WriteLog("MainWindow.RunShutdownCleanupAsync failed.");
             _logger.WriteLog(Convert.ToString(ex));
         }
     }

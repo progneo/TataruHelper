@@ -47,6 +47,8 @@ namespace FFXIVTataruHelper
 
             base.OnStartup(e);
 
+            ShutdownMode = ShutdownMode.OnMainWindowClose;
+
             try
             {
                 AppThemeService.Apply(AppThemeMode.System);

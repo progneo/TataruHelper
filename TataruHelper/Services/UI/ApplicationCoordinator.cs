@@ -1,11 +1,11 @@
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
 using FFXIVTataruHelper.FFHandlers;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.ViewModel;
-
-using System;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Translation;
 
@@ -41,14 +41,15 @@ namespace FFXIVTataruHelper.Services.UI
         public async Task InitializeAsync(TataruModel tataruModel, MainWindow mainWindow, TataruUIModel uiModel,
             TataruViewModel viewModel)
         {
-            await Task.Run(() =>
-            {
-                tataruModel.WebTranslator.LoadLanguages();
-                _ffMemoryReader.Start();
+            // LoadLanguages and FFMemoryReader.Start are independent; do them in parallel.
+            var loadLanguagesTask = Task.Run(() => tataruModel.WebTranslator.LoadLanguages());
+            var startReaderTask = Task.Run(() => _ffMemoryReader.Start());
 
-                _translationPipelineCoordinator.Start(_ffMemoryReader, tataruModel.ChatProcessor);
-                _chatWindowsEventCoordinator.Start(uiModel, viewModel, tataruModel, mainWindow);
-            }).ConfigureAwait(false);
+            await Task.WhenAll(loadLanguagesTask, startReaderTask).ConfigureAwait(false);
+
+            // Pipeline depends on both; chat windows must run on the UI thread, so marshal back.
+            _translationPipelineCoordinator.Start(_ffMemoryReader, tataruModel.ChatProcessor);
+            _chatWindowsEventCoordinator.Start(uiModel, viewModel, tataruModel, mainWindow);
         }
 
         public void Stop(IChatWindowCoordinator chatWindowCoordinator)
@@ -72,6 +73,38 @@ namespace FFXIVTataruHelper.Services.UI
             catch (Exception ex)
             {
                 _logger.WriteLog("ApplicationCoordinator.Stop settings sync failed.");
+                _logger.WriteLog(ex);
+            }
+        }
+
+        public async Task StopAsync(IChatWindowCoordinator chatWindowCoordinator)
+        {
+            StopBestEffort(_chatWindowsEventCoordinator.Stop, "chat windows events");
+            StopBestEffort(chatWindowCoordinator.CloseAll, "chat windows");
+            StopBestEffort(_translationPipelineCoordinator.Stop, "translation pipeline");
+
+            try
+            {
+                await _ffMemoryReader.StopAsync(TimeSpan.FromSeconds(2)).ConfigureAwait(false);
+            }
+            catch (Exception ex)
+            {
+                _logger.WriteLog("ApplicationCoordinator.StopAsync ff memory reader failed.");
+                _logger.WriteLog(ex);
+            }
+
+            try
+            {
+                using var cancellation = new CancellationTokenSource(SettingsShutdownTimeout);
+                await _settingsSyncService.StopAsync(cancellation.Token).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                _logger.WriteLog("ApplicationCoordinator.StopAsync settings sync timed out.");
+            }
+            catch (Exception ex)
+            {
+                _logger.WriteLog("ApplicationCoordinator.StopAsync settings sync failed.");
                 _logger.WriteLog(ex);
             }
         }

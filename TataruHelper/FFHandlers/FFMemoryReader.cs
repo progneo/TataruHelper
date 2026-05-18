@@ -583,11 +583,77 @@ namespace FFXIVTataruHelper.FFHandlers
 
         public void Stop()
         {
+            var pending = BeginStop();
+            if (pending.BackgroundTasks == null)
+            {
+                return;
+            }
+
+            WaitForBackgroundTasks(pending.BackgroundTasks, TimeSpan.FromSeconds(5));
+            FinishStop(pending.LifecycleCts);
+        }
+
+        public async Task StopAsync(TimeSpan timeout)
+        {
+            var pending = BeginStop();
+            if (pending.BackgroundTasks == null)
+            {
+                return;
+            }
+
+            try
+            {
+                var tasksToWait = pending.BackgroundTasks.Where(t => t != null).ToArray();
+                if (tasksToWait.Length > 0)
+                {
+                    var aggregated = Task.WhenAll(tasksToWait);
+                    using var cts = new CancellationTokenSource(timeout);
+                    try
+                    {
+                        await aggregated.WaitAsync(cts.Token).ConfigureAwait(false);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        _logger.WriteLog("FFMemoryReader.StopAsync timeout while waiting background tasks.");
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                _logger.WriteLog("FFMemoryReader.StopAsync wait failed.");
+                _logger.WriteLog(e);
+            }
+
+            FinishStop(pending.LifecycleCts);
+        }
+
+        private bool _isStopped;
+
+        private readonly struct PendingStop
+        {
+            public PendingStop(Task[] tasks, CancellationTokenSource cts)
+            {
+                BackgroundTasks = tasks;
+                LifecycleCts = cts;
+            }
+
+            public Task[] BackgroundTasks { get; }
+            public CancellationTokenSource LifecycleCts { get; }
+        }
+
+        private PendingStop BeginStop()
+        {
             Task[] backgroundTasks;
             CancellationTokenSource lifecycleCts;
 
             lock (_lifecycleSync)
             {
+                if (_isStopped)
+                {
+                    return default;
+                }
+
+                _isStopped = true;
                 _keepWorking = false;
                 _keepReading = false;
 
@@ -611,8 +677,11 @@ namespace FFXIVTataruHelper.FFHandlers
                 _logger.WriteLog(e);
             }
 
-            WaitForBackgroundTasks(backgroundTasks, TimeSpan.FromSeconds(5));
+            return new PendingStop(backgroundTasks, lifecycleCts);
+        }
 
+        private void FinishStop(CancellationTokenSource lifecycleCts)
+        {
             try
             {
                 _gameMemoryGateway.UnsetProcess();
