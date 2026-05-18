@@ -40,7 +40,7 @@ public partial class FluentColorEditor : UserControl
         InitializeComponent();
         Loaded += (_, _) =>
         {
-            ApplyFromColor(SelectedColor ?? Colors.Black, syncFields: true);
+            ApplyFromColor(SelectedColor ?? Colors.Black);
             SvBox.SizeChanged += (_, _) => UpdateSvCursor();
             HueBar.SizeChanged += (_, _) => UpdateHueCursor();
             AlphaBar.SizeChanged += (_, _) => UpdateAlphaCursor();
@@ -52,15 +52,15 @@ public partial class FluentColorEditor : UserControl
         if (d is FluentColorEditor self && !self._suppressSync)
         {
             var c = e.NewValue as Color? ?? Colors.Black;
-            self.ApplyFromColor(c, syncFields: true);
+            self.ApplyFromColor(c);
         }
     }
 
-    private void ApplyFromColor(Color c, bool syncFields)
+    private void ApplyFromColor(Color c)
     {
         _alpha = c.A;
         RgbToHsv(c.R, c.G, c.B, out _hue, out _saturation, out _value);
-        RefreshVisuals(syncFields);
+        RefreshVisuals(syncFields: true);
     }
 
     private void RefreshVisuals(bool syncFields)
@@ -91,6 +91,14 @@ public partial class FluentColorEditor : UserControl
             HexBox.Text = $"#{final.A:X2}{final.R:X2}{final.G:X2}{final.B:X2}";
             _suppressSync = false;
         }
+    }
+
+    // User-initiated changes call this to push the current HSV state back to the
+    // SelectedColor DP (and therefore to the bound source).
+    private void CommitToSource()
+    {
+        var opaque = HsvToRgb(_hue, _saturation, _value, 255);
+        var final = Color.FromArgb(_alpha, opaque.R, opaque.G, opaque.B);
 
         _suppressSync = true;
         SelectedColor = final;
@@ -149,6 +157,7 @@ public partial class FluentColorEditor : UserControl
         _saturation = Math.Clamp(p.X / w, 0, 1);
         _value = Math.Clamp(1 - (p.Y / h), 0, 1);
         RefreshVisuals(syncFields: true);
+        CommitToSource();
     }
 
     // --- Hue bar ---
@@ -176,6 +185,7 @@ public partial class FluentColorEditor : UserControl
         if (w <= 0) return;
         _hue = Math.Clamp(p.X / w, 0, 1) * 360.0;
         RefreshVisuals(syncFields: true);
+        CommitToSource();
     }
 
     // --- Alpha bar ---
@@ -203,6 +213,7 @@ public partial class FluentColorEditor : UserControl
         if (w <= 0) return;
         _alpha = (byte)Math.Round(Math.Clamp(p.X / w, 0, 1) * 255.0);
         RefreshVisuals(syncFields: true);
+        CommitToSource();
     }
 
     // --- Numeric fields ---
@@ -217,6 +228,7 @@ public partial class FluentColorEditor : UserControl
         RgbToHsv(r, g, b, out _hue, out _saturation, out _value);
         RefreshVisuals(syncFields: false);
         HexBox.Text = $"#{a:X2}{r:X2}{g:X2}{b:X2}";
+        CommitToSource();
     }
 
     // --- Hex ---
@@ -264,7 +276,8 @@ public partial class FluentColorEditor : UserControl
             return;
         }
 
-        ApplyFromColor(Color.FromArgb(a, r, g, b), syncFields: true);
+        ApplyFromColor(Color.FromArgb(a, r, g, b));
+        CommitToSource();
     }
 
     // --- HSV/RGB ---
