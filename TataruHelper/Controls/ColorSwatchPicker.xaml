@@ -3,7 +3,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:xctk="http://schemas.xceed.com/wpf/xaml/toolkit"
+             xmlns:ctrl="clr-namespace:FFXIVTataruHelper.Controls"
              x:Name="Root"
              mc:Ignorable="d"
              Background="Transparent">
@@ -94,15 +94,10 @@
                     BorderBrush="{DynamicResource Brush.Border}"
                     BorderThickness="1"
                     CornerRadius="8"
-                    Padding="8"
+                    Padding="12"
                     Margin="0,6,0,0"
                     Effect="{x:Null}">
-                <StackPanel>
-                    <xctk:ColorCanvas x:Name="Canvas"
-                                      UsingAlphaChannel="True"
-                                      Width="248"
-                                      SelectedColor="{Binding SelectedColor, ElementName=Root, Mode=TwoWay}" />
-                </StackPanel>
+                <ctrl:FluentColorEditor SelectedColor="{Binding SelectedColor, ElementName=Root, Mode=TwoWay}" />
             </Border>
         </Popup>
     </Grid>
