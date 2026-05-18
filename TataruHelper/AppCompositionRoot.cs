@@ -1,15 +1,22 @@
-using FFXIVTataruHelper.FFHandlers;
+using System;
+
 using FFXIVTataruHelper.Factories;
+using FFXIVTataruHelper.FFHandlers;
 using FFXIVTataruHelper.Services.GameMemory;
 using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.Services.Update;
+using FFXIVTataruHelper.Utils;
+
 using Microsoft.Extensions.DependencyInjection;
-using System;
+
 using Translation;
+
 using Updater;
+
+using ILog = Translation.ILog;
 
 namespace FFXIVTataruHelper
 {
@@ -33,11 +40,12 @@ namespace FFXIVTataruHelper
             services.AddSingleton<IDirectDialogReader, HeuristicDirectDialogReader>();
             services.AddSingleton<IGameMemoryGateway, SharlayanGameMemoryGateway>();
 
-            services.AddSingleton<Translation.ILog>(provider => new Utils.LoggerWrapper(provider.GetRequiredService<IAppLogger>()));
-            services.AddSingleton<WebTranslator>(provider => new WebTranslator(provider.GetRequiredService<Translation.ILog>()));
+            services.AddSingleton<ILog>(provider => new LoggerWrapper(provider.GetRequiredService<IAppLogger>()));
+            services.AddSingleton<WebTranslator>(provider => new WebTranslator(provider.GetRequiredService<ILog>()));
             services.AddSingleton<IFFMemoryReaderService, FFMemoryReader>();
 
             services.AddSingleton<IHotKeyBindingService, HotKeyBindingService>();
+            services.AddSingleton<IHotkeyCaptureService, HotkeyCaptureService>();
             services.AddSingleton<IChatWindowFactory, ChatWindowFactory>();
             services.AddTransient<IChatWindowCoordinator, ChatWindowCoordinator>();
             services.AddTransient<IChatWindowsEventCoordinator, ChatWindowsEventCoordinator>();
@@ -50,7 +58,7 @@ namespace FFXIVTataruHelper
                 var logger = provider.GetRequiredService<IAppLogger>();
                 try
                 {
-                    return (IUpdateService)new VelopackUpdateService(new Utils.LoggerWrapper(logger));
+                    return (IUpdateService)new VelopackUpdateService(new LoggerWrapper(logger));
                 }
                 catch (Exception ex)
                 {

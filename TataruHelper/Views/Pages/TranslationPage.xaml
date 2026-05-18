@@ -1,0 +1,138 @@
+﻿<UserControl x:Class="FFXIVTataruHelper.Views.Pages.TranslationPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:ctrl="clr-namespace:FFXIVTataruHelper.Controls"
+             xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
+             mc:Ignorable="d">
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0"
+                   Style="{DynamicResource SectionTitleStyle}"
+                   Text="{DynamicResource SectionTranslation}" />
+
+        <TextBlock Grid.Row="1"
+                   Style="{DynamicResource CaptionTextStyle}"
+                   Margin="0,0,0,16"
+                   Text="{DynamicResource TranslationPageDescription}" />
+
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="16" />
+                <ColumnDefinition Width="360" />
+            </Grid.ColumnDefinitions>
+
+            <!-- Chat code filters -->
+            <ui:Card Grid.Column="0" Padding="0">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel Grid.Row="0" Margin="16,16,16,8">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                            <ui:SymbolIcon Symbol="FilterDismiss24" FontSize="16"
+                                           Margin="0,0,8,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Accent}" />
+                            <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                       Margin="0"
+                                       Text="{DynamicResource ChatCodeFiltersLabel}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                   Text="{DynamicResource ChatCodeFiltersHint}" />
+                    </StackPanel>
+
+                    <ScrollViewer Grid.Row="1" Margin="8,0,4,12"
+                                  VerticalScrollBarVisibility="Auto"
+                                  Padding="0,0,8,0">
+                        <ItemsControl ItemsSource="{Binding BoundWindow.ChatCodes}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <VirtualizingStackPanel />
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="10,6,10,6"
+                                            Margin="0,1"
+                                            CornerRadius="6"
+                                            Background="Transparent">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Style.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background"
+                                                                Value="{DynamicResource Brush.SurfaceSubtle}" />
+                                                    </Trigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <DockPanel>
+                                            <ctrl:ColorSwatchPicker SwatchWidth="22" SwatchHeight="22"
+                                                                    Margin="8,0,0,0"
+                                                                    HorizontalAlignment="Right"
+                                                                    DockPanel.Dock="Right"
+                                                                    SelectedColor="{Binding Color, Mode=TwoWay}" />
+                                            <CheckBox IsChecked="{Binding IsChecked, Mode=TwoWay}"
+                                                      Content="{utils:ResourceBinding Name}"
+                                                      VerticalAlignment="Center"
+                                                      Foreground="{DynamicResource Brush.TextPrimary}" />
+                                        </DockPanel>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+                </Grid>
+            </ui:Card>
+
+            <!-- Engine routing -->
+            <ui:Card Grid.Column="2" Padding="16" VerticalAlignment="Top">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <ui:SymbolIcon Symbol="Globe24" FontSize="16"
+                                       Margin="0,0,8,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Accent}" />
+                        <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                   Margin="0"
+                                   Text="{DynamicResource EngineRoutingLabel}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                               Margin="0,0,0,12"
+                               Text="{DynamicResource EngineRoutingHint}" />
+
+                    <Label Style="{DynamicResource BaseLabelStyle}"
+                           Content="{DynamicResource TranslationEngine}" />
+                    <ComboBox ItemsSource="{Binding BoundWindow.TranslationEngines}"
+                              DisplayMemberPath="Name"
+                              IsSynchronizedWithCurrentItem="True"
+                              Margin="0,0,0,12" />
+
+                    <Label Style="{DynamicResource BaseLabelStyle}"
+                           Content="{DynamicResource FFLanguage}" />
+                    <ComboBox ItemsSource="{Binding BoundWindow.TranslateFromLanguagues}"
+                              DisplayMemberPath="ShownName"
+                              IsSynchronizedWithCurrentItem="True"
+                              Margin="0,0,0,12" />
+
+                    <Label Style="{DynamicResource BaseLabelStyle}"
+                           Content="{DynamicResource TraslateTo}" />
+                    <ComboBox ItemsSource="{Binding BoundWindow.TranslateToLanguagues}"
+                              DisplayMemberPath="ShownName"
+                              IsSynchronizedWithCurrentItem="True" />
+                </StackPanel>
+            </ui:Card>
+        </Grid>
+    </Grid>
+</UserControl>

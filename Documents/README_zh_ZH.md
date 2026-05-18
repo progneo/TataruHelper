@@ -1,38 +1,27 @@
-# Tataru Helper
+<p align="center">
+  <img src="./Tataru_img.png" width="112" alt="Tataru Helper app icon" />
+</p>
 
-> Fork 说明：该仓库是一个持续活跃维护的分支（fork）。
->
-> - 原始仓库： https://github.com/NightlyRevenger/TataruHelper
+<h1 align="center">Tataru Helper</h1>
 
+<p align="center">Real-time translation overlay for Final Fantasy XIV in-game text.</p>
+<p align="center">Maintained fork of the original project: <a href="https://github.com/NightlyRevenger/TataruHelper">NightlyRevenger/TataruHelper</a>.</p>
 
-[![Current Version](https://img.shields.io/github/release/progneo/TataruHelper)](https://github.com/progneo/TataruHelper/releases) ![GitHub Releases (by Asset)](https://img.shields.io/github/downloads/progneo/TataruHelper/latest/TataruHelper-0.9.40-full.nupkg?label=Downloads)  [![Crowdin](https://badges.crowdin.net/tataru-helper/localized.svg)](https://crowdin.com/project/tataru-helper) <a href="https://discord.gg/bSrpbd9">
-        <img src="https://img.shields.io/discord/592039000538349569?logo=discord"
-            alt="chat on Discord"></a>
-            
-[下载链接](https://github.com/progneo/TataruHelper/releases/latest/download/Setup.exe)( ---> 下载 Setup.exe)  
--
-[Tataru's Discord Server](https://discord.gg/bSrpbd9)  
--
----
-![TataruHead](./Tataru_img.png) ![LiveAction](./LiveAction.gif)  
-![LiveChat](./2020-08-18_21-21-05.gif)
- 
-## [使用演示](https://youtu.be/7HiQXzmkQuw)  
+<p align="center">
+  <a href="https://github.com/progneo/TataruHelper/actions/workflows/build.yml"><img src="https://github.com/progneo/TataruHelper/actions/workflows/build.yml/badge.svg" alt="Build" /></a>
+  <a href="https://github.com/progneo/TataruHelper/releases/latest"><img src="https://img.shields.io/github/v/release/progneo/TataruHelper?label=Release" alt="Release" /></a>
+  <a href="https://github.com/progneo/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/progneo/TataruHelper/Setup.exe?label=Downloads&display_asset_name=false" alt="Setup.exe Downloads" /></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/github/license/progneo/TataruHelper" alt="License" /></a>
+  <img src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white" alt=".NET 10" />
+  <a href="https://crowdin.com/project/tataru-helper"><img src="https://badges.crowdin.net/tataru-helper/localized.svg" alt="Crowdin" /></a>
+  <a href="https://discord.gg/bSrpbd9"><img src="https://img.shields.io/discord/592039000538349569?label=Discord&logo=discord" alt="Discord" /></a>
+  <a href="https://github.com/progneo/TataruHelper/stargazers"><img src="https://img.shields.io/github/stars/progneo/TataruHelper?style=flat" alt="Stars" /></a>
+  <a href="https://github.com/progneo/TataruHelper/commits"><img src="https://img.shields.io/github/commit-activity/m/progneo/TataruHelper?label=Activity" alt="Commit Activity" /></a>
+</p>
 
-## [捐赠支持作者](https://github.com/progneo/TataruHelper/blob/master/README.md#support)  
+<p align="center"><strong><a href="https://github.com/progneo/TataruHelper/releases/latest/download/Setup.exe">Download Setup.exe</a></strong> · <a href="./Guide.MD">Guide</a> · <a href="https://discord.gg/bSrpbd9">Discord</a> · <a href="../README.md#support">Support</a></p>
 
----
-## APP介绍
-* [中文](#中文)
-   * [安装](#安装)
-   * [使用](#使用)
-   * [开发 / 翻译](#开发)
-   * [许可](#许可)
-   * [致谢](#致谢)
-   * [联系人](#联系人)
-   * [支持我们](#支持我们)
-   
----
+<p align="center"><strong>Languages:</strong> <a href="../README.md">EN</a> | <a href="README_ru_RU.md">RU</a> | <a href="README_ko_KR.md">KO</a> | <a href="README_es_ES.md">ES</a> | <a href="README_ca_ES.md">CA</a> | <a href="README_pl_PL.md">PL</a> | <a href="README_pt_BR.md">PT-BR</a> | <a href="README_uk_UA.md">UK</a> | <a href="README_zh_ZH.md">ZH</a> | <a href="README_ja_JP.md">JA</a></p>
 
 #### 中文
 由塔塔露团队开发
@@ -50,7 +39,7 @@ Tataru Helper - 一个对最终幻想XIV（FF14）国际服中主线任务、普
 
 Tataru Helper 要求:  
 Windows 7 **x64**或之后版本系统 (**只支持64位系统**).  
-[Microsoft .NET Framework 4.6.2 ](https://www.microsoft.com/net/download/dotnet-framework-runtime)或之后版本.   
+[.NET 10 SDK/Runtime](https://dotnet.microsoft.com/download)或之后版本.   
 游戏本体：Final Fantasy XIV with **DirectX 11** and **x64**.  
 
 1. 下载最新版本：[点击这里](https://github.com/progneo/TataruHelper/releases/latest) (Setup.exe).

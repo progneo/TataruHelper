@@ -1,9 +1,9 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:FFXIVTataruHelper"
                     xmlns:system="clr-namespace:System;assembly=mscorlib">
 
     <system:String x:Key="SettingsWindowName">Settings</system:String>
+    <system:String x:Key="TrayTooltipText">Tataru Helper</system:String>
     <system:String x:Key="ChatWindowName">Chat Window</system:String>
     <system:String x:Key="StreamWindowName">Stream Chat Window</system:String>
     <system:String x:Key="PatreonWindowName">Patrons</system:String>
@@ -25,16 +25,38 @@
     <system:String x:Key="DockHelp">Help</system:String>
 
     <system:String x:Key="DockAbout">About</system:String>
+    <system:String x:Key="DockModernSettingsPreview">Modern settings (preview)</system:String>
 
     <system:String x:Key="DockPatrons">Patrons</system:String>
     <system:String x:Key="DockDiscrod">Discord</system:String>
 
     <system:String x:Key="FFStatusLable">FF Status:</system:String>
 
-    <system:String x:Key="FFStatusText">FFXIV process not found. Make sure that FFXIV is running using DirectX 11.</system:String>
+    <system:String x:Key="FFStatusText">Not found</system:String>
     <system:String x:Key="FFStatusTextFound">Process found:</system:String>
 
     <system:String x:Key="ChatWindowsTab">Chat Windows</system:String>
+    <system:String x:Key="SectionTranslation">Translation</system:String>
+    <system:String x:Key="SectionAppearance">Appearance</system:String>
+    <system:String x:Key="SectionGeneral">General</system:String>
+    <system:String x:Key="ActiveChatWindowLabel">Active Chat Window</system:String>
+    <system:String x:Key="AddButtonText">Add</system:String>
+    <system:String x:Key="DeleteButtonText">Delete</system:String>
+    <system:String x:Key="ShowHideButtonText">Show/Hide</system:String>
+    <system:String x:Key="ResetButtonText">Reset</system:String>
+    <system:String x:Key="WindowListLabel">Window list</system:String>
+    <system:String x:Key="WindowDetailsLabel">Window details</system:String>
+    <system:String x:Key="WindowNameLabel">Window name</system:String>
+    <system:String x:Key="ChatCodeFiltersLabel">Chat code filters</system:String>
+    <system:String x:Key="EngineRoutingLabel">Engine routing</system:String>
+    <system:String x:Key="TypographyLabel">Typography</system:String>
+    <system:String x:Key="WindowSurfaceLabel">Window surface</system:String>
+    <system:String x:Key="ShortcutCaptureLabel">Shortcut capture</system:String>
+    <system:String x:Key="OverlayBehaviorLabel">Overlay behavior</system:String>
+    <system:String x:Key="ApplicationFlagsLabel">Application flags</system:String>
+    <system:String x:Key="ForkRepositoryLabel">Fork repository:</system:String>
+    <system:String x:Key="OriginalRepositoryLabel">Original repository:</system:String>
+    <system:String x:Key="CommunityDiscordLabel">Community Discord:</system:String>
     <system:String x:Key="ChatAppearance">Chat Appearance</system:String>
     <system:String x:Key="TranslationSettings">Translation Settings</system:String>
     <system:String x:Key="GeneralBehavior">General Behavior</system:String>
@@ -120,7 +142,7 @@
     <system:String x:Key="CkNoviceNetwork">NoviceNetwork</system:String>
 
     <system:String x:Key="CkServerInfo">Server Info</system:String>
-    
+
     <system:String x:Key="CkCWLS1">CWLS1</system:String>
     <system:String x:Key="CkCWLS2">CWLS2</system:String>
     <system:String x:Key="CkCWLS3">CWLS3</system:String>
@@ -132,7 +154,7 @@
 
     <system:String x:Key="CkEmotes">Emotes</system:String>
     <system:String x:Key="CkCustomEmotes">Custom Emotes</system:String>
-    
+
     <system:String x:Key="DearPatrons">Dear Patrons!</system:String>
     <system:String x:Key="PatronsMsg">We express our great appreciation to the people who support our project and motivate us for new achievements.</system:String>
     <system:String x:Key="PatronsThankYou">Thank you</system:String>
@@ -151,4 +173,32 @@
     <system:String x:Key="LookingForUpdates">Looking for updates...</system:String>
     <system:String x:Key="NoUpdatesFound">No updates found.</system:String>
 
+    <!-- New UI keys -->
+    <system:String x:Key="ChatWindowsPageDescription">Manage your in-game chat overlay windows. Each tab is an independent overlay.</system:String>
+    <system:String x:Key="ChatWindowsTabHint">Switch tabs to edit a window's translation, appearance, hotkeys, and behavior in the other sections.</system:String>
+    <system:String x:Key="TranslationPageDescription">Engine and language routing apply only to the selected chat window.</system:String>
+    <system:String x:Key="ChatCodeFiltersHint">Pick which chat channels are translated and the colour each one is rendered in.</system:String>
+    <system:String x:Key="EngineRoutingHint">Choose the translation provider and source/target languages.</system:String>
+    <system:String x:Key="AppearancePageDescription">Customize how the overlay looks and how text is laid out.</system:String>
+    <system:String x:Key="HotkeysPageDescription">Record system-wide shortcuts and control how the overlay reacts.</system:String>
+    <system:String x:Key="GeneralPageDescription">Application-wide options that affect every chat window.</system:String>
+    <system:String x:Key="AboutPageDescription">Project links and credits.</system:String>
+
+    <system:String x:Key="ThemeGroupTitle">Theme</system:String>
+    <system:String x:Key="ThemeGroupHint">Choose how the settings window and overlay should be coloured.</system:String>
+    <system:String x:Key="ThemeSystem">Use system theme</system:String>
+    <system:String x:Key="ThemeLight">Light</system:String>
+    <system:String x:Key="ThemeDark">Dark</system:String>
+
+    <system:String x:Key="HotkeyRecordHint">Press a key combination…</system:String>
+    <system:String x:Key="HotkeyClear">Clear</system:String>
+
+    <system:String x:Key="DirectMemoryDescription">Try to read dialogs without delay (currently doesn't shows speaker name).</system:String>
+    <system:String x:Key="HideToTrayDescription">Hide the settings window to the system tray when minimized.</system:String>
+
+    <system:String x:Key="UpdatesGroupTitle">Updates</system:String>
+    <system:String x:Key="UpdatesGroupHint">Check whether a newer release of Tataru Helper is available.</system:String>
+    <system:String x:Key="LanguageGroupHint">Interface language for the settings window and overlays.</system:String>
+    <system:String x:Key="WindowCornerRadiusLabel">Corner radius</system:String>
+    <system:String x:Key="UpdateAvailableChip">Update available</system:String>
 </ResourceDictionary>

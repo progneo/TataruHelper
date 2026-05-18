@@ -1,21 +1,16 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
 
 
 using System;
 using System.IO;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace FFXIVTataruHelper
 {
     class LogWriter
     {
-        //Thread _WriteThread;
         const int _MaxLogFileSize = 5242880;
-        //const int _MaxLogFileSize = 10485760;
-        //const int _MaxLogFileSize = 2000;//
 
         bool _KeepWorking;
         TextWriter _logTextWriter;
@@ -26,12 +21,12 @@ namespace FFXIVTataruHelper
         string LogFileName = @"Log.txt";
         string BackUpLogFileName = @"Log_old.txt";
 
-
         string ChatLogFileName = @"ChatLog.txt";
+
+        Task _worker = Task.CompletedTask;
 
         public LogWriter()
         {
-            //_WriteThread = new Thread(EntryPoint);
             _KeepWorking = true;
 
             _logStreamWriter = new StreamWriter(LogFileName, true);
@@ -40,9 +35,7 @@ namespace FFXIVTataruHelper
 
         public void StartWriting()
         {
-            //_WriteThread.Start();
-
-            Task.Factory.StartNew(() =>
+            _worker = Task.Factory.StartNew(() =>
             {
                 try
                 {
@@ -52,31 +45,30 @@ namespace FFXIVTataruHelper
                 {
                     Logger.WriteLog(e);
                 }
-
             }, TaskCreationOptions.LongRunning);
-
         }
 
         private void EntryPoint()
         {
             Logger.WriteLog("Started Logging");
 
-            string str = null;
+            string str;
 
-            bool dequeueFalg = false;
             while (_KeepWorking)
             {
-                dequeueFalg = false;
+                bool dequeueFlag = false;
+
                 if (Logger.LogQueue.TryDequeue(out str))
                 {
                     _logTextWriter.WriteLine(str);
                     _logTextWriter.Flush();
-                    dequeueFalg = true;
+                    dequeueFlag = true;
                 }
+
                 if (Logger.ConsoleLogQueue.TryDequeue(out str))
                 {
                     Console.WriteLine(str);
-                    dequeueFalg = true;
+                    dequeueFlag = true;
                 }
 
                 if (Logger.ChatLogQueue.TryDequeue(out str))
@@ -86,12 +78,15 @@ namespace FFXIVTataruHelper
 
                     chatsw.WriteLine(str);
                     chatsw.Flush();
-                    dequeueFalg = true;
+                    dequeueFlag = true;
                 }
 
-                if (!dequeueFalg)
+                if (!dequeueFlag)
                 {
-                    SpinWait.SpinUntil(() => (Logger.LogQueue.IsEmpty == false || Logger.ConsoleLogQueue.IsEmpty == false || Logger.ChatLogQueue.IsEmpty == false) || !_KeepWorking);
+                    // Block until a producer signals or we're told to stop.
+                    // 500 ms cap is a safety net in case a Set was missed.
+                    Logger.QueueSignal.WaitOne(500);
+
                     if (_KeepWorking)
                     {
                         LimitLogFileSize();
@@ -149,7 +144,6 @@ namespace FFXIVTataruHelper
                     chatsw.Flush();
                     chatsw.Close();
                 }
-
             }
             catch { }
         }
@@ -157,14 +151,14 @@ namespace FFXIVTataruHelper
         public void Stop()
         {
             _KeepWorking = false;
+            try { Logger.QueueSignal.Set(); }
+            catch { }
+
+            try
+            {
+                _worker?.Wait(TimeSpan.FromMilliseconds(500));
+            }
+            catch { }
         }
-
-        ~LogWriter()
-        {
-            _KeepWorking = false;
-            ReleaseResources();
-        }
-
-
     }
 }

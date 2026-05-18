@@ -1,31 +1,29 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using FFXIVTataruHelper.EventArguments;
-using FFXIVTataruHelper.Services.HotKeys;
-using FFXIVTataruHelper.Services.Logging;
-using FFXIVTataruHelper.WinUtils;
 
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
 using System.Windows.Data;
-
-using FFXIVTataruHelper.UIModel;
-
-
-
 using System.Windows.Input;
+using System.Windows.Media;
 
 using FFXIVTataruHelper.Compatibility.HotKeys;
+using FFXIVTataruHelper.EventArguments;
+using FFXIVTataruHelper.Services.HotKeys;
+using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.TataruComponentModel;
+using FFXIVTataruHelper.UIModel;
+using FFXIVTataruHelper.WinUtils;
 
 using Translation;
+
+using Color = System.Windows.Media.Color;
+using FontFamily = System.Windows.Media.FontFamily;
 
 namespace FFXIVTataruHelper.ViewModel
 {
@@ -67,11 +65,15 @@ namespace FFXIVTataruHelper.ViewModel
         public string Name
         {
             get { return _Name; }
-            private set
+            set
             {
                 if (_Name == value) return;
 
                 _Name = value;
+
+                if (_BoundSettings != null && _BoundSettings.Name != value)
+                    _BoundSettings.Name = value;
+
                 OnPropertyChanged();
             }
         }
@@ -202,7 +204,7 @@ namespace FFXIVTataruHelper.ViewModel
             }
         }
 
-        public System.Drawing.RectangleD ChatWindowRectangle
+        public RectangleD ChatWindowRectangle
         {
             get { return _ChatWindowRectangle; }
             set
@@ -436,6 +438,18 @@ namespace FFXIVTataruHelper.ViewModel
             }
         }
 
+        public double WindowCornerRadius
+        {
+            get => _windowCornerRadius;
+            set
+            {
+                if (_windowCornerRadius == value) return;
+
+                _windowCornerRadius = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool IsSelected
         {
             get { return _IsSelected; }
@@ -466,6 +480,8 @@ namespace FFXIVTataruHelper.ViewModel
 
         #region **LocalVariables.
 
+        private ChatWindowViewModelSettings _BoundSettings;
+
         string _Name;
 
         double _ChatFontSize;
@@ -488,7 +504,7 @@ namespace FFXIVTataruHelper.ViewModel
         CollectionView _TranslateFromLanguagues;
         CollectionView _TranslateToLanguagues;
 
-        System.Drawing.RectangleD _ChatWindowRectangle;
+        RectangleD _ChatWindowRectangle;
 
         BindingList<ChatCodeViewModel> _ChatCodes;
 
@@ -503,6 +519,7 @@ namespace FFXIVTataruHelper.ViewModel
         HotKeyManager _HotKeyManager;
 
         bool _ShowTimestamps;
+        double _windowCornerRadius = 12;
 
         bool _IsSelected;
 
@@ -534,7 +551,7 @@ namespace FFXIVTataruHelper.ViewModel
             LineBreakHeight = 1;
             SpacingCount = 1;
             BackGroundColor = Color.FromArgb(255, 0, 255, 128);
-            ChatWindowRectangle = new System.Drawing.RectangleD(0, 0, 480, 320);
+            ChatWindowRectangle = new RectangleD(0, 0, 480, 320);
 
             ChatCodes = new BindingList<ChatCodeViewModel>()
             {
@@ -561,6 +578,8 @@ namespace FFXIVTataruHelper.ViewModel
 
             _IsWindowVisible = true;
 
+            _BoundSettings = settings;
+
             Name = settings.Name;
             WinId = settings.WinId;
 
@@ -579,6 +598,8 @@ namespace FFXIVTataruHelper.ViewModel
             IsHiddenByUser = false;
 
             ShowTimestamps = settings.ShowTimestamps;
+
+            WindowCornerRadius = settings.WindowCornerRadius > 0 ? settings.WindowCornerRadius : 12;
 
             BackGroundColor = settings.BackGroundColor;
 
@@ -630,6 +651,9 @@ namespace FFXIVTataruHelper.ViewModel
             //settings.IsHiddenByUser = this.IsHiddenByUser;
 
             settings.BackGroundColor = this.BackGroundColor;
+
+            settings.WindowCornerRadius = this.WindowCornerRadius;
+            settings.ShowTimestamps = this.ShowTimestamps;
 
             TranslationEngine engine = (TranslationEngine)this.TranslationEngines.CurrentItem;
             if (engine != null)
@@ -818,7 +842,11 @@ namespace FFXIVTataruHelper.ViewModel
                 if (code != null)
                 {
                     code.IsChecked = userCode.IsChecked;
-                    code.Color = userCode.Color;
+
+                    if (userCode.Color.A != 0)
+                    {
+                        code.Color = userCode.Color;
+                    }
                 }
             }
 
@@ -853,6 +881,8 @@ namespace FFXIVTataruHelper.ViewModel
             var rect = ChatWindowRectangle;
             rect.X = 0;
             rect.Y = 0;
+            rect.Width = 480;
+            rect.Height = 320;
 
             ChatWindowRectangle = rect;
         }

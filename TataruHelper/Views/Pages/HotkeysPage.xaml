@@ -1,0 +1,148 @@
+﻿<UserControl x:Class="FFXIVTataruHelper.Views.Pages.HotkeysPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="Transparent">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Style="{DynamicResource SectionTitleStyle}"
+                       Text="{DynamicResource ChatWindowHotkeys}" />
+            <TextBlock Grid.Row="1"
+                       Style="{DynamicResource CaptionTextStyle}"
+                       Margin="0,0,0,16"
+                       Text="{DynamicResource HotkeysPageDescription}" />
+
+            <!-- Shortcut capture card -->
+            <ui:Card Grid.Row="2" Padding="16" Margin="0,0,0,12">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <ui:SymbolIcon Symbol="Keyboard24" FontSize="16"
+                                       Margin="0,0,8,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Accent}" />
+                        <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                   Margin="0"
+                                   Text="{DynamicResource ShortcutCaptureLabel}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                   Text="{DynamicResource ShowHideChatWindowHK}" />
+                        <ui:TextBox Grid.Column="1"
+                                    PlaceholderText="{DynamicResource HotkeyRecordHint}"
+                                    Text="{Binding BoundWindow.ShowHideChatKeysName, Mode=OneWay}"
+                                    IsReadOnly="True"
+                                    IsUndoEnabled="False"
+                                    KeyDown="ShowHideChatWinHotKey_KeyDown"
+                                    KeyUp="ShowHideChatWinHotKey_KeyUp" />
+                        <ui:Button Grid.Column="2"
+                                   Margin="8,0,0,0"
+                                   Appearance="Secondary"
+                                   Icon="{ui:SymbolIcon Symbol=Info24}"
+                                   ToolTip="{DynamicResource ShowHideChatWindowHKToolTip}" />
+                    </Grid>
+
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                   Text="{DynamicResource ClickThroughHK}" />
+                        <ui:TextBox Grid.Column="1"
+                                    PlaceholderText="{DynamicResource HotkeyRecordHint}"
+                                    Text="{Binding BoundWindow.ClickThoughtChatKeysName, Mode=OneWay}"
+                                    IsReadOnly="True"
+                                    IsUndoEnabled="False"
+                                    KeyDown="ClickThroughHotKey_KeyDown"
+                                    KeyUp="ClickThroughHotKey_KeyUp" />
+                        <ui:Button Grid.Column="2"
+                                   Margin="8,0,0,0"
+                                   Appearance="Secondary"
+                                   Icon="{ui:SymbolIcon Symbol=Info24}"
+                                   ToolTip="{DynamicResource ClickThroughHKToolTip}" />
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="200" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center"
+                                   Text="{DynamicResource ClearChatHK}" />
+                        <ui:TextBox Grid.Column="1"
+                                    PlaceholderText="{DynamicResource HotkeyRecordHint}"
+                                    Text="{Binding BoundWindow.ClearChatKeysName, Mode=OneWay}"
+                                    IsReadOnly="True"
+                                    IsUndoEnabled="False"
+                                    KeyDown="ClearChatHotKey_KeyDown"
+                                    KeyUp="ClearChatHotKey_KeyUp" />
+                        <ui:Button Grid.Column="2"
+                                   Margin="8,0,0,0"
+                                   Appearance="Secondary"
+                                   Icon="{ui:SymbolIcon Symbol=Info24}"
+                                   ToolTip="{DynamicResource ClearChatHKToolTip}" />
+                    </Grid>
+                </StackPanel>
+            </ui:Card>
+
+            <!-- Overlay behavior card -->
+            <ui:Card Grid.Row="3" Padding="16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <ui:SymbolIcon Symbol="WindowApps24" FontSize="16"
+                                       Margin="0,0,8,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Accent}" />
+                        <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                   Margin="0"
+                                   Text="{DynamicResource OverlayBehaviorLabel}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <ui:ToggleSwitch IsChecked="{Binding BoundWindow.IsAlwaysOnTop, Mode=TwoWay}"
+                                     Content="{DynamicResource AlwaysOnTopCB}"
+                                     Margin="0,0,0,6" />
+                    <ui:ToggleSwitch IsChecked="{Binding BoundWindow.IsClickThrough, Mode=TwoWay}"
+                                     Content="{DynamicResource ClickThroughCB}"
+                                     Margin="0,0,0,6" />
+
+                    <Grid Margin="0,4,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <ui:ToggleSwitch Grid.Column="0"
+                                         IsChecked="{Binding BoundWindow.IsAutoHide, Mode=TwoWay}"
+                                         Content="{DynamicResource AutoHideCB}"
+                                         VerticalAlignment="Center" />
+                        <ui:NumberBox Grid.Column="1"
+                                      Value="{Binding BoundWindow.AutoHideTimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                      Width="140"
+                                      VerticalAlignment="Center"
+                                      Minimum="1"
+                                      Maximum="36000"
+                                      ClearButtonEnabled="False" />
+                    </Grid>
+                </StackPanel>
+            </ui:Card>
+        </Grid>
+    </ScrollViewer>
+</UserControl>

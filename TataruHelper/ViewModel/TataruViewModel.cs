@@ -1,22 +1,18 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using FFXIVTataruHelper.EventArguments;
-using FFXIVTataruHelper.Services.HotKeys;
-using FFXIVTataruHelper.Services.Logging;
-using FFXIVTataruHelper.Services.UI;
-using FFXIVTataruHelper.TataruComponentModel;
-using FFXIVTataruHelper.UIModel;
-using FFXIVTataruHelper.Utils;
-
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using System.Windows.Data;
+
+using FFXIVTataruHelper.Services.HotKeys;
+using FFXIVTataruHelper.Services.Logging;
+using FFXIVTataruHelper.Services.UI;
+using FFXIVTataruHelper.TataruComponentModel;
+using FFXIVTataruHelper.UIModel;
 
 using Translation;
 
@@ -107,6 +103,7 @@ namespace FFXIVTataruHelper.ViewModel
                     _DownloadingUpdateVisibility = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(UpdatingBlockVisibility));
+                    OnPropertyChanged(nameof(HasPendingUpdate));
                 }
             }
         }
@@ -121,6 +118,7 @@ namespace FFXIVTataruHelper.ViewModel
                     _RestartReadyVisibility = value;
                     OnPropertyChanged();
                     OnPropertyChanged(nameof(UpdatingBlockVisibility));
+                    OnPropertyChanged(nameof(HasPendingUpdate));
                 }
             }
         }
@@ -130,13 +128,15 @@ namespace FFXIVTataruHelper.ViewModel
             get => DownloadingUpdateVisibility || RestartReadyVisibility || UserStartedUpdateTextVisibility;
         }
 
+        public bool HasPendingUpdate
+        {
+            get => DownloadingUpdateVisibility || RestartReadyVisibility;
+        }
+
         public AsyncBindingList<ChatWindowViewModel> ChatWindows
         {
             get
             {
-                var itemsView = (IEditableCollectionView)CollectionViewSource.GetDefaultView(_ChatWindows);
-                itemsView.NewItemPlaceholderPosition = NewItemPlaceholderPosition.AtEnd;
-
                 return _ChatWindows;
             }
             set

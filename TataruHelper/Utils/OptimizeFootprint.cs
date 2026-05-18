@@ -11,16 +11,22 @@ namespace FFXIVTataruHelper
 {
     public class OptimizeFootprint
     {
-        [DllImport("KERNEL32.DLL", EntryPoint = "SetProcessWorkingSetSize", SetLastError = true, CallingConvention = CallingConvention.StdCall)]
-        static extern bool SetProcessWorkingSetSize32(IntPtr pProcess, int dwMinimumWorkingSetSize, int dwMaximumWorkingSetSize);
+        [DllImport("KERNEL32.DLL", EntryPoint = "SetProcessWorkingSetSize", SetLastError = true,
+            CallingConvention = CallingConvention.StdCall)]
+        static extern bool SetProcessWorkingSetSize32(IntPtr pProcess, int dwMinimumWorkingSetSize,
+            int dwMaximumWorkingSetSize);
 
-        [DllImport("KERNEL32.DLL", EntryPoint = "SetProcessWorkingSetSize", SetLastError = true, CallingConvention = CallingConvention.StdCall)]
-        static extern bool SetProcessWorkingSetSize64(IntPtr pProcess, long dwMinimumWorkingSetSize, long dwMaximumWorkingSetSize);
+        [DllImport("KERNEL32.DLL", EntryPoint = "SetProcessWorkingSetSize", SetLastError = true,
+            CallingConvention = CallingConvention.StdCall)]
+        static extern bool SetProcessWorkingSetSize64(IntPtr pProcess, long dwMinimumWorkingSetSize,
+            long dwMaximumWorkingSetSize);
 
         bool _KeepWorking;
 
         CancellationTokenSource source;
         CancellationToken token;
+
+        Task _worker = Task.CompletedTask;
 
         public OptimizeFootprint()
         {
@@ -29,13 +35,12 @@ namespace FFXIVTataruHelper
 
         public void Start()
         {
-            Task.Factory.StartNew(async () =>
+            _KeepWorking = true;
+            source = new CancellationTokenSource();
+            token = source.Token;
+
+            _worker = Task.Factory.StartNew(async () =>
             {
-                _KeepWorking = true;
-
-                source = new CancellationTokenSource();
-                token = source.Token;
-
                 try
                 {
                     await EntryPoint();
@@ -44,7 +49,7 @@ namespace FFXIVTataruHelper
                 {
                     Logger.WriteLog(e);
                 }
-            }, TaskCreationOptions.LongRunning);
+            }, TaskCreationOptions.LongRunning).Unwrap();
         }
 
         async Task EntryPoint()
@@ -85,13 +90,23 @@ namespace FFXIVTataruHelper
                     catch (Exception) { }
                 }
             }
-            source.Dispose();
         }
 
         public void Stop()
         {
+            if (!_KeepWorking)
+                return;
+
             _KeepWorking = false;
-            source.Cancel();
+
+            try { source?.Cancel(); }
+            catch { }
+
+            try { _worker?.Wait(TimeSpan.FromMilliseconds(500)); }
+            catch { }
+
+            try { source?.Dispose(); }
+            catch { }
         }
 
         private void FlushMemory()
@@ -102,11 +117,11 @@ namespace FFXIVTataruHelper
             {
                 if (IntPtr.Size == 8)
                 {
-                    SetProcessWorkingSetSize64(System.Diagnostics.Process.GetCurrentProcess().Handle, -1, -1);
+                    SetProcessWorkingSetSize64(Process.GetCurrentProcess().Handle, -1, -1);
                 }
                 else
                 {
-                    SetProcessWorkingSetSize32(System.Diagnostics.Process.GetCurrentProcess().Handle, -1, -1);
+                    SetProcessWorkingSetSize32(Process.GetCurrentProcess().Handle, -1, -1);
                 }
             }
         }

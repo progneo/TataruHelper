@@ -1,20 +1,17 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
+using System;
+using System.Threading.Tasks;
+using System.Windows;
+
+using FFXIVTataruHelper.Compatibility.HotKeys;
 using FFXIVTataruHelper.FFHandlers;
-using FFXIVTataruHelper.Factories;
 using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.ViewModel;
-
-using System;
-using System.ComponentModel;
-using System.Threading.Tasks;
-
-using FFXIVTataruHelper.UIModel;
-using FFXIVTataruHelper.Compatibility.HotKeys;
 
 using Translation;
 
@@ -34,7 +31,7 @@ namespace FFXIVTataruHelper
             get { return _FFMemoryReader; }
         }
 
-        public System.Windows.WindowState FFWindowState
+        public WindowState FFWindowState
         {
             get { return FFMemoryReader.FFWindowState; }
         }
@@ -135,6 +132,11 @@ namespace FFXIVTataruHelper
         public void Stop()
         {
             _ApplicationCoordinator.Stop(_ChatWindowCoordinator);
+        }
+
+        public Task StopAsync()
+        {
+            return _ApplicationCoordinator.StopAsync(_ChatWindowCoordinator);
         }
 
         public async Task AsyncLoadSettings()

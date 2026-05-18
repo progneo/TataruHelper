@@ -1,632 +1,576 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
+using System;
+using System.ComponentModel;
+using System.Drawing;
+using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Navigation;
 
 using FFXIVTataruHelper.EventArguments;
 using FFXIVTataruHelper.Factories;
+using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.Services.Update;
 using FFXIVTataruHelper.Utils;
-using FFXIVTataruHelper.ViewModel;
+using FFXIVTataruHelper.ViewModel.Shell;
+using FFXIVTataruHelper.Views.Pages;
 using FFXIVTataruHelper.WinUtils;
 
-using System;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Input;
-using System.Windows.Interop;
+using Hardcodet.Wpf.TaskbarNotification;
 
 using Updater;
 using Updater.EventArguments;
 
-namespace FFXIVTataruHelper
+using Wpf.Ui.Appearance;
+using Wpf.Ui.Controls;
+
+using Timer = System.Timers.Timer;
+
+namespace FFXIVTataruHelper;
+
+/// <summary>
+/// Interaction logic for MainWindow.xaml//
+/// </summary>
+public partial class MainWindow : FluentWindow
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml//
-    /// </summary>
-    public partial class MainWindow : Window //-V3072
+    private readonly ITataruModelFactory _tataruModelFactory;
+    private readonly IUpdateService _updater;
+    private readonly IAppLogger _logger;
+    private readonly IUiDispatcher _uiDispatcher;
+    private readonly IHotkeyCaptureService _hotkeyCaptureService;
+
+    private LogWriter _logWriter;
+    private TataruModel _tataruModel;
+    private TataruUIModel _tataruUiModel;
+    private SettingsShellViewModel _settingsShellViewModel;
+
+    private Timer _updaterTimer;
+    private LanguagueWrapper _languagueWrapper;
+    private OptimizeFootprint _optimizeFootprint;
+    private WinMessagesHandler _winMessagesHandler;
+
+    private IWindowScopedSettingsPage _chatWindowsPage;
+    private IWindowScopedSettingsPage _translationPage;
+    private IWindowScopedSettingsPage _appearancePage;
+    private IWindowScopedSettingsPage _hotkeysPage;
+    private IWindowScopedSettingsPage _generalPage;
+    private IWindowScopedSettingsPage _aboutPage;
+
+    private bool _isShutdownCleanupCompleted;
+
+    public MainWindow(
+        ITataruModelFactory tataruModelFactory,
+        IUpdateService updater,
+        IAppLogger logger,
+        IUiDispatcher uiDispatcher,
+        IHotkeyCaptureService hotkeyCaptureService)
     {
-        TataruModel TataruModel
+        _tataruModelFactory = tataruModelFactory;
+        _updater = updater;
+        _logger = logger;
+        _uiDispatcher = uiDispatcher;
+        _hotkeyCaptureService = hotkeyCaptureService;
+
+        if (!TataruSingleInstance.IsOnlyInstance)
         {
-            get { return _TataruModel; }
-            set { _TataruModel = value; }
+            ShutDown();
+            return;
         }
 
-        LogWriter _LogWriter;
-
-        TataruModel _TataruModel;
-        TataruUIModel _TataruUIModel;
-
-        System.Timers.Timer _UpdaterTimer = null;
-
-        ///////////////////////////////////////////////////
-
-        LanguagueWrapper _LanguagueWrapper;
-
-        IUpdateService _Updater;
-        readonly ITataruModelFactory _TataruModelFactory;
-        readonly IAppLogger _Logger;
-        readonly IUiDispatcher _UiDispatcher;
-        bool _IsShutdownCleanupCompleted;
-
-        OptimizeFootprint _OptimizeFootprint;
-
-        WinMessagesHandler _WinMessagesHandler;
-
-        public MainWindow(ITataruModelFactory tataruModelFactory, IUpdateService updater, IAppLogger logger,
-            IUiDispatcher uiDispatcher)
+        try
         {
-            _TataruModelFactory = tataruModelFactory;
-            _Updater = updater;
-            _Logger = logger;
-            _UiDispatcher = uiDispatcher;
-            if (Utils.TataruSingleInstance.IsOnlyInstance == false)
-            {
-                ShutDown();
-                return;
-            }
-
-            try
-            {
-                _LogWriter = new LogWriter();
-                _LogWriter.StartWriting();
-
-                _Logger.WriteLog("TataruHelper v" +
-                                 Convert.ToString(System.Reflection.Assembly.GetEntryAssembly().GetName().Version));
-            }
-            catch (Exception ex)
-            {
-                _Logger.WriteLog(ex);
-            }
-
-            try
-            {
-                InitializeComponent();
-
-                _UiDispatcher.SetWindow(this);
-            }
-            catch (Exception ex)
-            {
-                _Logger.WriteLog(ex);
-
-                return;
-            }
-
-            try
-            {
-                _LanguagueWrapper = new LanguagueWrapper(this);
-            }
-            catch (Exception e)
-            {
-                _Logger.WriteLog(e);
-                _Updater = null;
-            }
+            InitializeComponent();
+            _uiDispatcher.SetWindow(this);
+        }
+        catch (Exception ex)
+        {
+            _logger.WriteLog(ex);
+            return;
         }
 
-        #region **UserActions.
-
-        private void About_Click(object sender, RoutedEventArgs e)
+        try
         {
-            var _AboutWin = new AboutWin();
-            _AboutWin.Show();
+            _languagueWrapper = new LanguagueWrapper(this);
+        }
+        catch (Exception ex)
+        {
+            _logger.WriteLog(ex);
+        }
+    }
+
+    private async void Window_Loaded(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            _logWriter = new LogWriter();
+            _logWriter.StartWriting();
+            _logger.WriteLog("TataruHelper v" + Convert.ToString(Assembly.GetEntryAssembly()?.GetName().Version));
+        }
+        catch (Exception ex)
+        {
+            _logger.WriteLog(ex);
         }
 
-        private void Patrons_Click(object sender, RoutedEventArgs e)
+        try
         {
-            var patreonWin = new PatreonWin();
-            patreonWin.Show();
-
-            patreonWin.Resources["DearPatrons"] = this.Resources["DearPatrons"];
-            patreonWin.Resources["PatronsMsg"] = this.Resources["PatronsMsg"];
-            patreonWin.Resources["PatronsThankYou"] = this.Resources["PatronsThankYou"];
+            SystemThemeWatcher.Watch(this, WindowBackdropType.Mica, updateAccents: true);
+        }
+        catch (Exception ex)
+        {
+            _logger.WriteLog(ex);
         }
 
-        private void Discord_Click(object sender, RoutedEventArgs e)
+        try
         {
-            var uri = new Uri("https://discord.gg/bSrpbd9");
-            if (!ExternalLinkOpener.TryOpen(uri))
-            {
-                _Logger.WriteLog($"Failed to open external link: {uri.AbsoluteUri}");
-            }
-        }
+            _tataruModel = _tataruModelFactory.Create(this);
+            await _tataruModel.InitializeComponent();
+            _tataruUiModel = _tataruModel.TataruUIModel;
 
-        private void HideToTray_Changed(object sender, RoutedEventArgs e)
-        {
-            var isHideToTray = (bool)((CheckBox)sender).IsChecked;
-            _TataruUIModel.IsHideSettingsToTray = isHideToTray;
-        }
+            InitTataruModel();
 
-        private void DirectMemoryReading_Changed(object sender, RoutedEventArgs e)
-        {
-            var isDirectMemoryReading = (bool)((CheckBox)sender).IsChecked;
-            _TataruUIModel.IsDirecMemoryReading = isDirectMemoryReading;
-        }
+            _tataruModel.AsyncLoadSettings().Forget();
+            _tataruModel.FFMemoryReader.AddExclusionWindowHandler(new WindowInteropHelper(this).Handle);
 
-        private void RestartApp_Click(object sender, RoutedEventArgs e)
-        {
-            _Updater?.RestartApp();
-        }
+            _settingsShellViewModel = new SettingsShellViewModel(
+                _tataruModel.TataruViewModel,
+                _tataruUiModel,
+                _hotkeyCaptureService,
+                CheckUpdates);
 
-        private void CheckUpdates_Click(object sender, RoutedEventArgs e)
-        {
-            if (_Updater == null || _Updater is DisabledUpdateService)
-            {
-                UserStartedUpdateText.Text = "Updater is unavailable in this build.";
-                _TataruModel.TataruViewModel.UserStartedUpdateTextVisibility = true;
-                return;
-            }
+            _settingsShellViewModel.PropertyChanged += OnSettingsShellPropertyChanged;
+            _settingsShellViewModel.FfStatusText = (string)Resources["FFStatusText"];
 
-            UserStartedUpdateText.Text = (string)this.Resources["LookingForUpdates"];
+            DataContext = _settingsShellViewModel;
 
-            _TataruModel.TataruViewModel.UpdateCheckByUser = true;
-            _TataruModel.TataruViewModel.UserStartedUpdateTextVisibility = true;
+            InitializeSectionPages();
+            BindWindowScopedPages();
+            UpdateSectionContent();
 
-            _Updater.CheckAndInstallUpdatesAsync(CmdArgsStatus.IsPreRelease, CancellationToken.None).Forget();
-        }
+            _tataruModel.TataruViewModel.ShutdownRequested += OnShutDownRequsted;
 
-        private void Hyperlink_RequestNavigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
-        {
-            if (!ExternalLinkOpener.TryOpen(e.Uri))
-            {
-                _Logger.WriteLog($"Failed to open external link: {e.Uri?.AbsoluteUri}");
-            }
+            _optimizeFootprint = new OptimizeFootprint();
+            _optimizeFootprint.Start();
 
-            e.Handled = true;
-        }
+            _winMessagesHandler = new WinMessagesHandler(this, _logger);
+            _winMessagesHandler.ShowFirstInstance += OnShowFirstInstance;
 
-        #endregion
-
-        #region **WindowEvents
-
-        private async void Window_Loaded(object sender, RoutedEventArgs e)
-        {
-            try
-            {
-                _Logger.WriteLog("TataruHelper v" +
-                                 Convert.ToString(System.Reflection.Assembly.GetEntryAssembly().GetName().Version));
-            }
-            catch (Exception) { }
-
-            try
-            {
-                try
-                {
-                    _TataruModel = _TataruModelFactory.Create(this);
-
-                    await _TataruModel.InitializeComponent();
-
-                    _TataruUIModel = _TataruModel.TataruUIModel;
-
-                    InitTataruModel();
-                }
-                catch (Exception ex)
-                {
-                    _Logger.WriteLog(ex);
-                }
-
-                _TataruModel.AsyncLoadSettings().Forget();
-
-                _TataruModel.FFMemoryReader.AddExclusionWindowHandler((new WindowInteropHelper(this).Handle));
-
-                this.DataContext = _TataruModel.TataruViewModel;
-
-                _TataruModel.TataruViewModel.ShutdownRequested += OnShutDownRequsted;
-
-                _OptimizeFootprint = new OptimizeFootprint();
-                _OptimizeFootprint.Start();
-
-                _WinMessagesHandler = new WinMessagesHandler(this, _Logger);
-                _WinMessagesHandler.ShowFirstInstance += OnShowFirstInstance;
-
-                _Updater?.UpdateStateChanged += OnUpdaterEvent;
+            _updater?.UpdateStateChanged += OnUpdaterEvent;
 
 #if DEBUG
 #else
-                Task.Run(() =>
+            Task.Run(() =>
+            {
+                if (_updater == null)
                 {
-                    if (_Updater == null)
-                        return;
+                    return;
+                }
 
-                    _Updater.CheckAndInstallUpdatesAsync(CmdArgsStatus.IsPreRelease, CancellationToken.None).Forget();
+                _updater.CheckAndInstallUpdatesAsync(CmdArgsStatus.IsPreRelease, CancellationToken.None).Forget();
 
-                    _UpdaterTimer = new System.Timers.Timer(TimeSpan.FromMinutes(30).TotalMilliseconds);
-                    _UpdaterTimer.Elapsed += async (senderr, ee) => await UpdateTimerHandler();
-                    _UpdaterTimer.AutoReset = true;
-                    _UpdaterTimer.Start();
-
-                }).Forget();
+                _updaterTimer = new Timer(TimeSpan.FromMinutes(30).TotalMilliseconds);
+                _updaterTimer.Elapsed += async (_, _) => await UpdateTimerHandler();
+                _updaterTimer.AutoReset = true;
+                _updaterTimer.Start();
+            }).Forget();
 #endif
-            }
-            catch (Exception ex)
-            {
-                _Logger.WriteLog(ex);
-            }
         }
-
-        private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        catch (Exception ex)
         {
-            System.Drawing.PointD winSize = new System.Drawing.PointD(this.Width, this.Height);
-
-            if (_TataruUIModel != null)
-                if (_TataruUIModel.SettingsWindowSize != winSize)
-                    _TataruUIModel.SettingsWindowSize = winSize;
+            _logger.WriteLog(ex);
         }
+    }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+    private void InitializeSectionPages()
+    {
+        _chatWindowsPage = new ChatWindowsPage(_settingsShellViewModel);
+        _translationPage = new TranslationPage(_settingsShellViewModel);
+        _appearancePage = new AppearancePage(_settingsShellViewModel);
+        _hotkeysPage = new HotkeysPage(_settingsShellViewModel);
+        _generalPage = new GeneralPage(_settingsShellViewModel);
+        _aboutPage = new AboutPage(_settingsShellViewModel);
+    }
+
+    private void OnSettingsShellPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(SettingsShellViewModel.CurrentChatWindow) ||
+            e.PropertyName == nameof(SettingsShellViewModel.SelectedChatWindowId))
         {
-            try
-            {
-                // Closing from the window X should terminate the app deterministically.
-                e.Cancel = false;
-
-                if (!_IsShutdownCleanupCompleted)
-                {
-                    _IsShutdownCleanupCompleted = true;
-
-                    _UpdaterTimer?.Stop();
-                    _Updater?.StopUpdate();
-
-                    if (_OptimizeFootprint != null)
-                        _OptimizeFootprint.Stop();
-
-                    if (_TataruModel != null)
-                        _TataruModel.Stop();
-
-                    var saveSettingsTask = _TataruModel?.SaveSettings();
-                    if (saveSettingsTask != null && !saveSettingsTask.Wait(TimeSpan.FromMilliseconds(500)))
-                    {
-                        _Logger.WriteLog("MainWindow.Window_Closing save settings timed out.");
-                    }
-
-                    Utils.TataruSingleInstance.Stop();
-
-                    if (_LogWriter != null)
-                        _LogWriter.Stop();
-
-                    _Updater?.Dispose();
-                    TaskBarIcon?.Dispose();
-                }
-            }
-            catch (Exception ex)
-            {
-                _Logger.WriteLog(Convert.ToString(ex));
-            }
+            BindWindowScopedPages();
         }
 
-        #endregion
-
-        #region **UiEvents.
-
-        private async Task OnUiLanguageChange(IntegerValueChangeEventArgs ea)
+        if (e.PropertyName == nameof(SettingsShellViewModel.SelectedSection) ||
+            e.PropertyName == nameof(SettingsShellViewModel.SelectedSectionKey))
         {
-            await this.UIThreadAsync(() =>
-            {
-                if (ea.NewValue != ea.OldValue)
-                {
-                    _LanguagueWrapper.CurrentLanguage = (LanguagueWrapper.Languages)ea.NewValue;
-                }
-            });
+            UpdateSectionContent();
         }
+    }
 
-        private async Task OnHideSettingsToTrayChange(BooleanChangeEventArgs ea)
+    private void BindWindowScopedPages()
+    {
+        var current = _settingsShellViewModel?.CurrentChatWindow;
+
+        _chatWindowsPage?.BindTo(current);
+        _translationPage?.BindTo(current);
+        _appearancePage?.BindTo(current);
+        _hotkeysPage?.BindTo(current);
+        _generalPage?.BindTo(current);
+        _aboutPage?.BindTo(current);
+    }
+
+    private void UpdateSectionContent()
+    {
+        if (_settingsShellViewModel == null)
         {
-            await this.UIThreadAsync(() =>
-            {
-                if (ea.NewValue != HideToTray.IsChecked)
-                {
-                    HideToTray.IsChecked = ea.NewValue;
-                }
-            });
+            return;
         }
 
-        private async Task OnDirecMemoryReadingChange(BooleanChangeEventArgs ea)
+        SectionContentHost.Content = _settingsShellViewModel.SelectedSectionKey switch
         {
-            await this.UIThreadAsync(() =>
-            {
-                if (ea.NewValue != DirectMemoryBox.IsChecked)
-                {
-                    DirectMemoryBox.IsChecked = ea.NewValue;
-                }
+            SettingsSection.ChatWindows => _chatWindowsPage,
+            SettingsSection.Translation => _translationPage,
+            SettingsSection.Appearance => _appearancePage,
+            SettingsSection.Hotkeys => _hotkeysPage,
+            SettingsSection.General => _generalPage,
+            SettingsSection.About => _aboutPage,
+            _ => _chatWindowsPage
+        };
+    }
 
-                _TataruModel.FFMemoryReader.UseDirectReading = ea.NewValue;
-            });
-        }
+    private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+    {
+        var winSize = new PointD(Width, Height);
 
-        private async Task OnSettingsWindowSizeChange(PointDValueChangeEventArgs ea)
+        if (_tataruUiModel != null && _tataruUiModel.SettingsWindowSize != winSize)
         {
-            await this.UIThreadAsync(() =>
-            {
-                System.Drawing.PointD winSize = new System.Drawing.PointD(this.Width, this.Height);
-
-                var UIModel = ((TataruUIModel)ea.Sender);
-
-                if (UIModel.IsFirstTime == 0)
-                {
-                    UIModel.IsFirstTime = -1;
-                }
-
-                if (ea.NewValue != winSize)
-                {
-                    if (ea.NewValue.X > 1 && ea.NewValue.Y > 1)
-                    {
-                        this.Width = ea.NewValue.X;
-                        this.Height = ea.NewValue.Y;
-                    }
-                    else
-                    {
-                        UIModel.SettingsWindowSize = winSize;
-                    }
-                }
-            });
+            _tataruUiModel.SettingsWindowSize = winSize;
         }
+    }
 
-        private async Task OnFFWindowStateChange(WindowStateChangeEventArgs ea)
-        {
-            await this.UIThreadAsync(() =>
-            {
-                if (ea.IsRunningNew != ea.IsRunningOld)
-                {
-                    if (ea.IsRunningNew)
-                    {
-                        FFStatusText.Content = ((string)this.Resources["FFStatusTextFound"]) + " " + ea.Text;
-                    }
-                    else
-                    {
-                        FFStatusText.Content = ((string)this.Resources["FFStatusText"]);
-                    }
-                }
-            });
-        }
-
-        private async Task OnShowFirstInstance(BooleanChangeEventArgs ea)
-        {
-            await this.UIThreadAsync(() =>
-            {
-                ShowSettingsWindow();
-            });
-        }
-
-        private async Task OnUpdaterEvent(UpdateStateChangedEventArgs ea)
-        {
-            var stateTransition = UpdateUiStateMapper.Map(
-                ea.State,
-                _TataruModel.TataruViewModel.UpdateCheckByUser,
-                _TataruModel.TataruViewModel.RestartReadyVisibility,
-                _TataruModel.TataruViewModel.DownloadingUpdateVisibility);
-
-            if (stateTransition.DisableCheckButton)
-            {
-                await this.UIThreadAsync(() =>
-                {
-                    CheckUpdatesButton.IsEnabled = false;
-                });
-            }
-
-            if (stateTransition.ShowDownloading ||
-                stateTransition.ShowRestartReady ||
-                stateTransition.HideUserStartedText ||
-                stateTransition.HideDownloading ||
-                stateTransition.ShowNoUpdatesByUserRequest ||
-                stateTransition.ShowErrorByUserRequest ||
-                stateTransition.CompleteUserFlow)
-            {
-                await this.UIThreadAsync(() =>
-                {
-                    if (stateTransition.HideUserStartedText)
-                        _TataruModel.TataruViewModel.UserStartedUpdateTextVisibility = false;
-
-                    if (stateTransition.ShowDownloading)
-                        _TataruModel.TataruViewModel.DownloadingUpdateVisibility = true;
-
-                    if (stateTransition.ShowRestartReady)
-                    {
-                        _TataruModel.TataruViewModel.RestartReadyVisibility = true;
-                        TaskBarIcon.ShowBalloonTip((string)this.Resources["NotifyUpdateTitle"],
-                            (string)this.Resources["NotifyUpdateText"],
-                            Hardcodet.Wpf.TaskbarNotification.BalloonIcon.Info);
-                    }
-
-                    if (stateTransition.HideDownloading)
-                        _TataruModel.TataruViewModel.DownloadingUpdateVisibility = false;
-
-                    if (stateTransition.ShowNoUpdatesByUserRequest)
-                    {
-                        UserStartedUpdateText.Text = (string)this.Resources["NoUpdatesFound"];
-                        _TataruModel.TataruViewModel.UserStartedUpdateTextVisibility = true;
-                    }
-
-                    if (stateTransition.ShowErrorByUserRequest)
-                    {
-                        UserStartedUpdateText.Text = "Update check failed.";
-                        _TataruModel.TataruViewModel.UserStartedUpdateTextVisibility = true;
-                    }
-
-                    if (stateTransition.CompleteUserFlow)
-                    {
-                        _TataruModel.TataruViewModel.UpdateCheckByUser = false;
-                        OnUserStartedUpdateEnd();
-                    }
-                });
-            }
-        }
-
-        void OnUserStartedUpdateEnd()
-        {
-            Task.Run(async () =>
-            {
-                await Task.Delay((int)TimeSpan.FromSeconds(10).TotalMilliseconds);
-                await this.UIThreadAsync(() =>
-                {
-                    _TataruModel.TataruViewModel.UserStartedUpdateTextVisibility = false;
-                    CheckUpdatesButton.IsEnabled = true;
-                });
-            });
-        }
-
-        #endregion
-
-        #region **Initialization.
-
-        void InitTataruModel()
-        {
-            var UIModel = _TataruModel.TataruUIModel;
-
-            UIModel.UiLanguageChanged += OnUiLanguageChange;
-
-
-            UIModel.IsHideSettingsToTrayChanged += OnHideSettingsToTrayChange;
-            UIModel.IsDirecMemoryReadingChanged += OnDirecMemoryReadingChange;
-
-            UIModel.SettingsWindowSizeChanged += OnSettingsWindowSizeChange;
-
-            _TataruModel.FFMemoryReader.FFWindowStateChanged += OnFFWindowStateChange;
-        }
-
-        #endregion
-
-        #region **HotKeys.
-
-        private void ShowHideChatWinHotKey_KeyDown(object sender, KeyEventArgs e)
-        {
-            var mdl = _TataruModel.TataruViewModel.CurrentChatWindow;
-            if (mdl != null)
-            {
-                mdl.RegisterHotKeyDown(TatruHotkeyType.ShowHideChatWindow, e);
-            }
-
-            e.Handled = true;
-        }
-
-        private void ShowHideChatWinHotKeyBox_KeyUp(object sender, KeyEventArgs e)
-        {
-            var mdl = _TataruModel.TataruViewModel.CurrentChatWindow;
-            if (mdl != null)
-            {
-                mdl.RegisterHotKeyUp(TatruHotkeyType.ShowHideChatWindow, e);
-            }
-
-            e.Handled = true;
-        }
-
-        private void ClickThroughHotKey_KeyDown(object sender, KeyEventArgs e)
-        {
-            var mdl = _TataruModel.TataruViewModel.CurrentChatWindow;
-            if (mdl != null)
-            {
-                mdl.RegisterHotKeyDown(TatruHotkeyType.ClickThrough, e);
-            }
-
-            e.Handled = true;
-        }
-
-        private void ClickThroughHotKey_KeyUp(object sender, KeyEventArgs e)
-        {
-            var mdl = _TataruModel.TataruViewModel.CurrentChatWindow;
-            if (mdl != null)
-            {
-                mdl.RegisterHotKeyUp(TatruHotkeyType.ClickThrough, e);
-            }
-
-            e.Handled = true;
-        }
-
-        private void ClearChatHotKey_KeyDown(object sender, KeyEventArgs e)
-        {
-            var mdl = _TataruModel.TataruViewModel.CurrentChatWindow;
-            if (mdl != null)
-            {
-                mdl.RegisterHotKeyDown(TatruHotkeyType.ClearChat, e);
-            }
-
-            e.Handled = true;
-        }
-
-        private void ClearChatHotKey_KeyUp(object sender, KeyEventArgs e)
-        {
-            var mdl = _TataruModel.TataruViewModel.CurrentChatWindow;
-            if (mdl != null)
-            {
-                mdl.RegisterHotKeyUp(TatruHotkeyType.ClearChat, e);
-            }
-
-            e.Handled = true;
-        }
-
-        #endregion
-
-        #region **Tray.
-
-        private void TBMenuSettingsWin_Click(object sender, RoutedEventArgs e)
-        {
-            ShowSettingsWindow();
-        }
-
-        private void TBDoubleClick(object sender, RoutedEventArgs e)
-        {
-            ShowSettingsWindow();
-        }
-
-        private void TBMenuExit_Click(object sender, RoutedEventArgs e)
-        {
-            ShutDown();
-        }
-
-        public void ShowSettingsWindow()
-        {
-            Helper.Unminimize(this);
-
-            this.Visibility = Visibility.Visible;
-            this.Activate();
-            this.Focus();
-        }
-
-        private void OnShutDownRequsted(object sender, EventArgs e)
-        {
-            this.ShutDown();
-        }
-
-        #endregion
-
-        #region **System.
-
-        private async Task UpdateTimerHandler()
-        {
-            await Task.Run(() =>
-            {
-                _Updater?.CheckAndInstallUpdatesAsync(CmdArgsStatus.IsPreRelease, CancellationToken.None).Forget();
-            });
-        }
-
-        protected override void OnStateChanged(EventArgs e)
-        {
-            if (WindowState == System.Windows.WindowState.Minimized)
-            {
-                if ((bool)HideToTray.IsChecked)
-                    this.Hide();
-            }
-
-            base.OnStateChanged(e);
-        }
-
-        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+    private async void Window_Closing(object sender, CancelEventArgs e)
+    {
+        if (_isShutdownCleanupCompleted)
         {
             e.Cancel = false;
-            base.OnClosing(e);
+            return;
         }
 
-        private void Window_Closed(object sender, EventArgs e)
+        e.Cancel = true;
+
+        try
         {
-            _LogWriter?.Stop();
+            var cleanup = Task.Run(RunShutdownCleanupAsync);
+            var winner = await Task.WhenAny(cleanup, Task.Delay(TimeSpan.FromSeconds(3))).ConfigureAwait(true);
+            if (winner != cleanup)
+            {
+                _logger.WriteLog("MainWindow.Window_Closing forced shutdown after 3s timeout.");
+            }
         }
-
-        public void ShutDown()
+        catch (Exception ex)
         {
-            Application.Current.Shutdown();
+            _logger.WriteLog("MainWindow.Window_Closing cleanup failed.");
+            _logger.WriteLog(Convert.ToString(ex));
+        }
+        finally
+        {
+            _isShutdownCleanupCompleted = true;
+            Application.Current?.Shutdown();
+        }
+    }
+
+    private async Task RunShutdownCleanupAsync()
+    {
+        try
+        {
+            _updaterTimer?.Stop();
+            _updater?.StopUpdate();
+
+            _optimizeFootprint?.Stop();
+
+            if (_tataruModel != null)
+            {
+                await _tataruModel.StopAsync().ConfigureAwait(false);
+
+                try
+                {
+                    await _tataruModel.SaveSettings().ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    _logger.WriteLog("MainWindow shutdown save settings failed.");
+                    _logger.WriteLog(ex);
+                }
+            }
+
+            await _uiDispatcher.InvokeAsync(() =>
+            {
+                _settingsShellViewModel?.Dispose();
+                TaskBarIcon?.Dispose();
+            }).ConfigureAwait(false);
+
+            TataruSingleInstance.Stop();
+
+            _updater?.Dispose();
+
+            _logWriter?.Stop();
+        }
+        catch (Exception ex)
+        {
+            _logger.WriteLog("MainWindow.RunShutdownCleanupAsync failed.");
+            _logger.WriteLog(Convert.ToString(ex));
+        }
+    }
+
+    private async Task OnUiLanguageChange(IntegerValueChangeEventArgs ea)
+    {
+        await this.UIThreadAsync(() =>
+        {
+            if (ea.NewValue != ea.OldValue)
+            {
+                _languagueWrapper.CurrentLanguage = (LanguagueWrapper.Languages)ea.NewValue;
+            }
+        });
+    }
+
+    private async Task OnDirecMemoryReadingChange(BooleanChangeEventArgs ea)
+    {
+        await this.UIThreadAsync(() => { _tataruModel.FFMemoryReader.UseDirectReading = ea.NewValue; });
+    }
+
+    private async Task OnSettingsWindowSizeChange(PointDValueChangeEventArgs ea)
+    {
+        await this.UIThreadAsync(() =>
+        {
+            var winSize = new PointD(Width, Height);
+            var uiModel = (TataruUIModel)ea.Sender;
+
+            if (uiModel.IsFirstTime == 0)
+            {
+                uiModel.IsFirstTime = -1;
+            }
+
+            if (ea.NewValue == winSize)
+            {
+                return;
+            }
+
+            if (ea.NewValue.X > 1 && ea.NewValue.Y > 1)
+            {
+                Width = ea.NewValue.X;
+                Height = ea.NewValue.Y;
+            }
+            else
+            {
+                uiModel.SettingsWindowSize = winSize;
+            }
+        });
+    }
+
+    private async Task OnFFWindowStateChange(WindowStateChangeEventArgs ea)
+    {
+        await this.UIThreadAsync(() =>
+        {
+            if (ea.IsRunningNew == ea.IsRunningOld)
+            {
+                return;
+            }
+
+            _settingsShellViewModel.FfStatusText = ea.IsRunningNew
+                ? ((string)Resources["FFStatusTextFound"]) + " " + ea.Text
+                : (string)Resources["FFStatusText"];
+        });
+    }
+
+    private async Task OnShowFirstInstance(BooleanChangeEventArgs ea)
+    {
+        await this.UIThreadAsync(ShowSettingsWindow);
+    }
+
+    private async Task OnUpdaterEvent(UpdateStateChangedEventArgs ea)
+    {
+        var stateTransition = UpdateUiStateMapper.Map(
+            ea.State,
+            _tataruModel.TataruViewModel.UpdateCheckByUser,
+            _tataruModel.TataruViewModel.RestartReadyVisibility,
+            _tataruModel.TataruViewModel.DownloadingUpdateVisibility);
+
+        // Check Updates button now lives on About page; enable/disable plumbing
+        // would need a shared bindable property — deferred.
+        _ = stateTransition.DisableCheckButton;
+
+        if (stateTransition.ShowDownloading ||
+            stateTransition.ShowRestartReady ||
+            stateTransition.HideUserStartedText ||
+            stateTransition.HideDownloading ||
+            stateTransition.ShowNoUpdatesByUserRequest ||
+            stateTransition.ShowErrorByUserRequest ||
+            stateTransition.CompleteUserFlow)
+        {
+            await this.UIThreadAsync(() =>
+            {
+                if (stateTransition.HideUserStartedText)
+                {
+                    _tataruModel.TataruViewModel.UserStartedUpdateTextVisibility = false;
+                }
+
+                if (stateTransition.ShowDownloading)
+                {
+                    _tataruModel.TataruViewModel.DownloadingUpdateVisibility = true;
+                }
+
+                if (stateTransition.ShowRestartReady)
+                {
+                    _tataruModel.TataruViewModel.RestartReadyVisibility = true;
+                    TaskBarIcon.ShowBalloonTip((string)Resources["NotifyUpdateTitle"],
+                        (string)Resources["NotifyUpdateText"],
+                        BalloonIcon.Info);
+                }
+
+                if (stateTransition.HideDownloading)
+                {
+                    _tataruModel.TataruViewModel.DownloadingUpdateVisibility = false;
+                }
+
+                if (stateTransition.ShowNoUpdatesByUserRequest)
+                {
+                    UserStartedUpdateText.Text = (string)Resources["NoUpdatesFound"];
+                    _tataruModel.TataruViewModel.UserStartedUpdateTextVisibility = true;
+                }
+
+                if (stateTransition.ShowErrorByUserRequest)
+                {
+                    UserStartedUpdateText.Text = "Update check failed.";
+                    _tataruModel.TataruViewModel.UserStartedUpdateTextVisibility = true;
+                }
+
+                if (stateTransition.CompleteUserFlow)
+                {
+                    _tataruModel.TataruViewModel.UpdateCheckByUser = false;
+                    OnUserStartedUpdateEnd();
+                }
+            });
+        }
+    }
+
+    private void OnUserStartedUpdateEnd()
+    {
+        Task.Run(async () =>
+        {
+            await Task.Delay((int)TimeSpan.FromSeconds(10).TotalMilliseconds);
+            await this.UIThreadAsync(() =>
+            {
+                _tataruModel.TataruViewModel.UserStartedUpdateTextVisibility = false;
+            });
+        });
+    }
+
+    private void InitTataruModel()
+    {
+        var uiModel = _tataruModel.TataruUIModel;
+
+        uiModel.UiLanguageChanged += OnUiLanguageChange;
+        uiModel.IsDirecMemoryReadingChanged += OnDirecMemoryReadingChange;
+        uiModel.SettingsWindowSizeChanged += OnSettingsWindowSizeChange;
+
+        _tataruModel.FFMemoryReader.FFWindowStateChanged += OnFFWindowStateChange;
+    }
+
+    private void RestartApp_Click(object sender, MouseButtonEventArgs e)
+    {
+        _updater?.RestartApp();
+    }
+
+    private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+    {
+        if (!ExternalLinkOpener.TryOpen(e.Uri))
+        {
+            _logger.WriteLog($"Failed to open external link: {e.Uri?.AbsoluteUri}");
         }
 
-        #endregion
+        e.Handled = true;
+    }
+
+    private void TBMenuExit_Click(object sender, RoutedEventArgs e)
+    {
+        ShutDown();
+    }
+
+    private void TBDoubleClick(object sender, RoutedEventArgs e)
+    {
+        ShowSettingsWindow();
+    }
+
+    public void ShowSettingsWindow()
+    {
+        Helper.Unminimize(this);
+
+        Visibility = Visibility.Visible;
+        Activate();
+        Focus();
+    }
+
+    private void OnShutDownRequsted(object sender, EventArgs e)
+    {
+        ShutDown();
+    }
+
+    private void CheckUpdates()
+    {
+        if (_updater == null || _updater is DisabledUpdateService)
+        {
+            UserStartedUpdateText.Text = "Updater is unavailable in this build.";
+            _tataruModel.TataruViewModel.UserStartedUpdateTextVisibility = true;
+            return;
+        }
+
+        UserStartedUpdateText.Text = (string)Resources["LookingForUpdates"];
+
+        _tataruModel.TataruViewModel.UpdateCheckByUser = true;
+        _tataruModel.TataruViewModel.UserStartedUpdateTextVisibility = true;
+
+        _updater.CheckAndInstallUpdatesAsync(CmdArgsStatus.IsPreRelease, CancellationToken.None).Forget();
+    }
+
+    private async Task UpdateTimerHandler()
+    {
+        await Task.Run(() =>
+        {
+            _updater?.CheckAndInstallUpdatesAsync(CmdArgsStatus.IsPreRelease, CancellationToken.None).Forget();
+        });
+    }
+
+    protected override void OnStateChanged(EventArgs e)
+    {
+        if (WindowState == WindowState.Minimized && _settingsShellViewModel != null)
+        {
+            if (_settingsShellViewModel.IsHideSettingsToTray)
+            {
+                Hide();
+            }
+        }
+
+        base.OnStateChanged(e);
+    }
+
+    protected override void OnClosing(CancelEventArgs e)
+    {
+        e.Cancel = false;
+        base.OnClosing(e);
+    }
+
+    private void Window_Closed(object sender, EventArgs e)
+    {
+        _logWriter?.Stop();
+    }
+
+    public void ShutDown()
+    {
+        Application.Current.Shutdown();
     }
 }

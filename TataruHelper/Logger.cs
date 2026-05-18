@@ -2,7 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 
-
 using System;
 using System.Collections.Concurrent;
 using System.Runtime.CompilerServices;
@@ -16,19 +15,21 @@ namespace FFXIVTataruHelper
         public static ConcurrentQueue<string> ConsoleLogQueue = new ConcurrentQueue<string>();
         public static ConcurrentQueue<string> ChatLogQueue = new ConcurrentQueue<string>();
 
+        internal static readonly AutoResetEvent QueueSignal = new AutoResetEvent(false);
+
 
         public static void WriteLog(string InputString,
-        //[CallerFilePath] string sourceFilePath = "",
-        [CallerMemberName] string memberName = "",
-        [CallerLineNumber] int sourceLineNumber = 0)
+            //[CallerFilePath] string sourceFilePath = "",
+            [CallerMemberName] string memberName = "",
+            [CallerLineNumber] int sourceLineNumber = 0)
         {
             WriteInnerLog(InputString, memberName, sourceLineNumber);
         }
 
         public static void WriteLog(object Input,
-        //[CallerFilePath] string sourceFilePath = "",
-        [CallerMemberName] string memberName = "",
-        [CallerLineNumber] int sourceLineNumber = 0)
+            //[CallerFilePath] string sourceFilePath = "",
+            [CallerMemberName] string memberName = "",
+            [CallerLineNumber] int sourceLineNumber = 0)
         {
             WriteInnerLog(Convert.ToString(Input), memberName, sourceLineNumber);
         }
@@ -48,6 +49,7 @@ namespace FFXIVTataruHelper
             res += InputString + Environment.NewLine;
 
             LogQueue.Enqueue(res);
+            QueueSignal.Set();
         }
 
         public static void WriteConsoleLog(string InputString)
@@ -60,6 +62,7 @@ namespace FFXIVTataruHelper
             res += InputString + Environment.NewLine;
 
             ConsoleLogQueue.Enqueue(res);
+            QueueSignal.Set();
         }
 
         public static void WriteChatLog(string InputString)
@@ -69,9 +72,10 @@ namespace FFXIVTataruHelper
             //string time = DateTime.Now.ToString();
 
             //res = time + Environment.NewLine;
-            res += InputString;// + Environment.NewLine;
+            res += InputString; // + Environment.NewLine;
 
             ChatLogQueue.Enqueue(res);
+            QueueSignal.Set();
         }
     }
 }

@@ -8,7 +8,8 @@
     <AssemblyName>TataruHelper</AssemblyName>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Deterministic>true</Deterministic>
-    <NoWarn>1591</NoWarn>
+    <!-- CA1416: the entire project targets net10.0-windows, so platform-availability warnings are noise. -->
+    <NoWarn>$(NoWarn);1591;CA1416</NoWarn>
     <ApplicationIcon>app_icon2.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ImplicitUsings>disable</ImplicitUsings>
@@ -27,6 +28,7 @@
     <PackageReference Include="Sharlayan" />
     <PackageReference Include="Extended.Wpf.Toolkit" />
     <PackageReference Include="Velopack"/>
+    <PackageReference Include="WPF-UI"/>
   </ItemGroup>
 
   <ItemGroup>

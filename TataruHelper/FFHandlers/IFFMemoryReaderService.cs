@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using System.Windows;
 
 using FFXIVTataruHelper.EventArguments;
@@ -21,6 +22,8 @@ namespace FFXIVTataruHelper.FFHandlers
         void Start();
 
         void Stop();
+
+        Task StopAsync(TimeSpan timeout);
 
         void AddExclusionWindowHandler(IntPtr handler);
     }

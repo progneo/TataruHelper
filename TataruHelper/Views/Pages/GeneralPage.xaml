@@ -1,0 +1,132 @@
+﻿<UserControl x:Class="FFXIVTataruHelper.Views.Pages.GeneralPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d">
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Background="Transparent">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="0"
+                       Style="{DynamicResource SectionTitleStyle}"
+                       Text="{DynamicResource SectionGeneral}" />
+            <TextBlock Grid.Row="1"
+                       Style="{DynamicResource CaptionTextStyle}"
+                       Margin="0,0,0,16"
+                       Text="{DynamicResource GeneralPageDescription}" />
+
+            <!-- Language card -->
+            <ui:Card Grid.Row="2" Padding="16" Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <ui:SymbolIcon Symbol="LocalLanguage24" FontSize="16"
+                                           Margin="0,0,8,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Accent}" />
+                            <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                       Margin="0"
+                                       Text="{DynamicResource DocLanguage}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                   Text="{DynamicResource LanguageGroupHint}" />
+                    </StackPanel>
+                    <ComboBox Grid.Column="1"
+                              Width="220"
+                              VerticalAlignment="Center"
+                              ItemsSource="{Binding Shell.Languages}"
+                              SelectedItem="{Binding Shell.SelectedLanguageOption, Mode=TwoWay}"
+                              DisplayMemberPath="Title" />
+                </Grid>
+            </ui:Card>
+
+            <!-- Updates card -->
+            <ui:Card Grid.Row="3" Padding="16" Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <ui:SymbolIcon Symbol="ArrowSync24" FontSize="16"
+                                           Margin="0,0,8,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Accent}" />
+                            <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                       Margin="0"
+                                       Text="{DynamicResource UpdatesGroupTitle}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                   Text="{DynamicResource UpdatesGroupHint}" />
+                    </StackPanel>
+                    <ui:Button Grid.Column="1"
+                               x:Name="CheckUpdatesButton"
+                               Appearance="Primary"
+                               Icon="{ui:SymbolIcon Symbol=ArrowSync24}"
+                               Content="{DynamicResource CheckUpdatesText}"
+                               Command="{Binding Shell.CheckUpdatesCommand}"
+                               VerticalAlignment="Center" />
+                </Grid>
+            </ui:Card>
+
+            <!-- Application flags card -->
+            <ui:Card Grid.Row="4" Padding="16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                        <ui:SymbolIcon Symbol="Settings24" FontSize="16"
+                                       Margin="0,0,8,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Accent}" />
+                        <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                   Margin="0"
+                                   Text="{DynamicResource ApplicationFlagsLabel}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+
+                    <Grid Margin="0,0,0,10">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="{DynamicResource DirectMemoryCB}" FontWeight="SemiBold" />
+                            <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                       Text="{DynamicResource DirectMemoryDescription}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                         IsChecked="{Binding Shell.IsDirectMemoryReading, Mode=TwoWay}" />
+                    </Grid>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="{DynamicResource HideToTrayCB}" FontWeight="SemiBold" />
+                            <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                       Text="{DynamicResource HideToTrayDescription}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                         IsChecked="{Binding Shell.IsHideSettingsToTray, Mode=TwoWay}" />
+                    </Grid>
+                </StackPanel>
+            </ui:Card>
+        </Grid>
+    </ScrollViewer>
+</UserControl>
