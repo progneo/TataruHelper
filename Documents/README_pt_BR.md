@@ -1,38 +1,27 @@
-# Tataru Helper
+<p align="center">
+  <img src="./Tataru_img.png" width="112" alt="Tataru Helper app icon" />
+</p>
 
-> Aviso de fork: este repositório é um fork com manutenção ativa.
->
-> - Repositório original: https://github.com/NightlyRevenger/TataruHelper
+<h1 align="center">Tataru Helper</h1>
 
+<p align="center">Real-time translation overlay for Final Fantasy XIV in-game text.</p>
+<p align="center">Maintained fork of the original project: <a href="https://github.com/NightlyRevenger/TataruHelper">NightlyRevenger/TataruHelper</a>.</p>
 
-[![Crowdin](https://badges.crowdin.net/tataru-helper/localized.svg)](https://crowdin.com/project/tataru-helper) ![Discord Shield](https://discordapp.com/api/guilds/592039000538349569/widget.png?style=shield)
+<p align="center">
+  <a href="https://github.com/progneo/TataruHelper/actions/workflows/build.yml"><img src="https://github.com/progneo/TataruHelper/actions/workflows/build.yml/badge.svg" alt="Build" /></a>
+  <a href="https://github.com/progneo/TataruHelper/releases/latest"><img src="https://img.shields.io/github/v/release/progneo/TataruHelper?label=Release" alt="Release" /></a>
+  <a href="https://github.com/progneo/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/progneo/TataruHelper/Setup.exe?label=Downloads&display_asset_name=false" alt="Setup.exe Downloads" /></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/github/license/progneo/TataruHelper" alt="License" /></a>
+  <img src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white" alt=".NET 10" />
+  <a href="https://crowdin.com/project/tataru-helper"><img src="https://badges.crowdin.net/tataru-helper/localized.svg" alt="Crowdin" /></a>
+  <a href="https://discord.gg/bSrpbd9"><img src="https://img.shields.io/discord/592039000538349569?label=Discord&logo=discord" alt="Discord" /></a>
+  <a href="https://github.com/progneo/TataruHelper/stargazers"><img src="https://img.shields.io/github/stars/progneo/TataruHelper?style=flat" alt="Stars" /></a>
+  <a href="https://github.com/progneo/TataruHelper/commits"><img src="https://img.shields.io/github/commit-activity/m/progneo/TataruHelper?label=Activity" alt="Commit Activity" /></a>
+</p>
 
-## [Baixar Agora](https://github.com/progneo/TataruHelper/releases/latest)( \---> Baixar Setup.exe)
+<p align="center"><strong><a href="https://github.com/progneo/TataruHelper/releases/latest/download/Setup.exe">Download Setup.exe</a></strong> · <a href="./Guide.MD">Guide</a> · <a href="https://discord.gg/bSrpbd9">Discord</a> · <a href="../README.md#support">Support</a></p>
 
-## [Servidor do Discord da Tataru](https://discord.gg/bSrpbd9)
-
-* * *
-
-![TataruHead](./Tataru_img.png) ![LiveAction](./LiveAction.gif)
-
-## [Demonstração](https://youtu.be/7HiQXzmkQuw)
-
-## [Doações](https://github.com/progneo/TataruHelper/blob/master/README.md#support)
-
-* * *
-
-## Índice
-
-* [Português Brasileiro](#Português-Brasileiro) 
-   * [Instalação](#Instalação)
-   * [Como usar](#Como-usar)
-   * [Desenvolvimento/Tradução](#DesenvolvimentoTradução)
-   * [Licença](#Licença)
-   * [Créditos](#Créditos)
-   * [Contatos](#Contatos)
-   * [Suporte](#Suporte)
-
-* * *
+<p align="center"><strong>Languages:</strong> <a href="../README.md">EN</a> | <a href="README_ru_RU.md">RU</a> | <a href="README_ko_KR.md">KO</a> | <a href="README_es_ES.md">ES</a> | <a href="README_ca_ES.md">CA</a> | <a href="README_pl_PL.md">PL</a> | <a href="README_pt_BR.md">PT-BR</a> | <a href="README_uk_UA.md">UK</a> | <a href="README_zh_ZH.md">ZH</a> | <a href="README_ja_JP.md">JA</a></p>
 
 #### Português Brasileiro
 
@@ -50,7 +39,7 @@ Tataru Helper - aplicativo para tradução de textos in-game no MMORPG desenvolv
 
 Tataru Helper requer:  
 Windows 7 **x64** ou posterior (**somente versões x64**).  
-[Microsoft. .NETFramework 4.6.2 ](https://www.microsoft.com/net/download/dotnet-framework-runtime)ou superior.  
+[.NET 10 SDK/Runtime](https://dotnet.microsoft.com/download)ou superior.  
 Final Fantasy XIV versão **DirectX 11** e **x64**.
 
 1. Baixe a versão mais recente do aplicativo de [aqui](https://github.com/progneo/TataruHelper/releases/latest) (Setup.exe).
