@@ -1,10 +1,13 @@
-using FFXIVTataruHelper.Services.Logging;
-using FFXIVTataruHelper.UIModel;
-using FFXIVTataruHelper.ViewModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+
+using FFXIVTataruHelper.Services.Logging;
+using FFXIVTataruHelper.UIModel;
+using FFXIVTataruHelper.ViewModel;
+using FFXIVTataruHelper.WinUtils;
+
 using Translation;
 
 namespace FFXIVTataruHelper.Services.Settings
@@ -20,7 +23,8 @@ namespace FFXIVTataruHelper.Services.Settings
             _logger = logger;
         }
 
-        public UserSettings LoadUserSettings(string systemSettingsFileName, ChatProcessor chatProcessor, WebTranslator webTranslator)
+        public UserSettings LoadUserSettings(string systemSettingsFileName, ChatProcessor chatProcessor,
+            WebTranslator webTranslator)
         {
             if (!_settingsStore.LoadGlobalSettings(systemSettingsFileName))
             {
@@ -42,7 +46,10 @@ namespace FFXIVTataruHelper.Services.Settings
             for (int i = 0; i < userSettings.ChatWindows.Count; i++)
             {
                 userSettings.ChatWindows[i].WinId = i;
-                userSettings.ChatWindows[i].Name = Convert.ToString(i + 1);
+                if (string.IsNullOrWhiteSpace(userSettings.ChatWindows[i].Name))
+                {
+                    userSettings.ChatWindows[i].Name = Convert.ToString(i + 1);
+                }
             }
 
             return userSettings;
@@ -141,12 +148,12 @@ namespace FFXIVTataruHelper.Services.Settings
                     }
 
                     windowSettings.ShowHideChatKeys =
-                        new WinUtils.HotKeyCombination(oldSettings.ShowHideChatKeys.Name + "0",
+                        new HotKeyCombination(oldSettings.ShowHideChatKeys.Name + "0",
                             oldSettings.ShowHideChatKeys);
                     windowSettings.ClickThoughtChatKeys =
-                        new WinUtils.HotKeyCombination(oldSettings.ClickThoughtChatKeys.Name + "0",
+                        new HotKeyCombination(oldSettings.ClickThoughtChatKeys.Name + "0",
                             oldSettings.ClickThoughtChatKeys);
-                    windowSettings.ClearChatKeys = new WinUtils.HotKeyCombination(oldSettings.ClearChatKeys.Name + "0",
+                    windowSettings.ClearChatKeys = new HotKeyCombination(oldSettings.ClearChatKeys.Name + "0",
                         oldSettings.ClearChatKeys);
 
                     userSettings.ChatWindows.Add(new ChatWindowViewModelSettings(windowSettings));
