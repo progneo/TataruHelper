@@ -1,6 +1,9 @@
 using System.Linq;
+
 using FFXIVTataruHelper.Services.GameMemory;
+
 using NUnit.Framework;
+
 using Sharlayan.Core;
 using Sharlayan.Models.ReadResults;
 
@@ -31,6 +34,20 @@ namespace TataruHelper.Tests
             var result = reader.CheckChatEquality(first, second);
 
             Assert.That(result, Is.True);
+        }
+
+        [Test]
+        public void ExtractDirectDialog_ReturnsCutsceneCandidateWithoutSpeakerPrefix()
+        {
+            var reader = new HeuristicDirectDialogReader();
+            var chatLog = new ChatLogResult();
+            chatLog.ChatLogItems.Enqueue(new ChatLogItem { Code = "0044", Line = "Cutscene subtitle line" });
+
+            var direct = reader.ExtractDirectDialog(chatLog);
+
+            Assert.That(direct.ChatLogItems.Count, Is.EqualTo(1));
+            Assert.That(direct.ChatLogItems.First().Code, Is.EqualTo("0044"));
+            Assert.That(direct.ChatLogItems.First().Line, Is.EqualTo("Cutscene subtitle line"));
         }
     }
 }

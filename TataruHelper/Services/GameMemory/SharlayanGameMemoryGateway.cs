@@ -98,20 +98,29 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
             var result = new ChatLogResult();
             var talkText = NormalizeDialogToken(realtimeSnapshot.TalkText);
-            if (talkText.Length > 0)
+            if (talkText.Length == 0)
             {
-                var signature = BuildRealtimeSignature(talkText);
-                if (!string.Equals(_lastRealtimeDialogSignature, signature, StringComparison.Ordinal))
+                return fallbackDirectDialog;
+            }
+
+            var chatCode = NormalizeDialogToken(realtimeSnapshot.ChatCode);
+            if (chatCode.Length == 0)
+            {
+                chatCode = DirectDialogCode;
+            }
+
+            var speakerName = NormalizeDialogToken(realtimeSnapshot.SpeakerName);
+            var signature = BuildRealtimeSignature(chatCode, speakerName, talkText);
+            if (!string.Equals(_lastRealtimeDialogSignature, signature, StringComparison.Ordinal))
+            {
+                _lastRealtimeDialogSignature = signature;
+                var line = BuildRealtimeDialogLine(speakerName, talkText);
+                if (line.Length > 0)
                 {
-                    _lastRealtimeDialogSignature = signature;
-                    var line = BuildRealtimeDialogLine(talkText);
-                    if (line.Length > 0)
+                    result.ChatLogItems.Enqueue(new ChatLogItem
                     {
-                        result.ChatLogItems.Enqueue(new ChatLogItem
-                        {
-                            Code = DirectDialogCode, Line = line, TimeStamp = _timestampProvider()
-                        });
-                    }
+                        Code = chatCode, Line = line, TimeStamp = _timestampProvider()
+                    });
                 }
             }
 
@@ -166,6 +175,16 @@ namespace FFXIVTataruHelper.Services.GameMemory
             return NormalizeDialogToken(dialogLine);
         }
 
+        internal static string BuildRealtimeSignature(string chatCode, string speakerName, string talkText)
+        {
+            return string.Concat(
+                NormalizeDialogToken(chatCode),
+                "|",
+                NormalizeDialogToken(speakerName),
+                "|",
+                NormalizeDialogToken(talkText));
+        }
+
         internal static string SelectBestTalkText(IEnumerable<string> candidates)
         {
             if (candidates == null)
@@ -187,13 +206,24 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         internal static string BuildRealtimeDialogLine(string talkText)
         {
+            return BuildRealtimeDialogLine(string.Empty, talkText);
+        }
+
+        internal static string BuildRealtimeDialogLine(string speakerName, string talkText)
+        {
             var normalizedTalkText = NormalizeDialogToken(talkText);
             if (normalizedTalkText.Length == 0)
             {
                 return string.Empty;
             }
 
-            return normalizedTalkText;
+            var normalizedSpeakerName = NormalizeDialogToken(speakerName);
+            if (normalizedSpeakerName.Length == 0)
+            {
+                return normalizedTalkText;
+            }
+
+            return string.Concat(normalizedSpeakerName, ":", normalizedTalkText);
         }
 
         private static GameLanguage ParseGameLanguage(string gameLanguage)

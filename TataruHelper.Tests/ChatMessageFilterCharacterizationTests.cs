@@ -1,4 +1,5 @@
 using FFXIVTataruHelper;
+
 using NUnit.Framework;
 
 namespace TataruHelper.Tests
@@ -56,6 +57,21 @@ namespace TataruHelper.Tests
             Assert.That(split, Is.False);
             Assert.That(nickname, Is.Empty);
             Assert.That(body, Is.EqualTo("Player Name: hello world"));
+        }
+
+        [TestCase("003D")]
+        [TestCase("0044")]
+        public void TrySplitNickname_SplitsDirectDialogSpeakerCodes(string chatCode)
+        {
+            var filter = new ChatMessageFilter(
+                new string[0],
+                new[] { "003D", "0044" });
+
+            var split = filter.TrySplitNickname(chatCode, "Npc Name: hello world", out var nickname, out var body);
+
+            Assert.That(split, Is.True);
+            Assert.That(nickname, Is.EqualTo("Npc Name:"));
+            Assert.That(body, Is.EqualTo(" hello world"));
         }
     }
 }
