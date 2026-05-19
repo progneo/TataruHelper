@@ -19,7 +19,7 @@
 <p align="center"><strong>Download Stats</strong></p>
 <p align="center">
   <a href="https://github.com/progneo/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/progneo/TataruHelper/Setup.exe?label=Setup%20total%20downloads" alt="Setup total downloads" /></a>
-  <a href="https://github.com/progneo/TataruHelper/releases/latest/download/TataruHelper-0.10.5-stable-delta.nupkg"><img src="https://img.shields.io/github/downloads/progneo/TataruHelper/latest/TataruHelper-0.10.5-stable-delta.nupkg?label=Current%20release%20update%20loaded" alt="Current delta update file downloads" /></a>
+  <a href="https://github.com/progneo/TataruHelper/releases/latest/download/TataruHelper-0.10.6-stable-delta.nupkg"><img src="https://img.shields.io/github/downloads/progneo/TataruHelper/latest/TataruHelper-0.10.6-stable-delta.nupkg?label=Current%20release%20update%20loaded" alt="Current delta update file downloads" /></a>
 </p>
 
 <p align="center"><strong><a href="https://github.com/progneo/TataruHelper/releases/latest/download/Setup.exe">Download Setup.exe</a></strong> · <a href="Documents/Guide.MD">Guide</a> · <a href="https://discord.gg/bSrpbd9">Discord</a> · <a href="#support">Support</a></p>
