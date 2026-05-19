@@ -1,12 +1,16 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using FFXIVTataruHelper.WinUtils;
 using System;
 using System.Collections.Generic;
-using System.Windows.Media;
+using System.Drawing;
 using System.Linq;
+
 using FFXIVTataruHelper.UIModel;
+using FFXIVTataruHelper.WinUtils;
+
+using Color = System.Windows.Media.Color;
+using ColorConverter = System.Windows.Media.ColorConverter;
 
 namespace FFXIVTataruHelper
 {
@@ -33,7 +37,8 @@ namespace FFXIVTataruHelper
 
         public int FontSize { get; set; } = 14;
 
-        public List<Color> RecentBackgroundColors { get; set; } = new List<Color>(new Color[] { (Color)ColorConverter.ConvertFromString("#4B000000") });
+        public List<Color> RecentBackgroundColors { get; set; } =
+            new List<Color>(new Color[] { (Color)ColorConverter.ConvertFromString("#4B000000") });
 
         public int LineBreakHeight { get; set; } = 0;
 
@@ -53,14 +58,30 @@ namespace FFXIVTataruHelper
 
         public HotKeyCombination ClearChatKeys { get; set; } = new HotKeyCombination("ClearChatWin");
 
-        public System.Drawing.PointD SettingsWindowSize { get; set; } = new System.Drawing.PointD(0.0, 0.0);
+        public PointD SettingsWindowSize { get; set; } = new PointD(0.0, 0.0);
 
-        public System.Drawing.RectangleD ChatWindowLocation { get; set; } = new System.Drawing.RectangleD(0.0, 0.0, 0.0, 0.0);
+        public RectangleD ChatWindowLocation { get; set; } = new RectangleD(0.0, 0.0, 0.0, 0.0);
 
         public Dictionary<string, ChatMsgType> ChatCodes { get; set; } = new Dictionary<string, ChatMsgType>()
         {
-            { "003D", new ChatMsgType("003D", MsgType.Translate,"NPCD",(Color)ColorConverter.ConvertFromString("#FFABD647")) },
-            { "0044",  new ChatMsgType("0044", MsgType.Translate,"NPCA",(Color)ColorConverter.ConvertFromString("#FFABD647")) },
+            {
+                "003D",
+                new ChatMsgType("003D", MsgType.Translate, "NPCD", (Color)ColorConverter.ConvertFromString("#FFABD647"))
+            },
+            {
+                "0044",
+                new ChatMsgType("0044", MsgType.Translate, "NPCA", (Color)ColorConverter.ConvertFromString("#FFABD647"))
+            },
+            {
+                "F03D",
+                new ChatMsgType("F03D", MsgType.Translate, "NPCDRealtime",
+                    (Color)ColorConverter.ConvertFromString("#FFABD647"))
+            },
+            {
+                "F044",
+                new ChatMsgType("F044", MsgType.Translate, "NPCARealtime",
+                    (Color)ColorConverter.ConvertFromString("#FFABD647"))
+            },
         };
 
         public List<ChatWindowViewModelSettings> ChatWindows { get; set; }
@@ -89,7 +110,8 @@ namespace FFXIVTataruHelper
 
             FontSize = 14;
 
-            RecentBackgroundColors = new List<Color>(new Color[] { (Color)ColorConverter.ConvertFromString("#4B000000") });
+            RecentBackgroundColors =
+                new List<Color>(new Color[] { (Color)ColorConverter.ConvertFromString("#4B000000") });
 
             LineBreakHeight = 0;
 
@@ -103,9 +125,9 @@ namespace FFXIVTataruHelper
 
             CurentUILanguague = (int)LanguagueWrapper.Languages.English;
 
-            SettingsWindowSize = new System.Drawing.PointD(0.0, 0.0);
+            SettingsWindowSize = new PointD(0.0, 0.0);
 
-            ChatWindowLocation = new System.Drawing.RectangleD(0.0, 0.0, 0.0, 0.0);
+            ChatWindowLocation = new RectangleD(0.0, 0.0, 0.0, 0.0);
 
             ShowHideChatKeys = new HotKeyCombination("ShowHideChatWin");
             ClickThoughtChatKeys = new HotKeyCombination("ClickThoughtChatWin");
@@ -113,8 +135,26 @@ namespace FFXIVTataruHelper
 
             ChatCodes = new Dictionary<string, ChatMsgType>()
             {
-                { "003D", new ChatMsgType("003D", MsgType.Translate,"NPCD",(Color)ColorConverter.ConvertFromString("#FFABD647")) },
-                { "0044",  new ChatMsgType("0044", MsgType.Translate,"NPCA",(Color)ColorConverter.ConvertFromString("#FFABD647")) },
+                {
+                    "003D",
+                    new ChatMsgType("003D", MsgType.Translate, "NPCD",
+                        (Color)ColorConverter.ConvertFromString("#FFABD647"))
+                },
+                {
+                    "0044",
+                    new ChatMsgType("0044", MsgType.Translate, "NPCA",
+                        (Color)ColorConverter.ConvertFromString("#FFABD647"))
+                },
+                {
+                    "F03D",
+                    new ChatMsgType("F03D", MsgType.Translate, "NPCDRealtime",
+                        (Color)ColorConverter.ConvertFromString("#FFABD647"))
+                },
+                {
+                    "F044",
+                    new ChatMsgType("F044", MsgType.Translate, "NPCARealtime",
+                        (Color)ColorConverter.ConvertFromString("#FFABD647"))
+                },
             };
 
             ChatWindows = new List<ChatWindowViewModelSettings>();

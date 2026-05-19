@@ -17,6 +17,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
     {
         private const string DirectDialogCode = "003D";
         private const string CutsceneDialogCode = "0044";
+        private const string RealtimeDirectDialogCode = "F03D";
+        private const string RealtimeCutsceneDialogCode = "F044";
 
         private readonly IDirectDialogReader _directDialogReader;
         private readonly IAppLogger _logger;
@@ -108,6 +110,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
             {
                 chatCode = DirectDialogCode;
             }
+
+            chatCode = MapRealtimeChatCode(chatCode);
 
             var speakerName = NormalizeDialogToken(realtimeSnapshot.SpeakerName);
             var signature = BuildRealtimeSignature(chatCode, speakerName, talkText);
@@ -224,6 +228,22 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             return string.Concat(normalizedSpeakerName, ":", normalizedTalkText);
+        }
+
+        internal static string MapRealtimeChatCode(string chatCode)
+        {
+            var normalizedChatCode = NormalizeDialogToken(chatCode);
+            if (string.Equals(normalizedChatCode, DirectDialogCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return RealtimeDirectDialogCode;
+            }
+
+            if (string.Equals(normalizedChatCode, CutsceneDialogCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return RealtimeCutsceneDialogCode;
+            }
+
+            return normalizedChatCode;
         }
 
         private static GameLanguage ParseGameLanguage(string gameLanguage)

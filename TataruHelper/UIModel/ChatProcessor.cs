@@ -114,9 +114,11 @@ namespace FFXIVTataruHelper
                 MsgBlackList[i] = Helper.ClearBlackListString(MsgBlackList[i]);
             }
 
-            var tmpChatCodesWithNickNames = new List<string>(29);
+            var tmpChatCodesWithNickNames = new List<string>(31);
             tmpChatCodesWithNickNames.Add("003D");
             tmpChatCodesWithNickNames.Add("0044");
+            tmpChatCodesWithNickNames.Add("F03D");
+            tmpChatCodesWithNickNames.Add("F044");
             tmpChatCodesWithNickNames.Add("0048");
             tmpChatCodesWithNickNames.Add("000A");
             tmpChatCodesWithNickNames.Add("000B");

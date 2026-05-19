@@ -47,8 +47,8 @@ namespace TataruHelper.Tests
             var items = result.ChatLogItems.ToArray();
 
             Assert.That(items.Length, Is.EqualTo(2));
-            Assert.That(items.Count(item => item.Code == "003D"), Is.EqualTo(1));
-            Assert.That(items.Any(item => item.Code == "003D" && item.Line == "LiveText"), Is.True);
+            Assert.That(items.Count(item => item.Code == "F03D"), Is.EqualTo(1));
+            Assert.That(items.Any(item => item.Code == "F03D" && item.Line == "LiveText"), Is.True);
             Assert.That(items.Any(item => item.Code == "0044" && item.Line == "CutsceneNpc:FromChatLog"), Is.True);
             Assert.That(items.Any(item => item.Code == "003D" && item.Line == "OldNpc:FromChatLog"), Is.False);
         }
@@ -108,7 +108,7 @@ namespace TataruHelper.Tests
 
             var item = gateway.GetDirectDialog().ChatLogItems.Single();
 
-            Assert.That(item.Code, Is.EqualTo("003D"));
+            Assert.That(item.Code, Is.EqualTo("F03D"));
             Assert.That(item.Line, Is.EqualTo("LiveNpc:LiveText"));
         }
 
@@ -122,7 +122,7 @@ namespace TataruHelper.Tests
 
             var item = gateway.GetDirectDialog().ChatLogItems.Single();
 
-            Assert.That(item.Code, Is.EqualTo("0044"));
+            Assert.That(item.Code, Is.EqualTo("F044"));
             Assert.That(item.Line, Is.EqualTo("CutsceneNpc:LiveText"));
         }
 
@@ -140,9 +140,9 @@ namespace TataruHelper.Tests
             var secondTick = gateway.GetDirectDialog().ChatLogItems.ToArray();
 
             Assert.That(firstTick.Length, Is.EqualTo(1));
-            Assert.That(firstTick[0].Code, Is.EqualTo("003D"));
+            Assert.That(firstTick[0].Code, Is.EqualTo("F03D"));
             Assert.That(secondTick.Length, Is.EqualTo(1));
-            Assert.That(secondTick[0].Code, Is.EqualTo("0044"));
+            Assert.That(secondTick[0].Code, Is.EqualTo("F044"));
         }
 
         [Test]
@@ -175,16 +175,29 @@ namespace TataruHelper.Tests
                 new[] { TalkAddonRealtimeDialogSnapshot.Available("003D", string.Empty, "RealtimeAddonText") });
 
             Assert.That(snapshot.ChatCode, Is.EqualTo("003D"));
-            Assert.That(snapshot.SpeakerName, Is.EqualTo("DelayedNpc"));
+            Assert.That(snapshot.SpeakerName, Is.Empty);
             Assert.That(snapshot.TalkText, Is.EqualTo("RealtimeAddonText"));
         }
 
         [Test]
-        public void SelectRealtimeSnapshot_UsesLastTalkNameWithMiniTalkAddonText()
+        public void SelectRealtimeSnapshot_DoesNotUseLastTalkNameWithDifferentMiniTalkAddonText()
         {
             var snapshot = TalkAddonRealtimeReader.SelectRealtimeSnapshot(
                 "CutsceneNpc",
                 "DelayedText",
+                new[] { TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, "RealtimeBubbleText") });
+
+            Assert.That(snapshot.ChatCode, Is.EqualTo("0044"));
+            Assert.That(snapshot.SpeakerName, Is.Empty);
+            Assert.That(snapshot.TalkText, Is.EqualTo("RealtimeBubbleText"));
+        }
+
+        [Test]
+        public void SelectRealtimeSnapshot_UsesLastTalkName_WhenLastTalkTextMatchesAddonText()
+        {
+            var snapshot = TalkAddonRealtimeReader.SelectRealtimeSnapshot(
+                "CutsceneNpc",
+                "RealtimeBubbleText",
                 new[] { TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, "RealtimeBubbleText") });
 
             Assert.That(snapshot.ChatCode, Is.EqualTo("0044"));
@@ -203,6 +216,29 @@ namespace TataruHelper.Tests
             Assert.That(snapshot.ChatCode, Is.EqualTo("003D"));
             Assert.That(snapshot.SpeakerName, Is.EqualTo("FallbackNpc"));
             Assert.That(snapshot.TalkText, Is.EqualTo("FallbackLastTalkText"));
+        }
+
+        [Test]
+        public void BuildAddonSnapshot_SplitsVisibleTalkSpeakerAndBody()
+        {
+            var snapshot = TalkAddonRealtimeReader.BuildAddonSnapshot(
+                "003D",
+                new[] { "VisibleNpc", "Visible dialog text" },
+                "StaleNpc",
+                "Stale dialog text",
+                true);
+
+            Assert.That(snapshot.ChatCode, Is.EqualTo("003D"));
+            Assert.That(snapshot.SpeakerName, Is.EqualTo("VisibleNpc"));
+            Assert.That(snapshot.TalkText, Is.EqualTo("Visible dialog text"));
+        }
+
+        [TestCase("003D", "F03D")]
+        [TestCase("0044", "F044")]
+        [TestCase("2AB9", "2AB9")]
+        public void MapRealtimeChatCode_MapsOnlyDirectDialogCodes(string input, string expected)
+        {
+            Assert.That(SharlayanGameMemoryGateway.MapRealtimeChatCode(input), Is.EqualTo(expected));
         }
 
         [Test]

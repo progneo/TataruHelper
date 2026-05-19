@@ -122,6 +122,8 @@
     <system:String x:Key="CkError">Error</system:String>
     <system:String x:Key="CkNPCD">NPCD</system:String>
     <system:String x:Key="CkNPCA">NPCA</system:String>
+    <system:String x:Key="CkNPCDRealtime">NPCD Realtime</system:String>
+    <system:String x:Key="CkNPCARealtime">NPCA Realtime</system:String>
     <system:String x:Key="CkRecruitment">Recruitment</system:String>
     <system:String x:Key="CkBossQuotes">Boss quotes</system:String>
     <system:String x:Key="CkSay">Say</system:String>

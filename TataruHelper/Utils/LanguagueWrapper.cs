@@ -262,6 +262,8 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["CkError"] = catalog.GetString("Error");
             _SettingsWindow.Resources["CkNPCD"] = catalog.GetString("NPCD");
             _SettingsWindow.Resources["CkNPCA"] = catalog.GetString("NPCA");
+            _SettingsWindow.Resources["CkNPCDRealtime"] = catalog.GetString("NPCD Realtime");
+            _SettingsWindow.Resources["CkNPCARealtime"] = catalog.GetString("NPCA Realtime");
             _SettingsWindow.Resources["CkRecruitment"] = catalog.GetString("Recruitment");
             _SettingsWindow.Resources["CkSay"] = catalog.GetString("Say");
             _SettingsWindow.Resources["CkShout"] = catalog.GetString("Shout");
