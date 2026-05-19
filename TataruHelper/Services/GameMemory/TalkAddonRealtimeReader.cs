@@ -65,32 +65,31 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 return TalkAddonRealtimeDialogSnapshot.Unavailable();
             }
 
-            if (TryReadLastTalk(uiModuleAddress, out var lastTalkName, out var lastTalkText) &&
-                SharlayanGameMemoryGateway.NormalizeDialogToken(lastTalkText).Length > 0)
-            {
-                return TalkAddonRealtimeDialogSnapshot.Available(DirectDialogCode, lastTalkName, lastTalkText);
-            }
+            TryReadLastTalk(uiModuleAddress, out var lastTalkName, out var lastTalkText);
 
             var raptureAtkModuleAddress =
                 AddAddress(uiModuleAddress, _uiDirectDialogOffsets.Value.RaptureAtkModuleOffset);
             if (raptureAtkModuleAddress == IntPtr.Zero)
             {
-                return TalkAddonRealtimeDialogSnapshot.Unavailable();
+                return SelectRealtimeSnapshot(lastTalkName, lastTalkText,
+                    Array.Empty<TalkAddonRealtimeDialogSnapshot>());
             }
 
             var atkUnitManagerAddress = _memoryHandler.ReadPointer(raptureAtkModuleAddress,
                 _uiDirectDialogOffsets.Value.AtkUnitManagerOffset);
             if (atkUnitManagerAddress == IntPtr.Zero)
             {
-                return TalkAddonRealtimeDialogSnapshot.Unavailable();
+                return SelectRealtimeSnapshot(lastTalkName, lastTalkText,
+                    Array.Empty<TalkAddonRealtimeDialogSnapshot>());
             }
 
             if (!TryReadLoadedAddonSnapshot(atkUnitManagerAddress, lastTalkName, out var snapshot))
             {
-                return TalkAddonRealtimeDialogSnapshot.Unavailable();
+                return SelectRealtimeSnapshot(lastTalkName, lastTalkText,
+                    Array.Empty<TalkAddonRealtimeDialogSnapshot>());
             }
 
-            return snapshot;
+            return SelectRealtimeSnapshot(lastTalkName, lastTalkText, new[] { snapshot });
         }
 
         private bool TryReadLastTalk(IntPtr uiModuleAddress, out string speakerName, out string talkText)
@@ -168,7 +167,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
                 if (!TryReadAddonNodeTexts(loadedAddon.AddonAddress, addonSpec, out var nodeTexts))
                 {
-                    return false;
+                    continue;
                 }
 
                 var talkText = SharlayanGameMemoryGateway.SelectBestTalkText(nodeTexts);
@@ -188,6 +187,47 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             return matchedEmptySource;
+        }
+
+        internal static TalkAddonRealtimeDialogSnapshot SelectRealtimeSnapshot(
+            string speakerName,
+            string lastTalkText,
+            IEnumerable<TalkAddonRealtimeDialogSnapshot> addonSnapshots)
+        {
+            var normalizedSpeakerName = SharlayanGameMemoryGateway.NormalizeDialogToken(speakerName);
+            TalkAddonRealtimeDialogSnapshot firstEmptyAddonSnapshot = default;
+            var hasEmptyAddonSnapshot = false;
+
+            foreach (var addonSnapshot in addonSnapshots ?? Enumerable.Empty<TalkAddonRealtimeDialogSnapshot>())
+            {
+                if (!addonSnapshot.SourceAvailable)
+                {
+                    continue;
+                }
+
+                var addonText = SharlayanGameMemoryGateway.NormalizeDialogToken(addonSnapshot.TalkText);
+                if (addonText.Length > 0)
+                {
+                    return TalkAddonRealtimeDialogSnapshot.Available(
+                        addonSnapshot.ChatCode,
+                        normalizedSpeakerName,
+                        addonText);
+                }
+
+                if (!hasEmptyAddonSnapshot)
+                {
+                    firstEmptyAddonSnapshot = addonSnapshot;
+                    hasEmptyAddonSnapshot = true;
+                }
+            }
+
+            var fallbackText = SharlayanGameMemoryGateway.NormalizeDialogToken(lastTalkText);
+            if (fallbackText.Length > 0)
+            {
+                return TalkAddonRealtimeDialogSnapshot.Available(DirectDialogCode, normalizedSpeakerName, fallbackText);
+            }
+
+            return hasEmptyAddonSnapshot ? firstEmptyAddonSnapshot : TalkAddonRealtimeDialogSnapshot.Unavailable();
         }
 
         private bool TryReadAddonName(IntPtr addonAddress, out string addonName)

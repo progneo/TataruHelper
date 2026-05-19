@@ -167,6 +167,45 @@ namespace TataruHelper.Tests
         }
 
         [Test]
+        public void SelectRealtimeSnapshot_PrioritizesAddonTextOverLastTalkText()
+        {
+            var snapshot = TalkAddonRealtimeReader.SelectRealtimeSnapshot(
+                "DelayedNpc",
+                "DelayedText",
+                new[] { TalkAddonRealtimeDialogSnapshot.Available("003D", string.Empty, "RealtimeAddonText") });
+
+            Assert.That(snapshot.ChatCode, Is.EqualTo("003D"));
+            Assert.That(snapshot.SpeakerName, Is.EqualTo("DelayedNpc"));
+            Assert.That(snapshot.TalkText, Is.EqualTo("RealtimeAddonText"));
+        }
+
+        [Test]
+        public void SelectRealtimeSnapshot_UsesLastTalkNameWithMiniTalkAddonText()
+        {
+            var snapshot = TalkAddonRealtimeReader.SelectRealtimeSnapshot(
+                "CutsceneNpc",
+                "DelayedText",
+                new[] { TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, "RealtimeBubbleText") });
+
+            Assert.That(snapshot.ChatCode, Is.EqualTo("0044"));
+            Assert.That(snapshot.SpeakerName, Is.EqualTo("CutsceneNpc"));
+            Assert.That(snapshot.TalkText, Is.EqualTo("RealtimeBubbleText"));
+        }
+
+        [Test]
+        public void SelectRealtimeSnapshot_FallsBackToLastTalkText_WhenAddonTextIsEmpty()
+        {
+            var snapshot = TalkAddonRealtimeReader.SelectRealtimeSnapshot(
+                "FallbackNpc",
+                "FallbackLastTalkText",
+                new[] { TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, "   ") });
+
+            Assert.That(snapshot.ChatCode, Is.EqualTo("003D"));
+            Assert.That(snapshot.SpeakerName, Is.EqualTo("FallbackNpc"));
+            Assert.That(snapshot.TalkText, Is.EqualTo("FallbackLastTalkText"));
+        }
+
+        [Test]
         public void SelectBestTalkText_ReturnsLongestNonEmptyCandidate()
         {
             var result = SharlayanGameMemoryGateway.SelectBestTalkText(new[] { "  ", "short", "the longest line" });
