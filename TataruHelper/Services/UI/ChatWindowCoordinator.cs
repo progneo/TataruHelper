@@ -1,13 +1,21 @@
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Drawing;
+using System.Linq;
+using System.Windows.Data;
+
 using FFXIVTataruHelper.Factories;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.TataruComponentModel;
 using FFXIVTataruHelper.UIModel;
 using FFXIVTataruHelper.ViewModel;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
+using FFXIVTataruHelper.WinUtils;
+
 using Translation;
+
+using Color = System.Windows.Media.Color;
+using FontFamily = System.Windows.Media.FontFamily;
 
 namespace FFXIVTataruHelper.Services.UI
 {
@@ -19,7 +27,8 @@ namespace FFXIVTataruHelper.Services.UI
         private readonly IAppLogger _logger;
         private readonly IChatWindowFactory _chatWindowFactory;
 
-        public ChatWindowCoordinator(IUiDispatcher uiDispatcher, IAppLogger logger, IChatWindowFactory chatWindowFactory)
+        public ChatWindowCoordinator(IUiDispatcher uiDispatcher, IAppLogger logger,
+            IChatWindowFactory chatWindowFactory)
         {
             _uiDispatcher = uiDispatcher;
             _logger = logger;
@@ -144,22 +153,29 @@ namespace FFXIVTataruHelper.Services.UI
                 binder.AddPropertyCouple(new PropertyCouple<double, double>("LineBreakHeight", "LineBreakHeight"));
                 binder.AddPropertyCouple(new PropertyCouple<int, int>("SpacingCount", "SpacingCount"));
                 binder.AddPropertyCouple(
-                    new PropertyCouple<System.Windows.Media.FontFamily, System.Windows.Media.FontFamily>("ChatFont",
+                    new PropertyCouple<FontFamily, FontFamily>("ChatFont",
                         "ChatFont"));
                 binder.AddPropertyCouple(new PropertyCouple<bool, bool>("IsAlwaysOnTop", "IsAlwaysOnTop"));
                 binder.AddPropertyCouple(new PropertyCouple<bool, bool>("IsClickThrough", "IsClickThrough"));
                 binder.AddPropertyCouple(new PropertyCouple<bool, bool>("IsAutoHide", "IsAutoHide"));
                 binder.AddPropertyCouple(new PropertyCouple<TimeSpan, TimeSpan>("AutoHideTimeout", "AutoHideTimeout"));
                 binder.AddPropertyCouple(
-                    new PropertyCouple<System.Windows.Media.Color, System.Windows.Media.Color>("BackGroundColor",
+                    new PropertyCouple<Color, Color>("BackGroundColor",
                         "BackGroundColor"));
                 binder.AddPropertyCouple(new PropertyCouple<bool, bool>("ShowTimestamps", "ShowTimestamps"));
                 binder.AddPropertyCouple(
-                    new PropertyCouple<System.Drawing.RectangleD, System.Drawing.RectangleD>("ChatWindowRectangle",
+                    new PropertyCouple<double, double>("WindowCornerRadius", "WindowCornerRadius"));
+                binder.AddPropertyCouple(new PropertyCouple<double, double>("ContentPadding", "ContentPadding"));
+                binder.AddPropertyCouple(new PropertyCouple<bool, bool>("MessagesInContainer", "MessagesInContainer"));
+                binder.AddPropertyCouple(
+                    new PropertyCouple<double, double>("MessageContainerPadding", "MessageContainerPadding"));
+                binder.AddPropertyCouple(new PropertyCouple<bool, bool>("ShowOnlyLastMessage", "ShowOnlyLastMessage"));
+                binder.AddPropertyCouple(
+                    new PropertyCouple<RectangleD, RectangleD>("ChatWindowRectangle",
                         "ChatWindowRectangle"));
-                binder.AddPropertyCouple(new PropertyCouple<TranslationEngineName, System.Windows.Data.CollectionView>(
+                binder.AddPropertyCouple(new PropertyCouple<TranslationEngineName, CollectionView>(
                     "TranslationEngineName", "TranslationEngines",
-                    (ref TranslationEngineName x, ref System.Windows.Data.CollectionView y) =>
+                    (ref TranslationEngineName x, ref CollectionView y) =>
                     {
                         var engine = x;
                         var collection = y;
@@ -183,17 +199,20 @@ namespace FFXIVTataruHelper.Services.UI
                             }
                         });
                     },
-                    (ref System.Windows.Data.CollectionView y, ref TranslationEngineName x) =>
+                    (ref CollectionView y, ref TranslationEngineName x) =>
                     {
                         var collection = y;
                         TranslationEngineName selectedEngine = TranslationEngineName.GoogleTranslate;
 
-                        _uiDispatcher.Invoke(() => { selectedEngine = ((TranslationEngine)collection.CurrentItem).EngineName; });
+                        _uiDispatcher.Invoke(() =>
+                        {
+                            selectedEngine = ((TranslationEngine)collection.CurrentItem).EngineName;
+                        });
                         x = selectedEngine;
                     }));
-                binder.AddPropertyCouple(new PropertyCouple<TranslatorLanguague, System.Windows.Data.CollectionView>(
+                binder.AddPropertyCouple(new PropertyCouple<TranslatorLanguague, CollectionView>(
                     "FromLanguague", "TranslateFromLanguagues",
-                    (ref TranslatorLanguague x, ref System.Windows.Data.CollectionView y) =>
+                    (ref TranslatorLanguague x, ref CollectionView y) =>
                     {
                         var languague = x;
                         var collection = y;
@@ -217,17 +236,20 @@ namespace FFXIVTataruHelper.Services.UI
                             }
                         });
                     },
-                    (ref System.Windows.Data.CollectionView y, ref TranslatorLanguague x) =>
+                    (ref CollectionView y, ref TranslatorLanguague x) =>
                     {
                         var collection = y;
                         TranslatorLanguague lang = new TranslatorLanguague();
 
-                        _uiDispatcher.Invoke(() => { lang = new TranslatorLanguague((TranslatorLanguague)collection.CurrentItem); });
+                        _uiDispatcher.Invoke(() =>
+                        {
+                            lang = new TranslatorLanguague((TranslatorLanguague)collection.CurrentItem);
+                        });
                         x = lang;
                     }));
-                binder.AddPropertyCouple(new PropertyCouple<TranslatorLanguague, System.Windows.Data.CollectionView>(
+                binder.AddPropertyCouple(new PropertyCouple<TranslatorLanguague, CollectionView>(
                     "ToLanguague", "TranslateToLanguagues",
-                    (ref TranslatorLanguague x, ref System.Windows.Data.CollectionView y) =>
+                    (ref TranslatorLanguague x, ref CollectionView y) =>
                     {
                         var languague = x;
                         var collection = y;
@@ -251,22 +273,25 @@ namespace FFXIVTataruHelper.Services.UI
                             }
                         });
                     },
-                    (ref System.Windows.Data.CollectionView y, ref TranslatorLanguague x) =>
+                    (ref CollectionView y, ref TranslatorLanguague x) =>
                     {
                         var collection = y;
                         TranslatorLanguague lang = new TranslatorLanguague();
 
-                        _uiDispatcher.Invoke(() => { lang = new TranslatorLanguague((TranslatorLanguague)collection.CurrentItem); });
+                        _uiDispatcher.Invoke(() =>
+                        {
+                            lang = new TranslatorLanguague((TranslatorLanguague)collection.CurrentItem);
+                        });
                         x = lang;
                     }));
                 binder.AddPropertyCouple(
-                    new PropertyCouple<WinUtils.HotKeyCombination, WinUtils.HotKeyCombination>("ShowHideChatKeys",
+                    new PropertyCouple<HotKeyCombination, HotKeyCombination>("ShowHideChatKeys",
                         "ShowHideChatKeys"));
                 binder.AddPropertyCouple(
-                    new PropertyCouple<WinUtils.HotKeyCombination, WinUtils.HotKeyCombination>("ClickThoughtChatKeys",
+                    new PropertyCouple<HotKeyCombination, HotKeyCombination>("ClickThoughtChatKeys",
                         "ClickThoughtChatKeys"));
                 binder.AddPropertyCouple(
-                    new PropertyCouple<WinUtils.HotKeyCombination, WinUtils.HotKeyCombination>("ClearChatKeys",
+                    new PropertyCouple<HotKeyCombination, HotKeyCombination>("ClearChatKeys",
                         "ClearChatKeys"));
                 binder.AddPropertyCouple(new PropertyCouple<List<ChatCodeViewModel>, BindingList<ChatCodeViewModel>>(
                     "ChatCodes", "ChatCodes",
