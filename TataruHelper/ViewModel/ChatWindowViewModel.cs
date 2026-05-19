@@ -893,14 +893,20 @@ namespace FFXIVTataruHelper.ViewModel
         {
             List<ChatMsgType> chatCodes = allChatCodes.Select(entry => new ChatMsgType(entry)).ToList();
             List<ChatCodeViewModel> chatCodesViewMode = new List<ChatCodeViewModel>();
+            var isNewWindow = UserChatCodes == null || UserChatCodes.Count == 0;
 
             foreach (var code in allChatCodes)
             {
-                bool isCheked = (code.MsgType == MsgType.Translate) ? true : false;
-                chatCodesViewMode.Add(new ChatCodeViewModel(code.ChatCode, code.Name, code.Color, isCheked));
+                bool isChecked = (code.MsgType == MsgType.Translate);
+                if (isNewWindow && IsDelayedDialogCode(code.ChatCode))
+                {
+                    isChecked = false;
+                }
+
+                chatCodesViewMode.Add(new ChatCodeViewModel(code.ChatCode, code.Name, code.Color, isChecked));
             }
 
-            foreach (var userCode in UserChatCodes)
+            foreach (var userCode in UserChatCodes ?? Enumerable.Empty<ChatCodeViewModel>())
             {
                 var code = chatCodesViewMode.FirstOrDefault(x => x.Equals(userCode));
                 if (code != null)
@@ -915,6 +921,12 @@ namespace FFXIVTataruHelper.ViewModel
             }
 
             return new BindingList<ChatCodeViewModel>(chatCodesViewMode);
+        }
+
+        private static bool IsDelayedDialogCode(string chatCode)
+        {
+            return string.Equals(chatCode, "003D", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(chatCode, "0044", StringComparison.OrdinalIgnoreCase);
         }
 
         private void TrySetLangugue(CollectionView collection, TranslatorLanguague languague)

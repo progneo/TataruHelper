@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 
 using FFXIVTataruHelper;
 using FFXIVTataruHelper.Compatibility.HotKeys;
@@ -95,6 +96,51 @@ namespace TataruHelper.Tests
                 Assert.That(roundTripped.MessagesInContainer, Is.True);
                 Assert.That(roundTripped.MessageContainerPadding, Is.EqualTo(10));
                 Assert.That(roundTripped.ShowOnlyLastMessage, Is.True);
+            }
+            finally
+            {
+                hotKeyManager.Dispose();
+            }
+        }
+
+        [Test]
+        public void NewWindow_DefaultsDelayedDialogCodesOffAndRealtimeDialogCodesOn()
+        {
+            var settings = new ChatWindowViewModelSettings("1", 0);
+            var languages = new List<TranslatorLanguague>
+            {
+                new("Auto", "Auto", "auto"), new("English", "English", "en")
+            };
+            var translationEngines = new List<TranslationEngine>
+            {
+                new(TranslationEngineName.GoogleTranslate, languages, 1.0)
+            };
+            var allChatCodes = new List<ChatMsgType>
+            {
+                new("003D", MsgType.Translate, "NPCD", Color.FromArgb(255, 171, 214, 71)),
+                new("0044", MsgType.Translate, "NPCA", Color.FromArgb(255, 171, 214, 71)),
+                new("F03D", MsgType.Translate, "NPCDRealtime", Color.FromArgb(255, 171, 214, 71)),
+                new("F044", MsgType.Translate, "NPCARealtime", Color.FromArgb(255, 171, 214, 71))
+            };
+
+            var logger = new NullLogger();
+            var hotKeyManager = new HotKeyManager(null);
+            var bindingService = new HotKeyBindingService(logger);
+
+            try
+            {
+                var viewModel = new ChatWindowViewModel(
+                    settings,
+                    translationEngines,
+                    allChatCodes,
+                    hotKeyManager,
+                    logger,
+                    bindingService);
+
+                Assert.That(viewModel.ChatCodes.Single(code => code.Code == "003D").IsChecked, Is.False);
+                Assert.That(viewModel.ChatCodes.Single(code => code.Code == "0044").IsChecked, Is.False);
+                Assert.That(viewModel.ChatCodes.Single(code => code.Code == "F03D").IsChecked, Is.True);
+                Assert.That(viewModel.ChatCodes.Single(code => code.Code == "F044").IsChecked, Is.True);
             }
             finally
             {
