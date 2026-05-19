@@ -215,13 +215,6 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["AlwaysOnTopCB"] = catalog.GetString("Always On Top");
             _SettingsWindow.Resources["AutoHideCB"] = catalog.GetString("Auto Hide");
 
-            _SettingsWindow.Resources["DirectMemoryCB"] = catalog.GetString("Cutscenes/No delay");
-            _SettingsWindow.Resources["DirectMemoryToolTip"] = string.Concat(
-                catalog.GetString(
-                    "EXPERIMENTAL FUNCTION. If this option is active, the application will catch text from quest clouds and cutscene subtitles directly, not from the chatlog. Errors can occur."),
-                " ",
-                catalog.GetString("Speaker names may not always display correctly."));
-
             _SettingsWindow.Resources["AlwaysOnTopCB"] = catalog.GetString("Always On Top");
             _SettingsWindow.Resources["HideToTrayCB"] = catalog.GetString("Hide to Tray");
             _SettingsWindow.Resources["ShowTimestampsCb"] = catalog.GetString("Show Timestamps");

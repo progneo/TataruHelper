@@ -66,12 +66,6 @@ namespace FFXIVTataruHelper.FFHandlers
             }
         }
 
-        public bool UseDirectReading
-        {
-            get => _useDirectReading;
-            set => _useDirectReading = value;
-        }
-
         public bool IsGameWindowForeground
         {
             get;
@@ -100,8 +94,6 @@ namespace FFXIVTataruHelper.FFHandlers
         private Task _chatMessageEventRiserTask = Task.CompletedTask;
 
         private readonly bool _useDirectReadingInternal;
-
-        private bool _useDirectReading;
 
         private readonly ConcurrentDictionary<string, DateTime> _recentEmittedMessages;
         private static readonly TimeSpan DuplicateSuppressionWindow = TimeSpan.FromSeconds(2);
@@ -433,27 +425,14 @@ namespace FFXIVTataruHelper.FFHandlers
         {
             var chatLogEntries = readResult?.ChatLogItems?.ToArray() ?? Array.Empty<ChatLogItem>();
 
-            if (!_useDirectReadingInternal || !_useDirectReading)
-            {
-                if (chatLogEntries.Length == 0)
-                {
-                    return;
-                }
-
-                foreach (var chatLogItem in chatLogEntries)
-                {
-                    ProcessChatMsg(chatLogItem);
-                }
-
-                return;
-            }
-
             foreach (var chatLogItem in chatLogEntries)
             {
-                if (!IsDirectDialogCode(chatLogItem))
-                {
-                    ProcessChatMsg(chatLogItem);
-                }
+                ProcessChatMsg(chatLogItem);
+            }
+
+            if (!_useDirectReadingInternal)
+            {
+                return;
             }
 
             var directDialog = _gameMemoryGateway.GetDirectDialog();
@@ -464,19 +443,22 @@ namespace FFXIVTataruHelper.FFHandlers
 
             foreach (var directItem in directDialog.ChatLogItems.ToArray())
             {
-                ProcessChatMsg(directItem);
+                if (IsRealtimeDirectDialogCode(directItem))
+                {
+                    ProcessChatMsg(directItem);
+                }
             }
         }
 
-        private static bool IsDirectDialogCode(ChatLogItem chatLogItem)
+        internal static bool IsRealtimeDirectDialogCode(ChatLogItem chatLogItem)
         {
             if (chatLogItem == null || string.IsNullOrEmpty(chatLogItem.Code))
             {
                 return false;
             }
 
-            return string.Equals(chatLogItem.Code, "003D", StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(chatLogItem.Code, "0044", StringComparison.OrdinalIgnoreCase);
+            return string.Equals(chatLogItem.Code, "F03D", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(chatLogItem.Code, "F044", StringComparison.OrdinalIgnoreCase);
         }
 
         private bool ShouldSuppressAsDuplicate(ChatLogItem chatLogItem)

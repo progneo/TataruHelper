@@ -17,8 +17,6 @@ namespace FFXIVTataruHelper.FFHandlers
 
         bool IsGameWindowForeground { get; }
 
-        bool UseDirectReading { get; set; }
-
         void Start();
 
         void Stop();

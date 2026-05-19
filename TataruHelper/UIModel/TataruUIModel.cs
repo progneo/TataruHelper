@@ -1,35 +1,34 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using FFXIVTataruHelper.EventArguments;
-using FFXIVTataruHelper.WinUtils;
 using System;
 using System.Collections.Generic;
-using System.Windows.Media;
-using System.Linq;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Drawing;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
-using FFXIVTataruHelper.UIModel;
-using FFXIVTataruHelper.ViewModel;
-using FFXIVTataruHelper.TataruComponentModel;
+
+using FFXIVTataruHelper.EventArguments;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.Services.UI;
+using FFXIVTataruHelper.TataruComponentModel;
+using FFXIVTataruHelper.UIModel;
 
 namespace FFXIVTataruHelper
 {
     public class TataruUIModel : INotifyPropertyChanged
     {
-
         #region **Events.
 
-        public event AsyncEventHandler<AsyncListChangedEventHandler<ChatWindowViewModelSettings>> ChatWindowsListChangedAsync
-        {
-            add { this._ChatWindowsListChangedAsync.Register(value); }
-            remove { this._ChatWindowsListChangedAsync.Unregister(value); }
-        }
+        public event AsyncEventHandler<AsyncListChangedEventHandler<ChatWindowViewModelSettings>>
+            ChatWindowsListChangedAsync
+            {
+                add { this._ChatWindowsListChangedAsync.Register(value); }
+                remove { this._ChatWindowsListChangedAsync.Unregister(value); }
+            }
+
         private AsyncEvent<AsyncListChangedEventHandler<ChatWindowViewModelSettings>> _ChatWindowsListChangedAsync;
 
         public event PropertyChangedEventHandler PropertyChanged;
@@ -39,6 +38,7 @@ namespace FFXIVTataruHelper
             add { this._AsyncPropertyChanged.Register(value); }
             remove { this._AsyncPropertyChanged.Unregister(value); }
         }
+
         private AsyncEvent<AsyncPropertyChangedEventArgs> _AsyncPropertyChanged;
 
         public event AsyncEventHandler<BooleanChangeEventArgs> IsHideSettingsToTrayChanged
@@ -46,20 +46,15 @@ namespace FFXIVTataruHelper
             add { this._IsHideSettingsToTrayChanged.Register(value); }
             remove { this._IsHideSettingsToTrayChanged.Unregister(value); }
         }
-        private AsyncEvent<BooleanChangeEventArgs> _IsHideSettingsToTrayChanged;
 
-        public event AsyncEventHandler<BooleanChangeEventArgs> IsDirecMemoryReadingChanged
-        {
-            add { this._IsDirecMemoryReadingChanged.Register(value); }
-            remove { this._IsDirecMemoryReadingChanged.Unregister(value); }
-        }
-        private AsyncEvent<BooleanChangeEventArgs> _IsDirecMemoryReadingChanged;
+        private AsyncEvent<BooleanChangeEventArgs> _IsHideSettingsToTrayChanged;
 
         public event AsyncEventHandler<PointDValueChangeEventArgs> SettingsWindowSizeChanged
         {
             add { this._SettingsWindowSizeChanged.Register(value); }
             remove { this._SettingsWindowSizeChanged.Unregister(value); }
         }
+
         private AsyncEvent<PointDValueChangeEventArgs> _SettingsWindowSizeChanged;
 
         public event AsyncEventHandler<IntegerValueChangeEventArgs> UiLanguageChanged
@@ -67,6 +62,7 @@ namespace FFXIVTataruHelper
             add { this._UiLanguageChanged.Register(value); }
             remove { this._UiLanguageChanged.Unregister(value); }
         }
+
         private AsyncEvent<IntegerValueChangeEventArgs> _UiLanguageChanged;
 
         #endregion
@@ -81,35 +77,13 @@ namespace FFXIVTataruHelper
                 var oldValue = _IsHideSettingsToTray;
                 _IsHideSettingsToTray = value;
 
-                var ea = new BooleanChangeEventArgs(this)
-                {
-                    OldValue = oldValue,
-                    NewValue = value
-                };
+                var ea = new BooleanChangeEventArgs(this) { OldValue = oldValue, NewValue = value };
 
                 _IsHideSettingsToTrayChanged.InvokeAsync(ea).EndWith(() => { NotifyPropertyChanged(); });
             }
         }
 
-        public bool IsDirecMemoryReading
-        {
-            get { return _IsDirecMemoryReading; }
-            set
-            {
-                var oldValue = _IsDirecMemoryReading;
-                _IsDirecMemoryReading = value;
-
-                var ea = new BooleanChangeEventArgs(this)
-                {
-                    OldValue = oldValue,
-                    NewValue = value
-                };
-
-                _IsDirecMemoryReadingChanged.InvokeAsync(ea).EndWith(() => { NotifyPropertyChanged(); });
-            }
-        }
-
-        public System.Drawing.PointD SettingsWindowSize
+        public PointD SettingsWindowSize
         {
             get { return _SettingsWindowSize; }
             set
@@ -117,11 +91,7 @@ namespace FFXIVTataruHelper
                 var oldValue = _SettingsWindowSize;
                 _SettingsWindowSize = value;
 
-                var ea = new PointDValueChangeEventArgs(this)
-                {
-                    OldValue = oldValue,
-                    NewValue = value
-                };
+                var ea = new PointDValueChangeEventArgs(this) { OldValue = oldValue, NewValue = value };
 
                 _SettingsWindowSizeChanged.InvokeAsync(ea).EndWith(() => { NotifyPropertyChanged(); });
             }
@@ -146,14 +116,9 @@ namespace FFXIVTataruHelper
                 var oldValue = _UiLanguage;
                 _UiLanguage = value;
 
-                var ea = new IntegerValueChangeEventArgs(this)
-                {
-                    OldValue = oldValue,
-                    NewValue = value
-                };
+                var ea = new IntegerValueChangeEventArgs(this) { OldValue = oldValue, NewValue = value };
 
                 _UiLanguageChanged.InvokeAsync(ea).EndWith(() => { NotifyPropertyChanged(); });
-
             }
         }
 
@@ -181,9 +146,7 @@ namespace FFXIVTataruHelper
 
         bool _IsHideSettingsToTray;
 
-        bool _IsDirecMemoryReading;
-
-        System.Drawing.PointD _SettingsWindowSize = new System.Drawing.PointD(0.0, 0.0);
+        PointD _SettingsWindowSize = new PointD(0.0, 0.0);
 
         AsyncBindingList<ChatWindowViewModelSettings> _ChatWindows;
 
@@ -201,17 +164,21 @@ namespace FFXIVTataruHelper
             _uiDispatcher = uiDispatcher;
             _logger = logger;
 
-            this._ChatWindowsListChangedAsync = new AsyncEvent<AsyncListChangedEventHandler<ChatWindowViewModelSettings>>(this.EventErrorHandler, "TataruUIModel \n ChatWindowsListChangedAsync");
+            this._ChatWindowsListChangedAsync =
+                new AsyncEvent<AsyncListChangedEventHandler<ChatWindowViewModelSettings>>(this.EventErrorHandler,
+                    "TataruUIModel \n ChatWindowsListChangedAsync");
 
-            this._AsyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler, "AsyncPropertyChanged");
+            this._AsyncPropertyChanged =
+                new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler, "AsyncPropertyChanged");
 
-            this._IsHideSettingsToTrayChanged = new AsyncEvent<BooleanChangeEventArgs>(this.EventErrorHandler, "IsHideSettingsToTrayChanged");
+            this._IsHideSettingsToTrayChanged =
+                new AsyncEvent<BooleanChangeEventArgs>(this.EventErrorHandler, "IsHideSettingsToTrayChanged");
 
-            this._IsDirecMemoryReadingChanged = new AsyncEvent<BooleanChangeEventArgs>(this.EventErrorHandler, "IsDirecMemoryReadingChanged");
+            this._SettingsWindowSizeChanged =
+                new AsyncEvent<PointDValueChangeEventArgs>(this.EventErrorHandler, "SettingsWindowSizeChanged");
 
-            this._SettingsWindowSizeChanged = new AsyncEvent<PointDValueChangeEventArgs>(this.EventErrorHandler, "SettingsWindowSizeChanged");
-
-            this._UiLanguageChanged = new AsyncEvent<IntegerValueChangeEventArgs>(this.EventErrorHandler, "UiLanguageChanged");
+            this._UiLanguageChanged =
+                new AsyncEvent<IntegerValueChangeEventArgs>(this.EventErrorHandler, "UiLanguageChanged");
 
             this.ChatWindows = new AsyncBindingList<ChatWindowViewModelSettings>(_logger);
         }
@@ -221,8 +188,6 @@ namespace FFXIVTataruHelper
             UiLanguage = userSettings.CurentUILanguague;
 
             IsHideSettingsToTray = userSettings.IsHideToTray;
-
-            IsDirecMemoryReading = userSettings.IsDirecMemoryReading;
 
             SettingsWindowSize = userSettings.SettingsWindowSize;
 
@@ -247,11 +212,12 @@ namespace FFXIVTataruHelper
 
             userSettings.IsHideToTray = this.IsHideSettingsToTray;
 
-            userSettings.IsDirecMemoryReading = this.IsDirecMemoryReading;
+            userSettings.IsDirecMemoryReading = true;
 
             userSettings.SettingsWindowSize = this.SettingsWindowSize;
 
-            userSettings.ChatWindows = this.ChatWindows.ToList().Select(element => new ChatWindowViewModelSettings(element)).ToList();
+            userSettings.ChatWindows = this.ChatWindows.ToList()
+                .Select(element => new ChatWindowViewModelSettings(element)).ToList();
 
             userSettings.IsFirstTime = IsFirstTime;
 
@@ -277,6 +243,5 @@ namespace FFXIVTataruHelper
 
             await _ChatWindowsListChangedAsync.InvokeAsync(e);
         }
-
     }
 }

@@ -147,21 +147,6 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
     public ChatWindowViewModel CurrentChatWindow => _settingsViewModel.CurrentChatWindow;
 
-    public bool IsDirectMemoryReading
-    {
-        get => _uiModel.IsDirecMemoryReading;
-        set
-        {
-            if (_uiModel.IsDirecMemoryReading == value)
-            {
-                return;
-            }
-
-            _uiModel.IsDirecMemoryReading = value;
-            OnPropertyChanged();
-        }
-    }
-
     public bool IsHideSettingsToTray
     {
         get => _uiModel.IsHideSettingsToTray;
@@ -332,12 +317,6 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         if (e.PropertyName == nameof(TataruUIModel.IsHideSettingsToTray))
         {
             OnPropertyChanged(nameof(IsHideSettingsToTray));
-            return;
-        }
-
-        if (e.PropertyName == nameof(TataruUIModel.IsDirecMemoryReading))
-        {
-            OnPropertyChanged(nameof(IsDirectMemoryReading));
             return;
         }
 

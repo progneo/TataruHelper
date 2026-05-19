@@ -73,13 +73,11 @@ namespace FFXIVTataruHelper
                 new ChatMsgType("0044", MsgType.Translate, "NPCA", (Color)ColorConverter.ConvertFromString("#FFABD647"))
             },
             {
-                "F03D",
-                new ChatMsgType("F03D", MsgType.Translate, "NPCDRealtime",
+                "F03D", new ChatMsgType("F03D", MsgType.Translate, "NPCDRealtime",
                     (Color)ColorConverter.ConvertFromString("#FFABD647"))
             },
             {
-                "F044",
-                new ChatMsgType("F044", MsgType.Translate, "NPCARealtime",
+                "F044", new ChatMsgType("F044", MsgType.Translate, "NPCARealtime",
                     (Color)ColorConverter.ConvertFromString("#FFABD647"))
             },
         };
@@ -136,23 +134,19 @@ namespace FFXIVTataruHelper
             ChatCodes = new Dictionary<string, ChatMsgType>()
             {
                 {
-                    "003D",
-                    new ChatMsgType("003D", MsgType.Translate, "NPCD",
+                    "003D", new ChatMsgType("003D", MsgType.Translate, "NPCD",
                         (Color)ColorConverter.ConvertFromString("#FFABD647"))
                 },
                 {
-                    "0044",
-                    new ChatMsgType("0044", MsgType.Translate, "NPCA",
+                    "0044", new ChatMsgType("0044", MsgType.Translate, "NPCA",
                         (Color)ColorConverter.ConvertFromString("#FFABD647"))
                 },
                 {
-                    "F03D",
-                    new ChatMsgType("F03D", MsgType.Translate, "NPCDRealtime",
+                    "F03D", new ChatMsgType("F03D", MsgType.Translate, "NPCDRealtime",
                         (Color)ColorConverter.ConvertFromString("#FFABD647"))
                 },
                 {
-                    "F044",
-                    new ChatMsgType("F044", MsgType.Translate, "NPCARealtime",
+                    "F044", new ChatMsgType("F044", MsgType.Translate, "NPCARealtime",
                         (Color)ColorConverter.ConvertFromString("#FFABD647"))
                 },
             };
@@ -178,7 +172,7 @@ namespace FFXIVTataruHelper
 
             IsAutoHide = userSettings.IsAutoHide;
 
-            IsDirecMemoryReading = userSettings.IsDirecMemoryReading;
+            IsDirecMemoryReading = true;
 
             AutoHideTimeout = userSettings.AutoHideTimeout;
 
