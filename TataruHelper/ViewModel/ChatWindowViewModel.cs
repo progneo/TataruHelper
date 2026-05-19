@@ -486,6 +486,42 @@ namespace FFXIVTataruHelper.ViewModel
             }
         }
 
+        public int MessageContainerAlpha
+        {
+            get => _messageContainerAlpha;
+            set
+            {
+                if (_messageContainerAlpha == value) return;
+
+                _messageContainerAlpha = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double MessageContainerBorderThickness
+        {
+            get => _messageContainerBorderThickness;
+            set
+            {
+                if (_messageContainerBorderThickness == value) return;
+
+                _messageContainerBorderThickness = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int MessageContainerBorderAlpha
+        {
+            get => _messageContainerBorderAlpha;
+            set
+            {
+                if (_messageContainerBorderAlpha == value) return;
+
+                _messageContainerBorderAlpha = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool ShowOnlyLastMessage
         {
             get => _showOnlyLastMessage;
@@ -571,6 +607,9 @@ namespace FFXIVTataruHelper.ViewModel
         double _contentPadding = 12;
         bool _messagesInContainer;
         double _messageContainerPadding = 6;
+        int _messageContainerAlpha = 32;
+        double _messageContainerBorderThickness;
+        int _messageContainerBorderAlpha = 96;
         bool _showOnlyLastMessage;
 
         bool _IsSelected;
@@ -607,6 +646,9 @@ namespace FFXIVTataruHelper.ViewModel
             ContentPadding = 12;
             MessagesInContainer = false;
             MessageContainerPadding = 6;
+            MessageContainerAlpha = 32;
+            MessageContainerBorderThickness = 0;
+            MessageContainerBorderAlpha = 96;
             ShowOnlyLastMessage = false;
 
             ChatCodes = new BindingList<ChatCodeViewModel>()
@@ -659,6 +701,9 @@ namespace FFXIVTataruHelper.ViewModel
             ContentPadding = settings.ContentPadding;
             MessagesInContainer = settings.MessagesInContainer;
             MessageContainerPadding = settings.MessageContainerPadding;
+            MessageContainerAlpha = settings.MessageContainerAlpha;
+            MessageContainerBorderThickness = settings.MessageContainerBorderThickness;
+            MessageContainerBorderAlpha = settings.MessageContainerBorderAlpha;
             ShowOnlyLastMessage = settings.ShowOnlyLastMessage;
 
             BackGroundColor = settings.BackGroundColor;
@@ -717,6 +762,9 @@ namespace FFXIVTataruHelper.ViewModel
             settings.ContentPadding = this.ContentPadding;
             settings.MessagesInContainer = this.MessagesInContainer;
             settings.MessageContainerPadding = this.MessageContainerPadding;
+            settings.MessageContainerAlpha = this.MessageContainerAlpha;
+            settings.MessageContainerBorderThickness = this.MessageContainerBorderThickness;
+            settings.MessageContainerBorderAlpha = this.MessageContainerBorderAlpha;
             settings.ShowOnlyLastMessage = this.ShowOnlyLastMessage;
 
             TranslationEngine engine = (TranslationEngine)this.TranslationEngines.CurrentItem;

@@ -169,6 +169,13 @@ namespace FFXIVTataruHelper.Services.UI
                 binder.AddPropertyCouple(new PropertyCouple<bool, bool>("MessagesInContainer", "MessagesInContainer"));
                 binder.AddPropertyCouple(
                     new PropertyCouple<double, double>("MessageContainerPadding", "MessageContainerPadding"));
+                binder.AddPropertyCouple(new PropertyCouple<int, int>("MessageContainerAlpha",
+                    "MessageContainerAlpha"));
+                binder.AddPropertyCouple(
+                    new PropertyCouple<double, double>("MessageContainerBorderThickness",
+                        "MessageContainerBorderThickness"));
+                binder.AddPropertyCouple(
+                    new PropertyCouple<int, int>("MessageContainerBorderAlpha", "MessageContainerBorderAlpha"));
                 binder.AddPropertyCouple(new PropertyCouple<bool, bool>("ShowOnlyLastMessage", "ShowOnlyLastMessage"));
                 binder.AddPropertyCouple(
                     new PropertyCouple<RectangleD, RectangleD>("ChatWindowRectangle",

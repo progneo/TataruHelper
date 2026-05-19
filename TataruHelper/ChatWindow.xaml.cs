@@ -333,14 +333,29 @@ namespace FFXIVTataruHelper
                     break;
                 case "MessageContainerPadding":
                     {
-                        ApplyMessageContainerPadding();
+                        ApplyMessageContainerVisuals();
+                    }
+                    break;
+                case "MessageContainerAlpha":
+                    {
+                        ApplyMessageContainerVisuals();
+                    }
+                    break;
+                case "MessageContainerBorderThickness":
+                    {
+                        ApplyMessageContainerVisuals();
+                    }
+                    break;
+                case "MessageContainerBorderAlpha":
+                    {
+                        ApplyMessageContainerVisuals();
                     }
                     break;
                 case "MessagesInContainer":
                     {
                         if (_ChatWindowViewModel.MessagesInContainer)
                         {
-                            ApplyMessageContainerPadding();
+                            ApplyMessageContainerVisuals();
                         }
                     }
                     break;
@@ -522,14 +537,8 @@ namespace FFXIVTataruHelper
 
             messageText.Inlines.Add(new Run(text));
 
-            var containerBackgroundColor = Color.FromArgb(32, color.R, color.G, color.B);
-            var messageBorder = new Border
-            {
-                Padding = new Thickness(_ChatWindowViewModel.MessageContainerPadding),
-                CornerRadius = new CornerRadius(6),
-                Background = new SolidColorBrush(containerBackgroundColor),
-                Child = messageText
-            };
+            var messageBorder = new Border { CornerRadius = new CornerRadius(6), Tag = color, Child = messageText };
+            ApplyMessageContainerVisual(messageBorder);
 
             var paragraph = new Paragraph
             {
@@ -557,7 +566,7 @@ namespace FFXIVTataruHelper
             ChatRtb.Padding = new Thickness(_ChatWindowViewModel.ContentPadding);
         }
 
-        private void ApplyMessageContainerPadding()
+        private void ApplyMessageContainerVisuals()
         {
             foreach (var paragraph in ChatRtb.Document.Blocks.OfType<Paragraph>())
             {
@@ -565,10 +574,29 @@ namespace FFXIVTataruHelper
                 {
                     if (inline is InlineUIContainer container && container.Child is Border border)
                     {
-                        border.Padding = new Thickness(_ChatWindowViewModel.MessageContainerPadding);
+                        ApplyMessageContainerVisual(border);
                     }
                 }
             }
+        }
+
+        private void ApplyMessageContainerVisual(Border border)
+        {
+            if (border == null)
+            {
+                return;
+            }
+
+            var baseColor = border.Tag is Color color ? color : Colors.White;
+            var backgroundAlpha = (byte)Math.Clamp(_ChatWindowViewModel.MessageContainerAlpha, 0, 255);
+            var borderAlpha = (byte)Math.Clamp(_ChatWindowViewModel.MessageContainerBorderAlpha, 0, 255);
+
+            border.Padding = new Thickness(_ChatWindowViewModel.MessageContainerPadding);
+            border.Background = new SolidColorBrush(
+                Color.FromArgb(backgroundAlpha, baseColor.R, baseColor.G, baseColor.B));
+            border.BorderThickness = new Thickness(_ChatWindowViewModel.MessageContainerBorderThickness);
+            border.BorderBrush = new SolidColorBrush(
+                Color.FromArgb(borderAlpha, baseColor.R, baseColor.G, baseColor.B));
         }
 
         private void EnforceLastMessageOnly()

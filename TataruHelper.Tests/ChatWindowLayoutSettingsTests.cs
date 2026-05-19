@@ -26,6 +26,9 @@ namespace TataruHelper.Tests
             Assert.That(settings.ContentPadding, Is.EqualTo(12));
             Assert.That(settings.MessagesInContainer, Is.False);
             Assert.That(settings.MessageContainerPadding, Is.EqualTo(6));
+            Assert.That(settings.MessageContainerAlpha, Is.EqualTo(32));
+            Assert.That(settings.MessageContainerBorderThickness, Is.EqualTo(0));
+            Assert.That(settings.MessageContainerBorderAlpha, Is.EqualTo(96));
             Assert.That(settings.ShowOnlyLastMessage, Is.False);
         }
 
@@ -37,6 +40,9 @@ namespace TataruHelper.Tests
                 ContentPadding = 21,
                 MessagesInContainer = true,
                 MessageContainerPadding = 9,
+                MessageContainerAlpha = 80,
+                MessageContainerBorderThickness = 2,
+                MessageContainerBorderAlpha = 140,
                 ShowOnlyLastMessage = true
             };
 
@@ -45,6 +51,9 @@ namespace TataruHelper.Tests
             Assert.That(copy.ContentPadding, Is.EqualTo(21));
             Assert.That(copy.MessagesInContainer, Is.True);
             Assert.That(copy.MessageContainerPadding, Is.EqualTo(9));
+            Assert.That(copy.MessageContainerAlpha, Is.EqualTo(80));
+            Assert.That(copy.MessageContainerBorderThickness, Is.EqualTo(2));
+            Assert.That(copy.MessageContainerBorderAlpha, Is.EqualTo(140));
             Assert.That(copy.ShowOnlyLastMessage, Is.True);
         }
 
@@ -56,6 +65,9 @@ namespace TataruHelper.Tests
                 ContentPadding = 18,
                 MessagesInContainer = true,
                 MessageContainerPadding = 10,
+                MessageContainerAlpha = 72,
+                MessageContainerBorderThickness = 3,
+                MessageContainerBorderAlpha = 128,
                 ShowOnlyLastMessage = true
             };
 
@@ -95,6 +107,9 @@ namespace TataruHelper.Tests
                 Assert.That(roundTripped.ContentPadding, Is.EqualTo(18));
                 Assert.That(roundTripped.MessagesInContainer, Is.True);
                 Assert.That(roundTripped.MessageContainerPadding, Is.EqualTo(10));
+                Assert.That(roundTripped.MessageContainerAlpha, Is.EqualTo(72));
+                Assert.That(roundTripped.MessageContainerBorderThickness, Is.EqualTo(3));
+                Assert.That(roundTripped.MessageContainerBorderAlpha, Is.EqualTo(128));
                 Assert.That(roundTripped.ShowOnlyLastMessage, Is.True);
             }
             finally

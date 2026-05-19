@@ -63,6 +63,9 @@ namespace FFXIVTataruHelper.UIModel
         private double _contentPadding;
         private bool _messagesInContainer;
         private double _messageContainerPadding;
+        private int _messageContainerAlpha;
+        private double _messageContainerBorderThickness;
+        private int _messageContainerBorderAlpha;
         private bool _showOnlyLastMessage;
 
         private HotKeyCombination _showHideChatKeys;
@@ -279,6 +282,42 @@ namespace FFXIVTataruHelper.UIModel
             }
         }
 
+        public int MessageContainerAlpha
+        {
+            get => _messageContainerAlpha;
+            set
+            {
+                if (_messageContainerAlpha == value) return;
+
+                _messageContainerAlpha = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double MessageContainerBorderThickness
+        {
+            get => _messageContainerBorderThickness;
+            set
+            {
+                if (_messageContainerBorderThickness == value) return;
+
+                _messageContainerBorderThickness = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int MessageContainerBorderAlpha
+        {
+            get => _messageContainerBorderAlpha;
+            set
+            {
+                if (_messageContainerBorderAlpha == value) return;
+
+                _messageContainerBorderAlpha = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool ShowOnlyLastMessage
         {
             get => _showOnlyLastMessage;
@@ -422,6 +461,9 @@ namespace FFXIVTataruHelper.UIModel
             ContentPadding = 12;
             MessagesInContainer = false;
             MessageContainerPadding = 6;
+            MessageContainerAlpha = 32;
+            MessageContainerBorderThickness = 0;
+            MessageContainerBorderAlpha = 96;
             ShowOnlyLastMessage = false;
 
             ShowHideChatKeys = new HotKeyCombination();
@@ -463,6 +505,9 @@ namespace FFXIVTataruHelper.UIModel
             ContentPadding = 12;
             MessagesInContainer = false;
             MessageContainerPadding = 6;
+            MessageContainerAlpha = 32;
+            MessageContainerBorderThickness = 0;
+            MessageContainerBorderAlpha = 96;
             ShowOnlyLastMessage = false;
 
             ShowHideChatKeys = new HotKeyCombination("ShowHideChatKeys" + Convert.ToString(WinId));
@@ -508,6 +553,9 @@ namespace FFXIVTataruHelper.UIModel
             ContentPadding = settings.ContentPadding;
             MessagesInContainer = settings.MessagesInContainer;
             MessageContainerPadding = settings.MessageContainerPadding;
+            MessageContainerAlpha = settings.MessageContainerAlpha;
+            MessageContainerBorderThickness = settings.MessageContainerBorderThickness;
+            MessageContainerBorderAlpha = settings.MessageContainerBorderAlpha;
             ShowOnlyLastMessage = settings.ShowOnlyLastMessage;
 
             ShowHideChatKeys = new HotKeyCombination(settings.ShowHideChatKeys);

@@ -46,6 +46,9 @@ namespace TataruHelper.Tests
                 viewModel.ContentPadding = 18;
                 viewModel.MessagesInContainer = true;
                 viewModel.MessageContainerPadding = 10;
+                viewModel.MessageContainerAlpha = 64;
+                viewModel.MessageContainerBorderThickness = 2;
+                viewModel.MessageContainerBorderAlpha = 140;
                 viewModel.ShowOnlyLastMessage = true;
 
                 var synced = SpinWait.SpinUntil(() =>
@@ -53,6 +56,9 @@ namespace TataruHelper.Tests
                         && syncedSettings.ContentPadding == 18
                         && syncedSettings.MessagesInContainer
                         && syncedSettings.MessageContainerPadding == 10
+                        && syncedSettings.MessageContainerAlpha == 64
+                        && syncedSettings.MessageContainerBorderThickness == 2
+                        && syncedSettings.MessageContainerBorderAlpha == 140
                         && syncedSettings.ShowOnlyLastMessage,
                     TimeSpan.FromSeconds(1));
 
