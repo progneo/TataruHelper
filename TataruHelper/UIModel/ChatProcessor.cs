@@ -1,17 +1,17 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using FFXIVTataruHelper.EventArguments;
-using FFXIVTataruHelper.FFHandlers;
-using FFXIVTataruHelper.Services.Logging;
-using FFXIVTataruHelper.Services.Settings;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Media;
+
+using FFXIVTataruHelper.EventArguments;
+using FFXIVTataruHelper.Services.Logging;
+using FFXIVTataruHelper.Services.Settings;
+
 using Translation;
 
 namespace FFXIVTataruHelper
@@ -25,6 +25,7 @@ namespace FFXIVTataruHelper
             add { this._TextArrivedArrived.Register(value); }
             remove { this._TextArrivedArrived.Unregister(value); }
         }
+
         private AsyncEvent<ChatMessageArrivedEventArgs> _TextArrivedArrived;
 
         #endregion
@@ -67,7 +68,8 @@ namespace FFXIVTataruHelper
 
         public ChatProcessor(WebTranslator webTranslator, ISettingsStore settingsStore, IAppLogger logger)
         {
-            this._TextArrivedArrived = new AsyncEvent<ChatMessageArrivedEventArgs>(this.EventErrorHandler, "TranslationArrived");
+            this._TextArrivedArrived =
+                new AsyncEvent<ChatMessageArrivedEventArgs>(this.EventErrorHandler, "TranslationArrived");
 
             _SettingsStore = settingsStore;
             _Logger = logger;
@@ -85,7 +87,6 @@ namespace FFXIVTataruHelper
 
         private void Init()
         {
-
             var tmpMsgBlackList = new List<string>();
             tmpMsgBlackList.Add("Triple Triad matches not allowed in current area.");
             tmpMsgBlackList.Add("Triple Triad matches allowed in current area.");
@@ -103,6 +104,7 @@ namespace FFXIVTataruHelper
                 if (!MsgBlackList.Contains(st))
                     MsgBlackList.Add(st);
             }
+
             MsgBlackList = MsgBlackList.Distinct().ToList();
 
             Helper.SaveJson(MsgBlackList, _SettingsStore.BlackListPath);
@@ -112,7 +114,11 @@ namespace FFXIVTataruHelper
                 MsgBlackList[i] = Helper.ClearBlackListString(MsgBlackList[i]);
             }
 
-            var tmpChatCodesWithNickNames = new List<string>(27);
+            var tmpChatCodesWithNickNames = new List<string>(31);
+            tmpChatCodesWithNickNames.Add("003D");
+            tmpChatCodesWithNickNames.Add("0044");
+            tmpChatCodesWithNickNames.Add("F03D");
+            tmpChatCodesWithNickNames.Add("F044");
             tmpChatCodesWithNickNames.Add("0048");
             tmpChatCodesWithNickNames.Add("000A");
             tmpChatCodesWithNickNames.Add("000B");
@@ -150,6 +156,7 @@ namespace FFXIVTataruHelper
                 if (!ChatCodesWithNickNames.Contains(st))
                     ChatCodesWithNickNames.Add(st);
             }
+
             ChatCodesWithNickNames = ChatCodesWithNickNames.Distinct().ToList();
 
             Helper.SaveJson(ChatCodesWithNickNames, _SettingsStore.IgnoreNickNameChatCodesPath);
@@ -165,10 +172,13 @@ namespace FFXIVTataruHelper
                 await ProcessChatMsg(ea, msgType);
 
             if (CmdArgsStatus.LogAllChat || CmdArgsStatus.LogPlotChat)
-                _Logger.WriteChatLog(String.Format("{0} {1}: {2}", ea.ChatMessage.TimeStamp, ea.ChatMessage.Code, ea.ChatMessage.Text));
+                _Logger.WriteChatLog(String.Format("{0} {1}: {2}", ea.ChatMessage.TimeStamp, ea.ChatMessage.Code,
+                    ea.ChatMessage.Text));
         }
 
-        public async Task<string> Translate(string inSentence, TranslationEngine translationEngine, TranslatorLanguague fromLang, TranslatorLanguague toLang, string chatCode, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<string> Translate(string inSentence, TranslationEngine translationEngine,
+            TranslatorLanguague fromLang, TranslatorLanguague toLang, string chatCode,
+            CancellationToken cancellationToken = default(CancellationToken))
         {
             string text = string.Empty;
             string NickName = string.Empty;
@@ -176,10 +186,11 @@ namespace FFXIVTataruHelper
             string sentenceToTranslate = inSentence;
             _ChatMessageFilter.TrySplitNickname(chatCode, inSentence, out NickName, out sentenceToTranslate);
 
-            text = await _WebTranslator.TranslateAsync(sentenceToTranslate, translationEngine, fromLang, toLang, cancellationToken);
+            text = await _WebTranslator.TranslateAsync(sentenceToTranslate, translationEngine, fromLang, toLang,
+                cancellationToken);
 
             if (NickName.Length > 0)
-                text = NickName +" "+ text;
+                text = NickName + " " + text;
 
             return text;
         }

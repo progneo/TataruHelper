@@ -41,14 +41,14 @@ namespace TataruHelper.Tests
 
             var gateway = CreateGateway(
                 directDialogReader,
-                () => TalkAddonRealtimeDialogSnapshot.Available("LiveText"));
+                () => TalkAddonRealtimeDialogSnapshot.Available("003D", string.Empty, "LiveText"));
 
             var result = gateway.GetDirectDialog();
             var items = result.ChatLogItems.ToArray();
 
             Assert.That(items.Length, Is.EqualTo(2));
-            Assert.That(items.Count(item => item.Code == "003D"), Is.EqualTo(1));
-            Assert.That(items.Any(item => item.Code == "003D" && item.Line == "LiveText"), Is.True);
+            Assert.That(items.Count(item => item.Code == "F03D"), Is.EqualTo(1));
+            Assert.That(items.Any(item => item.Code == "F03D" && item.Line == "LiveText"), Is.True);
             Assert.That(items.Any(item => item.Code == "0044" && item.Line == "CutsceneNpc:FromChatLog"), Is.True);
             Assert.That(items.Any(item => item.Code == "003D" && item.Line == "OldNpc:FromChatLog"), Is.False);
         }
@@ -99,6 +99,149 @@ namespace TataruHelper.Tests
         }
 
         [Test]
+        public void Gateway_EmitsRealtimeSpeakerPrefix_WhenSpeakerAvailable()
+        {
+            var directDialogReader = new FakeDirectDialogReader();
+            var gateway = CreateGateway(
+                directDialogReader,
+                () => TalkAddonRealtimeDialogSnapshot.Available("003D", "LiveNpc", "LiveText"));
+
+            var item = gateway.GetDirectDialog().ChatLogItems.Single();
+
+            Assert.That(item.Code, Is.EqualTo("F03D"));
+            Assert.That(item.Line, Is.EqualTo("LiveNpc:LiveText"));
+        }
+
+        [Test]
+        public void Gateway_EmitsRealtime0044_WhenSnapshotIsCutsceneCode()
+        {
+            var directDialogReader = new FakeDirectDialogReader();
+            var gateway = CreateGateway(
+                directDialogReader,
+                () => TalkAddonRealtimeDialogSnapshot.Available("0044", "CutsceneNpc", "LiveText"));
+
+            var item = gateway.GetDirectDialog().ChatLogItems.Single();
+
+            Assert.That(item.Code, Is.EqualTo("F044"));
+            Assert.That(item.Line, Is.EqualTo("CutsceneNpc:LiveText"));
+        }
+
+        [Test]
+        public void Gateway_DoesNotSuppressSameRealtimeTextAcrossDifferentCodes()
+        {
+            var directDialogReader = new FakeDirectDialogReader();
+            var queue = new Queue<TalkAddonRealtimeDialogSnapshot>();
+            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("003D", string.Empty, "SameText"));
+            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, "SameText"));
+
+            var gateway = CreateGateway(directDialogReader, () => queue.Dequeue());
+
+            var firstTick = gateway.GetDirectDialog().ChatLogItems.ToArray();
+            var secondTick = gateway.GetDirectDialog().ChatLogItems.ToArray();
+
+            Assert.That(firstTick.Length, Is.EqualTo(1));
+            Assert.That(firstTick[0].Code, Is.EqualTo("F03D"));
+            Assert.That(secondTick.Length, Is.EqualTo(1));
+            Assert.That(secondTick[0].Code, Is.EqualTo("F044"));
+        }
+
+        [Test]
+        public void Gateway_FallsBackToHeuristicDirectDialog_WhenRealtimeAvailableButEmpty()
+        {
+            var directDialogReader = new FakeDirectDialogReader
+            {
+                DirectDialogResult = BuildResult(
+                    new ChatLogItem { Code = "003D", Line = "FallbackNpc:FallbackText" },
+                    new ChatLogItem { Code = "0044", Line = "FallbackCutsceneText" })
+            };
+
+            var gateway = CreateGateway(
+                directDialogReader,
+                () => TalkAddonRealtimeDialogSnapshot.Available("0044", "CutsceneNpc", "   "));
+
+            var items = gateway.GetDirectDialog().ChatLogItems.ToArray();
+
+            Assert.That(items.Length, Is.EqualTo(2));
+            Assert.That(items.Any(item => item.Code == "003D" && item.Line == "FallbackNpc:FallbackText"), Is.True);
+            Assert.That(items.Any(item => item.Code == "0044" && item.Line == "FallbackCutsceneText"), Is.True);
+        }
+
+        [Test]
+        public void SelectRealtimeSnapshot_PrioritizesAddonTextOverLastTalkText()
+        {
+            var snapshot = TalkAddonRealtimeReader.SelectRealtimeSnapshot(
+                "DelayedNpc",
+                "DelayedText",
+                new[] { TalkAddonRealtimeDialogSnapshot.Available("003D", string.Empty, "RealtimeAddonText") });
+
+            Assert.That(snapshot.ChatCode, Is.EqualTo("003D"));
+            Assert.That(snapshot.SpeakerName, Is.Empty);
+            Assert.That(snapshot.TalkText, Is.EqualTo("RealtimeAddonText"));
+        }
+
+        [Test]
+        public void SelectRealtimeSnapshot_DoesNotUseLastTalkNameWithDifferentMiniTalkAddonText()
+        {
+            var snapshot = TalkAddonRealtimeReader.SelectRealtimeSnapshot(
+                "CutsceneNpc",
+                "DelayedText",
+                new[] { TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, "RealtimeBubbleText") });
+
+            Assert.That(snapshot.ChatCode, Is.EqualTo("0044"));
+            Assert.That(snapshot.SpeakerName, Is.Empty);
+            Assert.That(snapshot.TalkText, Is.EqualTo("RealtimeBubbleText"));
+        }
+
+        [Test]
+        public void SelectRealtimeSnapshot_UsesLastTalkName_WhenLastTalkTextMatchesAddonText()
+        {
+            var snapshot = TalkAddonRealtimeReader.SelectRealtimeSnapshot(
+                "CutsceneNpc",
+                "RealtimeBubbleText",
+                new[] { TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, "RealtimeBubbleText") });
+
+            Assert.That(snapshot.ChatCode, Is.EqualTo("0044"));
+            Assert.That(snapshot.SpeakerName, Is.EqualTo("CutsceneNpc"));
+            Assert.That(snapshot.TalkText, Is.EqualTo("RealtimeBubbleText"));
+        }
+
+        [Test]
+        public void SelectRealtimeSnapshot_FallsBackToLastTalkText_WhenAddonTextIsEmpty()
+        {
+            var snapshot = TalkAddonRealtimeReader.SelectRealtimeSnapshot(
+                "FallbackNpc",
+                "FallbackLastTalkText",
+                new[] { TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, "   ") });
+
+            Assert.That(snapshot.ChatCode, Is.EqualTo("003D"));
+            Assert.That(snapshot.SpeakerName, Is.EqualTo("FallbackNpc"));
+            Assert.That(snapshot.TalkText, Is.EqualTo("FallbackLastTalkText"));
+        }
+
+        [Test]
+        public void BuildAddonSnapshot_SplitsVisibleTalkSpeakerAndBody()
+        {
+            var snapshot = TalkAddonRealtimeReader.BuildAddonSnapshot(
+                "003D",
+                new[] { "VisibleNpc", "Visible dialog text" },
+                "StaleNpc",
+                "Stale dialog text",
+                true);
+
+            Assert.That(snapshot.ChatCode, Is.EqualTo("003D"));
+            Assert.That(snapshot.SpeakerName, Is.EqualTo("VisibleNpc"));
+            Assert.That(snapshot.TalkText, Is.EqualTo("Visible dialog text"));
+        }
+
+        [TestCase("003D", "F03D")]
+        [TestCase("0044", "F044")]
+        [TestCase("2AB9", "2AB9")]
+        public void MapRealtimeChatCode_MapsOnlyDirectDialogCodes(string input, string expected)
+        {
+            Assert.That(SharlayanGameMemoryGateway.MapRealtimeChatCode(input), Is.EqualTo(expected));
+        }
+
+        [Test]
         public void SelectBestTalkText_ReturnsLongestNonEmptyCandidate()
         {
             var result = SharlayanGameMemoryGateway.SelectBestTalkText(new[] { "  ", "short", "the longest line" });
@@ -117,6 +260,13 @@ namespace TataruHelper.Tests
         {
             var signature = SharlayanGameMemoryGateway.BuildRealtimeSignature("  Npc:Line  ");
             Assert.That(signature, Is.EqualTo("Npc:Line"));
+        }
+
+        [Test]
+        public void BuildRealtimeSignature_IncludesChatCodeAndSpeaker()
+        {
+            var signature = SharlayanGameMemoryGateway.BuildRealtimeSignature(" 0044 ", " Npc ", " Line ");
+            Assert.That(signature, Is.EqualTo("0044|Npc|Line"));
         }
 
         [Test]
@@ -144,6 +294,16 @@ namespace TataruHelper.Tests
                 "   ");
 
             Assert.That(line, Is.EqualTo(string.Empty));
+        }
+
+        [Test]
+        public void BuildRealtimeDialogLine_AddsSpeakerPrefix_WhenSpeakerProvided()
+        {
+            var line = SharlayanGameMemoryGateway.BuildRealtimeDialogLine(
+                " LiveNpc ",
+                " LiveText ");
+
+            Assert.That(line, Is.EqualTo("LiveNpc:LiveText"));
         }
 
         private static SharlayanGameMemoryGateway CreateGateway(

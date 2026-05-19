@@ -7,6 +7,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
@@ -90,6 +91,7 @@ namespace FFXIVTataruHelper
                 ChatRtb.Document.Blocks.Clear();
 
                 ChatRtb.IsUndoEnabled = false;
+                ApplyContentPadding();
 
                 _TextArrivedTime = DateTime.UtcNow;
 
@@ -324,6 +326,47 @@ namespace FFXIVTataruHelper
                         }
                     }
                     break;
+                case "ContentPadding":
+                    {
+                        ApplyContentPadding();
+                    }
+                    break;
+                case "MessageContainerPadding":
+                    {
+                        ApplyMessageContainerVisuals();
+                    }
+                    break;
+                case "MessageContainerAlpha":
+                    {
+                        ApplyMessageContainerVisuals();
+                    }
+                    break;
+                case "MessageContainerBorderThickness":
+                    {
+                        ApplyMessageContainerVisuals();
+                    }
+                    break;
+                case "MessageContainerBorderAlpha":
+                    {
+                        ApplyMessageContainerVisuals();
+                    }
+                    break;
+                case "MessagesInContainer":
+                    {
+                        if (_ChatWindowViewModel.MessagesInContainer)
+                        {
+                            ApplyMessageContainerVisuals();
+                        }
+                    }
+                    break;
+                case "ShowOnlyLastMessage":
+                    {
+                        if (_ChatWindowViewModel.ShowOnlyLastMessage)
+                        {
+                            EnforceLastMessageOnly();
+                        }
+                    }
+                    break;
             }
         }
 
@@ -398,72 +441,169 @@ namespace FFXIVTataruHelper
             try
             {
                 translatedMsg = translatedMsg.Trim(new char[] { ' ' });
-
-                ChatRtb.AppendText(Environment.NewLine);
-                ChatRtb.CaretPosition = ChatRtb.CaretPosition.DocumentEnd;
-
-                if (_ChatWindowViewModel.SpacingCount > 0)
+                if (_ChatWindowViewModel.ShowOnlyLastMessage)
                 {
-                    string whiteSpaces = String.Empty;
-                    for (int i = 0; i < _ChatWindowViewModel.SpacingCount; i++)
-                    {
-                        whiteSpaces += " ";
-                    }
-
-                    ChatRtb.AppendText(whiteSpaces);
+                    ChatRtb.Document.Blocks.Clear();
                 }
 
-                Paragraph p = (ChatRtb.Document.Blocks.LastBlock) as Paragraph;
-                p.Margin = new Thickness(0, _ChatWindowViewModel.LineBreakHeight, 0, 0);
-
-                SolidColorBrush tmpColor = new SolidColorBrush(color);
-
-                int nameInd = 0;
-                if ((nameInd = translatedMsg.IndexOf(":")) > 0)
-                {
-                    string msgText = translatedMsg;
-                    string name = String.Empty;
-                    string text = String.Empty;
-
-                    name = msgText.Substring(0, nameInd);
-                    text = msgText.Substring(nameInd, msgText.Length - nameInd);
-
-                    if (timeStamp != default(DateTime))
-                        name = timeStamp.ToString("HH:mm") + " " + name;
-
-                    TextRange tr1 = new TextRange(ChatRtb.Document.ContentEnd, ChatRtb.Document.ContentEnd);
-                    tr1.Text = name;
-                    tr1.ApplyPropertyValue(TextElement.ForegroundProperty, tmpColor);
-                    tr1.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Bold);
-                    tr1.ApplyPropertyValue(TextElement.FontFamilyProperty, _ChatWindowViewModel.ChatFont);
-                    tr1.ApplyPropertyValue(TextElement.FontSizeProperty, _ChatWindowViewModel.ChatFontSize);
-
-                    TextRange tr2 = new TextRange(ChatRtb.Document.ContentEnd, ChatRtb.Document.ContentEnd);
-
-                    tr2.Text = text;
-                    tr2.ApplyPropertyValue(TextElement.ForegroundProperty, tmpColor);
-                    tr2.ApplyPropertyValue(TextElement.FontWeightProperty, FontWeights.Normal);
-                    tr2.ApplyPropertyValue(TextElement.FontFamilyProperty, _ChatWindowViewModel.ChatFont);
-                    tr2.ApplyPropertyValue(TextElement.FontSizeProperty, _ChatWindowViewModel.ChatFontSize);
-                }
-                else
-                {
-                    if (timeStamp != default(DateTime))
-                        translatedMsg = timeStamp.ToString("HH:mm") + " " + translatedMsg;
-
-                    TextRange tr = new TextRange(ChatRtb.Document.ContentEnd, ChatRtb.Document.ContentEnd);
-                    tr.Text = translatedMsg;
-
-                    tr.ApplyPropertyValue(TextElement.ForegroundProperty, tmpColor);
-                    tr.ApplyPropertyValue(TextElement.FontFamilyProperty, _ChatWindowViewModel.ChatFont);
-                    tr.ApplyPropertyValue(TextElement.FontSizeProperty, _ChatWindowViewModel.ChatFontSize);
-                }
+                Paragraph paragraph = BuildMessageParagraph(translatedMsg, color, timeStamp);
+                ChatRtb.Document.Blocks.Add(paragraph);
 
                 ChatRtb.ScrollToEnd();
             }
             catch (Exception exc)
             {
                 _Logger.WriteLog(Convert.ToString(exc));
+            }
+        }
+
+        private Paragraph BuildMessageParagraph(string translatedMsg, Color color, DateTime timeStamp)
+        {
+            string leadingSpaces = _ChatWindowViewModel.SpacingCount > 0
+                ? new string(' ', _ChatWindowViewModel.SpacingCount)
+                : string.Empty;
+
+            string name = null;
+            string text = translatedMsg;
+
+            int nameInd = translatedMsg.IndexOf(":", StringComparison.Ordinal);
+            if (nameInd > 0)
+            {
+                name = translatedMsg.Substring(0, nameInd);
+                text = translatedMsg.Substring(nameInd, translatedMsg.Length - nameInd);
+            }
+
+            if (timeStamp != default(DateTime))
+            {
+                if (!string.IsNullOrEmpty(name))
+                {
+                    name = timeStamp.ToString("HH:mm") + " " + name;
+                }
+                else
+                {
+                    text = timeStamp.ToString("HH:mm") + " " + text;
+                }
+            }
+
+            if (_ChatWindowViewModel.MessagesInContainer)
+            {
+                return BuildContainedMessageParagraph(leadingSpaces, name, text, color);
+            }
+
+            return BuildPlainMessageParagraph(leadingSpaces, name, text, color);
+        }
+
+        private Paragraph BuildPlainMessageParagraph(string leadingSpaces, string name, string text, Color color)
+        {
+            var paragraph = new Paragraph
+            {
+                Margin = new Thickness(0, _ChatWindowViewModel.LineBreakHeight, 0, 0),
+                TextAlignment = TextAlignment.Left
+            };
+
+            if (!string.IsNullOrEmpty(leadingSpaces))
+            {
+                paragraph.Inlines.Add(CreateRun(leadingSpaces, color, FontWeights.Normal));
+            }
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                paragraph.Inlines.Add(CreateRun(name, color, FontWeights.Bold));
+            }
+
+            paragraph.Inlines.Add(CreateRun(text, color, FontWeights.Normal));
+            return paragraph;
+        }
+
+        private Paragraph BuildContainedMessageParagraph(string leadingSpaces, string name, string text, Color color)
+        {
+            var messageText = new TextBlock
+            {
+                TextWrapping = TextWrapping.Wrap,
+                FontFamily = _ChatWindowViewModel.ChatFont,
+                FontSize = _ChatWindowViewModel.ChatFontSize,
+                Foreground = new SolidColorBrush(color)
+            };
+
+            if (!string.IsNullOrEmpty(leadingSpaces))
+            {
+                messageText.Inlines.Add(new Run(leadingSpaces));
+            }
+
+            if (!string.IsNullOrEmpty(name))
+            {
+                messageText.Inlines.Add(new Run(name) { FontWeight = FontWeights.Bold });
+            }
+
+            messageText.Inlines.Add(new Run(text));
+
+            var messageBorder = new Border { CornerRadius = new CornerRadius(6), Tag = color, Child = messageText };
+            ApplyMessageContainerVisual(messageBorder);
+
+            var paragraph = new Paragraph
+            {
+                Margin = new Thickness(0, _ChatWindowViewModel.LineBreakHeight, 0, 0),
+                TextAlignment = TextAlignment.Left
+            };
+
+            paragraph.Inlines.Add(new InlineUIContainer(messageBorder));
+            return paragraph;
+        }
+
+        private Run CreateRun(string text, Color color, FontWeight fontWeight)
+        {
+            return new Run(text)
+            {
+                Foreground = new SolidColorBrush(color),
+                FontWeight = fontWeight,
+                FontFamily = _ChatWindowViewModel.ChatFont,
+                FontSize = _ChatWindowViewModel.ChatFontSize
+            };
+        }
+
+        private void ApplyContentPadding()
+        {
+            ChatRtb.Padding = new Thickness(_ChatWindowViewModel.ContentPadding);
+        }
+
+        private void ApplyMessageContainerVisuals()
+        {
+            foreach (var paragraph in ChatRtb.Document.Blocks.OfType<Paragraph>())
+            {
+                foreach (var inline in paragraph.Inlines)
+                {
+                    if (inline is InlineUIContainer container && container.Child is Border border)
+                    {
+                        ApplyMessageContainerVisual(border);
+                    }
+                }
+            }
+        }
+
+        private void ApplyMessageContainerVisual(Border border)
+        {
+            if (border == null)
+            {
+                return;
+            }
+
+            var baseColor = border.Tag is Color color ? color : Colors.White;
+            var backgroundAlpha = (byte)Math.Clamp(_ChatWindowViewModel.MessageContainerAlpha, 0, 255);
+            var borderAlpha = (byte)Math.Clamp(_ChatWindowViewModel.MessageContainerBorderAlpha, 0, 255);
+
+            border.Padding = new Thickness(_ChatWindowViewModel.MessageContainerPadding);
+            border.Background = new SolidColorBrush(
+                Color.FromArgb(backgroundAlpha, baseColor.R, baseColor.G, baseColor.B));
+            border.BorderThickness = new Thickness(_ChatWindowViewModel.MessageContainerBorderThickness);
+            border.BorderBrush = new SolidColorBrush(
+                Color.FromArgb(borderAlpha, baseColor.R, baseColor.G, baseColor.B));
+        }
+
+        private void EnforceLastMessageOnly()
+        {
+            while (ChatRtb.Document.Blocks.Count > 1)
+            {
+                ChatRtb.Document.Blocks.Remove(ChatRtb.Document.Blocks.FirstBlock);
             }
         }
 

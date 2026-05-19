@@ -96,21 +96,6 @@
                                    VerticalAlignment="Center" />
                     </StackPanel>
 
-                    <Grid Margin="0,0,0,10">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <StackPanel Grid.Column="0">
-                            <TextBlock Text="{DynamicResource DirectMemoryCB}" FontWeight="SemiBold" />
-                            <TextBlock Style="{DynamicResource CaptionTextStyle}"
-                                       Text="{DynamicResource DirectMemoryDescription}"
-                                       TextWrapping="Wrap" />
-                        </StackPanel>
-                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
-                                         IsChecked="{Binding Shell.IsDirectMemoryReading, Mode=TwoWay}" />
-                    </Grid>
-
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />

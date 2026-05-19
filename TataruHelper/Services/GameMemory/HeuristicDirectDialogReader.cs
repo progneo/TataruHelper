@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Linq;
+
 using Sharlayan.Core;
 using Sharlayan.Models.ReadResults;
 
@@ -21,7 +22,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             var directCandidates = chatLogResult.ChatLogItems
-                .Where(item => item != null && !IsTextEmpty(item))
+                .Where(item => item != null && HasDialogText(item))
                 .Where(item => IsDialogPanelCandidate(item) || IsCutsceneCandidate(item))
                 .ToArray();
 
@@ -134,6 +135,21 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             return chatLogItem.Line.Length - 1 == index;
+        }
+
+        private static bool HasDialogText(ChatLogItem chatLogItem)
+        {
+            if (chatLogItem == null || string.IsNullOrWhiteSpace(chatLogItem.Line))
+            {
+                return false;
+            }
+
+            if (IsCutsceneCandidate(chatLogItem))
+            {
+                return true;
+            }
+
+            return !IsTextEmpty(chatLogItem);
         }
     }
 }

@@ -36,6 +36,18 @@
     "Color": "#FFABD647"
   },
   {
+    "ChatCode": "F03D",
+    "MsgType": 1,
+    "Name": "NPCDRealtime",
+    "Color": "#FFABD647"
+  },
+  {
+    "ChatCode": "F044",
+    "MsgType": 1,
+    "Name": "NPCARealtime",
+    "Color": "#FFABD647"
+  },
+  {
     "ChatCode": "2AB9",
     "MsgType": 1,
     "Name": "BossQuotes",

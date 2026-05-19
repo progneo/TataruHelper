@@ -338,11 +338,6 @@ public partial class MainWindow : FluentWindow
         });
     }
 
-    private async Task OnDirecMemoryReadingChange(BooleanChangeEventArgs ea)
-    {
-        await this.UIThreadAsync(() => { _tataruModel.FFMemoryReader.UseDirectReading = ea.NewValue; });
-    }
-
     private async Task OnSettingsWindowSizeChange(PointDValueChangeEventArgs ea)
     {
         await this.UIThreadAsync(() =>
@@ -475,7 +470,6 @@ public partial class MainWindow : FluentWindow
         var uiModel = _tataruModel.TataruUIModel;
 
         uiModel.UiLanguageChanged += OnUiLanguageChange;
-        uiModel.IsDirecMemoryReadingChanged += OnDirecMemoryReadingChange;
         uiModel.SettingsWindowSizeChanged += OnSettingsWindowSizeChange;
 
         _tataruModel.FFMemoryReader.FFWindowStateChanged += OnFFWindowStateChange;

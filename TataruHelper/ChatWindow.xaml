@@ -57,9 +57,20 @@
             </Border.Style>
         </Border>
 
-        <RichTextBox x:Name="ChatRtb" Margin="12" Background="#00000000" IsReadOnly="True" IsUndoEnabled="False"
+        <RichTextBox x:Name="ChatRtb" Margin="0" Background="#00000000" IsReadOnly="True" IsUndoEnabled="False"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled"
                      FontFamily="{Binding ChatFont, Mode=OneWay}"
                      FontSize="{Binding ChatFontSize, Mode=OneWay}">
+            <RichTextBox.Style>
+                <Style TargetType="RichTextBox">
+                    <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Hidden" />
+                    <Style.Triggers>
+                        <DataTrigger Binding="{Binding IsMouseOver, ElementName=RootGrid}" Value="True">
+                            <Setter Property="ScrollViewer.VerticalScrollBarVisibility" Value="Auto" />
+                        </DataTrigger>
+                    </Style.Triggers>
+                </Style>
+            </RichTextBox.Style>
             <FlowDocument TextAlignment="Left"
                           PagePadding="0"
                           ColumnWidth="{Binding ActualWidth, ElementName=ChatRtb}">

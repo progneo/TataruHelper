@@ -58,8 +58,15 @@ namespace FFXIVTataruHelper.UIModel
 
         private List<ChatCodeViewModel> _chatCodes;
 
-        private bool _ShowTimestamps;
+        private bool _showTimestamps;
         private double _windowCornerRadius;
+        private double _contentPadding;
+        private bool _messagesInContainer;
+        private double _messageContainerPadding;
+        private int _messageContainerAlpha;
+        private double _messageContainerBorderThickness;
+        private int _messageContainerBorderAlpha;
+        private bool _showOnlyLastMessage;
 
         private HotKeyCombination _showHideChatKeys;
         private HotKeyCombination _clickThoughtChatKeys;
@@ -217,12 +224,12 @@ namespace FFXIVTataruHelper.UIModel
 
         public bool ShowTimestamps
         {
-            get => _ShowTimestamps;
+            get => _showTimestamps;
             set
             {
-                if (_ShowTimestamps == value) return;
+                if (_showTimestamps == value) return;
 
-                _ShowTimestamps = value;
+                _showTimestamps = value;
                 OnPropertyChanged();
             }
         }
@@ -235,6 +242,90 @@ namespace FFXIVTataruHelper.UIModel
                 if (_windowCornerRadius == value) return;
 
                 _windowCornerRadius = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double ContentPadding
+        {
+            get => _contentPadding;
+            set
+            {
+                if (_contentPadding == value) return;
+
+                _contentPadding = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool MessagesInContainer
+        {
+            get => _messagesInContainer;
+            set
+            {
+                if (_messagesInContainer == value) return;
+
+                _messagesInContainer = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double MessageContainerPadding
+        {
+            get => _messageContainerPadding;
+            set
+            {
+                if (_messageContainerPadding == value) return;
+
+                _messageContainerPadding = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int MessageContainerAlpha
+        {
+            get => _messageContainerAlpha;
+            set
+            {
+                if (_messageContainerAlpha == value) return;
+
+                _messageContainerAlpha = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double MessageContainerBorderThickness
+        {
+            get => _messageContainerBorderThickness;
+            set
+            {
+                if (_messageContainerBorderThickness == value) return;
+
+                _messageContainerBorderThickness = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int MessageContainerBorderAlpha
+        {
+            get => _messageContainerBorderAlpha;
+            set
+            {
+                if (_messageContainerBorderAlpha == value) return;
+
+                _messageContainerBorderAlpha = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowOnlyLastMessage
+        {
+            get => _showOnlyLastMessage;
+            set
+            {
+                if (_showOnlyLastMessage == value) return;
+
+                _showOnlyLastMessage = value;
                 OnPropertyChanged();
             }
         }
@@ -367,6 +458,13 @@ namespace FFXIVTataruHelper.UIModel
             ChatCodes = new List<ChatCodeViewModel>();
 
             WindowCornerRadius = 12;
+            ContentPadding = 12;
+            MessagesInContainer = false;
+            MessageContainerPadding = 6;
+            MessageContainerAlpha = 32;
+            MessageContainerBorderThickness = 0;
+            MessageContainerBorderAlpha = 96;
+            ShowOnlyLastMessage = false;
 
             ShowHideChatKeys = new HotKeyCombination();
             ClickThoughtChatKeys = new HotKeyCombination();
@@ -404,6 +502,13 @@ namespace FFXIVTataruHelper.UIModel
             ChatCodes = new List<ChatCodeViewModel>();
 
             WindowCornerRadius = 12;
+            ContentPadding = 12;
+            MessagesInContainer = false;
+            MessageContainerPadding = 6;
+            MessageContainerAlpha = 32;
+            MessageContainerBorderThickness = 0;
+            MessageContainerBorderAlpha = 96;
+            ShowOnlyLastMessage = false;
 
             ShowHideChatKeys = new HotKeyCombination("ShowHideChatKeys" + Convert.ToString(WinId));
             ClickThoughtChatKeys = new HotKeyCombination("ClickThoughtChatKeys" + Convert.ToString(WinId));
@@ -445,6 +550,13 @@ namespace FFXIVTataruHelper.UIModel
             ShowTimestamps = settings.ShowTimestamps;
 
             WindowCornerRadius = settings.WindowCornerRadius;
+            ContentPadding = settings.ContentPadding;
+            MessagesInContainer = settings.MessagesInContainer;
+            MessageContainerPadding = settings.MessageContainerPadding;
+            MessageContainerAlpha = settings.MessageContainerAlpha;
+            MessageContainerBorderThickness = settings.MessageContainerBorderThickness;
+            MessageContainerBorderAlpha = settings.MessageContainerBorderAlpha;
+            ShowOnlyLastMessage = settings.ShowOnlyLastMessage;
 
             ShowHideChatKeys = new HotKeyCombination(settings.ShowHideChatKeys);
             ClickThoughtChatKeys = new HotKeyCombination(settings.ClickThoughtChatKeys);

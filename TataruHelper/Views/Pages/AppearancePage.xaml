@@ -84,47 +84,123 @@
                     </StackPanel>
                 </ui:Card>
 
-                <ui:Card Grid.Column="2" Padding="16" VerticalAlignment="Top">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <ui:SymbolIcon Symbol="Color24" FontSize="16"
-                                           Margin="0,0,8,0" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource Brush.Accent}" />
-                            <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
-                                       Margin="0"
-                                       Text="{DynamicResource WindowSurfaceLabel}"
-                                       VerticalAlignment="Center" />
+                <StackPanel Grid.Column="2" VerticalAlignment="Top">
+                    <ui:Card Padding="16" Margin="0,0,0,12">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                <ui:SymbolIcon Symbol="Color24" FontSize="16"
+                                               Margin="0,0,8,0" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.Accent}" />
+                                <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                           Margin="0"
+                                           Text="{DynamicResource WindowSurfaceLabel}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource BackgroundColor}" />
+                            <ctrl:ColorSwatchPicker SwatchWidth="160"
+                                                    SwatchHeight="32"
+                                                    HorizontalAlignment="Left"
+                                                    SelectedColor="{Binding BoundWindow.BackGroundColor, Mode=TwoWay}"
+                                                    Margin="0,0,0,12" />
+
+                            <Label Style="{DynamicResource BaseLabelStyle}"
+                                   Content="{DynamicResource WindowCornerRadiusLabel}" />
+                            <ui:NumberBox
+                                Value="{Binding BoundWindow.WindowCornerRadius, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Minimum="0" Maximum="64"
+                                ClearButtonEnabled="False"
+                                Margin="0,0,0,12" />
+
+                            <Label Style="{DynamicResource BaseLabelStyle}"
+                                   Content="{DynamicResource ContentPaddingLabel}" />
+                            <ui:NumberBox
+                                Value="{Binding BoundWindow.ContentPadding, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Minimum="0" Maximum="64"
+                                ClearButtonEnabled="False" />
                         </StackPanel>
+                    </ui:Card>
 
-                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource BackgroundColor}" />
-                        <ctrl:ColorSwatchPicker SwatchWidth="160"
-                                                SwatchHeight="32"
-                                                HorizontalAlignment="Left"
-                                                SelectedColor="{Binding BoundWindow.BackGroundColor, Mode=TwoWay}"
-                                                Margin="0,0,0,12" />
+                    <ui:Card Padding="16" Margin="0,0,0,12">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <ui:SymbolIcon Symbol="TextBulletListSquare24" FontSize="16"
+                                               Margin="0,0,8,0" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.Accent}" />
+                                <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                           Margin="0"
+                                           Text="{DynamicResource MessagesInContainerLabel}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
 
-                        <Label Style="{DynamicResource BaseLabelStyle}"
-                               Content="{DynamicResource WindowCornerRadiusLabel}" />
-                        <ui:NumberBox
-                            Value="{Binding BoundWindow.WindowCornerRadius, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            Minimum="0" Maximum="64"
-                            ClearButtonEnabled="False"
-                            Margin="0,0,0,12" />
+                            <ui:ToggleSwitch IsChecked="{Binding BoundWindow.MessagesInContainer, Mode=TwoWay}"
+                                             Content="{DynamicResource MessagesInContainerLabel}"
+                                             Margin="0,0,0,12" />
 
-                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource IntervalWidth}" />
-                        <ui:NumberBox
-                            Value="{Binding BoundWindow.SpacingCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            Minimum="0" Maximum="100"
-                            ClearButtonEnabled="False"
-                            Margin="0,0,0,12" />
+                            <Label Style="{DynamicResource BaseLabelStyle}"
+                                   Content="{DynamicResource MessageContainerPaddingLabel}" />
+                            <ui:NumberBox
+                                Value="{Binding BoundWindow.MessageContainerPadding, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Minimum="0" Maximum="64"
+                                ClearButtonEnabled="False"
+                                Margin="0,0,0,12" />
 
-                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource LineBreakHeight}" />
-                        <ui:NumberBox
-                            Value="{Binding BoundWindow.LineBreakHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            Minimum="0" Maximum="100"
-                            ClearButtonEnabled="False" />
-                    </StackPanel>
-                </ui:Card>
+                            <Label Style="{DynamicResource BaseLabelStyle}"
+                                   Content="{DynamicResource MessageContainerAlphaLabel}" />
+                            <ui:NumberBox
+                                Value="{Binding BoundWindow.MessageContainerAlpha, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Minimum="0" Maximum="255"
+                                ClearButtonEnabled="False"
+                                Margin="0,0,0,12" />
+
+                            <Label Style="{DynamicResource BaseLabelStyle}"
+                                   Content="{DynamicResource MessageContainerBorderThicknessLabel}" />
+                            <ui:NumberBox
+                                Value="{Binding BoundWindow.MessageContainerBorderThickness, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Minimum="0" Maximum="12"
+                                ClearButtonEnabled="False"
+                                Margin="0,0,0,12" />
+
+                            <Label Style="{DynamicResource BaseLabelStyle}"
+                                   Content="{DynamicResource MessageContainerBorderAlphaLabel}" />
+                            <ui:NumberBox
+                                Value="{Binding BoundWindow.MessageContainerBorderAlpha, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Minimum="0" Maximum="255"
+                                ClearButtonEnabled="False"
+                                Margin="0,0,0,12" />
+
+                            <ui:ToggleSwitch IsChecked="{Binding BoundWindow.ShowOnlyLastMessage, Mode=TwoWay}"
+                                             Content="{DynamicResource ShowOnlyLastMessageLabel}" />
+                        </StackPanel>
+                    </ui:Card>
+
+                    <ui:Card Padding="16">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <ui:SymbolIcon Symbol="TextParagraphDirectionLeft20" FontSize="16"
+                                               Margin="0,0,8,0" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.Accent}" />
+                                <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                           Margin="0"
+                                           Text="{DynamicResource ParagraphSettings}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource IntervalWidth}" />
+                            <ui:NumberBox
+                                Value="{Binding BoundWindow.SpacingCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Minimum="0" Maximum="100"
+                                ClearButtonEnabled="False"
+                                Margin="0,0,0,12" />
+
+                            <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource LineBreakHeight}" />
+                            <ui:NumberBox
+                                Value="{Binding BoundWindow.LineBreakHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Minimum="0" Maximum="100"
+                                ClearButtonEnabled="False" />
+                        </StackPanel>
+                    </ui:Card>
+                </StackPanel>
             </Grid>
         </Grid>
     </ScrollViewer>

@@ -450,6 +450,90 @@ namespace FFXIVTataruHelper.ViewModel
             }
         }
 
+        public double ContentPadding
+        {
+            get => _contentPadding;
+            set
+            {
+                if (_contentPadding == value) return;
+
+                _contentPadding = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool MessagesInContainer
+        {
+            get => _messagesInContainer;
+            set
+            {
+                if (_messagesInContainer == value) return;
+
+                _messagesInContainer = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double MessageContainerPadding
+        {
+            get => _messageContainerPadding;
+            set
+            {
+                if (_messageContainerPadding == value) return;
+
+                _messageContainerPadding = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int MessageContainerAlpha
+        {
+            get => _messageContainerAlpha;
+            set
+            {
+                if (_messageContainerAlpha == value) return;
+
+                _messageContainerAlpha = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double MessageContainerBorderThickness
+        {
+            get => _messageContainerBorderThickness;
+            set
+            {
+                if (_messageContainerBorderThickness == value) return;
+
+                _messageContainerBorderThickness = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int MessageContainerBorderAlpha
+        {
+            get => _messageContainerBorderAlpha;
+            set
+            {
+                if (_messageContainerBorderAlpha == value) return;
+
+                _messageContainerBorderAlpha = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowOnlyLastMessage
+        {
+            get => _showOnlyLastMessage;
+            set
+            {
+                if (_showOnlyLastMessage == value) return;
+
+                _showOnlyLastMessage = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool IsSelected
         {
             get { return _IsSelected; }
@@ -520,6 +604,13 @@ namespace FFXIVTataruHelper.ViewModel
 
         bool _ShowTimestamps;
         double _windowCornerRadius = 12;
+        double _contentPadding = 12;
+        bool _messagesInContainer;
+        double _messageContainerPadding = 6;
+        int _messageContainerAlpha = 32;
+        double _messageContainerBorderThickness;
+        int _messageContainerBorderAlpha = 96;
+        bool _showOnlyLastMessage;
 
         bool _IsSelected;
 
@@ -552,6 +643,13 @@ namespace FFXIVTataruHelper.ViewModel
             SpacingCount = 1;
             BackGroundColor = Color.FromArgb(255, 0, 255, 128);
             ChatWindowRectangle = new RectangleD(0, 0, 480, 320);
+            ContentPadding = 12;
+            MessagesInContainer = false;
+            MessageContainerPadding = 6;
+            MessageContainerAlpha = 32;
+            MessageContainerBorderThickness = 0;
+            MessageContainerBorderAlpha = 96;
+            ShowOnlyLastMessage = false;
 
             ChatCodes = new BindingList<ChatCodeViewModel>()
             {
@@ -600,6 +698,13 @@ namespace FFXIVTataruHelper.ViewModel
             ShowTimestamps = settings.ShowTimestamps;
 
             WindowCornerRadius = settings.WindowCornerRadius > 0 ? settings.WindowCornerRadius : 12;
+            ContentPadding = settings.ContentPadding;
+            MessagesInContainer = settings.MessagesInContainer;
+            MessageContainerPadding = settings.MessageContainerPadding;
+            MessageContainerAlpha = settings.MessageContainerAlpha;
+            MessageContainerBorderThickness = settings.MessageContainerBorderThickness;
+            MessageContainerBorderAlpha = settings.MessageContainerBorderAlpha;
+            ShowOnlyLastMessage = settings.ShowOnlyLastMessage;
 
             BackGroundColor = settings.BackGroundColor;
 
@@ -654,6 +759,13 @@ namespace FFXIVTataruHelper.ViewModel
 
             settings.WindowCornerRadius = this.WindowCornerRadius;
             settings.ShowTimestamps = this.ShowTimestamps;
+            settings.ContentPadding = this.ContentPadding;
+            settings.MessagesInContainer = this.MessagesInContainer;
+            settings.MessageContainerPadding = this.MessageContainerPadding;
+            settings.MessageContainerAlpha = this.MessageContainerAlpha;
+            settings.MessageContainerBorderThickness = this.MessageContainerBorderThickness;
+            settings.MessageContainerBorderAlpha = this.MessageContainerBorderAlpha;
+            settings.ShowOnlyLastMessage = this.ShowOnlyLastMessage;
 
             TranslationEngine engine = (TranslationEngine)this.TranslationEngines.CurrentItem;
             if (engine != null)
@@ -829,14 +941,20 @@ namespace FFXIVTataruHelper.ViewModel
         {
             List<ChatMsgType> chatCodes = allChatCodes.Select(entry => new ChatMsgType(entry)).ToList();
             List<ChatCodeViewModel> chatCodesViewMode = new List<ChatCodeViewModel>();
+            var isNewWindow = UserChatCodes == null || UserChatCodes.Count == 0;
 
             foreach (var code in allChatCodes)
             {
-                bool isCheked = (code.MsgType == MsgType.Translate) ? true : false;
-                chatCodesViewMode.Add(new ChatCodeViewModel(code.ChatCode, code.Name, code.Color, isCheked));
+                bool isChecked = (code.MsgType == MsgType.Translate);
+                if (isNewWindow && IsDelayedDialogCode(code.ChatCode))
+                {
+                    isChecked = false;
+                }
+
+                chatCodesViewMode.Add(new ChatCodeViewModel(code.ChatCode, code.Name, code.Color, isChecked));
             }
 
-            foreach (var userCode in UserChatCodes)
+            foreach (var userCode in UserChatCodes ?? Enumerable.Empty<ChatCodeViewModel>())
             {
                 var code = chatCodesViewMode.FirstOrDefault(x => x.Equals(userCode));
                 if (code != null)
@@ -851,6 +969,12 @@ namespace FFXIVTataruHelper.ViewModel
             }
 
             return new BindingList<ChatCodeViewModel>(chatCodesViewMode);
+        }
+
+        private static bool IsDelayedDialogCode(string chatCode)
+        {
+            return string.Equals(chatCode, "003D", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(chatCode, "0044", StringComparison.OrdinalIgnoreCase);
         }
 
         private void TrySetLangugue(CollectionView collection, TranslatorLanguague languague)

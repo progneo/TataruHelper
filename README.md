@@ -10,13 +10,16 @@
 <p align="center">
   <a href="https://github.com/progneo/TataruHelper/actions/workflows/build.yml"><img src="https://github.com/progneo/TataruHelper/actions/workflows/build.yml/badge.svg" alt="Build" /></a>
   <a href="https://github.com/progneo/TataruHelper/releases/latest"><img src="https://img.shields.io/github/v/release/progneo/TataruHelper?label=Release" alt="Release" /></a>
-  <a href="https://github.com/progneo/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/progneo/TataruHelper/Setup.exe?label=Downloads&display_asset_name=false" alt="Setup.exe Downloads" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/github/license/progneo/TataruHelper" alt="License" /></a>
   <img src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white" alt=".NET 10" />
   <a href="https://crowdin.com/project/tataru-helper"><img src="https://badges.crowdin.net/tataru-helper/localized.svg" alt="Crowdin" /></a>
   <a href="https://discord.gg/bSrpbd9"><img src="https://img.shields.io/discord/592039000538349569?label=Discord&logo=discord" alt="Discord" /></a>
-  <a href="https://github.com/progneo/TataruHelper/stargazers"><img src="https://img.shields.io/github/stars/progneo/TataruHelper?style=flat" alt="Stars" /></a>
-  <a href="https://github.com/progneo/TataruHelper/commits"><img src="https://img.shields.io/github/commit-activity/m/progneo/TataruHelper?label=Activity" alt="Commit Activity" /></a>
+</p>
+
+<p align="center"><strong>Download Stats</strong></p>
+<p align="center">
+  <a href="https://github.com/progneo/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/progneo/TataruHelper/Setup.exe?label=Setup%20total%20downloads" alt="Setup total downloads" /></a>
+  <a href="https://github.com/progneo/TataruHelper/releases/latest/download/TataruHelper-0.10.5-stable-delta.nupkg"><img src="https://img.shields.io/github/downloads/progneo/TataruHelper/latest/TataruHelper-0.10.5-stable-delta.nupkg?label=Current%20release%20update%20loaded" alt="Current delta update file downloads" /></a>
 </p>
 
 <p align="center"><strong><a href="https://github.com/progneo/TataruHelper/releases/latest/download/Setup.exe">Download Setup.exe</a></strong> · <a href="Documents/Guide.MD">Guide</a> · <a href="https://discord.gg/bSrpbd9">Discord</a> · <a href="#support">Support</a></p>

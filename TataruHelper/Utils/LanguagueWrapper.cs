@@ -191,6 +191,15 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ParagraphSettings"] = catalog.GetString("Paragraph Settings");
             _SettingsWindow.Resources["IntervalWidth"] = catalog.GetString("Spacing");
             _SettingsWindow.Resources["LineBreakHeight"] = catalog.GetString("Line Break Height");
+            _SettingsWindow.Resources["WindowCornerRadiusLabel"] = catalog.GetString("Corner radius");
+            _SettingsWindow.Resources["ContentPaddingLabel"] = catalog.GetString("Content padding");
+            _SettingsWindow.Resources["MessagesInContainerLabel"] = catalog.GetString("Messages in container");
+            _SettingsWindow.Resources["MessageContainerPaddingLabel"] = catalog.GetString("Message container padding");
+            _SettingsWindow.Resources["MessageContainerAlphaLabel"] = catalog.GetString("Message container alpha");
+            _SettingsWindow.Resources["MessageContainerBorderThicknessLabel"] =
+                catalog.GetString("Message border thickness");
+            _SettingsWindow.Resources["MessageContainerBorderAlphaLabel"] = catalog.GetString("Message border alpha");
+            _SettingsWindow.Resources["ShowOnlyLastMessageLabel"] = catalog.GetString("Show only last message");
 
             _SettingsWindow.Resources["ChatCodes"] = catalog.GetString("Chat Codes");
 
@@ -214,13 +223,6 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ClickThroughCB"] = catalog.GetString("Click Through");
             _SettingsWindow.Resources["AlwaysOnTopCB"] = catalog.GetString("Always On Top");
             _SettingsWindow.Resources["AutoHideCB"] = catalog.GetString("Auto Hide");
-
-            _SettingsWindow.Resources["DirectMemoryCB"] = catalog.GetString("Cutscenes/No delay");
-            _SettingsWindow.Resources["DirectMemoryToolTip"] = string.Concat(
-                catalog.GetString(
-                    "EXPERIMENTAL FUNCTION. If this option is active, the application will catch text from quest clouds and cutscene subtitles directly, not from the chatlog. Errors can occur."),
-                " ",
-                catalog.GetString("Speaker names may not always display correctly."));
 
             _SettingsWindow.Resources["AlwaysOnTopCB"] = catalog.GetString("Always On Top");
             _SettingsWindow.Resources["HideToTrayCB"] = catalog.GetString("Hide to Tray");
@@ -262,6 +264,8 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["CkError"] = catalog.GetString("Error");
             _SettingsWindow.Resources["CkNPCD"] = catalog.GetString("NPCD");
             _SettingsWindow.Resources["CkNPCA"] = catalog.GetString("NPCA");
+            _SettingsWindow.Resources["CkNPCDRealtime"] = catalog.GetString("NPCD Realtime");
+            _SettingsWindow.Resources["CkNPCARealtime"] = catalog.GetString("NPCA Realtime");
             _SettingsWindow.Resources["CkRecruitment"] = catalog.GetString("Recruitment");
             _SettingsWindow.Resources["CkSay"] = catalog.GetString("Say");
             _SettingsWindow.Resources["CkShout"] = catalog.GetString("Shout");
