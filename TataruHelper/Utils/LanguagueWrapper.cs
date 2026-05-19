@@ -191,6 +191,11 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ParagraphSettings"] = catalog.GetString("Paragraph Settings");
             _SettingsWindow.Resources["IntervalWidth"] = catalog.GetString("Spacing");
             _SettingsWindow.Resources["LineBreakHeight"] = catalog.GetString("Line Break Height");
+            _SettingsWindow.Resources["WindowCornerRadiusLabel"] = catalog.GetString("Corner radius");
+            _SettingsWindow.Resources["ContentPaddingLabel"] = catalog.GetString("Content padding");
+            _SettingsWindow.Resources["MessagesInContainerLabel"] = catalog.GetString("Messages in container");
+            _SettingsWindow.Resources["MessageContainerPaddingLabel"] = catalog.GetString("Message container padding");
+            _SettingsWindow.Resources["ShowOnlyLastMessageLabel"] = catalog.GetString("Show only last message");
 
             _SettingsWindow.Resources["ChatCodes"] = catalog.GetString("Chat Codes");
 

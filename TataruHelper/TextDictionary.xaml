@@ -199,5 +199,9 @@
     <system:String x:Key="UpdatesGroupHint">Check whether a newer release of Tataru Helper is available.</system:String>
     <system:String x:Key="LanguageGroupHint">Interface language for the settings window and overlays.</system:String>
     <system:String x:Key="WindowCornerRadiusLabel">Corner radius</system:String>
+    <system:String x:Key="ContentPaddingLabel">Content padding</system:String>
+    <system:String x:Key="MessagesInContainerLabel">Messages in container</system:String>
+    <system:String x:Key="MessageContainerPaddingLabel">Message container padding</system:String>
+    <system:String x:Key="ShowOnlyLastMessageLabel">Show only last message</system:String>
     <system:String x:Key="UpdateAvailableChip">Update available</system:String>
 </ResourceDictionary>

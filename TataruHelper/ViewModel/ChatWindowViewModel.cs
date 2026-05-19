@@ -450,6 +450,54 @@ namespace FFXIVTataruHelper.ViewModel
             }
         }
 
+        public double ContentPadding
+        {
+            get => _contentPadding;
+            set
+            {
+                if (_contentPadding == value) return;
+
+                _contentPadding = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool MessagesInContainer
+        {
+            get => _messagesInContainer;
+            set
+            {
+                if (_messagesInContainer == value) return;
+
+                _messagesInContainer = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double MessageContainerPadding
+        {
+            get => _messageContainerPadding;
+            set
+            {
+                if (_messageContainerPadding == value) return;
+
+                _messageContainerPadding = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool ShowOnlyLastMessage
+        {
+            get => _showOnlyLastMessage;
+            set
+            {
+                if (_showOnlyLastMessage == value) return;
+
+                _showOnlyLastMessage = value;
+                OnPropertyChanged();
+            }
+        }
+
         public bool IsSelected
         {
             get { return _IsSelected; }
@@ -520,6 +568,10 @@ namespace FFXIVTataruHelper.ViewModel
 
         bool _ShowTimestamps;
         double _windowCornerRadius = 12;
+        double _contentPadding = 12;
+        bool _messagesInContainer;
+        double _messageContainerPadding = 6;
+        bool _showOnlyLastMessage;
 
         bool _IsSelected;
 
@@ -552,6 +604,10 @@ namespace FFXIVTataruHelper.ViewModel
             SpacingCount = 1;
             BackGroundColor = Color.FromArgb(255, 0, 255, 128);
             ChatWindowRectangle = new RectangleD(0, 0, 480, 320);
+            ContentPadding = 12;
+            MessagesInContainer = false;
+            MessageContainerPadding = 6;
+            ShowOnlyLastMessage = false;
 
             ChatCodes = new BindingList<ChatCodeViewModel>()
             {
@@ -600,6 +656,10 @@ namespace FFXIVTataruHelper.ViewModel
             ShowTimestamps = settings.ShowTimestamps;
 
             WindowCornerRadius = settings.WindowCornerRadius > 0 ? settings.WindowCornerRadius : 12;
+            ContentPadding = settings.ContentPadding;
+            MessagesInContainer = settings.MessagesInContainer;
+            MessageContainerPadding = settings.MessageContainerPadding;
+            ShowOnlyLastMessage = settings.ShowOnlyLastMessage;
 
             BackGroundColor = settings.BackGroundColor;
 
@@ -654,6 +714,10 @@ namespace FFXIVTataruHelper.ViewModel
 
             settings.WindowCornerRadius = this.WindowCornerRadius;
             settings.ShowTimestamps = this.ShowTimestamps;
+            settings.ContentPadding = this.ContentPadding;
+            settings.MessagesInContainer = this.MessagesInContainer;
+            settings.MessageContainerPadding = this.MessageContainerPadding;
+            settings.ShowOnlyLastMessage = this.ShowOnlyLastMessage;
 
             TranslationEngine engine = (TranslationEngine)this.TranslationEngines.CurrentItem;
             if (engine != null)
