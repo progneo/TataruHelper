@@ -235,8 +235,7 @@ namespace FFXIVTataruHelper
 
             _SettingsWindow.Resources["ResetChatPosition"] = catalog.GetString("Reset Chat Position");
 
-            _SettingsWindow.Resources["TranslationEngineError"] =
-                catalog.GetString("Translation engine error. Consider switching to other engine.");
+            _SettingsWindow.Resources["TranslationEngineError"] = catalog.GetString("Translation failed:");
 
             _SettingsWindow.Resources["FFStatusLable"] = catalog.GetString("FF Status:");
 
@@ -255,9 +254,6 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["PatronsMsg"] = catalog.GetString(
                 "We express our great appreciation to the people who support our project and motivate us for new achievements.");
             _SettingsWindow.Resources["PatronsThankYou"] = catalog.GetString("Thank you");
-
-            _SettingsWindow.Resources["TranslationEngineSwitchMsg"] =
-                catalog.GetString("Translation engine error. Switching to:");
 
             _SettingsWindow.Resources["CkSystem"] = catalog.GetString("System");
             _SettingsWindow.Resources["CkEcho"] = catalog.GetString("Echo");

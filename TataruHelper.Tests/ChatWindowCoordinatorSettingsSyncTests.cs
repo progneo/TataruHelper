@@ -105,6 +105,7 @@ namespace TataruHelper.Tests
             return new ChatWindowViewModel(
                 settings,
                 translationEngines,
+                null,
                 allChatCodes,
                 hotKeyManager,
                 logger,

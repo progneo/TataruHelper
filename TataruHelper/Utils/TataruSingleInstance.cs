@@ -1,7 +1,6 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using FFXIVTataruHelper.WinUtils;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -9,6 +8,8 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
+
+using FFXIVTataruHelper.WinUtils;
 
 namespace FFXIVTataruHelper.Utils
 {
@@ -18,6 +19,7 @@ namespace FFXIVTataruHelper.Utils
             Win32Interfaces.RegisterWindowMessageM("WM_SHOWFIRSTINSTANCE|{0}", ProgramInfo.AssemblyGuid);
 
         private static Mutex mutex = null;
+        private static bool mutexOwned;
 
 
         public static bool IsOnlyInstance
@@ -46,11 +48,13 @@ namespace FFXIVTataruHelper.Utils
             try
             {
                 mutex = new Mutex(true, mutexName, out onlyInstance);
+                mutexOwned = onlyInstance;
             }
             catch (Exception e)
             {
                 Logger.WriteLog(e);
                 onlyInstance = true;
+                mutexOwned = false;
             }
 
             //Logger.WriteLog("onlyInstance: " + Convert.ToString(onlyInstance));
@@ -80,7 +84,14 @@ namespace FFXIVTataruHelper.Utils
             {
                 if (mutex != null)
                 {
-                    mutex.ReleaseMutex();
+                    if (mutexOwned)
+                    {
+                        mutex.ReleaseMutex();
+                        mutexOwned = false;
+                    }
+
+                    mutex.Dispose();
+                    mutex = null;
                 }
             }
             catch (Exception e)

@@ -9,7 +9,8 @@ namespace FFXIVTataruHelper
     {
         public static string OldHotKeysFilePath = "../HotKeys.json";
 
-        public static List<string> FFXIVLanguages = new List<string>(new string[] { "English", "Chinese", "Japanese", "French", "German", "Korean" });
+        public static List<string> FFXIVLanguages =
+            new List<string>(new string[] { "English", "Chinese", "Japanese", "French", "German", "Korean" });
 
         public static string ChatCodesFilePath = @"Resources\ChatCodes.json";
 
@@ -53,7 +54,13 @@ namespace FFXIVTataruHelper
 
         public static int TranslationDelay = 33;
 
-        public static int TranslatorWaitTime = 5000;
+        public static int TranslatorWaitTime = 30000;
+
+        public static int TranslationContextBufferWindowMs = 300;
+
+        public static int TranslationContextMaxBatchSize = 4;
+
+        public static string TranslationContextBatchDelimiter = "\n<<<TATARU_TRANSLATION_SEGMENT>>>\n";
 
         public static int SettingsSaveDelay = 2500;
 

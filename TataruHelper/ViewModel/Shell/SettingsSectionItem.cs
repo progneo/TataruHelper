@@ -11,11 +11,13 @@ public sealed class SettingsSectionItem : INotifyPropertyChanged
 
     public SettingsSectionItem(
         SettingsSection section,
+        string groupName,
         string resourceKey,
         string fallbackTitle,
         SymbolRegular icon)
     {
         Section = section;
+        GroupName = groupName;
         ResourceKey = resourceKey;
         _title = fallbackTitle;
         Icon = icon;
@@ -24,6 +26,8 @@ public sealed class SettingsSectionItem : INotifyPropertyChanged
     public event PropertyChangedEventHandler PropertyChanged;
 
     public SettingsSection Section { get; }
+
+    public string GroupName { get; }
 
     public string ResourceKey { get; }
 

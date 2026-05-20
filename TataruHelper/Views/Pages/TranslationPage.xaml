@@ -24,14 +24,66 @@
                    Text="{DynamicResource TranslationPageDescription}" />
 
         <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*" />
-                <ColumnDefinition Width="16" />
-                <ColumnDefinition Width="360" />
-            </Grid.ColumnDefinitions>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="12" />
+                <RowDefinition Height="*" />
+            </Grid.RowDefinitions>
+
+            <!-- Engine routing -->
+            <ui:Card Grid.Row="0" Padding="16">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                        <ui:SymbolIcon Symbol="Globe24" FontSize="16"
+                                       Margin="0,0,8,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Accent}" />
+                        <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                   Margin="0"
+                                   Text="{DynamicResource EngineRoutingLabel}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                               Margin="0,0,0,12"
+                               Text="{DynamicResource EngineRoutingHint}" />
+
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="12" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0">
+                            <Label Style="{DynamicResource BaseLabelStyle}"
+                                   Content="{DynamicResource TranslationEngine}" />
+                            <ComboBox ItemsSource="{Binding BoundWindow.AvailableEngines}"
+                                      SelectedItem="{Binding BoundWindow.SelectedEngine, Mode=TwoWay}"
+                                      DisplayMemberPath="Name" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="2">
+                            <Label Style="{DynamicResource BaseLabelStyle}"
+                                   Content="{DynamicResource FFLanguage}" />
+                            <ComboBox ItemsSource="{Binding BoundWindow.TranslateFromLanguagues}"
+                                      DisplayMemberPath="ShownName"
+                                      IsSynchronizedWithCurrentItem="True" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="4">
+                            <Label Style="{DynamicResource BaseLabelStyle}"
+                                   Content="{DynamicResource TraslateTo}" />
+                            <ComboBox ItemsSource="{Binding BoundWindow.TranslateToLanguagues}"
+                                      DisplayMemberPath="ShownName"
+                                      IsSynchronizedWithCurrentItem="True" />
+                        </StackPanel>
+                    </Grid>
+                </StackPanel>
+            </ui:Card>
 
             <!-- Chat code filters -->
-            <ui:Card Grid.Column="0" Padding="0">
+            <ui:Card Grid.Row="2" Padding="0">
                 <Grid>
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
@@ -94,44 +146,6 @@
                         </ItemsControl>
                     </ScrollViewer>
                 </Grid>
-            </ui:Card>
-
-            <!-- Engine routing -->
-            <ui:Card Grid.Column="2" Padding="16" VerticalAlignment="Top">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <ui:SymbolIcon Symbol="Globe24" FontSize="16"
-                                       Margin="0,0,8,0" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource Brush.Accent}" />
-                        <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
-                                   Margin="0"
-                                   Text="{DynamicResource EngineRoutingLabel}"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
-                               Margin="0,0,0,12"
-                               Text="{DynamicResource EngineRoutingHint}" />
-
-                    <Label Style="{DynamicResource BaseLabelStyle}"
-                           Content="{DynamicResource TranslationEngine}" />
-                    <ComboBox ItemsSource="{Binding BoundWindow.TranslationEngines}"
-                              DisplayMemberPath="Name"
-                              IsSynchronizedWithCurrentItem="True"
-                              Margin="0,0,0,12" />
-
-                    <Label Style="{DynamicResource BaseLabelStyle}"
-                           Content="{DynamicResource FFLanguage}" />
-                    <ComboBox ItemsSource="{Binding BoundWindow.TranslateFromLanguagues}"
-                              DisplayMemberPath="ShownName"
-                              IsSynchronizedWithCurrentItem="True"
-                              Margin="0,0,0,12" />
-
-                    <Label Style="{DynamicResource BaseLabelStyle}"
-                           Content="{DynamicResource TraslateTo}" />
-                    <ComboBox ItemsSource="{Binding BoundWindow.TranslateToLanguagues}"
-                              DisplayMemberPath="ShownName"
-                              IsSynchronizedWithCurrentItem="True" />
-                </StackPanel>
             </ui:Card>
         </Grid>
     </Grid>

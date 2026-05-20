@@ -27,11 +27,7 @@ public partial class TranslationPage : UserControl, IWindowScopedSettingsPage, I
         get => _boundWindow;
         private set
         {
-            if (ReferenceEquals(_boundWindow, value))
-            {
-                return;
-            }
-
+            if (ReferenceEquals(_boundWindow, value)) return;
             _boundWindow = value;
             OnPropertyChanged();
         }

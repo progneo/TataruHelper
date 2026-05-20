@@ -97,6 +97,7 @@ namespace TataruHelper.Tests
                 var viewModel = new ChatWindowViewModel(
                     settings,
                     translationEngines,
+                    null,
                     allChatCodes,
                     hotKeyManager,
                     logger,
@@ -147,6 +148,7 @@ namespace TataruHelper.Tests
                 var viewModel = new ChatWindowViewModel(
                     settings,
                     translationEngines,
+                    null,
                     allChatCodes,
                     hotKeyManager,
                     logger,

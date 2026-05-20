@@ -1,0 +1,82 @@
+[
+  {
+    "ShownName": "Auto",
+    "SystemName": "Auto",
+    "LanguageCode": "auto"
+  },
+  {
+    "ShownName": "English",
+    "SystemName": "English",
+    "LanguageCode": "en"
+  },
+  {
+    "ShownName": "Russian",
+    "SystemName": "Russian",
+    "LanguageCode": "ru"
+  },
+  {
+    "ShownName": "Ukrainian",
+    "SystemName": "Ukrainian",
+    "LanguageCode": "uk"
+  },
+  {
+    "ShownName": "German",
+    "SystemName": "German",
+    "LanguageCode": "de"
+  },
+  {
+    "ShownName": "French",
+    "SystemName": "French",
+    "LanguageCode": "fr"
+  },
+  {
+    "ShownName": "Italian",
+    "SystemName": "Italian",
+    "LanguageCode": "it"
+  },
+  {
+    "ShownName": "Spanish",
+    "SystemName": "Spanish",
+    "LanguageCode": "es"
+  },
+  {
+    "ShownName": "Portuguese",
+    "SystemName": "Portuguese",
+    "LanguageCode": "pt"
+  },
+  {
+    "ShownName": "Polish",
+    "SystemName": "Polish",
+    "LanguageCode": "pl"
+  },
+  {
+    "ShownName": "Dutch",
+    "SystemName": "Dutch",
+    "LanguageCode": "nl"
+  },
+  {
+    "ShownName": "Japanese",
+    "SystemName": "Japanese",
+    "LanguageCode": "ja"
+  },
+  {
+    "ShownName": "Korean",
+    "SystemName": "Korean",
+    "LanguageCode": "ko"
+  },
+  {
+    "ShownName": "Chinese Simplified",
+    "SystemName": "Chinese Simplified",
+    "LanguageCode": "zh"
+  },
+  {
+    "ShownName": "Turkish",
+    "SystemName": "Turkish",
+    "LanguageCode": "tr"
+  },
+  {
+    "ShownName": "Arabic",
+    "SystemName": "Arabic",
+    "LanguageCode": "ar"
+  }
+]

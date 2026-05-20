@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+
 using NUnit.Framework;
 
 namespace Translation.Tests
@@ -8,7 +9,7 @@ namespace Translation.Tests
     public class WebTranslatorCharacterizationTests
     {
         [Test]
-        public void Translate_UsesCache_ForSameRequest()
+        public void Translate_Success_ReturnsTextFromSelectedEngine()
         {
             var googleProvider = new FakeProvider(TranslationEngineName.GoogleTranslate, "translated value");
             var translator = new WebTranslator(new NullLog(), new[] { googleProvider }, false);
@@ -17,20 +18,36 @@ namespace Translation.Tests
             var from = new TranslatorLanguague("English", "English", "en");
             var to = new TranslatorLanguague("Spanish", "Spanish", "es");
 
-            var first = translator.Translate("Hello world", engine, from, to);
-            var second = translator.Translate("Hello world", engine, from, to);
+            var result = translator.Translate("Hello world", engine, from, to);
 
-            Assert.That(first, Is.EqualTo("translated value"));
-            Assert.That(second, Is.EqualTo("translated value"));
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Text, Is.EqualTo("translated value"));
+            Assert.That(result.Engine, Is.EqualTo(TranslationEngineName.GoogleTranslate));
+        }
+
+        [Test]
+        public void Translate_UsesCache_ForRepeatedRequest()
+        {
+            var googleProvider = new FakeProvider(TranslationEngineName.GoogleTranslate, "translated value");
+            var translator = new WebTranslator(new NullLog(), new[] { googleProvider }, false);
+
+            var engine = CreateEngine(TranslationEngineName.GoogleTranslate);
+            var from = new TranslatorLanguague("English", "English", "en");
+            var to = new TranslatorLanguague("Spanish", "Spanish", "es");
+
+            translator.Translate("Hello world", engine, from, to);
+            translator.Translate("Hello world", engine, from, to);
+
             Assert.That(googleProvider.CallCount, Is.EqualTo(1));
         }
 
         [Test]
-        public void Translate_FallsBackToGoogle_WhenPrimaryProviderFails()
+        public void Translate_DoesNotFallBack_WhenProviderThrows()
         {
             var failingDeepL = new FakeProvider(TranslationEngineName.DeepL, null, true);
-            var googleProvider = new FakeProvider(TranslationEngineName.GoogleTranslate, "google fallback");
-            var translator = new WebTranslator(new NullLog(), new ITranslationProvider[] { failingDeepL, googleProvider }, false);
+            var googleProvider = new FakeProvider(TranslationEngineName.GoogleTranslate, "should not be used");
+            var translator = new WebTranslator(new NullLog(),
+                new ITranslationProvider[] { failingDeepL, googleProvider }, false);
 
             var engine = CreateEngine(TranslationEngineName.DeepL);
             var from = new TranslatorLanguague("English", "English", "en");
@@ -38,13 +55,33 @@ namespace Translation.Tests
 
             var result = translator.Translate("Hello", engine, from, to);
 
-            Assert.That(result, Is.EqualTo("google fallback"));
-            Assert.That(failingDeepL.CallCount, Is.EqualTo(1));
-            Assert.That(googleProvider.CallCount, Is.EqualTo(1));
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.Engine, Is.EqualTo(TranslationEngineName.DeepL));
+            Assert.That(result.FailureKind, Is.EqualTo(TranslationFailureKind.ProviderException));
+            Assert.That(googleProvider.CallCount, Is.EqualTo(0));
         }
 
         [Test]
-        public void Translate_ReturnsEmpty_WhenProviderIsMissingAndNoFallback()
+        public void Translate_FlagsEmptyResponse_WithoutFallback()
+        {
+            var emptyProvider = new FakeProvider(TranslationEngineName.DeepL, string.Empty);
+            var googleProvider = new FakeProvider(TranslationEngineName.GoogleTranslate, "should not be used");
+            var translator = new WebTranslator(new NullLog(),
+                new ITranslationProvider[] { emptyProvider, googleProvider }, false);
+
+            var engine = CreateEngine(TranslationEngineName.DeepL);
+            var from = new TranslatorLanguague("English", "English", "en");
+            var to = new TranslatorLanguague("German", "German", "de");
+
+            var result = translator.Translate("Hello", engine, from, to);
+
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.FailureKind, Is.EqualTo(TranslationFailureKind.EmptyResponse));
+            Assert.That(googleProvider.CallCount, Is.EqualTo(0));
+        }
+
+        [Test]
+        public void Translate_ReportsProviderUnavailable_WhenEngineNotRegistered()
         {
             var deepLProvider = new FakeProvider(TranslationEngineName.DeepL, "unused");
             var translator = new WebTranslator(new NullLog(), new[] { deepLProvider }, false);
@@ -55,7 +92,8 @@ namespace Translation.Tests
 
             var result = translator.Translate("Hello", engine, from, to);
 
-            Assert.That(result, Is.Empty);
+            Assert.That(result.IsSuccess, Is.False);
+            Assert.That(result.FailureKind, Is.EqualTo(TranslationFailureKind.ProviderUnavailable));
             Assert.That(deepLProvider.CallCount, Is.EqualTo(0));
         }
 
@@ -70,7 +108,8 @@ namespace Translation.Tests
 
             var result = translator.Translate("No translation needed", engine, sameLang, sameLang);
 
-            Assert.That(result, Is.EqualTo("No translation needed"));
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Text, Is.EqualTo("No translation needed"));
             Assert.That(googleProvider.CallCount, Is.EqualTo(0));
         }
 
@@ -86,7 +125,8 @@ namespace Translation.Tests
 
             var result = translator.Translate("12345 !!! ???", engine, from, to);
 
-            Assert.That(result, Is.EqualTo("12345 !!! ???"));
+            Assert.That(result.IsSuccess, Is.True);
+            Assert.That(result.Text, Is.EqualTo("12345 !!! ???"));
             Assert.That(googleProvider.CallCount, Is.EqualTo(0));
         }
 

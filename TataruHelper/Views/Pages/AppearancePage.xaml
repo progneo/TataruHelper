@@ -12,7 +12,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
             <TextBlock Grid.Row="0"
@@ -24,65 +23,125 @@
                        Margin="0,0,0,16"
                        Text="{DynamicResource AppearancePageDescription}" />
 
-            <!-- App theme selector -->
-            <ui:Card Grid.Row="2" Padding="16" Margin="0,0,0,12">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
-                        <ui:SymbolIcon Symbol="DarkTheme24" FontSize="16"
-                                       Margin="0,0,8,0" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource Brush.Accent}" />
-                        <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
-                                   Margin="0"
-                                   Text="{DynamicResource ThemeGroupTitle}"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
-                               Margin="0,0,0,12"
-                               Text="{DynamicResource ThemeGroupHint}" />
-
-                    <ComboBox Width="220"
-                              HorizontalAlignment="Left"
-                              ItemsSource="{Binding Shell.ThemeOptions}"
-                              DisplayMemberPath="Title"
-                              SelectedItem="{Binding Shell.SelectedThemeOption, Mode=TwoWay}" />
-                </StackPanel>
-            </ui:Card>
-
-            <Grid Grid.Row="3" VerticalAlignment="Top">
+            <Grid Grid.Row="2" VerticalAlignment="Top">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="16" />
                     <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <ui:Card Grid.Column="0" Padding="16" VerticalAlignment="Top">
-                    <StackPanel>
-                        <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                            <ui:SymbolIcon Symbol="TextFont24" FontSize="16"
-                                           Margin="0,0,8,0" VerticalAlignment="Center"
-                                           Foreground="{DynamicResource Brush.Accent}" />
-                            <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
-                                       Margin="0"
-                                       Text="{DynamicResource TypographyLabel}"
-                                       VerticalAlignment="Center" />
-                        </StackPanel>
+                <StackPanel Grid.Column="0" VerticalAlignment="Top">
+                    <ui:Card Padding="16" Margin="0,0,0,12" VerticalAlignment="Top">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="180" />
+                            </Grid.ColumnDefinitions>
 
-                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontFamily}" />
-                        <ComboBox ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}"
-                                  SelectedItem="{Binding BoundWindow.ChatFont, Mode=TwoWay}"
-                                  Margin="0,0,0,12" />
+                            <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,12">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <ui:SymbolIcon Symbol="TextFont24" FontSize="16"
+                                                   Margin="0,0,8,0" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource Brush.Accent}" />
+                                    <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                               Margin="0"
+                                               Text="{DynamicResource TypographyLabel}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                           Text="Choose text style and readability defaults for this overlay window." />
+                            </StackPanel>
 
-                        <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource FontSize}" />
-                        <ui:NumberBox
-                            Value="{Binding BoundWindow.ChatFontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                            Minimum="1" Maximum="100"
-                            ClearButtonEnabled="False"
-                            Margin="0,0,0,12" />
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource FontFamily}" />
+                            <ComboBox Grid.Row="1" Grid.Column="1"
+                                      ItemsSource="{Binding Source={x:Static Fonts.SystemFontFamilies}}"
+                                      SelectedItem="{Binding BoundWindow.ChatFont, Mode=TwoWay}" />
 
-                        <ui:ToggleSwitch IsChecked="{Binding BoundWindow.ShowTimestamps, Mode=TwoWay}"
-                                         Content="{DynamicResource ShowTimestampsCb}" />
-                    </StackPanel>
-                </ui:Card>
+                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,10,0,0" Text="{DynamicResource FontSize}" />
+                            <ui:NumberBox Grid.Row="2" Grid.Column="1"
+                                          Margin="0,10,0,0"
+                                          Value="{Binding BoundWindow.ChatFontSize, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Minimum="1" Maximum="100"
+                                          ClearButtonEnabled="False" />
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,10,0,0"
+                                       Text="{DynamicResource ShowTimestampsCb}" />
+                            <ui:ToggleSwitch Grid.Row="3" Grid.Column="1"
+                                             Margin="0,10,0,0"
+                                             IsChecked="{Binding BoundWindow.ShowTimestamps, Mode=TwoWay}" />
+                        </Grid>
+                    </ui:Card>
+
+                    <ui:Card Padding="16" VerticalAlignment="Top">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="Auto" />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="180" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Margin="0,0,0,12">
+                                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
+                                    <ui:SymbolIcon Symbol="WindowApps24" FontSize="16"
+                                                   Margin="0,0,8,0" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource Brush.Accent}" />
+                                    <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                               Margin="0"
+                                               Text="{DynamicResource OverlayBehaviorLabel}"
+                                               VerticalAlignment="Center" />
+                                </StackPanel>
+                                <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                           Text="Configure how the chat overlay behaves in game." />
+                            </StackPanel>
+
+                            <TextBlock Grid.Row="1" Grid.Column="0" Text="{DynamicResource AlwaysOnTopCB}" />
+                            <ui:ToggleSwitch Grid.Row="1" Grid.Column="1"
+                                             HorizontalAlignment="Right"
+                                             IsChecked="{Binding BoundWindow.IsAlwaysOnTop, Mode=TwoWay}" />
+
+                            <TextBlock Grid.Row="2" Grid.Column="0" Margin="0,10,0,0"
+                                       Text="{DynamicResource ClickThroughCB}" />
+                            <ui:ToggleSwitch Grid.Row="2" Grid.Column="1"
+                                             Margin="0,10,0,0"
+                                             HorizontalAlignment="Right"
+                                             IsChecked="{Binding BoundWindow.IsClickThrough, Mode=TwoWay}" />
+
+                            <TextBlock Grid.Row="3" Grid.Column="0" Margin="0,10,0,0"
+                                       Text="{DynamicResource AutoHideCB}" />
+                            <ui:ToggleSwitch Grid.Row="3" Grid.Column="1"
+                                             Margin="0,10,0,0"
+                                             HorizontalAlignment="Right"
+                                             IsChecked="{Binding BoundWindow.IsAutoHide, Mode=TwoWay}" />
+
+                            <StackPanel Grid.Row="4" Grid.Column="0" Margin="0,10,0,0">
+                                <TextBlock Text="Auto Hide Timeout" />
+                                <TextBlock Style="{DynamicResource CaptionTextStyle}" Text="Timeout in seconds." />
+                            </StackPanel>
+                            <ui:NumberBox Grid.Row="4" Grid.Column="1"
+                                          Margin="0,10,0,0"
+                                          HorizontalAlignment="Right"
+                                          Value="{Binding BoundWindow.AutoHideTimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                          Width="120"
+                                          Minimum="1"
+                                          Maximum="36000"
+                                          IsEnabled="{Binding BoundWindow.IsAutoHide}"
+                                          ClearButtonEnabled="False" />
+                        </Grid>
+                    </ui:Card>
+                </StackPanel>
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Top">
                     <ui:Card Padding="16" Margin="0,0,0,12">

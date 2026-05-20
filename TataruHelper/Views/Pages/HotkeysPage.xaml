@@ -11,7 +11,6 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
@@ -104,45 +103,6 @@
                 </StackPanel>
             </ui:Card>
 
-            <!-- Overlay behavior card -->
-            <ui:Card Grid.Row="3" Padding="16">
-                <StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                        <ui:SymbolIcon Symbol="WindowApps24" FontSize="16"
-                                       Margin="0,0,8,0" VerticalAlignment="Center"
-                                       Foreground="{DynamicResource Brush.Accent}" />
-                        <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
-                                   Margin="0"
-                                   Text="{DynamicResource OverlayBehaviorLabel}"
-                                   VerticalAlignment="Center" />
-                    </StackPanel>
-
-                    <ui:ToggleSwitch IsChecked="{Binding BoundWindow.IsAlwaysOnTop, Mode=TwoWay}"
-                                     Content="{DynamicResource AlwaysOnTopCB}"
-                                     Margin="0,0,0,6" />
-                    <ui:ToggleSwitch IsChecked="{Binding BoundWindow.IsClickThrough, Mode=TwoWay}"
-                                     Content="{DynamicResource ClickThroughCB}"
-                                     Margin="0,0,0,6" />
-
-                    <Grid Margin="0,4,0,0">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="*" />
-                            <ColumnDefinition Width="Auto" />
-                        </Grid.ColumnDefinitions>
-                        <ui:ToggleSwitch Grid.Column="0"
-                                         IsChecked="{Binding BoundWindow.IsAutoHide, Mode=TwoWay}"
-                                         Content="{DynamicResource AutoHideCB}"
-                                         VerticalAlignment="Center" />
-                        <ui:NumberBox Grid.Column="1"
-                                      Value="{Binding BoundWindow.AutoHideTimeoutSeconds, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                      Width="140"
-                                      VerticalAlignment="Center"
-                                      Minimum="1"
-                                      Maximum="36000"
-                                      ClearButtonEnabled="False" />
-                    </Grid>
-                </StackPanel>
-            </ui:Card>
         </Grid>
     </ScrollViewer>
 </UserControl>

@@ -210,12 +210,16 @@ namespace FFXIVTataruHelper.ViewModel
 
         ReadOnlyCollection<ChatMsgType> _AllChatCodes;
 
+        readonly TranslationCredentialsViewModel _TranslationCredentials;
+
         public TataruViewModel(
             TataruModel tatruModel,
             IAppLogger logger,
             IUiDispatcher uiDispatcher,
-            IHotKeyBindingService hotKeyBindingService)
+            IHotKeyBindingService hotKeyBindingService,
+            TranslationCredentialsViewModel translationCredentials)
         {
+            _TranslationCredentials = translationCredentials;
             this._chatWindowsListChangedAsync =
                 new AsyncEvent<AsyncListChangedEventHandler<ChatWindowViewModel>>(this.EventErrorHandler,
                     "TataruViewModel \n ChatWindowsListChangedAsync");
@@ -270,8 +274,8 @@ namespace FFXIVTataruHelper.ViewModel
 
                 var trEng = TranslationEngines;
                 cws = new ChatWindowViewModelSettings((winId + 1).ToString(), winId);
-                cwm = new ChatWindowViewModel(cws, trEng.ToList(), _AllChatCodes.ToList(), _TataruModel.HotKeyManager,
-                    _Logger, _HotKeyBindingService);
+                cwm = new ChatWindowViewModel(cws, trEng.ToList(), _TranslationCredentials, _AllChatCodes.ToList(),
+                    _TataruModel.HotKeyManager, _Logger, _HotKeyBindingService);
 
                 ChatWindows.Add(cwm);
 
@@ -290,8 +294,8 @@ namespace FFXIVTataruHelper.ViewModel
 
             _UiDispatcher.Invoke(() =>
             {
-                cwm = new ChatWindowViewModel(settings, trEng.ToList(), _AllChatCodes.ToList(),
-                    _TataruModel.HotKeyManager, _Logger, _HotKeyBindingService);
+                cwm = new ChatWindowViewModel(settings, trEng.ToList(), _TranslationCredentials,
+                    _AllChatCodes.ToList(), _TataruModel.HotKeyManager, _Logger, _HotKeyBindingService);
 
                 try
                 {

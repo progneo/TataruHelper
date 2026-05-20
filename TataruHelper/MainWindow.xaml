@@ -6,6 +6,7 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
+    xmlns:data="clr-namespace:System.Windows.Data;assembly=PresentationFramework"
     x:Class="FFXIVTataruHelper.MainWindow"
     mc:Ignorable="d"
     Icon="Resources/tray_icon.ico"
@@ -25,6 +26,15 @@
     FontFamily="{DynamicResource Font.Ui}"
     FontSize="{DynamicResource FontSize.Body}"
     Closing="Window_Closing" Closed="Window_Closed" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged">
+
+    <ui:FluentWindow.Resources>
+        <CollectionViewSource x:Key="GroupedSectionsView"
+                              Source="{Binding Sections}">
+            <CollectionViewSource.GroupDescriptions>
+                <data:PropertyGroupDescription PropertyName="GroupName" />
+            </CollectionViewSource.GroupDescriptions>
+        </CollectionViewSource>
+    </ui:FluentWindow.Resources>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -165,8 +175,20 @@
                 <ListBox x:Name="SectionList"
                          Style="{DynamicResource SidebarSectionListStyle}"
                          ItemContainerStyle="{DynamicResource SidebarSectionItemStyle}"
-                         ItemsSource="{Binding Sections}"
+                         ItemsSource="{Binding Source={StaticResource GroupedSectionsView}}"
                          SelectedItem="{Binding SelectedSection, Mode=TwoWay}">
+                    <ListBox.GroupStyle>
+                        <GroupStyle>
+                            <GroupStyle.HeaderTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Name}"
+                                               Margin="10,8,10,6"
+                                               FontWeight="SemiBold"
+                                               Foreground="{DynamicResource Brush.TextSecondary}" />
+                                </DataTemplate>
+                            </GroupStyle.HeaderTemplate>
+                        </GroupStyle>
+                    </ListBox.GroupStyle>
                     <ListBox.ItemTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">

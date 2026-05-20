@@ -111,9 +111,7 @@
 
     <system:String x:Key="ResetChatPosition">Reset Chat Position</system:String>
 
-    <system:String x:Key="TranslationEngineError">Translation engine error. Consider switching to other engine.</system:String>
-
-    <system:String x:Key="TranslationEngineSwitchMsg">Translation engine error. Switching to:</system:String>
+    <system:String x:Key="TranslationEngineError">Translation failed:</system:String>
 
     <system:String x:Key="CkSystem">System</system:String>
     <system:String x:Key="CkEcho">Echo</system:String>
