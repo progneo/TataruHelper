@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 using HttpUtilities;
@@ -204,6 +205,8 @@ namespace Translation.Papago
         private static IEnumerable<string> EnumerateChunkUrls(string html)
         {
             var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            var candidates = new List<string>();
+
             foreach (Match match in ChunkPattern.Matches(html))
             {
                 var path = match.Groups["path"].Value;
@@ -212,8 +215,26 @@ namespace Translation.Papago
 
                 var url = "https://papago.naver.com" + path;
                 if (seen.Add(url))
-                    yield return url;
+                    candidates.Add(url);
             }
+
+            // Prefer chunks that empirically contain the HMAC key (main.* and
+            // vendors~home.*). Falls back to anything else if those don't match.
+            return candidates.OrderByDescending(ChunkPriority);
+        }
+
+        private static int ChunkPriority(string url)
+        {
+            var basename = url.Substring(url.LastIndexOf('/') + 1);
+
+            if (basename.StartsWith("main.", StringComparison.OrdinalIgnoreCase))
+                return 3;
+            if (basename.StartsWith("vendors~home.", StringComparison.OrdinalIgnoreCase))
+                return 2;
+            if (basename.StartsWith("runtime~", StringComparison.OrdinalIgnoreCase))
+                return -1;
+
+            return 0;
         }
 
         private static string ExtractKey(string body)
