@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Text.RegularExpressions;
 
 using HttpUtilities;
@@ -36,13 +37,21 @@ namespace Translation.Papago
             RegexOptions.Compiled);
 
         private readonly ILog _logger;
+        private readonly string _cachePath;
         private readonly object _gate = new object();
 
         private string _cachedKey;
+        private bool _diskLoadAttempted;
 
         public PapagoKeyResolver(ILog logger)
+            : this(logger, GlobalTranslationSettings.PapagoKeyCachePath)
+        {
+        }
+
+        public PapagoKeyResolver(ILog logger, string cachePath)
         {
             _logger = logger;
+            _cachePath = cachePath;
         }
 
         public string GetKey()
@@ -52,7 +61,22 @@ namespace Translation.Papago
                 if (!string.IsNullOrEmpty(_cachedKey))
                     return _cachedKey;
 
+                if (!_diskLoadAttempted)
+                {
+                    _diskLoadAttempted = true;
+                    var diskKey = ReadCachedKey();
+                    if (!string.IsNullOrEmpty(diskKey))
+                    {
+                        _cachedKey = diskKey;
+                        _logger?.WriteLog($"Papago key resolve: loaded cached key '{diskKey}' from {_cachePath}.");
+                        return _cachedKey;
+                    }
+                }
+
                 _cachedKey = Resolve();
+                if (!string.IsNullOrEmpty(_cachedKey))
+                    WriteCachedKey(_cachedKey);
+
                 return _cachedKey;
             }
         }
@@ -62,6 +86,62 @@ namespace Translation.Papago
             lock (_gate)
             {
                 _cachedKey = null;
+                DeleteCachedKey();
+            }
+        }
+
+        private string ReadCachedKey()
+        {
+            if (string.IsNullOrEmpty(_cachePath))
+                return null;
+
+            try
+            {
+                if (!File.Exists(_cachePath))
+                    return null;
+
+                var contents = File.ReadAllText(_cachePath).Trim();
+                return KeyPattern.IsMatch("\"" + contents + "\"") ? contents : null;
+            }
+            catch (Exception ex)
+            {
+                _logger?.WriteLog("Papago key cache read failed: " + ex.Message);
+                return null;
+            }
+        }
+
+        private void WriteCachedKey(string key)
+        {
+            if (string.IsNullOrEmpty(_cachePath))
+                return;
+
+            try
+            {
+                var dir = Path.GetDirectoryName(_cachePath);
+                if (!string.IsNullOrEmpty(dir) && !Directory.Exists(dir))
+                    Directory.CreateDirectory(dir);
+
+                File.WriteAllText(_cachePath, key);
+            }
+            catch (Exception ex)
+            {
+                _logger?.WriteLog("Papago key cache write failed: " + ex.Message);
+            }
+        }
+
+        private void DeleteCachedKey()
+        {
+            if (string.IsNullOrEmpty(_cachePath))
+                return;
+
+            try
+            {
+                if (File.Exists(_cachePath))
+                    File.Delete(_cachePath);
+            }
+            catch (Exception ex)
+            {
+                _logger?.WriteLog("Papago key cache delete failed: " + ex.Message);
             }
         }
 

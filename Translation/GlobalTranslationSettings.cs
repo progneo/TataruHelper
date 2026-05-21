@@ -29,6 +29,8 @@ namespace Translation
 
         public static string PapagoEncoderPath = "TranslationResources/PapagoEncoder";
 
+        public static string PapagoKeyCachePath = "PapagoKey.cache";
+
         public static string GoogleTranslateLanguages = "TranslationResources/GoogleTranslateLanguages.json";
 
         public static string PapagoLanguages = "TranslationResources/PapagoLanguages.json";
