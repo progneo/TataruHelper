@@ -2,22 +2,20 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Runtime.Versioning;
 using System.Windows;
 using System.Windows.Data;
+using System.Windows.Interop;
 using System.Windows.Markup;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-
 namespace WpfXamlExtensions
 {
+    [SupportedOSPlatform("windows6.1")]
     public class IconToImageSourceConverter : MarkupExtension, IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
@@ -27,14 +25,18 @@ namespace WpfXamlExtensions
             {
                 try
                 {
-                    Trace.TraceWarning("Attempted to convert {0} instead of Icon object in IconToImageSourceConverter", value);
+                    Trace.TraceWarning("Attempted to convert {0} instead of Icon object in IconToImageSourceConverter",
+                        value);
                 }
-                catch (Exception) {  }
+                catch (Exception)
+                {
+                    // ignored
+                }
 
                 return null;
             }
 
-            ImageSource imageSource = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(
+            ImageSource imageSource = Imaging.CreateBitmapSourceFromHIcon(
                 icon.Handle,
                 Int32Rect.Empty,
                 BitmapSizeOptions.FromEmptyOptions());

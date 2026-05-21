@@ -98,7 +98,8 @@ namespace FFXIVTataruHelper
             WebTranslator webTranslator,
             IHotKeyBindingService hotKeyBindingService,
             IChatWindowCoordinator chatWindowCoordinator,
-            IApplicationCoordinator applicationCoordinator)
+            IApplicationCoordinator applicationCoordinator,
+            TranslationCredentialsViewModel translationCredentials)
         {
             CmdArgsStatus.LoadArgs();
 
@@ -121,7 +122,8 @@ namespace FFXIVTataruHelper
 
             _ChatProcessor = new ChatProcessor(_WebTranslator, _SettingsStore, _Logger);
 
-            _TataruViewModel = new TataruViewModel(this, _Logger, _UiDispatcher, _HotKeyBindingService);
+            _TataruViewModel = new TataruViewModel(this, _Logger, _UiDispatcher, _HotKeyBindingService,
+                translationCredentials);
         }
 
         public async Task InitializeComponent()

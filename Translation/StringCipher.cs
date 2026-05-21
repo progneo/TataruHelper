@@ -2,12 +2,10 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Translation
 {
@@ -24,8 +22,11 @@ namespace Translation
             var cipherTextBytesWithSaltAndIv = Convert.FromBase64String(cipherText);
             var saltStringBytes = cipherTextBytesWithSaltAndIv.Take(Keysize / 8).ToArray();
             var ivStringBytes = cipherTextBytesWithSaltAndIv.Skip(Keysize / 8).Take(Keysize / 8).ToArray();
-            var cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((Keysize / 8) * 2).Take(cipherTextBytesWithSaltAndIv.Length - ((Keysize / 8) * 2)).ToArray();
+            var cipherTextBytes = cipherTextBytesWithSaltAndIv.Skip((Keysize / 8) * 2)
+                .Take(cipherTextBytesWithSaltAndIv.Length - ((Keysize / 8) * 2)).ToArray();
 
+            // Ciphertext layout is fixed by the embedded PapagoEncoderResource (256-bit Rijndael block).
+#pragma warning disable SYSLIB0022, SYSLIB0060
             using (var password = new Rfc2898DeriveBytes(passPhrase, saltStringBytes, DerivationIterations))
             {
                 var keyBytes = password.GetBytes(Keysize / 8);
@@ -45,12 +46,13 @@ namespace Translation
                                 memoryStream.Close();
                                 cryptoStream.Close();
 
-                                result=Encoding.UTF8.GetString(plainTextBytes, 0, decryptedByteCount);
+                                result = Encoding.UTF8.GetString(plainTextBytes, 0, decryptedByteCount);
                             }
                         }
                     }
                 }
             }
+#pragma warning restore SYSLIB0022, SYSLIB0060
 
             return result;
         }

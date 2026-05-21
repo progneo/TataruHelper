@@ -38,10 +38,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Locale_cloud\**\*.mo">
+    <None Update="Locale\**\*.mo">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
-    <None Update="Locale_cloud\**\*.po">
+    <None Update="Locale\**\*.po">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="Resources\ChatCodes.json">

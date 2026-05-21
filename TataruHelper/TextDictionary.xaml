@@ -39,6 +39,9 @@
     <system:String x:Key="SectionTranslation">Translation</system:String>
     <system:String x:Key="SectionAppearance">Appearance</system:String>
     <system:String x:Key="SectionGeneral">General</system:String>
+    <system:String x:Key="SidebarGroupChatWindows">Chat Windows</system:String>
+    <system:String x:Key="SidebarGroupPerWindow">Per Window Settings</system:String>
+    <system:String x:Key="SidebarGroupApplication">Application</system:String>
     <system:String x:Key="ActiveChatWindowLabel">Active Chat Window</system:String>
     <system:String x:Key="AddButtonText">Add</system:String>
     <system:String x:Key="DeleteButtonText">Delete</system:String>
@@ -111,9 +114,7 @@
 
     <system:String x:Key="ResetChatPosition">Reset Chat Position</system:String>
 
-    <system:String x:Key="TranslationEngineError">Translation engine error. Consider switching to other engine.</system:String>
-
-    <system:String x:Key="TranslationEngineSwitchMsg">Translation engine error. Switching to:</system:String>
+    <system:String x:Key="TranslationEngineError">Translation failed:</system:String>
 
     <system:String x:Key="CkSystem">System</system:String>
     <system:String x:Key="CkEcho">Echo</system:String>
@@ -207,4 +208,30 @@
     <system:String x:Key="MessageContainerBorderAlphaLabel">Message border alpha</system:String>
     <system:String x:Key="ShowOnlyLastMessageLabel">Show only last message</system:String>
     <system:String x:Key="UpdateAvailableChip">Update available</system:String>
+
+    <!-- General page (translator catalogue) -->
+    <system:String x:Key="TranslatorsLabel">Translators</system:String>
+    <system:String x:Key="TranslatorsHint">Enable only translators you need. Disabled translators are hidden on the Translation page.</system:String>
+    <system:String x:Key="FreeTranslatorsLabel">Free</system:String>
+    <system:String x:Key="PaidTranslatorsLabel">Paid</system:String>
+    <system:String x:Key="AITranslatorsLabel">AI</system:String>
+    <system:String x:Key="AzureKeyLabel">Azure key</system:String>
+    <system:String x:Key="AzureRegionLabel">Azure region</system:String>
+    <system:String x:Key="GoogleCloudKeyLabel">Google Cloud key</system:String>
+    <system:String x:Key="DeepLApiKeyLabel">DeepL API key</system:String>
+    <system:String x:Key="YandexApiKeyLabel">Yandex API key</system:String>
+    <system:String x:Key="YandexFolderIdLabel">Yandex folder ID</system:String>
+    <system:String x:Key="OpenAIKeyLabel">OpenAI key</system:String>
+    <system:String x:Key="OpenAIModelLabel">OpenAI model (optional)</system:String>
+    <system:String x:Key="DeepSeekKeyLabel">DeepSeek key</system:String>
+    <system:String x:Key="DeepSeekModelLabel">DeepSeek model (optional)</system:String>
+    <system:String x:Key="YandexGptUsesYandexHint">Uses the Yandex Cloud API key and folder ID from the Yandex row above.</system:String>
+    <system:String x:Key="YandexGptModelAliasLabel">Model alias (optional, e.g. yandexgpt/latest, yandexgpt-lite/latest)</system:String>
+
+    <!-- About / Appearance -->
+    <system:String x:Key="AppTagline">Real-time FFXIV chat translator</system:String>
+    <system:String x:Key="TypographyHint">Choose text style and readability defaults for this overlay window.</system:String>
+    <system:String x:Key="OverlayBehaviorHint">Configure how the chat overlay behaves in game.</system:String>
+    <system:String x:Key="AutoHideTimeoutLabel">Auto Hide Timeout</system:String>
+    <system:String x:Key="AutoHideTimeoutHint">Timeout in seconds.</system:String>
 </ResourceDictionary>

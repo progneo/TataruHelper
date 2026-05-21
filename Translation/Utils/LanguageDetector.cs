@@ -1,9 +1,10 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using IvanAkcheurov.NTextCat.Lib;
 using System;
 using System.Linq;
+
+using NTextCat;
 
 namespace Translation.Utils
 {
@@ -69,7 +70,7 @@ namespace Translation.Utils
                     koreanCount++;
             }
 
-            return (((double)koreanCount / (double)sentence.Length)>= _MaxSameLanguagePercent);
+            return (((double)koreanCount / (double)sentence.Length) >= _MaxSameLanguagePercent);
         }
 
         public bool HasJapanese(string sentence)

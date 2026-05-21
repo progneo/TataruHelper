@@ -2,6 +2,7 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Threading;
@@ -20,6 +21,8 @@ using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.TataruComponentModel;
 using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.WinUtils;
+
+using Translation;
 
 namespace FFXIVTataruHelper
 {
@@ -45,6 +48,8 @@ namespace FFXIVTataruHelper
         private DateTime _TextArrivedTime;
         protected bool _KeepWorking;
         private bool _AutoHidden;
+
+        private readonly HashSet<string> _reportedFailureEngines = new HashSet<string>(StringComparer.Ordinal);
 
         private const uint TopMostSetWindowPosFlags =
             Win32Interfaces.SWP_NOMOVE |
@@ -170,78 +175,44 @@ namespace FFXIVTataruHelper
 
             textColor = chatCode.Color;
 
-            int translateTryCount = 0;
-            bool notTransalted = true;
-
             if (ea.ChatMessage.Text.Length > 0)
             {
-                while (translateTryCount < _SettingsStore.MaxTranslateTryCount && notTransalted)
+                TranslationResult result = default;
+
+                using (var translationCts = new CancellationTokenSource(_SettingsStore.TranslatorWaitTimeMs))
                 {
-                    var translationEngines = _TataruModel.ChatProcessor.TranslationEngines;
-                    string translation = string.Empty;
-
-
-                    using (var translationCts = new CancellationTokenSource(_SettingsStore.TranslatorWaitTimeMs))
+                    try
                     {
-                        try
-                        {
-                            translation = await _TataruModel.ChatProcessor.Translate(
-                                ea.ChatMessage.Text,
-                                _ChatWindowViewModel.CurrentTransaltionEngine,
-                                _ChatWindowViewModel.CurrentTranslateFromLanguague,
-                                _ChatWindowViewModel.CurrentTranslateToLanguague,
-                                chatCode.Code,
-                                translationCts.Token);
-                        }
-                        catch (OperationCanceledException)
-                        {
-                            translation = string.Empty;
-                        }
+                        result = await _TataruModel.ChatProcessor.Translate(
+                            ea.ChatMessage.Text,
+                            _ChatWindowViewModel.SelectedEngine,
+                            _ChatWindowViewModel.CurrentTranslateFromLanguague,
+                            _ChatWindowViewModel.CurrentTranslateToLanguague,
+                            chatCode.Code,
+                            translationCts.Token);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        result = TranslationResult.Failure(
+                            _ChatWindowViewModel.SelectedEngine?.EngineName ?? default,
+                            TranslationFailureKind.ProviderException,
+                            "Translation timed out.");
+                    }
+                }
+
+                if (result.IsSuccess)
+                {
+                    text = result.Text;
+                }
+                else
+                {
+                    var failedEngineName = _ChatWindowViewModel.SelectedEngine?.Name ?? result.Engine.ToString();
+                    if (_reportedFailureEngines.Add(failedEngineName))
+                    {
+                        _UiDispatcher.Invoke(() => ShowFailureNotice(failedEngineName, textColor));
                     }
 
-                    translateTryCount++;
-
-                    if (translation.Length < 1)
-                    {
-                        var engineIndex = translationEngines.IndexOf(_ChatWindowViewModel.CurrentTransaltionEngine);
-                        if (engineIndex < 0)
-                            engineIndex = translationEngines.Count - 1;
-
-                        bool supported = false;
-
-                        int iterCount = 0;
-                        do
-                        {
-                            engineIndex++;
-                            iterCount++;
-                            if (engineIndex >= translationEngines.Count)
-                                engineIndex = 0;
-
-                            var tmpEngine = translationEngines[engineIndex];
-                            if (tmpEngine.SupportedLanguages.Contains(
-                                    _ChatWindowViewModel.CurrentTranslateFromLanguague)
-                                && tmpEngine.SupportedLanguages.Contains(_ChatWindowViewModel
-                                    .CurrentTranslateToLanguague))
-                            {
-                                supported = true;
-
-                                _UiDispatcher.Invoke(() =>
-                                {
-                                    _ChatWindowViewModel.TranslationEngines.MoveCurrentToPosition(engineIndex);
-                                });
-                            }
-                        } while (!supported && iterCount <= translationEngines.Count);
-
-                        _UiDispatcher.Invoke(() =>
-                        {
-                            ShowErrorText(1, _ChatWindowViewModel.CurrentTransaltionEngine.Name, textColor);
-                        });
-                    }
-                    else
-                    {
-                        text = translation;
-                        notTransalted = false;
-                    }
+                    return;
                 }
             }
             else
@@ -270,104 +241,108 @@ namespace FFXIVTataruHelper
 
         protected virtual async Task OnSettingsWindowPropertyChange(AsyncPropertyChangedEventArgs ea)
         {
-            switch (ea.PropertyName)
+            await this.UIThreadAsync(() =>
             {
-                case "IsClickThrough":
-
-                    if (_ChatWindowViewModel.IsClickThrough)
-                        MakeWindowClickThrough();
-                    else
-                        MakeWindowClickable();
-
-                    break;
-                case "IsAlwaysOnTop":
-                    {
-                        ApplyAlwaysOnTop();
-
-                        if (!_ChatWindowViewModel.IsAlwaysOnTop && !_TataruModel.FFMemoryReader.IsGameWindowForeground)
-                        {
-                            _ChatWindowViewModel.IsWindowVisible = false;
-                        }
-                        else if (_ChatWindowViewModel.IsAlwaysOnTop && !_ChatWindowViewModel.IsHiddenByUser)
-                        {
-                            _ChatWindowViewModel.IsWindowVisible = true;
-                            ShowWindow();
-                        }
-                    }
-                    break;
-                case "IsAutoHide":
-                    {
-                        _TextArrivedTime = DateTime.UtcNow;
-                        if (!_ChatWindowViewModel.IsAutoHide)
-                            ShowWindow();
-                    }
-                    break;
-                case "IsWindowVisible":
-                    {
-                        if (_ChatWindowViewModel.IsWindowVisible == true)
-                        {
-                            _TextArrivedTime = DateTime.UtcNow;
-                            ShowWindow();
-                            ApplyAlwaysOnTop();
-                        }
-                    }
-                    break;
-                case "BackGroundColor":
-                    {
-                        if (_ChatWindowViewModel.BackGroundColor.A == 255)
-                            this.AllowsTransparency = false;
-                        else
-                            this.AllowsTransparency = true;
+                switch (ea.PropertyName)
+                {
+                    case "IsClickThrough":
 
                         if (_ChatWindowViewModel.IsClickThrough)
-                        {
-                            MakeWindowClickable();
                             MakeWindowClickThrough();
+                        else
+                            MakeWindowClickable();
+
+                        break;
+                    case "IsAlwaysOnTop":
+                        {
+                            ApplyAlwaysOnTop();
+
+                            if (!_ChatWindowViewModel.IsAlwaysOnTop &&
+                                !_TataruModel.FFMemoryReader.IsGameWindowForeground)
+                            {
+                                _ChatWindowViewModel.IsWindowVisible = false;
+                            }
+                            else if (_ChatWindowViewModel.IsAlwaysOnTop && !_ChatWindowViewModel.IsHiddenByUser)
+                            {
+                                _ChatWindowViewModel.IsWindowVisible = true;
+                                ShowWindow();
+                            }
                         }
-                    }
-                    break;
-                case "ContentPadding":
-                    {
-                        ApplyContentPadding();
-                    }
-                    break;
-                case "MessageContainerPadding":
-                    {
-                        ApplyMessageContainerVisuals();
-                    }
-                    break;
-                case "MessageContainerAlpha":
-                    {
-                        ApplyMessageContainerVisuals();
-                    }
-                    break;
-                case "MessageContainerBorderThickness":
-                    {
-                        ApplyMessageContainerVisuals();
-                    }
-                    break;
-                case "MessageContainerBorderAlpha":
-                    {
-                        ApplyMessageContainerVisuals();
-                    }
-                    break;
-                case "MessagesInContainer":
-                    {
-                        if (_ChatWindowViewModel.MessagesInContainer)
+                        break;
+                    case "IsAutoHide":
+                        {
+                            _TextArrivedTime = DateTime.UtcNow;
+                            if (!_ChatWindowViewModel.IsAutoHide)
+                                ShowWindow();
+                        }
+                        break;
+                    case "IsWindowVisible":
+                        {
+                            if (_ChatWindowViewModel.IsWindowVisible == true)
+                            {
+                                _TextArrivedTime = DateTime.UtcNow;
+                                ShowWindow();
+                                ApplyAlwaysOnTop();
+                            }
+                        }
+                        break;
+                    case "BackGroundColor":
+                        {
+                            if (_ChatWindowViewModel.BackGroundColor.A == 255)
+                                this.AllowsTransparency = false;
+                            else
+                                this.AllowsTransparency = true;
+
+                            if (_ChatWindowViewModel.IsClickThrough)
+                            {
+                                MakeWindowClickable();
+                                MakeWindowClickThrough();
+                            }
+                        }
+                        break;
+                    case "ContentPadding":
+                        {
+                            ApplyContentPadding();
+                        }
+                        break;
+                    case "MessageContainerPadding":
                         {
                             ApplyMessageContainerVisuals();
                         }
-                    }
-                    break;
-                case "ShowOnlyLastMessage":
-                    {
-                        if (_ChatWindowViewModel.ShowOnlyLastMessage)
+                        break;
+                    case "MessageContainerAlpha":
                         {
-                            EnforceLastMessageOnly();
+                            ApplyMessageContainerVisuals();
                         }
-                    }
-                    break;
-            }
+                        break;
+                    case "MessageContainerBorderThickness":
+                        {
+                            ApplyMessageContainerVisuals();
+                        }
+                        break;
+                    case "MessageContainerBorderAlpha":
+                        {
+                            ApplyMessageContainerVisuals();
+                        }
+                        break;
+                    case "MessagesInContainer":
+                        {
+                            if (_ChatWindowViewModel.MessagesInContainer)
+                            {
+                                ApplyMessageContainerVisuals();
+                            }
+                        }
+                        break;
+                    case "ShowOnlyLastMessage":
+                        {
+                            if (_ChatWindowViewModel.ShowOnlyLastMessage)
+                            {
+                                EnforceLastMessageOnly();
+                            }
+                        }
+                        break;
+                }
+            });
         }
 
         protected virtual async Task OnChatClearRequest(TatruEventArgs ea)
@@ -607,23 +582,20 @@ namespace FFXIVTataruHelper
             }
         }
 
-        void ShowErrorText(int errorCode, string EngineName, Color textColor)
+        void ShowFailureNotice(string engineName, Color textColor)
         {
-            if (errorCode == 1)
-            {
-                //string text = ((string)_SettigsWindow.Resources["TranslationEngineSwitchMsg"]) + " " + Convert.ToString(_TataruUIModel.TranslationEngine);
-                string text = ((string)Application.Current.Resources["TranslationEngineSwitchMsg"]) + EngineName;
+            var prefix = (string)Application.Current.Resources["TranslationEngineError"];
+            var text = (prefix ?? "Translation failed:") + " " + engineName;
 
-                ShowWindow();
+            ShowWindow();
 
-                if (_ChatWindowViewModel.IsHiddenByUser == false)
-                    _TextArrivedTime = DateTime.UtcNow;
+            if (_ChatWindowViewModel.IsHiddenByUser == false)
+                _TextArrivedTime = DateTime.UtcNow;
 
-                ShowTranslatedText(text, textColor);
+            ShowTranslatedText(text, textColor);
 
-                if (_ChatWindowViewModel.IsHiddenByUser == false)
-                    _TextArrivedTime = DateTime.UtcNow;
-            }
+            if (_ChatWindowViewModel.IsHiddenByUser == false)
+                _TextArrivedTime = DateTime.UtcNow;
         }
 
         #endregion

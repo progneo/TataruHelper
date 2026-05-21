@@ -43,37 +43,37 @@ public partial class HotkeysPage : UserControl, IWindowScopedSettingsPage, INoti
         BoundWindow = window;
     }
 
-    private void ShowHideChatWinHotKey_KeyDown(object sender, KeyEventArgs e)
+    private void ShowHideChatWinHotKey_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         Shell.RegisterHotKeyDown(TatruHotkeyType.ShowHideChatWindow, e);
         e.Handled = true;
     }
 
-    private void ShowHideChatWinHotKey_KeyUp(object sender, KeyEventArgs e)
+    private void ShowHideChatWinHotKey_PreviewKeyUp(object sender, KeyEventArgs e)
     {
         Shell.RegisterHotKeyUp(TatruHotkeyType.ShowHideChatWindow, e);
         e.Handled = true;
     }
 
-    private void ClickThroughHotKey_KeyDown(object sender, KeyEventArgs e)
+    private void ClickThroughHotKey_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         Shell.RegisterHotKeyDown(TatruHotkeyType.ClickThrough, e);
         e.Handled = true;
     }
 
-    private void ClickThroughHotKey_KeyUp(object sender, KeyEventArgs e)
+    private void ClickThroughHotKey_PreviewKeyUp(object sender, KeyEventArgs e)
     {
         Shell.RegisterHotKeyUp(TatruHotkeyType.ClickThrough, e);
         e.Handled = true;
     }
 
-    private void ClearChatHotKey_KeyDown(object sender, KeyEventArgs e)
+    private void ClearChatHotKey_PreviewKeyDown(object sender, KeyEventArgs e)
     {
         Shell.RegisterHotKeyDown(TatruHotkeyType.ClearChat, e);
         e.Handled = true;
     }
 
-    private void ClearChatHotKey_KeyUp(object sender, KeyEventArgs e)
+    private void ClearChatHotKey_PreviewKeyUp(object sender, KeyEventArgs e)
     {
         Shell.RegisterHotKeyUp(TatruHotkeyType.ClearChat, e);
         e.Handled = true;

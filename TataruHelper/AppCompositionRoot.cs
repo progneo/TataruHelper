@@ -9,10 +9,12 @@ using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.Services.Update;
 using FFXIVTataruHelper.Utils;
+using FFXIVTataruHelper.ViewModel;
 
 using Microsoft.Extensions.DependencyInjection;
 
 using Translation;
+using Translation.Credentials;
 
 using Updater;
 
@@ -41,7 +43,11 @@ namespace FFXIVTataruHelper
             services.AddSingleton<IGameMemoryGateway, SharlayanGameMemoryGateway>();
 
             services.AddSingleton<ILog>(provider => new LoggerWrapper(provider.GetRequiredService<IAppLogger>()));
-            services.AddSingleton<WebTranslator>(provider => new WebTranslator(provider.GetRequiredService<ILog>()));
+            services.AddSingleton<ITranslationCredentialStore>(_ => new DpapiCredentialStore());
+            services.AddSingleton<TranslationCredentialsViewModel>();
+            services.AddSingleton<WebTranslator>(provider => new WebTranslator(
+                provider.GetRequiredService<ILog>(),
+                provider.GetRequiredService<ITranslationCredentialStore>()));
             services.AddSingleton<IFFMemoryReaderService, FFMemoryReader>();
 
             services.AddSingleton<IHotKeyBindingService, HotKeyBindingService>();

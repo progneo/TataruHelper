@@ -1,19 +1,13 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using System.Collections.Generic;
-
 namespace FFXIVTataruHelper
 {
     static class GlobalSettings
     {
-        public static string OldHotKeysFilePath = "../HotKeys.json";
-
-        public static List<string> FFXIVLanguages = new List<string>(new string[] { "English", "Chinese", "Japanese", "French", "German", "Korean" });
-
         public static string ChatCodesFilePath = @"Resources\ChatCodes.json";
 
-        public static string LocalisationDirPath = @"Locale_cloud\";
+        public static string LocalisationDirPath = @"Locale\";
 
         public static string ru_RU_LanguaguePath = @"ru\ru_RU.mo";
 
@@ -53,7 +47,13 @@ namespace FFXIVTataruHelper
 
         public static int TranslationDelay = 33;
 
-        public static int TranslatorWaitTime = 5000;
+        public static int TranslatorWaitTime = 30000;
+
+        public static int TranslationContextBufferWindowMs = 300;
+
+        public static int TranslationContextMaxBatchSize = 4;
+
+        public static string TranslationContextBatchDelimiter = "\n<<<TATARU_TRANSLATION_SEGMENT>>>\n";
 
         public static int SettingsSaveDelay = 2500;
 

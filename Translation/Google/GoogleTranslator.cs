@@ -1,121 +1,259 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
+// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using HttpUtilities;
 using System;
+using System.Net;
+using System.Text;
 using System.Text.RegularExpressions;
+
+using HttpUtilities;
+
+using Newtonsoft.Json.Linq;
+
 using Translation.HttpUtils;
 
 namespace Translation.Google
 {
     class GoogleTranslator
     {
-        ILog _Logger;
+        private static readonly Regex GoogleRxLegacy =
+            new Regex("(?<=(<div dir=\"ltr\" class=\"t0\">)).*?(?=(<\\/div>))",
+                RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        HttpReader _GoogleWebReader;
+        private static readonly Regex GoogleRx =
+            new Regex("(?<=(<div(.*)class=\"result-container\"(.*)>)).*?(?=(<\\/div>))",
+                RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
-        static Regex GoogleRxLeagacy = new Regex("(?<=(<div dir=\"ltr\" class=\"t0\">)).*?(?=(<\\/div>))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private const string GoogleJsonBaseUrl =
+            "https://translate.googleapis.com/translate_a/single?client=dict-chrome-ex&dt=t&dt=bd&dt=qca&dt=rm&dt=ss&dt=at&dt=ex&dt=ld&dt=md&dt=rw&ie=UTF-8&oe=UTF-8&otf=1&ssel=0&tsel=0&kc=7&hl={1}&sl={0}&tl={1}&q={2}";
 
-        static Regex GoogleRx = new Regex("(?<=(<div(.*)class=\"result-container\"(.*)>)).*?(?=(<\\/div>))", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        private const string GoogleHtmlBaseUrl =
+            "https://translate.google.com/m?hl={0}&sl={1}&tl={2}&ie=UTF-8&prev=_m&q={3}";
 
-        string googleHost = @"translate.google.com";
+        private readonly ILog _logger;
+
+        private HttpReader _googleWebReader;
 
         public GoogleTranslator(ILog logger)
         {
-            _GoogleWebReader = null;
-            _Logger = logger;
+            _googleWebReader = null;
+            _logger = logger;
         }
 
-        void CreateGoogleReader()
+        private void CreateGoogleReader()
         {
-            _GoogleWebReader = new HttpUtilities.HttpReader(new HttpUtils.HttpILogWrapper(_Logger));
-            TranslationHttpPolicy.ConfigureReader(_GoogleWebReader);
+            _googleWebReader = new HttpReader(new HttpILogWrapper(_logger));
+            TranslationHttpPolicy.ConfigureReader(_googleWebReader);
 
-            _GoogleWebReader.UserAgent = "Opera/9.80 (Android; Opera Mini/11.0.1912/37.7549; U; pl) Presto/2.12.423 Version/12.16";
-            _GoogleWebReader.Accept = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8";
-            _GoogleWebReader.ContentType = null;
+            _googleWebReader.UserAgent =
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+            _googleWebReader.Accept =
+                "text/html,application/xhtml+xml,application/xml;q=0.9,application/json;q=0.8,*/*;q=0.7";
+            _googleWebReader.ContentType = null;
 
-            _GoogleWebReader.OptionalHeaders.Add("Accept-Language", "en-US;q=0.5,en;q=0.3");
-            _GoogleWebReader.OptionalHeaders.Add("DNT", "1");
-            _GoogleWebReader.OptionalHeaders.Add("Upgrade-Insecure-Requests", "1");
+            _googleWebReader.OptionalHeaders.Add("Accept-Language", "en-US,en;q=0.8");
+            _googleWebReader.OptionalHeaders.Add("DNT", "1");
+            _googleWebReader.OptionalHeaders.Add("Upgrade-Insecure-Requests", "1");
+            _googleWebReader.OptionalHeaders.Add("Pragma", "no-cache");
+            _googleWebReader.OptionalHeaders.Add("Cache-Control", "no-cache");
 
-            _GoogleWebReader.OptionalHeaders.Add("Pragma", "no-cache");
-            _GoogleWebReader.OptionalHeaders.Add("Cache-Control", "no-cache");
-
-            var requestResult = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
-                () => _GoogleWebReader.RequestWebData("https://translate.google.com/m", HttpUtilities.HttpMethods.GET, true),
-                _Logger,
+            TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
+                () => _googleWebReader.RequestWebData("https://translate.google.com/m", HttpMethods.GET, true),
+                _logger,
                 "Google warmup");
         }
 
         public string Translate(string sentence, string inLang, string outLang)
         {
-            string result = string.Empty;
-
-            if (_GoogleWebReader == null)
+            if (_googleWebReader == null)
+            {
                 CreateGoogleReader();
+            }
 
-            result = TranslateInternal(sentence, inLang, outLang);
-
-            if (result == string.Empty)
+            var result = TranslateInternal(sentence, inLang, outLang);
+            if (!IsValidGoogleResult(result))
             {
                 CreateGoogleReader();
                 result = TranslateInternal(sentence, inLang, outLang);
             }
 
-            return result;
+            return result ?? string.Empty;
         }
 
         private string TranslateInternal(string sentence, string inLang, string outLang)
         {
-            string result = string.Empty;
+            try
+            {
+                var safeInput = sentence ?? string.Empty;
+                var sourceLang = string.IsNullOrWhiteSpace(inLang) ? "auto" : inLang;
+                var targetLang = string.IsNullOrWhiteSpace(outLang) ? "en" : outLang;
+
+                if (GlobalTranslationSettings.UseGoogleJsonEndpoint)
+                {
+                    var jsonResult = TryTranslateUsingJsonEndpoint(safeInput, sourceLang, targetLang);
+                    if (IsValidGoogleResult(jsonResult))
+                    {
+                        return jsonResult;
+                    }
+                }
+
+                if (GlobalTranslationSettings.UseGoogleHtmlFallbackEndpoint)
+                {
+                    var htmlResult = TryTranslateUsingHtmlEndpoint(safeInput, sourceLang, targetLang);
+                    if (IsValidGoogleResult(htmlResult))
+                    {
+                        return htmlResult;
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                _logger?.WriteLog($"[GOOGLE_TRANSLATE_EXCEPTION] {exception}");
+            }
+
+            return string.Empty;
+        }
+
+        private string TryTranslateUsingJsonEndpoint(string sentence, string inLang, string outLang)
+        {
+            var url = string.Format(
+                GoogleJsonBaseUrl,
+                inLang,
+                outLang,
+                Uri.EscapeDataString(sentence));
+
+            var requestResult = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
+                () => _googleWebReader.RequestWebData(url, HttpMethods.GET, true),
+                _logger,
+                "Google translate json");
+
+            if (!requestResult.IsSuccessful)
+            {
+                _logger?.WriteLog($"[GOOGLE_JSON_HTTP_FAILED] {requestResult?.InnerException}");
+                return string.Empty;
+            }
+
+            var parsed = ParseGoogleJsonTranslation(requestResult.Body, _logger);
+            if (!IsValidGoogleResult(parsed))
+            {
+                _logger?.WriteLog("[GOOGLE_JSON_INVALID_RESULT] Parsed translation was empty or malformed.");
+            }
+
+            return parsed;
+        }
+
+        private string TryTranslateUsingHtmlEndpoint(string sentence, string inLang, string outLang)
+        {
+            var url = string.Format(
+                GoogleHtmlBaseUrl,
+                outLang,
+                inLang,
+                outLang,
+                Uri.EscapeDataString(sentence));
+
+            var requestResult = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
+                () => _googleWebReader.RequestWebData(url, HttpMethods.GET, true),
+                _logger,
+                "Google translate html");
+
+            if (!requestResult.IsSuccessful)
+            {
+                _logger?.WriteLog($"[GOOGLE_HTML_HTTP_FAILED] {requestResult?.InnerException}");
+                return string.Empty;
+            }
+
+            var parsed = ParseGoogleHtmlTranslation(requestResult.Body);
+            if (!IsValidGoogleResult(parsed))
+            {
+                _logger?.WriteLog("[GOOGLE_HTML_INVALID_RESULT] HTML parse failed.");
+                _logger?.WriteLog(requestResult.Body ?? "[GOOGLE_HTML_EMPTY_BODY]");
+            }
+
+            return parsed;
+        }
+
+        internal static string ParseGoogleJsonTranslation(string body, ILog logger = null)
+        {
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                return string.Empty;
+            }
 
             try
             {
-                string _outLang = outLang;
-                string _inLang = inLang;
-
-                string _baseUrl = "https://translate.google.com/m?hl=ru&sl={0}&tl={1}&ie=UTF-8&prev=_m&q={2}";
-                string url = string.Format(_baseUrl, _inLang, _outLang, Uri.EscapeDataString(sentence));
-
-                var requestResult = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
-                    () => _GoogleWebReader.RequestWebData(url, HttpUtilities.HttpMethods.GET, true),
-                    _Logger,
-                    "Google translate");
-
-                if (requestResult.IsSuccessful)
+                var token = JToken.Parse(body);
+                var rootArray = token as JArray;
+                if (rootArray == null || rootArray.Count == 0)
                 {
-                    var rxMatch = GoogleRxLeagacy.Match(requestResult.Body);
-
-                    if (rxMatch.Success)
-                    {
-                        result = System.Net.WebUtility.HtmlDecode(rxMatch.Value);
-                    }
-                    else
-                    {
-                        rxMatch = GoogleRx.Match(requestResult.Body);
-
-                        if (rxMatch.Success)
-                        {
-                            result = System.Net.WebUtility.HtmlDecode(rxMatch.Value);
-                        }
-                        else
-                        {
-                            _Logger?.WriteLog(requestResult.Body ?? "Google body response is null");
-                        }
-                    }
+                    logger?.WriteLog("[GOOGLE_JSON_PARSE_ERROR] Root JSON token is not an array.");
+                    return string.Empty;
                 }
-                else
+
+                var translatedFragments = rootArray[0] as JArray;
+                if (translatedFragments == null)
                 {
-                    _Logger?.WriteLog(requestResult?.InnerException?.ToString() ?? "Google Exception is null");
+                    logger?.WriteLog("[GOOGLE_JSON_PARSE_ERROR] Segment array is missing.");
+                    return string.Empty;
                 }
+
+                var builder = new StringBuilder();
+                foreach (var fragmentToken in translatedFragments)
+                {
+                    var fragment = fragmentToken as JArray;
+                    var translatedPart = fragment?[0]?.ToString();
+                    if (string.IsNullOrEmpty(translatedPart))
+                    {
+                        continue;
+                    }
+
+                    builder.Append(translatedPart);
+                }
+
+                return WebUtility.HtmlDecode(builder.ToString().Trim());
             }
-            catch (Exception e)
+            catch (Exception exception)
             {
-                _Logger?.WriteLog(Convert.ToString(e));
+                logger?.WriteLog($"[GOOGLE_JSON_PARSE_EXCEPTION] {exception}");
+                return string.Empty;
+            }
+        }
+
+        internal static string ParseGoogleHtmlTranslation(string body)
+        {
+            if (string.IsNullOrWhiteSpace(body))
+            {
+                return string.Empty;
             }
 
-            return result;
+            var rxMatch = GoogleRxLegacy.Match(body);
+            if (rxMatch.Success)
+            {
+                return WebUtility.HtmlDecode(rxMatch.Value.Trim());
+            }
+
+            rxMatch = GoogleRx.Match(body);
+            if (rxMatch.Success)
+            {
+                return WebUtility.HtmlDecode(rxMatch.Value.Trim());
+            }
+
+            return string.Empty;
+        }
+
+        internal static bool IsValidGoogleResult(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return false;
+            }
+
+            var trimmed = value.Trim();
+            if (trimmed.IndexOf("<div", StringComparison.OrdinalIgnoreCase) >= 0)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }

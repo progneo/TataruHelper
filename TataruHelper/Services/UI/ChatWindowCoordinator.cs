@@ -180,43 +180,6 @@ namespace FFXIVTataruHelper.Services.UI
                 binder.AddPropertyCouple(
                     new PropertyCouple<RectangleD, RectangleD>("ChatWindowRectangle",
                         "ChatWindowRectangle"));
-                binder.AddPropertyCouple(new PropertyCouple<TranslationEngineName, CollectionView>(
-                    "TranslationEngineName", "TranslationEngines",
-                    (ref TranslationEngineName x, ref CollectionView y) =>
-                    {
-                        var engine = x;
-                        var collection = y;
-
-                        _uiDispatcher.Invoke(() =>
-                        {
-                            TranslationEngine result = null;
-
-                            foreach (TranslationEngine elem in collection.SourceCollection)
-                            {
-                                if (elem.EngineName == engine)
-                                {
-                                    result = elem;
-                                    break;
-                                }
-                            }
-
-                            if (result != null && !collection.CurrentItem.Equals(result))
-                            {
-                                collection.MoveCurrentTo(result);
-                            }
-                        });
-                    },
-                    (ref CollectionView y, ref TranslationEngineName x) =>
-                    {
-                        var collection = y;
-                        TranslationEngineName selectedEngine = TranslationEngineName.GoogleTranslate;
-
-                        _uiDispatcher.Invoke(() =>
-                        {
-                            selectedEngine = ((TranslationEngine)collection.CurrentItem).EngineName;
-                        });
-                        x = selectedEngine;
-                    }));
                 binder.AddPropertyCouple(new PropertyCouple<TranslatorLanguague, CollectionView>(
                     "FromLanguague", "TranslateFromLanguagues",
                     (ref TranslatorLanguague x, ref CollectionView y) =>

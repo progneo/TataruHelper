@@ -4,10 +4,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
+             xmlns:ctl="clr-namespace:FFXIVTataruHelper.Views.Controls"
              mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Background="Transparent">
         <Grid>
             <Grid.RowDefinitions>
+                <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -24,7 +28,6 @@
                        Margin="0,0,0,16"
                        Text="{DynamicResource GeneralPageDescription}" />
 
-            <!-- Language card -->
             <ui:Card Grid.Row="2" Padding="16" Margin="0,0,0,12">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -53,8 +56,35 @@
                 </Grid>
             </ui:Card>
 
-            <!-- Updates card -->
             <ui:Card Grid.Row="3" Padding="16" Margin="0,0,0,12">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <ui:SymbolIcon Symbol="DarkTheme24" FontSize="16"
+                                           Margin="0,0,8,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Accent}" />
+                            <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                       Margin="0"
+                                       Text="{DynamicResource ThemeGroupTitle}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                   Text="{DynamicResource ThemeGroupHint}" />
+                    </StackPanel>
+                    <ComboBox Grid.Column="1"
+                              Width="220"
+                              VerticalAlignment="Center"
+                              ItemsSource="{Binding Shell.ThemeOptions}"
+                              DisplayMemberPath="Title"
+                              SelectedItem="{Binding Shell.SelectedThemeOption, Mode=TwoWay}" />
+                </Grid>
+            </ui:Card>
+
+            <ui:Card Grid.Row="4" Padding="16" Margin="0,0,0,12">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
@@ -72,6 +102,9 @@
                         </StackPanel>
                         <TextBlock Style="{DynamicResource CaptionTextStyle}"
                                    Text="{DynamicResource UpdatesGroupHint}" />
+                        <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                   Margin="0,6,0,0"
+                                   Text="{Binding Shell.AppVersion, StringFormat=Version {0}}" />
                     </StackPanel>
                     <ui:Button Grid.Column="1"
                                x:Name="CheckUpdatesButton"
@@ -83,8 +116,7 @@
                 </Grid>
             </ui:Card>
 
-            <!-- Application flags card -->
-            <ui:Card Grid.Row="4" Padding="16">
+            <ui:Card Grid.Row="5" Padding="16">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                         <ui:SymbolIcon Symbol="Settings24" FontSize="16"
@@ -110,6 +142,231 @@
                         <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
                                          IsChecked="{Binding Shell.IsHideSettingsToTray, Mode=TwoWay}" />
                     </Grid>
+                </StackPanel>
+            </ui:Card>
+
+            <ui:Card Grid.Row="6" Padding="16" Margin="0,12,0,0">
+                <StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                        <ui:SymbolIcon Symbol="Translate24" FontSize="16"
+                                       Margin="0,0,8,0" VerticalAlignment="Center"
+                                       Foreground="{DynamicResource Brush.Accent}" />
+                        <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                   Margin="0"
+                                   Text="{DynamicResource TranslatorsLabel}"
+                                   VerticalAlignment="Center" />
+                    </StackPanel>
+                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                               Margin="0,0,0,10"
+                               Text="{DynamicResource TranslatorsHint}" />
+
+                    <!-- Free -->
+                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,6" Text="{DynamicResource FreeTranslatorsLabel}" />
+
+                    <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <DockPanel>
+                            <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                             IsChecked="{Binding Shell.TranslationCredentials.IsGoogleTranslateEnabled, Mode=TwoWay}" />
+                            <TextBlock Text="Google Translate" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+                    <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <DockPanel>
+                            <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                             IsChecked="{Binding Shell.TranslationCredentials.IsDeepLEnabled, Mode=TwoWay}" />
+                            <TextBlock Text="DeepL (web)" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+                    <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <DockPanel>
+                            <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                             IsChecked="{Binding Shell.TranslationCredentials.IsPapagoEnabled, Mode=TwoWay}" />
+                            <TextBlock Text="Papago" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+                    <Border Padding="12,10" Margin="0,0,0,14" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <DockPanel>
+                            <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                             IsChecked="{Binding Shell.TranslationCredentials.IsBaiduEnabled, Mode=TwoWay}" />
+                            <TextBlock Text="Baidu" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Paid -->
+                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,6" Text="{DynamicResource PaidTranslatorsLabel}" />
+
+                    <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                                 IsChecked="{Binding Shell.TranslationCredentials.IsAzureEnabled, Mode=TwoWay}" />
+                                <TextBlock Text="Azure Translator" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <StackPanel Margin="0,8,0,0"
+                                        Visibility="{Binding Shell.TranslationCredentials.ShowAzureSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource AzureKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.AzureApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.AzureApiKeyMasked}"
+                                    Margin="0,0,0,6" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource AzureRegionLabel}" />
+                                <TextBox
+                                    Text="{Binding Shell.TranslationCredentials.AzureRegion, UpdateSourceTrigger=LostFocus}"
+                                    KeyDown="CredentialTextBox_KeyDown" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                                 IsChecked="{Binding Shell.TranslationCredentials.IsGoogleCloudEnabled, Mode=TwoWay}" />
+                                <TextBlock Text="Google Cloud Translate" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <StackPanel Margin="0,8,0,0"
+                                        Visibility="{Binding Shell.TranslationCredentials.ShowGoogleCloudSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource GoogleCloudKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.GoogleCloudApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.GoogleCloudApiKeyMasked}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                                 IsChecked="{Binding Shell.TranslationCredentials.IsDeepLApiEnabled, Mode=TwoWay}" />
+                                <TextBlock Text="DeepL API" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <StackPanel Margin="0,8,0,0"
+                                        Visibility="{Binding Shell.TranslationCredentials.ShowDeepLApiSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource DeepLApiKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.DeepLApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.DeepLApiKeyMasked}" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Padding="12,10" Margin="0,0,0,14" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                                 IsChecked="{Binding Shell.TranslationCredentials.IsYandexEnabled, Mode=TwoWay}" />
+                                <TextBlock Text="Yandex" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <StackPanel Margin="0,8,0,0"
+                                        Visibility="{Binding Shell.TranslationCredentials.ShowYandexSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource YandexApiKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.YandexApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.YandexApiKeyMasked}"
+                                    Margin="0,0,0,6" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource YandexFolderIdLabel}" />
+                                <TextBox
+                                    Text="{Binding Shell.TranslationCredentials.YandexFolderId, UpdateSourceTrigger=LostFocus}"
+                                    KeyDown="CredentialTextBox_KeyDown" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- AI -->
+                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                               FontWeight="SemiBold"
+                               Margin="0,0,0,6" Text="{DynamicResource AITranslatorsLabel}" />
+
+                    <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                                 IsChecked="{Binding Shell.TranslationCredentials.IsOpenAIEnabled, Mode=TwoWay}" />
+                                <TextBlock Text="OpenAI" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <StackPanel Margin="0,8,0,0"
+                                        Visibility="{Binding Shell.TranslationCredentials.ShowOpenAISettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource OpenAIKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.OpenAIApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.OpenAIApiKeyMasked}"
+                                    Margin="0,0,0,6" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource OpenAIModelLabel}" />
+                                <TextBox
+                                    Text="{Binding Shell.TranslationCredentials.OpenAIModel, UpdateSourceTrigger=LostFocus}"
+                                    KeyDown="CredentialTextBox_KeyDown" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                                 IsChecked="{Binding Shell.TranslationCredentials.IsDeepSeekEnabled, Mode=TwoWay}" />
+                                <TextBlock Text="DeepSeek" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <StackPanel Margin="0,8,0,0"
+                                        Visibility="{Binding Shell.TranslationCredentials.ShowDeepSeekSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource DeepSeekKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.DeepSeekApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.DeepSeekApiKeyMasked}"
+                                    Margin="0,0,0,6" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource DeepSeekModelLabel}" />
+                                <TextBox
+                                    Text="{Binding Shell.TranslationCredentials.DeepSeekModel, UpdateSourceTrigger=LostFocus}"
+                                    KeyDown="CredentialTextBox_KeyDown" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Padding="12,10" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                                 IsChecked="{Binding Shell.TranslationCredentials.IsYandexGptEnabled, Mode=TwoWay}" />
+                                <TextBlock Text="YandexGPT" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <StackPanel Margin="0,8,0,0"
+                                        Visibility="{Binding Shell.TranslationCredentials.ShowYandexGptSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
+                                <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                           TextWrapping="Wrap" Margin="0,0,0,6"
+                                           Text="{DynamicResource YandexGptUsesYandexHint}" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource YandexGptModelAliasLabel}" />
+                                <TextBox
+                                    Text="{Binding Shell.TranslationCredentials.YandexGptModel, UpdateSourceTrigger=LostFocus}"
+                                    KeyDown="CredentialTextBox_KeyDown" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </ui:Card>
         </Grid>

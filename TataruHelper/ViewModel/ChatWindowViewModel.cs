@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
@@ -377,23 +378,27 @@ namespace FFXIVTataruHelper.ViewModel
             }
         }
 
-        public CollectionView TranslationEngines
+        public ObservableCollection<TranslationEngine> AvailableEngines { get; } =
+            new ObservableCollection<TranslationEngine>();
+
+        public TranslationEngine SelectedEngine
         {
-            get { return _TranslationEngines; }
+            get => _selectedEngine;
             set
             {
-                if (_TranslationEngines != null)
-                    _TranslationEngines.CurrentChanged -= OnTranslationEngineChange;
+                if (ReferenceEquals(_selectedEngine, value)) return;
+                if (value != null && !AvailableEngines.Contains(value)) return;
 
-                _TranslationEngines = value;
-                _TranslationEngines.CurrentChanged += OnTranslationEngineChange;
+                _selectedEngine = value;
+
+                if (_BoundSettings != null && value != null)
+                {
+                    _BoundSettings.TranslationEngineName = value.EngineName;
+                }
+
+                RebuildLanguagesForSelectedEngine();
                 OnPropertyChanged();
             }
-        }
-
-        public TranslationEngine CurrentTransaltionEngine
-        {
-            get { return (TranslationEngine)TranslationEngines.CurrentItem; }
         }
 
         public CollectionView TranslateFromLanguagues
@@ -584,7 +589,9 @@ namespace FFXIVTataruHelper.ViewModel
 
         Color _BackGroundColor;
 
-        CollectionView _TranslationEngines;
+        TranslationEngine _selectedEngine;
+        IReadOnlyList<TranslationEngine> _allTranslationEngines;
+        TranslationCredentialsViewModel _engineAvailability;
         CollectionView _TranslateFromLanguagues;
         CollectionView _TranslateToLanguagues;
 
@@ -660,6 +667,7 @@ namespace FFXIVTataruHelper.ViewModel
         public ChatWindowViewModel(
             ChatWindowViewModelSettings settings,
             List<TranslationEngine> translationEngines,
+            TranslationCredentialsViewModel engineAvailability,
             List<ChatMsgType> allChatCodes,
             HotKeyManager hotKeyManager,
             IAppLogger logger,
@@ -708,17 +716,24 @@ namespace FFXIVTataruHelper.ViewModel
 
             BackGroundColor = settings.BackGroundColor;
 
-            TranslationEngines = new CollectionView(translationEngines);
+            _allTranslationEngines = translationEngines;
+            _engineAvailability = engineAvailability;
 
-            var tmpEngine = translationEngines.FirstOrDefault(x => x.EngineName == settings.TranslationEngineName);
-            TranslationEngines.MoveCurrentToFirst();
-            if (tmpEngine != null)
-                if (TranslationEngines.Contains(tmpEngine))
-                    TranslationEngines.MoveCurrentTo(tmpEngine);
-                else
-                    TranslationEngines.MoveCurrentToFirst();
+            var savedEngineName = settings.TranslationEngineName;
 
-            OnTranslationEngineChange(this, null);
+            RebuildAvailableEngines();
+
+            if (_engineAvailability != null)
+            {
+                _engineAvailability.AvailableEnginesChanged += OnEngineAvailabilityChanged;
+            }
+
+            var savedEngine = _allTranslationEngines
+                .FirstOrDefault(x => x.EngineName == savedEngineName);
+
+            SelectedEngine = AvailableEngines.Contains(savedEngine)
+                ? savedEngine
+                : AvailableEngines.FirstOrDefault();
 
             TrySetLangugue(_TranslateFromLanguagues, settings.FromLanguague);
             TrySetLangugue(_TranslateToLanguagues, settings.ToLanguague);
@@ -767,11 +782,7 @@ namespace FFXIVTataruHelper.ViewModel
             settings.MessageContainerBorderAlpha = this.MessageContainerBorderAlpha;
             settings.ShowOnlyLastMessage = this.ShowOnlyLastMessage;
 
-            TranslationEngine engine = (TranslationEngine)this.TranslationEngines.CurrentItem;
-            if (engine != null)
-                settings.TranslationEngineName = engine.EngineName;
-            else
-                settings.TranslationEngineName = TranslationEngineName.GoogleTranslate;
+            settings.TranslationEngineName = SelectedEngine?.EngineName ?? TranslationEngineName.GoogleTranslate;
 
             settings.FromLanguague = (TranslatorLanguague)TranslateFromLanguagues.CurrentItem;
             settings.ToLanguague = (TranslatorLanguague)TranslateToLanguagues.CurrentItem;
@@ -849,36 +860,71 @@ namespace FFXIVTataruHelper.ViewModel
             _HotKeyBindingService.ReRegisterGlobalHotKey(hotKeyManager, ref globalHotKey, hotKeyCombination, _disposed);
         }
 
-        private void OnTranslationEngineChange(object sender, EventArgs e)
+        private void RebuildAvailableEngines()
         {
             TranslatorLanguague prevFrom = null, prevTo = null;
-            if (TranslateFromLanguagues != null && TranslateToLanguagues != null)
+            if (_TranslateFromLanguagues != null) prevFrom = (TranslatorLanguague)_TranslateFromLanguagues.CurrentItem;
+            if (_TranslateToLanguagues != null) prevTo = (TranslatorLanguague)_TranslateToLanguagues.CurrentItem;
+
+            AvailableEngines.Clear();
+            if (_allTranslationEngines == null) return;
+
+            var enabledNames = _engineAvailability?.AvailableEngines;
+            foreach (var engine in _allTranslationEngines)
             {
-                prevFrom = (TranslatorLanguague)TranslateFromLanguagues.CurrentItem;
-                prevTo = (TranslatorLanguague)TranslateToLanguagues.CurrentItem;
+                if (enabledNames == null || enabledNames.Contains(engine.EngineName))
+                {
+                    AvailableEngines.Add(engine);
+                }
             }
 
-            OnPropertyChanged("TranslationEngineSelected");
-            OnPropertyChanged("TranslationEngines");
+            if (_selectedEngine != null && !AvailableEngines.Contains(_selectedEngine))
+            {
+                SelectedEngine = AvailableEngines.FirstOrDefault();
+                return;
+            }
+
+            if (_selectedEngine != null && _TranslateFromLanguagues != null)
+            {
+                TrySetLangugue(_TranslateFromLanguagues, prevFrom);
+                TrySetLangugue(_TranslateToLanguagues, prevTo);
+            }
+        }
+
+        private void OnEngineAvailabilityChanged(object sender, EventArgs e)
+        {
+            RebuildAvailableEngines();
+        }
+
+        private void RebuildLanguagesForSelectedEngine()
+        {
+            TranslatorLanguague prevFrom = null, prevTo = null;
+            if (_TranslateFromLanguagues != null) prevFrom = (TranslatorLanguague)_TranslateFromLanguagues.CurrentItem;
+            if (_TranslateToLanguagues != null) prevTo = (TranslatorLanguague)_TranslateToLanguagues.CurrentItem;
 
             if (_TranslateFromLanguagues != null)
                 _TranslateFromLanguagues.CurrentChanged -= OnTranslateFromLanguageChange;
-
             if (_TranslateToLanguagues != null)
                 _TranslateToLanguagues.CurrentChanged -= OnTranslateToLanguageChange;
 
-            _TranslateFromLanguagues =
-                new CollectionView(((TranslationEngine)_TranslationEngines.CurrentItem).SupportedLanguages.ToList());
+            if (_selectedEngine == null)
+            {
+                _TranslateFromLanguagues = null;
+                _TranslateToLanguagues = null;
+                OnPropertyChanged("TranslateFromLanguagues");
+                OnPropertyChanged("TranslateToLanguagues");
+                return;
+            }
+
+            _TranslateFromLanguagues = new CollectionView(_selectedEngine.SupportedLanguages.ToList());
             _TranslateFromLanguagues.CurrentChanged += OnTranslateFromLanguageChange;
             OnPropertyChanged("TranslateFromLanguagues");
 
-            List<TranslatorLanguague> supportedToLanguages =
-                ((TranslationEngine)_TranslationEngines.CurrentItem).SupportedLanguages.ToList();
-            var lang = supportedToLanguages.FirstOrDefault(x => x.SystemName == "Auto");
-            if (lang != null)
-                supportedToLanguages.Remove(lang);
+            var supportedToLanguages = _selectedEngine.SupportedLanguages.ToList();
+            var auto = supportedToLanguages.FirstOrDefault(x => x.SystemName == "Auto");
+            if (auto != null) supportedToLanguages.Remove(auto);
 
-            _TranslateToLanguagues = new CollectionView(supportedToLanguages.ToList());
+            _TranslateToLanguagues = new CollectionView(supportedToLanguages);
             _TranslateToLanguagues.CurrentChanged += OnTranslateToLanguageChange;
             OnPropertyChanged("TranslateToLanguagues");
 
@@ -931,7 +977,7 @@ namespace FFXIVTataruHelper.ViewModel
             {
                 if (e.HotKey.Name == ClearChatKeys.Name)
                 {
-                    _requestChatClear.InvokeAsync(new TatruEventArgs(this));
+                    _ = _requestChatClear.InvokeAsync(new TatruEventArgs(this));
                 }
             }
         }

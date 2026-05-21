@@ -4,18 +4,19 @@ using System.IO;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
-using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace HttpUtilities
 {
     public class HttpReader
     {
         #region Properties
+
         // public string Host { get => _GlobalHost; }
         public CookieContainer Cookies { get => _GlobalCookie; set => _GlobalCookie = value; }
 
-        public string UserAgent { get; set; } = "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko";
+        public string UserAgent { get; set; } =
+            "User-Agent: Mozilla/5.0 (Windows NT 6.1; WOW64; Trident/7.0; rv:11.0) like Gecko";
+
         public string Accept { get; set; } = "text/html, application/xhtml+xml, */*";
         public string ContentType { get; set; } = "application/x-www-form-urlencoded";
 
@@ -96,7 +97,8 @@ namespace HttpUtilities
 
         #region AsyncMethods
 
-        public virtual async Task<HttpResponse> RequestWebDataAsync(string url, HttpMethods method, bool acceptCookie = false)
+        public virtual async Task<HttpResponse> RequestWebDataAsync(string url, HttpMethods method,
+            bool acceptCookie = false)
         {
             HttpResponse result = new HttpResponse();
 
@@ -109,7 +111,8 @@ namespace HttpUtilities
             return result;
         }
 
-        public virtual async Task<HttpResponse> RequestWebDataAsync(string url, HttpMethods method, string dataIn, bool acceptCookie = false)
+        public virtual async Task<HttpResponse> RequestWebDataAsync(string url, HttpMethods method, string dataIn,
+            bool acceptCookie = false)
         {
             HttpResponse result = new HttpResponse();
 
@@ -145,7 +148,7 @@ namespace HttpUtilities
                 _Logger?.WriteLog(e?.ToString() ?? "Exception is null");
 
                 if (_ThrowExceptions)
-                    throw e;
+                    throw;
 
                 result = new HttpResponse(false, null, e);
             }
@@ -153,7 +156,8 @@ namespace HttpUtilities
             return result;
         }
 
-        public virtual HttpResponse RequestWebData(string url, HttpMethods method, string dataIn, bool acceptCookie = false)
+        public virtual HttpResponse RequestWebData(string url, HttpMethods method, string dataIn,
+            bool acceptCookie = false)
         {
             HttpResponse result = new HttpResponse();
 
@@ -172,7 +176,7 @@ namespace HttpUtilities
                 _Logger?.WriteLog(e?.ToString() ?? "Exception is null");
 
                 if (_ThrowExceptions)
-                    throw e;
+                    throw;
 
                 result = new HttpResponse(false, null, e);
             }
@@ -184,11 +188,15 @@ namespace HttpUtilities
 
         #region ProtecteMethods
 
-        protected virtual WebRequest PrepRequest(string url, HttpMethods method, CookieContainer cookie = null, string authorizationString = null)
+        protected virtual WebRequest PrepRequest(string url, HttpMethods method, CookieContainer cookie = null,
+            string authorizationString = null)
         {
             var uri = new Uri(url);
 
+            // HttpReader is legacy WebRequest-based; migration to HttpClient is tracked in MODERNIZATION_PLAN.md.
+#pragma warning disable SYSLIB0014
             WebRequest localRequest = WebRequest.Create(uri);
+#pragma warning restore SYSLIB0014
 
             localRequest.Method = method.ToString();
 
@@ -252,7 +260,7 @@ namespace HttpUtilities
             {
                 using (Stream ReceiveStream = localResponse.GetResponseStream())
                 {
-                    Encoding encode = System.Text.Encoding.GetEncoding("utf-8");
+                    Encoding encode = Encoding.GetEncoding("utf-8");
 
                     using (StreamReader readStream = new StreamReader(ReceiveStream, encode))
                     {
@@ -291,7 +299,7 @@ namespace HttpUtilities
 
             return content;
         }
-        #endregion
 
+        #endregion
     }
 }

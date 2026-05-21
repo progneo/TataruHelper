@@ -19,6 +19,7 @@ using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.Services.Update;
 using FFXIVTataruHelper.Utils;
+using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.ViewModel.Shell;
 using FFXIVTataruHelper.Views.Pages;
 using FFXIVTataruHelper.WinUtils;
@@ -45,6 +46,7 @@ public partial class MainWindow : FluentWindow
     private readonly IAppLogger _logger;
     private readonly IUiDispatcher _uiDispatcher;
     private readonly IHotkeyCaptureService _hotkeyCaptureService;
+    private readonly TranslationCredentialsViewModel _translationCredentials;
 
     private LogWriter _logWriter;
     private TataruModel _tataruModel;
@@ -70,13 +72,15 @@ public partial class MainWindow : FluentWindow
         IUpdateService updater,
         IAppLogger logger,
         IUiDispatcher uiDispatcher,
-        IHotkeyCaptureService hotkeyCaptureService)
+        IHotkeyCaptureService hotkeyCaptureService,
+        TranslationCredentialsViewModel translationCredentials)
     {
         _tataruModelFactory = tataruModelFactory;
         _updater = updater;
         _logger = logger;
         _uiDispatcher = uiDispatcher;
         _hotkeyCaptureService = hotkeyCaptureService;
+        _translationCredentials = translationCredentials;
 
         if (!TataruSingleInstance.IsOnlyInstance)
         {
@@ -142,7 +146,8 @@ public partial class MainWindow : FluentWindow
                 _tataruModel.TataruViewModel,
                 _tataruUiModel,
                 _hotkeyCaptureService,
-                CheckUpdates);
+                CheckUpdates,
+                _translationCredentials);
 
             _settingsShellViewModel.PropertyChanged += OnSettingsShellPropertyChanged;
             _settingsShellViewModel.FfStatusText = (string)Resources["FFStatusText"];

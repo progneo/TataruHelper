@@ -31,7 +31,7 @@
                             <TextBlock Text="Tataru Helper" FontSize="{DynamicResource FontSize.Title}"
                                        FontWeight="SemiBold" />
                             <TextBlock Style="{DynamicResource CaptionTextStyle}"
-                                       Text="Real-time FFXIV chat translator" />
+                                       Text="{DynamicResource AppTagline}" />
                         </StackPanel>
                     </StackPanel>
 

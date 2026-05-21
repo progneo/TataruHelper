@@ -2,6 +2,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
@@ -23,26 +24,38 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     private SettingsSectionItem _selectedSection;
     private LanguageOption _selectedLanguageOption;
     private string _ffStatusText;
+    private readonly string _appVersion;
+
+    public TranslationCredentialsViewModel TranslationCredentials { get; }
 
     public SettingsShellViewModel(
         TataruViewModel settingsViewModel,
         TataruUIModel uiModel,
         IHotkeyCaptureService hotkeyCaptureService,
-        Action checkUpdatesAction)
+        Action checkUpdatesAction,
+        TranslationCredentialsViewModel translationCredentials)
     {
         _settingsViewModel = settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
         _uiModel = uiModel ?? throw new ArgumentNullException(nameof(uiModel));
         _hotkeyCaptureService = hotkeyCaptureService ?? throw new ArgumentNullException(nameof(hotkeyCaptureService));
         _checkUpdatesAction = checkUpdatesAction ?? throw new ArgumentNullException(nameof(checkUpdatesAction));
+        TranslationCredentials =
+            translationCredentials ?? throw new ArgumentNullException(nameof(translationCredentials));
 
         Sections = new ObservableCollection<SettingsSectionItem>
         {
-            new(SettingsSection.ChatWindows, "ChatWindowsTab", "Chat Windows", SymbolRegular.Chat24),
-            new(SettingsSection.Translation, "SectionTranslation", "Translation", SymbolRegular.Translate24),
-            new(SettingsSection.Appearance, "SectionAppearance", "Appearance", SymbolRegular.ColorBackground24),
-            new(SettingsSection.Hotkeys, "ChatWindowHotkeys", "Hotkeys", SymbolRegular.Keyboard24),
-            new(SettingsSection.General, "SectionGeneral", "General", SymbolRegular.Settings24),
-            new(SettingsSection.About, "DockAbout", "About", SymbolRegular.Info24)
+            new(SettingsSection.ChatWindows, "SidebarGroupChatWindows", "Chat Windows",
+                "ChatWindowsTab", "Chat Windows", SymbolRegular.Chat24),
+            new(SettingsSection.Appearance, "SidebarGroupPerWindow", "Per Window Settings",
+                "SectionAppearance", "Appearance", SymbolRegular.ColorBackground24),
+            new(SettingsSection.Hotkeys, "SidebarGroupPerWindow", "Per Window Settings",
+                "ChatWindowHotkeys", "Hotkeys", SymbolRegular.Keyboard24),
+            new(SettingsSection.Translation, "SidebarGroupPerWindow", "Per Window Settings",
+                "SectionTranslation", "Translation", SymbolRegular.Translate24),
+            new(SettingsSection.General, "SidebarGroupApplication", "Application",
+                "SectionGeneral", "General", SymbolRegular.Settings24),
+            new(SettingsSection.About, "SidebarGroupApplication", "Application",
+                "DockAbout", "About", SymbolRegular.Info24)
         };
 
         ThemeOptions = new ObservableCollection<ThemeOption>
@@ -79,6 +92,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         _selectedSection = Sections.First(x => x.Section == SettingsSection.ChatWindows);
         _selectedLanguageOption = ResolveLanguageOption(_uiModel.UiLanguage);
         _ffStatusText = string.Empty;
+        _appVersion = "v" + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "unknown");
 
         RefreshSectionTitles();
 
@@ -199,6 +213,8 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
                    || section == SettingsSection.Hotkeys;
         }
     }
+
+    public string AppVersion => _appVersion;
 
     public LanguageOption SelectedLanguageOption
     {
@@ -337,11 +353,36 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
             {
                 section.RefreshTitle(resourceValue);
             }
+
+            var groupValue = Application.Current?.Resources?[section.GroupResourceKey] as string;
+            if (!string.IsNullOrWhiteSpace(groupValue))
+            {
+                section.RefreshGroupName(groupValue);
+            }
         }
+
+        RegroupSections();
 
         foreach (var option in ThemeOptions)
         {
             option.RefreshTitleFromResources();
+        }
+    }
+
+    private void RegroupSections()
+    {
+        var snapshot = Sections.ToList();
+        var previousSelection = _selectedSection;
+        Sections.Clear();
+        foreach (var item in snapshot)
+        {
+            Sections.Add(item);
+        }
+
+        if (previousSelection != null && Sections.Contains(previousSelection))
+        {
+            _selectedSection = previousSelection;
+            OnPropertyChanged(nameof(SelectedSection));
         }
     }
 

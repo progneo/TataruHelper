@@ -4,9 +4,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Translation
 {
@@ -19,6 +16,12 @@ namespace Translation
         Amazon = 4,
         Papago = 5,
         Baidu = 6,
+        AzureTranslator = 7,
+        GoogleCloudTranslate = 8,
+        DeepLApi = 9,
+        OpenAI = 10,
+        DeepSeek = 11,
+        YandexGPT = 12,
     }
 
     public class TranslationEngine : IEquatable<TranslationEngine>
@@ -38,7 +41,8 @@ namespace Translation
 
         ReadOnlyCollection<TranslatorLanguague> _SupportedLanguages;
 
-        public TranslationEngine(TranslationEngineName translationEngineName, List<TranslatorLanguague> translatorLanguagues, double quality)
+        public TranslationEngine(TranslationEngineName translationEngineName,
+            List<TranslatorLanguague> translatorLanguagues, double quality)
         {
             this.EngineName = translationEngineName;
             _SupportedLanguages = new ReadOnlyCollection<TranslatorLanguague>(translatorLanguagues);
@@ -52,10 +56,10 @@ namespace Translation
 
         public bool Equals(TranslationEngine engine)
         {
-            if (Object.ReferenceEquals(engine, null))
+            if (ReferenceEquals(engine, null))
                 return false;
 
-            if (Object.ReferenceEquals(this, engine))
+            if (ReferenceEquals(this, engine))
                 return true;
 
             if (this.GetType() != engine.GetType())

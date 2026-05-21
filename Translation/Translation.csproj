@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IvanAkcheurov.NTextCat.Lib" />
+    <PackageReference Include="NTextCat"/>
     <PackageReference Include="Jurassic" />
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
@@ -36,6 +36,12 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="TranslationResources\PapagoLanguages.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TranslationResources\AzureTranslatorLanguages.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="TranslationResources\YandexCloudLanguages.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Update="TranslationResources\Core14.profile.xml">
