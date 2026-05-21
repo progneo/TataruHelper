@@ -1,14 +1,16 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using HttpUtilities;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Translation.HttpUtils;
+
+using HttpUtilities;
+
 using Translation.Deepl.Requests;
 using Translation.Deepl.Responses;
+using Translation.HttpUtils;
 using Translation.Utils;
 
 namespace Translation.Deepl
@@ -21,8 +23,6 @@ namespace Translation.Deepl
 
         HttpReader _DeeplReader;
 
-        bool _ServerSplit;
-
         ILog _Logger;
 
         string deeplApiUrl = @"https://www2.deepl.com/jsonrpc";
@@ -34,14 +34,12 @@ namespace Translation.Deepl
             _DeeplReader = null;
 
             Rnd = new Random((int)Math.Round(DateTime.Now.TimeOfDay.TotalMilliseconds));
-
-            _ServerSplit = false;
         }
 
         private void CreateDeeplReader()
         {
             long baseIdMult = 10000;
-            _DeeplReader = new HttpReader(new HttpUtils.HttpILogWrapper(_Logger));
+            _DeeplReader = new HttpReader(new HttpILogWrapper(_Logger));
             TranslationHttpPolicy.ConfigureReader(_DeeplReader);
 
             _DeeplReader.Referer = "https://www.deepl.com/translator";
@@ -96,7 +94,8 @@ namespace Translation.Deepl
 
                 if (strDeepLTranslationResponse.IsSuccessful)
                 {
-                    var deepLTranslationResponse = SafeJson.DeserializeExternal<DeepLTranslationResponse>(strDeepLTranslationResponse.Body);
+                    var deepLTranslationResponse =
+                        SafeJson.DeserializeExternal<DeepLTranslationResponse>(strDeepLTranslationResponse.Body);
 
                     if (deepLTranslationResponse?.Result?.Translations != null)
                     {
@@ -124,7 +123,8 @@ namespace Translation.Deepl
                 }
                 else
                 {
-                    _Logger?.WriteLog(strDeepLTranslationResponse?.InnerException?.ToString() ?? "Deepl Exception is null");
+                    _Logger?.WriteLog(strDeepLTranslationResponse?.InnerException?.ToString() ??
+                                      "Deepl Exception is null");
                 }
             }
             catch (Exception e)

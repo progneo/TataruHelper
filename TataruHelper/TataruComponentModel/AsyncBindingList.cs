@@ -3,15 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Reflection;
-using FFXIVTataruHelper.EventArguments;
+
 using FFXIVTataruHelper.Services.Logging;
 
 namespace FFXIVTataruHelper.TataruComponentModel
@@ -25,7 +18,9 @@ namespace FFXIVTataruHelper.TataruComponentModel
         public AsyncBindingList(IAppLogger logger) : base()
         {
             _logger = logger;
-            this._AsyncListChanged = new AsyncEvent<AsyncListChangedEventHandler<T>>(this.EventErrorHandler, "AsyncBindingList \n AsyncListChanged");
+            this._AsyncListChanged =
+                new AsyncEvent<AsyncListChangedEventHandler<T>>(this.EventErrorHandler,
+                    "AsyncBindingList \n AsyncListChanged");
         }
 
         /// <summary>
@@ -34,7 +29,9 @@ namespace FFXIVTataruHelper.TataruComponentModel
         public AsyncBindingList(IList<T> list, IAppLogger logger) : base(list)
         {
             _logger = logger;
-            this._AsyncListChanged = new AsyncEvent<AsyncListChangedEventHandler<T>>(this.EventErrorHandler, "AsyncBindingList \n AsyncListChanged");
+            this._AsyncListChanged =
+                new AsyncEvent<AsyncListChangedEventHandler<T>>(this.EventErrorHandler,
+                    "AsyncBindingList \n AsyncListChanged");
         }
 
         #endregion
@@ -46,6 +43,7 @@ namespace FFXIVTataruHelper.TataruComponentModel
             add { this._AsyncListChanged.Register(value); }
             remove { this._AsyncListChanged.Unregister(value); }
         }
+
         private AsyncEvent<AsyncListChangedEventHandler<T>> _AsyncListChanged;
 
         #endregion
@@ -66,11 +64,9 @@ namespace FFXIVTataruHelper.TataruComponentModel
 
             var tmp = new ListChangedEventArgs(ListChangedType.ItemDeleted, index);
 
-            var ea = new AsyncListChangedEventHandler<T>(this, itemToDelete, new ListChangedEventArgs(ListChangedType.ItemDeleted, index));
-            //Task.Run(async () =>
-            //{
-                 _AsyncListChanged.InvokeAsync(ea);
-            //});
+            var ea = new AsyncListChangedEventHandler<T>(this, itemToDelete,
+                new ListChangedEventArgs(ListChangedType.ItemDeleted, index));
+            _ = _AsyncListChanged.InvokeAsync(ea);
 
             base.RemoveItem(index);
         }
@@ -88,20 +84,14 @@ namespace FFXIVTataruHelper.TataruComponentModel
                     {
                         T item = this.Items[e.NewIndex];
                         var ea = new AsyncListChangedEventHandler<T>(this, item, e);
-                        //Task.Run(async () =>
-                        //{
-                            _AsyncListChanged.InvokeAsync(ea);
-                        //});
+                        _ = _AsyncListChanged.InvokeAsync(ea);
                     }
                     break;
                 case ListChangedType.ItemAdded:
                     {
                         T item = this.Items[e.NewIndex];
                         var ea = new AsyncListChangedEventHandler<T>(this, item, e);
-                        //Task.Run(async () =>
-                        //{
-                             _AsyncListChanged.InvokeAsync(ea);
-                        //});
+                        _ = _AsyncListChanged.InvokeAsync(ea);
                     }
                     break;
             }

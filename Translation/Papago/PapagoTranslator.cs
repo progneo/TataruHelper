@@ -2,10 +2,9 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+
+using HttpUtilities;
+
 using Translation.HttpUtils;
 using Translation.Utils;
 
@@ -13,7 +12,7 @@ namespace Translation.Papago
 {
     class PapagoTranslator
     {
-        HttpUtilities.HttpReader _PapagoReader;
+        HttpReader _PapagoReader;
         PapagoEncoder _PapagoEncoder = null;
 
         ILog _Logger;
@@ -27,7 +26,7 @@ namespace Translation.Papago
 
         void CreatePapagoReader()
         {
-            _PapagoReader = new HttpUtilities.HttpReader(new HttpUtils.HttpILogWrapper(_Logger));
+            _PapagoReader = new HttpReader(new HttpILogWrapper(_Logger));
             TranslationHttpPolicy.ConfigureReader(_PapagoReader);
             _PapagoReader.ContentType = "application/x-www-form-urlencoded; charset=UTF-8";
         }
@@ -90,16 +89,19 @@ namespace Translation.Papago
                         _PapagoReader.OptionalHeaders.Add("Authorization", reqvObj.AuthorizationHeader);
                         _PapagoReader.OptionalHeaders.Add("Timestamp", reqvObj.Timestamp);
 
-                        var requestBody = reqvObj.StringRequest + $"&authroization={Uri.EscapeDataString(reqvObj.AuthorizationHeader)}" + $"&timestamp={reqvObj.Timestamp}";
+                        var requestBody = reqvObj.StringRequest +
+                                          $"&authroization={Uri.EscapeDataString(reqvObj.AuthorizationHeader)}" +
+                                          $"&timestamp={reqvObj.Timestamp}";
 
                         var papagoWebResponse = TranslationHttpPolicy.ExecuteHttpRequestWithRetry(
-                            () => _PapagoReader.RequestWebData(url, HttpUtilities.HttpMethods.POST, requestBody, true),
+                            () => _PapagoReader.RequestWebData(url, HttpMethods.POST, requestBody, true),
                             _Logger,
                             "Papago translate");
 
                         if (papagoWebResponse.IsSuccessful)
                         {
-                            PapagoResponse papagoResponse = SafeJson.DeserializeExternal<PapagoResponse>(papagoWebResponse.Body);
+                            PapagoResponse papagoResponse =
+                                SafeJson.DeserializeExternal<PapagoResponse>(papagoWebResponse.Body);
 
                             result = papagoResponse.translatedText;
                         }
@@ -107,15 +109,14 @@ namespace Translation.Papago
                         {
                             CreatePapagoReader();
 
-                            _Logger?.WriteLog(papagoWebResponse?.InnerException?.ToString() ?? "Papago Exception is null");
+                            _Logger?.WriteLog(papagoWebResponse?.InnerException?.ToString() ??
+                                              "Papago Exception is null");
                         }
-
                     }
                     else
                     {
                         _Logger?.WriteLog("reqvObj == null");
                     }
-
                 }
                 catch (Exception e)
                 {
@@ -132,7 +133,6 @@ namespace Translation.Papago
         string DetectLanguage(string sentence)
         {
             string result = string.Empty;
-            string url = @"https://papago.naver.com/apis/langs/dect";
 
             if (_PapagoEncoder == null)
                 _PapagoEncoder = new PapagoEncoder(GlobalTranslationSettings.PapagoEncoderPath, _Logger);

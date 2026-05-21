@@ -977,7 +977,7 @@ namespace FFXIVTataruHelper.ViewModel
             {
                 if (e.HotKey.Name == ClearChatKeys.Name)
                 {
-                    _requestChatClear.InvokeAsync(new TatruEventArgs(this));
+                    _ = _requestChatClear.InvokeAsync(new TatruEventArgs(this));
                 }
             }
         }

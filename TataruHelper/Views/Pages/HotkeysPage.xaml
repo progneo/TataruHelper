@@ -48,8 +48,8 @@
                                     Text="{Binding BoundWindow.ShowHideChatKeysName, Mode=OneWay}"
                                     IsReadOnly="True"
                                     IsUndoEnabled="False"
-                                    KeyDown="ShowHideChatWinHotKey_KeyDown"
-                                    KeyUp="ShowHideChatWinHotKey_KeyUp" />
+                                    PreviewKeyDown="ShowHideChatWinHotKey_PreviewKeyDown"
+                                    PreviewKeyUp="ShowHideChatWinHotKey_PreviewKeyUp" />
                         <ui:Button Grid.Column="2"
                                    Margin="8,0,0,0"
                                    Appearance="Secondary"
@@ -70,8 +70,8 @@
                                     Text="{Binding BoundWindow.ClickThoughtChatKeysName, Mode=OneWay}"
                                     IsReadOnly="True"
                                     IsUndoEnabled="False"
-                                    KeyDown="ClickThroughHotKey_KeyDown"
-                                    KeyUp="ClickThroughHotKey_KeyUp" />
+                                    PreviewKeyDown="ClickThroughHotKey_PreviewKeyDown"
+                                    PreviewKeyUp="ClickThroughHotKey_PreviewKeyUp" />
                         <ui:Button Grid.Column="2"
                                    Margin="8,0,0,0"
                                    Appearance="Secondary"
@@ -92,8 +92,8 @@
                                     Text="{Binding BoundWindow.ClearChatKeysName, Mode=OneWay}"
                                     IsReadOnly="True"
                                     IsUndoEnabled="False"
-                                    KeyDown="ClearChatHotKey_KeyDown"
-                                    KeyUp="ClearChatHotKey_KeyUp" />
+                                    PreviewKeyDown="ClearChatHotKey_PreviewKeyDown"
+                                    PreviewKeyUp="ClearChatHotKey_PreviewKeyUp" />
                         <ui:Button Grid.Column="2"
                                    Margin="8,0,0,0"
                                    Appearance="Secondary"

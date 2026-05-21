@@ -12,7 +12,8 @@ namespace Translation
         public string FromLang { get; private set; }
         public string ToLang { get; private set; }
 
-        public TranslationRequest(string inSentence, TranslationEngineName translationEngineName, string fromLang, string toLang)
+        public TranslationRequest(string inSentence, TranslationEngineName translationEngineName, string fromLang,
+            string toLang)
         {
             InSentence = inSentence;
             TranslationEngineName = translationEngineName;
@@ -30,34 +31,13 @@ namespace Translation
 
         public bool Equals(TranslationRequest reqv)
         {
-            if (Object.ReferenceEquals(reqv, null))
-                return false;
-
-            if (Object.ReferenceEquals(this, reqv))
-                return true;
-
-            if (this.GetType() != reqv.GetType())
-                return false;
-
             bool result = InSentence == reqv.InSentence && TranslationEngineName == reqv.TranslationEngineName;
             result = result && FromLang == reqv.FromLang && ToLang == reqv.ToLang;
 
             return result;
         }
 
-        public static bool operator ==(TranslationRequest left, TranslationRequest right)
-        {
-            if (ReferenceEquals(left, right))
-                return true;
-
-            if (ReferenceEquals(left, null))
-                return false;
-
-            if (ReferenceEquals(right, null))
-                return false;
-
-            return left.Equals(right);
-        }
+        public static bool operator ==(TranslationRequest left, TranslationRequest right) => left.Equals(right);
 
         public static bool operator !=(TranslationRequest left, TranslationRequest right) => !(left == right);
 

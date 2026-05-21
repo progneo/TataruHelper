@@ -1,10 +1,9 @@
-using FFXIVTataruHelper.Services.Logging;
-using FFXIVTataruHelper.WinUtils;
-
 using System;
 using System.Windows.Input;
 
 using FFXIVTataruHelper.Compatibility.HotKeys;
+using FFXIVTataruHelper.Services.Logging;
+using FFXIVTataruHelper.WinUtils;
 
 namespace FFXIVTataruHelper.Services.HotKeys
 {
@@ -33,11 +32,7 @@ namespace FFXIVTataruHelper.Services.HotKeys
                     return;
                 }
 
-                var isModifierKey = HotKeyCombination.IsModifierKey(key);
-                var hasOnlyModifiers = hotKeyCombination.ModifierKey != ModifierKeys.None &&
-                                       hotKeyCombination.NormalKey == Key.None;
-
-                if (isModifierKey && !hasOnlyModifiers)
+                if (hotKeyCombination.NormalKey != Key.None)
                 {
                     hotKeyCombination.ClearKeys();
                 }

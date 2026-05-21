@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="IvanAkcheurov.NTextCat.Lib" />
+    <PackageReference Include="NTextCat"/>
     <PackageReference Include="Jurassic" />
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>

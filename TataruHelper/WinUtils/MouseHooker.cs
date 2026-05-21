@@ -2,10 +2,10 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 
-
 using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+
 using FFXIVTataruHelper.EventArguments;
 using FFXIVTataruHelper.Services.Logging;
 
@@ -18,6 +18,7 @@ namespace FFXIVTataruHelper.WinUtils
             add { this._LowLevelMouseEvent.Register(value); }
             remove { this._LowLevelMouseEvent.Unregister(value); }
         }
+
         private AsyncEvent<LowLevelMouseEventArgs> _LowLevelMouseEvent;
         private readonly IAppLogger _logger;
 
@@ -90,11 +91,9 @@ namespace FFXIVTataruHelper.WinUtils
 
                 var ea = new LowLevelMouseEventArgs(this)
                 {
-                    MouseMessages = (MouseMessages)wParam,
-                    MouseEventFlags = hookStruct
+                    MouseMessages = (MouseMessages)wParam, MouseEventFlags = hookStruct
                 };
-                _LowLevelMouseEvent.InvokeAsync(ea);
-
+                _ = _LowLevelMouseEvent.InvokeAsync(ea);
             }
 
             return CallNextHookEx(_hookID, nCode, wParam, lParam);

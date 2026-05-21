@@ -2,25 +2,22 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 
-
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Input;
 
+using Newtonsoft.Json;
+
 namespace FFXIVTataruHelper.WinUtils
 {
     public class HotKeyCombination : IEquatable<HotKeyCombination>
     {
-        [JsonIgnore]
-        public ModifierKeys ModifierKey { get { return _ModifierKey; } }
+        [JsonIgnore] public ModifierKeys ModifierKey { get { return _ModifierKey; } }
 
-        [JsonIgnore]
-        public Key NormalKey { get { return _NormalKey; } }
+        [JsonIgnore] public Key NormalKey { get { return _NormalKey; } }
 
-        [JsonIgnore]
-        public string Name { get { return _Name; } }
+        [JsonIgnore] public string Name { get { return _Name; } }
 
         [JsonIgnore]
         public bool IsInitialized
@@ -34,17 +31,13 @@ namespace FFXIVTataruHelper.WinUtils
             }
         }
 
-        [JsonProperty]
-        private ModifierKeys _ModifierKey;
+        [JsonProperty] private ModifierKeys _ModifierKey;
 
-        [JsonProperty]
-        private Key _NormalKey;
+        [JsonProperty] private Key _NormalKey;
 
-        [JsonProperty]
-        private string _Name;
+        [JsonProperty] private string _Name;
 
-        [JsonProperty]
-        private List<System.Windows.Input.Key> _Keys;
+        [JsonProperty] private List<Key> _Keys;
 
         public HotKeyCombination()
         {
@@ -148,27 +141,32 @@ namespace FFXIVTataruHelper.WinUtils
 
         public string CombinationKeysName()
         {
-            string res = "Empty";
-            if (_Keys.Count > 0)
-                res = String.Empty;
+            if (_ModifierKey == ModifierKeys.None && _NormalKey == Key.None)
+                return "Empty";
 
-            for (int i = 0; i < _Keys.Count; i++)
-            {
-                res += _Keys[i].ToString() + "+";
-            }
-            res = res.Remove(res.Length - 1, 1);
-            res = res.Replace("Left", "");
-            res = res.Replace("Right", "");
+            var parts = new List<string>(4);
 
-            return res;
+            if ((_ModifierKey & ModifierKeys.Control) != 0)
+                parts.Add("Ctrl");
+            if ((_ModifierKey & ModifierKeys.Alt) != 0)
+                parts.Add("Alt");
+            if ((_ModifierKey & ModifierKeys.Shift) != 0)
+                parts.Add("Shift");
+            if ((_ModifierKey & ModifierKeys.Windows) != 0)
+                parts.Add("Win");
+
+            if (_NormalKey != Key.None)
+                parts.Add(_NormalKey.ToString());
+
+            return string.Join("+", parts);
         }
 
         public static bool IsModifierKey(Key key)
         {
             if (key == Key.LeftAlt || key == Key.RightAlt ||
-                 key == Key.LeftShift || key == Key.RightShift ||
-                 key == Key.LeftCtrl || key == Key.RightCtrl ||
-                 key == Key.LWin || key == Key.RWin || key == Key.System)
+                key == Key.LeftShift || key == Key.RightShift ||
+                key == Key.LeftCtrl || key == Key.RightCtrl ||
+                key == Key.LWin || key == Key.RWin || key == Key.System)
             {
                 return true;
             }
@@ -189,14 +187,15 @@ namespace FFXIVTataruHelper.WinUtils
             if (ReferenceEquals(right, null))
                 return false;
 
-            return left.NormalKey == right.NormalKey && left.ModifierKey == right.ModifierKey && left.Name == right.Name;
+            return left.NormalKey == right.NormalKey && left.ModifierKey == right.ModifierKey &&
+                   left.Name == right.Name;
         }
 
         public static bool operator !=(HotKeyCombination left, HotKeyCombination right) => !(left == right);
 
         public override bool Equals(object obj)
         {
-            if(obj is HotKeyCombination)
+            if (obj is HotKeyCombination)
             {
                 return this == (HotKeyCombination)obj;
             }
