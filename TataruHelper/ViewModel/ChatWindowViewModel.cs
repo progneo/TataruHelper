@@ -719,6 +719,8 @@ namespace FFXIVTataruHelper.ViewModel
             _allTranslationEngines = translationEngines;
             _engineAvailability = engineAvailability;
 
+            var savedEngineName = settings.TranslationEngineName;
+
             RebuildAvailableEngines();
 
             if (_engineAvailability != null)
@@ -727,7 +729,7 @@ namespace FFXIVTataruHelper.ViewModel
             }
 
             var savedEngine = _allTranslationEngines
-                .FirstOrDefault(x => x.EngineName == settings.TranslationEngineName);
+                .FirstOrDefault(x => x.EngineName == savedEngineName);
 
             SelectedEngine = AvailableEngines.Contains(savedEngine)
                 ? savedEngine
@@ -879,12 +881,6 @@ namespace FFXIVTataruHelper.ViewModel
             if (_selectedEngine != null && !AvailableEngines.Contains(_selectedEngine))
             {
                 SelectedEngine = AvailableEngines.FirstOrDefault();
-                return;
-            }
-
-            if (_selectedEngine == null && AvailableEngines.Count > 0)
-            {
-                SelectedEngine = AvailableEngines[0];
                 return;
             }
 
