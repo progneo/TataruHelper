@@ -5,6 +5,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              xmlns:utils="clr-namespace:WpfXamlExtensions;assembly=WpfXamlExtensions"
+             xmlns:ctl="clr-namespace:FFXIVTataruHelper.Views.Controls"
              mc:Ignorable="d">
     <ScrollViewer VerticalScrollBarVisibility="Auto" Background="Transparent">
         <Grid>
@@ -152,21 +153,17 @@
                                        Foreground="{DynamicResource Brush.Accent}" />
                         <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
                                    Margin="0"
-                                   Text="Translators"
+                                   Text="{DynamicResource TranslatorsLabel}"
                                    VerticalAlignment="Center" />
                     </StackPanel>
                     <TextBlock Style="{DynamicResource CaptionTextStyle}"
                                Margin="0,0,0,10"
-                               Text="Enable only translators you need. Disabled translators are hidden on the Translation page." />
-
-                    <ui:ToggleSwitch Content="Show API key values"
-                                     IsChecked="{Binding Shell.TranslationCredentials.ShowApiKeyValues, Mode=TwoWay}"
-                                     Margin="0,0,0,14" />
+                               Text="{DynamicResource TranslatorsHint}" />
 
                     <!-- Free -->
                     <TextBlock Style="{DynamicResource CaptionTextStyle}"
                                FontWeight="SemiBold"
-                               Margin="0,0,0,6" Text="Free" />
+                               Margin="0,0,0,6" Text="{DynamicResource FreeTranslatorsLabel}" />
 
                     <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
                             Background="{DynamicResource Brush.SurfaceSubtle}">
@@ -204,7 +201,7 @@
                     <!-- Paid -->
                     <TextBlock Style="{DynamicResource CaptionTextStyle}"
                                FontWeight="SemiBold"
-                               Margin="0,0,0,6" Text="Paid" />
+                               Margin="0,0,0,6" Text="{DynamicResource PaidTranslatorsLabel}" />
 
                     <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
                             Background="{DynamicResource Brush.SurfaceSubtle}">
@@ -216,27 +213,14 @@
                             </DockPanel>
                             <StackPanel Margin="0,8,0,0"
                                         Visibility="{Binding Shell.TranslationCredentials.ShowAzureSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
-                                <Label Style="{DynamicResource BaseLabelStyle}" Content="Azure key" />
-                                <TextBox
-                                    Text="{Binding Shell.TranslationCredentials.AzureApiKey, UpdateSourceTrigger=LostFocus}"
-                                    KeyDown="CredentialTextBox_KeyDown" Margin="0,0,0,6"
-                                    Visibility="{Binding Shell.TranslationCredentials.ShowApiKeyValues, Converter={utils:BooleanToVisibilityConverterCollapse}}" />
-                                <TextBlock Text="{Binding Shell.TranslationCredentials.AzureApiKeyMasked}"
-                                           Margin="0,0,0,6">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                            <Style.Triggers>
-                                                <DataTrigger
-                                                    Binding="{Binding Shell.TranslationCredentials.ShowApiKeyValues}"
-                                                    Value="True">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <Label Style="{DynamicResource BaseLabelStyle}" Content="Azure region" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource AzureKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.AzureApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.AzureApiKeyMasked}"
+                                    Margin="0,0,0,6" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource AzureRegionLabel}" />
                                 <TextBox
                                     Text="{Binding Shell.TranslationCredentials.AzureRegion, UpdateSourceTrigger=LostFocus}"
                                     KeyDown="CredentialTextBox_KeyDown" />
@@ -254,25 +238,11 @@
                             </DockPanel>
                             <StackPanel Margin="0,8,0,0"
                                         Visibility="{Binding Shell.TranslationCredentials.ShowGoogleCloudSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
-                                <Label Style="{DynamicResource BaseLabelStyle}" Content="Google Cloud key" />
-                                <TextBox
-                                    Text="{Binding Shell.TranslationCredentials.GoogleCloudApiKey, UpdateSourceTrigger=LostFocus}"
-                                    KeyDown="CredentialTextBox_KeyDown" Margin="0,0,0,6"
-                                    Visibility="{Binding Shell.TranslationCredentials.ShowApiKeyValues, Converter={utils:BooleanToVisibilityConverterCollapse}}" />
-                                <TextBlock Text="{Binding Shell.TranslationCredentials.GoogleCloudApiKeyMasked}">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                            <Style.Triggers>
-                                                <DataTrigger
-                                                    Binding="{Binding Shell.TranslationCredentials.ShowApiKeyValues}"
-                                                    Value="True">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource GoogleCloudKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.GoogleCloudApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.GoogleCloudApiKeyMasked}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -287,25 +257,11 @@
                             </DockPanel>
                             <StackPanel Margin="0,8,0,0"
                                         Visibility="{Binding Shell.TranslationCredentials.ShowDeepLApiSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
-                                <Label Style="{DynamicResource BaseLabelStyle}" Content="DeepL API key" />
-                                <TextBox
-                                    Text="{Binding Shell.TranslationCredentials.DeepLApiKey, UpdateSourceTrigger=LostFocus}"
-                                    KeyDown="CredentialTextBox_KeyDown" Margin="0,0,0,6"
-                                    Visibility="{Binding Shell.TranslationCredentials.ShowApiKeyValues, Converter={utils:BooleanToVisibilityConverterCollapse}}" />
-                                <TextBlock Text="{Binding Shell.TranslationCredentials.DeepLApiKeyMasked}">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                            <Style.Triggers>
-                                                <DataTrigger
-                                                    Binding="{Binding Shell.TranslationCredentials.ShowApiKeyValues}"
-                                                    Value="True">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource DeepLApiKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.DeepLApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.DeepLApiKeyMasked}" />
                             </StackPanel>
                         </StackPanel>
                     </Border>
@@ -320,27 +276,14 @@
                             </DockPanel>
                             <StackPanel Margin="0,8,0,0"
                                         Visibility="{Binding Shell.TranslationCredentials.ShowYandexSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
-                                <Label Style="{DynamicResource BaseLabelStyle}" Content="Yandex API key" />
-                                <TextBox
-                                    Text="{Binding Shell.TranslationCredentials.YandexApiKey, UpdateSourceTrigger=LostFocus}"
-                                    KeyDown="CredentialTextBox_KeyDown" Margin="0,0,0,6"
-                                    Visibility="{Binding Shell.TranslationCredentials.ShowApiKeyValues, Converter={utils:BooleanToVisibilityConverterCollapse}}" />
-                                <TextBlock Text="{Binding Shell.TranslationCredentials.YandexApiKeyMasked}"
-                                           Margin="0,0,0,6">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                            <Style.Triggers>
-                                                <DataTrigger
-                                                    Binding="{Binding Shell.TranslationCredentials.ShowApiKeyValues}"
-                                                    Value="True">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <Label Style="{DynamicResource BaseLabelStyle}" Content="Yandex folder ID" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource YandexApiKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.YandexApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.YandexApiKeyMasked}"
+                                    Margin="0,0,0,6" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource YandexFolderIdLabel}" />
                                 <TextBox
                                     Text="{Binding Shell.TranslationCredentials.YandexFolderId, UpdateSourceTrigger=LostFocus}"
                                     KeyDown="CredentialTextBox_KeyDown" />
@@ -351,7 +294,7 @@
                     <!-- AI -->
                     <TextBlock Style="{DynamicResource CaptionTextStyle}"
                                FontWeight="SemiBold"
-                               Margin="0,0,0,6" Text="AI" />
+                               Margin="0,0,0,6" Text="{DynamicResource AITranslatorsLabel}" />
 
                     <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
                             Background="{DynamicResource Brush.SurfaceSubtle}">
@@ -363,27 +306,14 @@
                             </DockPanel>
                             <StackPanel Margin="0,8,0,0"
                                         Visibility="{Binding Shell.TranslationCredentials.ShowOpenAISettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
-                                <Label Style="{DynamicResource BaseLabelStyle}" Content="OpenAI key" />
-                                <TextBox
-                                    Text="{Binding Shell.TranslationCredentials.OpenAIApiKey, UpdateSourceTrigger=LostFocus}"
-                                    KeyDown="CredentialTextBox_KeyDown" Margin="0,0,0,6"
-                                    Visibility="{Binding Shell.TranslationCredentials.ShowApiKeyValues, Converter={utils:BooleanToVisibilityConverterCollapse}}" />
-                                <TextBlock Text="{Binding Shell.TranslationCredentials.OpenAIApiKeyMasked}"
-                                           Margin="0,0,0,6">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                            <Style.Triggers>
-                                                <DataTrigger
-                                                    Binding="{Binding Shell.TranslationCredentials.ShowApiKeyValues}"
-                                                    Value="True">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <Label Style="{DynamicResource BaseLabelStyle}" Content="OpenAI model (optional)" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource OpenAIKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.OpenAIApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.OpenAIApiKeyMasked}"
+                                    Margin="0,0,0,6" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource OpenAIModelLabel}" />
                                 <TextBox
                                     Text="{Binding Shell.TranslationCredentials.OpenAIModel, UpdateSourceTrigger=LostFocus}"
                                     KeyDown="CredentialTextBox_KeyDown" />
@@ -401,27 +331,14 @@
                             </DockPanel>
                             <StackPanel Margin="0,8,0,0"
                                         Visibility="{Binding Shell.TranslationCredentials.ShowDeepSeekSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
-                                <Label Style="{DynamicResource BaseLabelStyle}" Content="DeepSeek key" />
-                                <TextBox
-                                    Text="{Binding Shell.TranslationCredentials.DeepSeekApiKey, UpdateSourceTrigger=LostFocus}"
-                                    KeyDown="CredentialTextBox_KeyDown" Margin="0,0,0,6"
-                                    Visibility="{Binding Shell.TranslationCredentials.ShowApiKeyValues, Converter={utils:BooleanToVisibilityConverterCollapse}}" />
-                                <TextBlock Text="{Binding Shell.TranslationCredentials.DeepSeekApiKeyMasked}"
-                                           Margin="0,0,0,6">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock">
-                                            <Setter Property="Visibility" Value="Visible" />
-                                            <Style.Triggers>
-                                                <DataTrigger
-                                                    Binding="{Binding Shell.TranslationCredentials.ShowApiKeyValues}"
-                                                    Value="True">
-                                                    <Setter Property="Visibility" Value="Collapsed" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-                                <Label Style="{DynamicResource BaseLabelStyle}" Content="DeepSeek model (optional)" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource DeepSeekKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.DeepSeekApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.DeepSeekApiKeyMasked}"
+                                    Margin="0,0,0,6" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource DeepSeekModelLabel}" />
                                 <TextBox
                                     Text="{Binding Shell.TranslationCredentials.DeepSeekModel, UpdateSourceTrigger=LostFocus}"
                                     KeyDown="CredentialTextBox_KeyDown" />
@@ -441,9 +358,9 @@
                                         Visibility="{Binding Shell.TranslationCredentials.ShowYandexGptSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
                                 <TextBlock Style="{DynamicResource CaptionTextStyle}"
                                            TextWrapping="Wrap" Margin="0,0,0,6"
-                                           Text="Uses the Yandex Cloud API key and folder ID from the Yandex row above." />
+                                           Text="{DynamicResource YandexGptUsesYandexHint}" />
                                 <Label Style="{DynamicResource BaseLabelStyle}"
-                                       Content="Model alias (optional, e.g. yandexgpt/latest, yandexgpt-lite/latest)" />
+                                       Content="{DynamicResource YandexGptModelAliasLabel}" />
                                 <TextBox
                                     Text="{Binding Shell.TranslationCredentials.YandexGptModel, UpdateSourceTrigger=LostFocus}"
                                     KeyDown="CredentialTextBox_KeyDown" />

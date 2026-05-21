@@ -44,15 +44,18 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
         Sections = new ObservableCollection<SettingsSectionItem>
         {
-            new(SettingsSection.ChatWindows, "Chat Windows", "ChatWindowsTab", "Chat Windows", SymbolRegular.Chat24),
-            new(SettingsSection.Appearance, "Per Window Settings", "SectionAppearance", "Appearance",
-                SymbolRegular.ColorBackground24),
-            new(SettingsSection.Hotkeys, "Per Window Settings", "ChatWindowHotkeys", "Hotkeys",
-                SymbolRegular.Keyboard24),
-            new(SettingsSection.Translation, "Per Window Settings", "SectionTranslation", "Translation",
-                SymbolRegular.Translate24),
-            new(SettingsSection.General, "Application", "SectionGeneral", "General", SymbolRegular.Settings24),
-            new(SettingsSection.About, "Application", "DockAbout", "About", SymbolRegular.Info24)
+            new(SettingsSection.ChatWindows, "SidebarGroupChatWindows", "Chat Windows",
+                "ChatWindowsTab", "Chat Windows", SymbolRegular.Chat24),
+            new(SettingsSection.Appearance, "SidebarGroupPerWindow", "Per Window Settings",
+                "SectionAppearance", "Appearance", SymbolRegular.ColorBackground24),
+            new(SettingsSection.Hotkeys, "SidebarGroupPerWindow", "Per Window Settings",
+                "ChatWindowHotkeys", "Hotkeys", SymbolRegular.Keyboard24),
+            new(SettingsSection.Translation, "SidebarGroupPerWindow", "Per Window Settings",
+                "SectionTranslation", "Translation", SymbolRegular.Translate24),
+            new(SettingsSection.General, "SidebarGroupApplication", "Application",
+                "SectionGeneral", "General", SymbolRegular.Settings24),
+            new(SettingsSection.About, "SidebarGroupApplication", "Application",
+                "DockAbout", "About", SymbolRegular.Info24)
         };
 
         ThemeOptions = new ObservableCollection<ThemeOption>
@@ -350,11 +353,36 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
             {
                 section.RefreshTitle(resourceValue);
             }
+
+            var groupValue = Application.Current?.Resources?[section.GroupResourceKey] as string;
+            if (!string.IsNullOrWhiteSpace(groupValue))
+            {
+                section.RefreshGroupName(groupValue);
+            }
         }
+
+        RegroupSections();
 
         foreach (var option in ThemeOptions)
         {
             option.RefreshTitleFromResources();
+        }
+    }
+
+    private void RegroupSections()
+    {
+        var snapshot = Sections.ToList();
+        var previousSelection = _selectedSection;
+        Sections.Clear();
+        foreach (var item in snapshot)
+        {
+            Sections.Add(item);
+        }
+
+        if (previousSelection != null && Sections.Contains(previousSelection))
+        {
+            _selectedSection = previousSelection;
+            OnPropertyChanged(nameof(SelectedSection));
         }
     }
 

@@ -22,8 +22,6 @@ namespace FFXIVTataruHelper.ViewModel
 
         private readonly ITranslationCredentialStore _store;
         private readonly ObservableCollection<TranslationEngineName> _availableEngines;
-        private bool _areApiKeysVisible;
-        private bool _showApiKeyValues;
 
         public event PropertyChangedEventHandler PropertyChanged;
         public event EventHandler AvailableEnginesChanged;
@@ -37,28 +35,6 @@ namespace FFXIVTataruHelper.ViewModel
         }
 
         public ReadOnlyObservableCollection<TranslationEngineName> AvailableEngines { get; }
-
-        public bool AreApiKeysVisible
-        {
-            get => _areApiKeysVisible;
-            set
-            {
-                if (_areApiKeysVisible == value) return;
-                _areApiKeysVisible = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public bool ShowApiKeyValues
-        {
-            get => _showApiKeyValues;
-            set
-            {
-                if (_showApiKeyValues == value) return;
-                _showApiKeyValues = value;
-                OnPropertyChanged();
-            }
-        }
 
         public bool IsGoogleTranslateEnabled
         {

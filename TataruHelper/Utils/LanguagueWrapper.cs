@@ -149,6 +149,9 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["SectionTranslation"] = catalog.GetString("Translation");
             _SettingsWindow.Resources["SectionAppearance"] = catalog.GetString("Appearance");
             _SettingsWindow.Resources["SectionGeneral"] = catalog.GetString("General");
+            _SettingsWindow.Resources["SidebarGroupChatWindows"] = catalog.GetString("Chat Windows");
+            _SettingsWindow.Resources["SidebarGroupPerWindow"] = catalog.GetString("Per Window Settings");
+            _SettingsWindow.Resources["SidebarGroupApplication"] = catalog.GetString("Application");
             _SettingsWindow.Resources["ActiveChatWindowLabel"] = catalog.GetString("Active Chat Window");
             _SettingsWindow.Resources["AddButtonText"] = catalog.GetString("Add");
             _SettingsWindow.Resources["DeleteButtonText"] = catalog.GetString("Delete");
@@ -305,6 +308,91 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["CheckUpdatesText"] = catalog.GetString("Check updates");
             _SettingsWindow.Resources["LookingForUpdates"] = catalog.GetString("Looking for updates...");
             _SettingsWindow.Resources["NoUpdatesFound"] = catalog.GetString("No updates found.");
+
+            // Tray / dock
+            _SettingsWindow.Resources["SettingsHide"] = catalog.GetString("Hide");
+            _SettingsWindow.Resources["SettingsExit"] = catalog.GetString("Exit");
+            _SettingsWindow.Resources["PatreonWindowName"] = catalog.GetString("Patrons");
+            _SettingsWindow.Resources["DockPatrons"] = catalog.GetString("Patrons");
+            _SettingsWindow.Resources["DockDiscrod"] = catalog.GetString("Discord");
+            _SettingsWindow.Resources["DockModernSettingsPreview"] = catalog.GetString("Modern settings (preview)");
+
+            // Page descriptions
+            _SettingsWindow.Resources["ChatWindowsPageDescription"] =
+                catalog.GetString("Manage your in-game chat overlay windows. Each tab is an independent overlay.");
+            _SettingsWindow.Resources["ChatWindowsTabHint"] =
+                catalog.GetString(
+                    "Switch tabs to edit a window's translation, appearance, hotkeys, and behavior in the other sections.");
+            _SettingsWindow.Resources["TranslationPageDescription"] =
+                catalog.GetString("Engine and language routing apply only to the selected chat window.");
+            _SettingsWindow.Resources["ChatCodeFiltersHint"] =
+                catalog.GetString("Pick which chat channels are translated and the colour each one is rendered in.");
+            _SettingsWindow.Resources["EngineRoutingHint"] =
+                catalog.GetString("Choose the translation provider and source/target languages.");
+            _SettingsWindow.Resources["AppearancePageDescription"] =
+                catalog.GetString("Customize how the overlay looks and how text is laid out.");
+            _SettingsWindow.Resources["HotkeysPageDescription"] =
+                catalog.GetString("Record system-wide shortcuts and control how the overlay reacts.");
+            _SettingsWindow.Resources["GeneralPageDescription"] =
+                catalog.GetString("Application-wide options that affect every chat window.");
+            _SettingsWindow.Resources["AboutPageDescription"] = catalog.GetString("Project links and credits.");
+
+            // Theme group
+            _SettingsWindow.Resources["ThemeGroupTitle"] = catalog.GetString("Theme");
+            _SettingsWindow.Resources["ThemeGroupHint"] =
+                catalog.GetString("Choose how the settings window and overlay should be coloured.");
+            _SettingsWindow.Resources["ThemeSystem"] = catalog.GetString("Use system theme");
+            _SettingsWindow.Resources["ThemeLight"] = catalog.GetString("Light");
+            _SettingsWindow.Resources["ThemeDark"] = catalog.GetString("Dark");
+
+            // Hotkeys / general
+            _SettingsWindow.Resources["HotkeyRecordHint"] = catalog.GetString("Press a key combination…");
+            _SettingsWindow.Resources["HotkeyClear"] = catalog.GetString("Clear");
+            _SettingsWindow.Resources["HideToTrayDescription"] =
+                catalog.GetString("Hide the settings window to the system tray when minimized.");
+            _SettingsWindow.Resources["LanguageGroupHint"] =
+                catalog.GetString("Interface language for the settings window and overlays.");
+
+            // Updates group
+            _SettingsWindow.Resources["UpdatesGroupTitle"] = catalog.GetString("Updates");
+            _SettingsWindow.Resources["UpdatesGroupHint"] =
+                catalog.GetString("Check whether a newer release of Tataru Helper is available.");
+            _SettingsWindow.Resources["UpdateAvailableChip"] = catalog.GetString("Update available");
+
+            // Chat code (missed)
+            _SettingsWindow.Resources["CkBossQuotes"] = catalog.GetString("Boss quotes");
+
+            // Translator catalogue (General page)
+            _SettingsWindow.Resources["TranslatorsLabel"] = catalog.GetString("Translators");
+            _SettingsWindow.Resources["TranslatorsHint"] =
+                catalog.GetString(
+                    "Enable only translators you need. Disabled translators are hidden on the Translation page.");
+            _SettingsWindow.Resources["FreeTranslatorsLabel"] = catalog.GetString("Free");
+            _SettingsWindow.Resources["PaidTranslatorsLabel"] = catalog.GetString("Paid");
+            _SettingsWindow.Resources["AITranslatorsLabel"] = catalog.GetString("AI");
+            _SettingsWindow.Resources["AzureKeyLabel"] = catalog.GetString("Azure key");
+            _SettingsWindow.Resources["AzureRegionLabel"] = catalog.GetString("Azure region");
+            _SettingsWindow.Resources["GoogleCloudKeyLabel"] = catalog.GetString("Google Cloud key");
+            _SettingsWindow.Resources["DeepLApiKeyLabel"] = catalog.GetString("DeepL API key");
+            _SettingsWindow.Resources["YandexApiKeyLabel"] = catalog.GetString("Yandex API key");
+            _SettingsWindow.Resources["YandexFolderIdLabel"] = catalog.GetString("Yandex folder ID");
+            _SettingsWindow.Resources["OpenAIKeyLabel"] = catalog.GetString("OpenAI key");
+            _SettingsWindow.Resources["OpenAIModelLabel"] = catalog.GetString("OpenAI model (optional)");
+            _SettingsWindow.Resources["DeepSeekKeyLabel"] = catalog.GetString("DeepSeek key");
+            _SettingsWindow.Resources["DeepSeekModelLabel"] = catalog.GetString("DeepSeek model (optional)");
+            _SettingsWindow.Resources["YandexGptUsesYandexHint"] =
+                catalog.GetString("Uses the Yandex Cloud API key and folder ID from the Yandex row above.");
+            _SettingsWindow.Resources["YandexGptModelAliasLabel"] =
+                catalog.GetString("Model alias (optional, e.g. yandexgpt/latest, yandexgpt-lite/latest)");
+
+            // About / Appearance
+            _SettingsWindow.Resources["AppTagline"] = catalog.GetString("Real-time FFXIV chat translator");
+            _SettingsWindow.Resources["TypographyHint"] =
+                catalog.GetString("Choose text style and readability defaults for this overlay window.");
+            _SettingsWindow.Resources["OverlayBehaviorHint"] =
+                catalog.GetString("Configure how the chat overlay behaves in game.");
+            _SettingsWindow.Resources["AutoHideTimeoutLabel"] = catalog.GetString("Auto Hide Timeout");
+            _SettingsWindow.Resources["AutoHideTimeoutHint"] = catalog.GetString("Timeout in seconds.");
         }
     }
 }
