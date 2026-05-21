@@ -86,9 +86,7 @@ namespace Translation
         {
             LoadLanguages(
                 GlobalTranslationSettings.GoogleTranslateLanguages,
-                GlobalTranslationSettings.DeeplLanguages,
                 GlobalTranslationSettings.PapagoLanguages,
-                GlobalTranslationSettings.BaiduLanguages,
                 GlobalTranslationSettings.AzureTranslatorLanguages,
                 GlobalTranslationSettings.GoogleCloudTranslateLanguages,
                 GlobalTranslationSettings.DeepLApiLanguages,
@@ -242,9 +240,7 @@ namespace Translation
 
         private void LoadLanguages(
             string glTrPath,
-            string deepPath,
             string PapagoTrPath,
-            string baiduTrPath,
             string azurePath,
             string gCloudPath,
             string deepLApiPath,
@@ -259,14 +255,8 @@ namespace Translation
                 var tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(glTrPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.GoogleTranslate, tmpList, 9));
 
-                tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(deepPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.DeepL, tmpList, 10));
-
                 tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(PapagoTrPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.Papago, tmpList, 6));
-
-                tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(baiduTrPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.Baidu, tmpList, 3));
 
                 tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(azurePath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.AzureTranslator, tmpList, 9));

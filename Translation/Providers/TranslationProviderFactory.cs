@@ -2,9 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 
 using Translation.AI;
-using Translation.Baidu;
 using Translation.Credentials;
-using Translation.Deepl;
 using Translation.DeepLApi;
 using Translation.Google;
 using Translation.GoogleCloud;
@@ -25,10 +23,8 @@ namespace Translation.Providers
             {
                 new TranslationProviderAdapter(TranslationEngineName.GoogleTranslate,
                     new GoogleTranslator(logger).Translate),
-                new TranslationProviderAdapter(TranslationEngineName.DeepL, new DeepLTranslator(logger).Translate),
                 new TranslationProviderAdapter(TranslationEngineName.Papago,
                     new PapagoTranslator(logger).Translate),
-                new TranslationProviderAdapter(TranslationEngineName.Baidu, new BaiduTranslater(logger).Translate),
                 new TranslationProviderAdapter(TranslationEngineName.AzureTranslator,
                     new AzureTranslator.AzureTranslator(logger, credentials).Translate),
                 new TranslationProviderAdapter(TranslationEngineName.GoogleCloudTranslate,

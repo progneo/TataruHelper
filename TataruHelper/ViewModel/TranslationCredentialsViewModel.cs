@@ -13,11 +13,10 @@ namespace FFXIVTataruHelper.ViewModel
     {
         private static readonly TranslationEngineName[] EngineUiOrder =
         {
-            TranslationEngineName.GoogleTranslate, TranslationEngineName.DeepL, TranslationEngineName.Papago,
-            TranslationEngineName.Baidu, TranslationEngineName.AzureTranslator,
-            TranslationEngineName.GoogleCloudTranslate, TranslationEngineName.DeepLApi,
-            TranslationEngineName.OpenAI, TranslationEngineName.DeepSeek, TranslationEngineName.YandexGPT,
-            TranslationEngineName.Yandex
+            TranslationEngineName.GoogleTranslate, TranslationEngineName.Papago,
+            TranslationEngineName.AzureTranslator, TranslationEngineName.GoogleCloudTranslate,
+            TranslationEngineName.DeepLApi, TranslationEngineName.OpenAI, TranslationEngineName.DeepSeek,
+            TranslationEngineName.YandexGPT, TranslationEngineName.Yandex
         };
 
         private readonly ITranslationCredentialStore _store;
@@ -42,22 +41,10 @@ namespace FFXIVTataruHelper.ViewModel
             set => SetEngineEnabled(TranslationEngineName.GoogleTranslate, value);
         }
 
-        public bool IsDeepLEnabled
-        {
-            get => _store.IsEngineEnabled(TranslationEngineName.DeepL);
-            set => SetEngineEnabled(TranslationEngineName.DeepL, value);
-        }
-
         public bool IsPapagoEnabled
         {
             get => _store.IsEngineEnabled(TranslationEngineName.Papago);
             set => SetEngineEnabled(TranslationEngineName.Papago, value);
-        }
-
-        public bool IsBaiduEnabled
-        {
-            get => _store.IsEngineEnabled(TranslationEngineName.Baidu);
-            set => SetEngineEnabled(TranslationEngineName.Baidu, value);
         }
 
         public bool IsAzureEnabled
@@ -237,9 +224,7 @@ namespace FFXIVTataruHelper.ViewModel
         private static string EngineTogglePropertyName(TranslationEngineName engine) => engine switch
         {
             TranslationEngineName.GoogleTranslate => nameof(IsGoogleTranslateEnabled),
-            TranslationEngineName.DeepL => nameof(IsDeepLEnabled),
             TranslationEngineName.Papago => nameof(IsPapagoEnabled),
-            TranslationEngineName.Baidu => nameof(IsBaiduEnabled),
             TranslationEngineName.AzureTranslator => nameof(IsAzureEnabled),
             TranslationEngineName.GoogleCloudTranslate => nameof(IsGoogleCloudEnabled),
             TranslationEngineName.DeepLApi => nameof(IsDeepLApiEnabled),

@@ -20,12 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="TranslationResources\BaiduEncoder">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TranslationResources\BaiduLanguages.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
     <None Update="TranslationResources\DeeplLanguages.json">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

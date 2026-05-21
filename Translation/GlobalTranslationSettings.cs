@@ -27,15 +27,9 @@ namespace Translation
 
         public static string NTextCatLanguageModelsPath = "TranslationResources/Core14.profile.xml";
 
-        public static string BaiduEncoder = "TranslationResources/BaiduEncoder";
-
         public static string PapagoEncoderPath = "TranslationResources/PapagoEncoder";
 
         public static string GoogleTranslateLanguages = "TranslationResources/GoogleTranslateLanguages.json";
-
-        public static string DeeplLanguages = "TranslationResources/DeeplLanguages.json";
-
-        public static string BaiduLanguages = "TranslationResources/BaiduLanguages.json";
 
         public static string PapagoLanguages = "TranslationResources/PapagoLanguages.json";
 
