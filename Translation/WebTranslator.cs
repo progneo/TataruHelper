@@ -19,12 +19,12 @@ namespace Translation
     {
         public ReadOnlyCollection<TranslationEngine> TranslationEngines
         {
-            get { return _TranslationEngines; }
+            get { return _translationEngines; }
         }
 
-        private ReadOnlyCollection<TranslationEngine> _TranslationEngines;
+        private ReadOnlyCollection<TranslationEngine> _translationEngines;
 
-        private readonly List<KeyValuePair<TranslationRequest, string>> transaltionCache;
+        private readonly List<KeyValuePair<TranslationRequest, string>> _translationCache;
 
         private readonly KeyValuePair<TranslationRequest, string> defaultCachedResult =
             default(KeyValuePair<TranslationRequest, string>);
@@ -36,7 +36,7 @@ namespace Translation
 
         private readonly ILog _Logger;
 
-        private readonly string _TransaltionSettingsPath = "TranslationSysSettings.json";
+        private readonly string _translationSettingsPath = "TranslationSysSettings.json";
 
         public WebTranslator(ILog logger)
             : this(logger, null, true, null, null)
@@ -63,13 +63,13 @@ namespace Translation
             _Logger = logger;
 
             if (usePersistedSettings &&
-                !Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _TransaltionSettingsPath))
+                !Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _translationSettingsPath))
             {
-                Helper.SaveStaticToJson(typeof(GlobalTranslationSettings), _TransaltionSettingsPath);
-                Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _TransaltionSettingsPath);
+                Helper.SaveStaticToJson(typeof(GlobalTranslationSettings), _translationSettingsPath);
+                Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _translationSettingsPath);
             }
 
-            transaltionCache =
+            _translationCache =
                 new List<KeyValuePair<TranslationRequest, string>>(GlobalTranslationSettings.TranslationCacheSize);
 
             _TranslationProviders = translationProviders != null
@@ -153,7 +153,7 @@ namespace Translation
 
             var translationRequest =
                 new TranslationRequest(normalizedSentence, translationEngine.EngineName, fromLangCode, toLangCode);
-            var cachedResult = transaltionCache.FirstOrDefault(x => x.Key == translationRequest);
+            var cachedResult = _translationCache.FirstOrDefault(x => x.Key == translationRequest);
 
             if (!cachedResult.Equals(defaultCachedResult))
             {
@@ -165,15 +165,15 @@ namespace Translation
 
             if (result.IsSuccess && !string.IsNullOrEmpty(result.Text))
             {
-                cachedResult = transaltionCache.FirstOrDefault(x => x.Key == translationRequest);
+                cachedResult = _translationCache.FirstOrDefault(x => x.Key == translationRequest);
                 if (cachedResult.Equals(defaultCachedResult))
                 {
-                    transaltionCache.Add(
+                    _translationCache.Add(
                         new KeyValuePair<TranslationRequest, string>(translationRequest, result.Text));
                 }
 
-                if (transaltionCache.Count > GlobalTranslationSettings.TranslationCacheSize - 10)
-                    transaltionCache.RemoveRange(0, GlobalTranslationSettings.TranslationCacheSize / 2);
+                if (_translationCache.Count > GlobalTranslationSettings.TranslationCacheSize - 10)
+                    _translationCache.RemoveRange(0, GlobalTranslationSettings.TranslationCacheSize / 2);
             }
 
             return result;
@@ -283,7 +283,7 @@ namespace Translation
                 tmptranslationEngines = tmptranslationEngines.OrderByDescending(x => x.Quality).ToList();
 
 
-                _TranslationEngines = new ReadOnlyCollection<TranslationEngine>(tmptranslationEngines);
+                _translationEngines = new ReadOnlyCollection<TranslationEngine>(tmptranslationEngines);
             }
             catch (Exception e)
             {

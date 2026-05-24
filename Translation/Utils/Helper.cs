@@ -89,11 +89,11 @@ namespace Translation
             return result;
         }
 
-        public static bool SaveStaticToJson(Type static_class, string filename, ILog logger = null)
+        public static bool SaveStaticToJson(Type staticClass, string filename, ILog logger = null)
         {
             try
             {
-                FieldInfo[] fields = static_class.GetFields(BindingFlags.Static | BindingFlags.Public);
+                FieldInfo[] fields = staticClass.GetFields(BindingFlags.Static | BindingFlags.Public);
                 object[,] a = new object[fields.Length, 2];
                 int i = 0;
                 foreach (FieldInfo field in fields)
@@ -117,11 +117,11 @@ namespace Translation
             }
         }
 
-        public static bool LoadStaticFromJson(Type static_class, string filename, ILog logger = null)
+        public static bool LoadStaticFromJson(Type staticClass, string filename, ILog logger = null)
         {
             try
             {
-                FieldInfo[] fields = static_class.GetFields(BindingFlags.Static | BindingFlags.Public);
+                FieldInfo[] fields = staticClass.GetFields(BindingFlags.Static | BindingFlags.Public);
                 object[,] a;
 
                 a = JsonConvert.DeserializeObject<object[,]>(File.ReadAllText(filename));
@@ -190,7 +190,7 @@ namespace Translation
         }
 
 
-        private static HashSet<char> whiteListChars = new HashSet<char>(new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
+        private static readonly HashSet<char> s_whiteListChars = new HashSet<char>(new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
             'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
             'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '.', ',', '?', '!', ':', '(', ')' });
 
@@ -200,7 +200,7 @@ namespace Translation
 
             foreach (var c in input)
             {
-                if (whiteListChars.Contains(c))
+                if (s_whiteListChars.Contains(c))
                     sb.Append(c);
                 else
                     sb.Append(' ');
@@ -213,15 +213,13 @@ namespace Translation
         {
             var innerList = list.ToList();
 
-            Random rng = null;
-
             var totalMs = Math.Round(DateTime.UtcNow.TimeOfDay.TotalMilliseconds);
             if (totalMs >= Int32.MaxValue)
                 totalMs = Int32.MaxValue - 1;
             if (totalMs <= Int32.MinValue)
                 totalMs = Int32.MinValue + 1;
 
-            rng = new Random((int)totalMs);
+            var rng = new Random((int)totalMs);
 
             int n = innerList.Count;
             while (n > 1)

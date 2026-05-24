@@ -15,7 +15,6 @@ namespace FFXIVTataruHelper.UIModel
 {
     public class UserSettingsOld
     {
-        //public static string BackgroundColor = "#90909090";
         public Color BackgroundColor { get; set; } = (Color)ColorConverter.ConvertFromString("#4B000000");
 
         public Color Font1Color { get; set; } = (Color)ColorConverter.ConvertFromString("#FFFFFFFF");
