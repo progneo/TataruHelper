@@ -21,7 +21,7 @@ using FFXIVTataruHelper.TataruComponentModel;
 using FFXIVTataruHelper.UIModel;
 using FFXIVTataruHelper.WinUtils;
 
-using Translation;
+using Translation.Core;
 
 using Color = System.Windows.Media.Color;
 using FontFamily = System.Windows.Media.FontFamily;

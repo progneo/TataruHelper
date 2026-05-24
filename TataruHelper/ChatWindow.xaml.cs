@@ -22,7 +22,7 @@ using FFXIVTataruHelper.TataruComponentModel;
 using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.WinUtils;
 
-using Translation;
+using Translation.Core;
 
 namespace FFXIVTataruHelper
 {

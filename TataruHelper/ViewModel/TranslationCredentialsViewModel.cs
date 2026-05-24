@@ -4,7 +4,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
-using Translation;
+using Translation.Core;
 using Translation.Credentials;
 
 namespace FFXIVTataruHelper.ViewModel

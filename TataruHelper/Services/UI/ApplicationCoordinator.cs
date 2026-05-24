@@ -7,7 +7,7 @@ using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.ViewModel;
 
-using Translation;
+using Translation.Core;
 
 namespace FFXIVTataruHelper.Services.UI
 {

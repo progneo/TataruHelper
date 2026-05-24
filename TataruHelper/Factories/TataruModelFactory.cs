@@ -5,7 +5,7 @@ using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.ViewModel;
 
-using Translation;
+using Translation.Core;
 
 namespace FFXIVTataruHelper.Factories
 {

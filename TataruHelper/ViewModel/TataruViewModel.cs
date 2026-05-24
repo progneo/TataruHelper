@@ -14,7 +14,7 @@ using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.TataruComponentModel;
 using FFXIVTataruHelper.UIModel;
 
-using Translation;
+using Translation.Core;
 
 namespace FFXIVTataruHelper.ViewModel
 {

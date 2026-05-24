@@ -3,7 +3,8 @@
 
 using System;
 using System.Collections.ObjectModel;
-using Translation;
+
+using Translation.Core;
 
 namespace FFXIVTataruHelper.EventArguments
 {

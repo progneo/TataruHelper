@@ -12,7 +12,7 @@ using FFXIVTataruHelper.EventArguments;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
 
-using Translation;
+using Translation.Core;
 
 namespace FFXIVTataruHelper
 {

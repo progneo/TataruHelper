@@ -1,7 +1,10 @@
-using NUnit.Framework;
 using System;
 using System.Threading;
-using Translation.HttpUtils;
+
+using NUnit.Framework;
+
+using Translation.Abstractions;
+using Translation.Http;
 
 namespace Translation.Tests
 {

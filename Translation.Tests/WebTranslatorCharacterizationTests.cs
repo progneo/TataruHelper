@@ -3,6 +3,9 @@ using System.Collections.Generic;
 
 using NUnit.Framework;
 
+using Translation.Abstractions;
+using Translation.Core;
+
 namespace Translation.Tests
 {
     [TestFixture]

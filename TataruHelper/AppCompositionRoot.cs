@@ -13,12 +13,12 @@ using FFXIVTataruHelper.ViewModel;
 
 using Microsoft.Extensions.DependencyInjection;
 
-using Translation;
+using Translation.Core;
 using Translation.Credentials;
 
 using Updater;
 
-using ILog = Translation.ILog;
+using ILog = Translation.Abstractions.ILog;
 
 namespace FFXIVTataruHelper
 {

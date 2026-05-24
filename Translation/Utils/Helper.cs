@@ -1,16 +1,18 @@
 ﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
-using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
-using System.Linq;
 
-namespace Translation
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+namespace Translation.Utils
 {
     static class Helper
     {
@@ -27,7 +29,6 @@ namespace Translation
 
         public static string GetHash(HashAlgorithm hashAlgorithm, string input)
         {
-
             // Convert the input string to a byte array and compute the hash.
             byte[] data = hashAlgorithm.ComputeHash(Encoding.UTF8.GetBytes(input));
 
@@ -48,14 +49,14 @@ namespace Translation
 
         public static string Base64Decode(string base64EncodedData)
         {
-            var base64EncodedBytes = System.Convert.FromBase64String(base64EncodedData);
-            return System.Text.Encoding.UTF8.GetString(base64EncodedBytes);
+            var base64EncodedBytes = Convert.FromBase64String(base64EncodedData);
+            return Encoding.UTF8.GetString(base64EncodedBytes);
         }
 
         public static string Base64Encode(string plainText)
         {
-            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-            return System.Convert.ToBase64String(plainTextBytes);
+            var plainTextBytes = Encoding.UTF8.GetBytes(plainText);
+            return Convert.ToBase64String(plainTextBytes);
         }
 
         public static T LoadJsonData<T>(string path, ILog logger = null)
@@ -108,6 +109,7 @@ namespace Translation
                 {
                     sw.WriteLine(output);
                 }
+
                 return true;
             }
             catch (Exception e)
@@ -133,18 +135,18 @@ namespace Translation
                     {
                         if (field.FieldType.Name.Contains("List"))
                         {
-
                             var filedVal = field.GetValue(null);
 
                             Type itemType = filedVal.GetType().GetProperty("Item").PropertyType;
 
-                            var backUpList = Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType), filedVal);
+                            var backUpList =
+                                Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType), filedVal);
 
                             try
                             {
                                 Type typeTest = a[i, 1].GetType();
 
-                                var arr = (Newtonsoft.Json.Linq.JArray)(a[i, 1]);
+                                var arr = (JArray)(a[i, 1]);
 
                                 int len = arr.Count;
 
@@ -167,7 +169,6 @@ namespace Translation
                                 logger?.WriteLog(Convert.ToString(e));
                                 filedVal = backUpList;
                             }
-
                         }
                         else
                             field.SetValue(null, Convert.ChangeType(a[i, 1], field.FieldType));
@@ -176,8 +177,11 @@ namespace Translation
                     {
                         throw new ArgumentException("Wrong Settings File. Rolling to default");
                     }
+
                     i++;
-                };
+                }
+
+                ;
 
                 return true;
             }
@@ -186,13 +190,16 @@ namespace Translation
                 logger?.WriteLog(Convert.ToString(e));
                 return false;
             }
-
         }
 
 
-        private static HashSet<char> whiteListChars = new HashSet<char>(new char[] { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
-            'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't',
-            'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '.', ',', '?', '!', ':', '(', ')' });
+        private static HashSet<char> whiteListChars = new HashSet<char>(new char[]
+        {
+            'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
+            'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p',
+            'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-',
+            '.', ',', '?', '!', ':', '(', ')'
+        });
 
         public static string PapagoWhiteListChars(string input)
         {
@@ -235,6 +242,5 @@ namespace Translation
 
             return innerList;
         }
-
     }
 }

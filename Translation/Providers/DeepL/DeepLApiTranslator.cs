@@ -1,0 +1,108 @@
+using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Http;
+using System.Text;
+
+using Newtonsoft.Json.Linq;
+
+using Translation.Credentials;
+using Translation.Exceptions;
+using Translation.Http;
+
+namespace Translation.Providers.DeepL
+{
+    internal sealed class DeepLApiTranslator
+    {
+        private const string FreeEndpoint = "https://api-free.deepl.com/v2/translate";
+        private const string ProEndpoint = "https://api.deepl.com/v2/translate";
+
+        private readonly ILog _logger;
+        private readonly ITranslationCredentialStore _credentials;
+
+        public DeepLApiTranslator(ILog logger, ITranslationCredentialStore credentials)
+        {
+            _logger = logger;
+            _credentials = credentials ?? NullCredentialStore.Instance;
+        }
+
+        public string Translate(string sentence, string inLang, string outLang)
+        {
+            if (string.IsNullOrEmpty(sentence))
+                return string.Empty;
+
+            var apiKey = _credentials.GetApiKey(TranslationEngineName.DeepLApi);
+            if (string.IsNullOrWhiteSpace(apiKey))
+                throw new MissingApiKeyException(TranslationEngineName.DeepLApi);
+
+            var endpoint = apiKey.TrimEnd().EndsWith(":fx", StringComparison.OrdinalIgnoreCase)
+                ? FreeEndpoint
+                : ProEndpoint;
+            var target = string.IsNullOrWhiteSpace(outLang) ? "EN" : outLang.ToUpperInvariant();
+            var source = string.IsNullOrWhiteSpace(inLang) || inLang == "auto" ? null : inLang.ToUpperInvariant();
+
+            var fields = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("text", sentence),
+                new KeyValuePair<string, string>("target_lang", target),
+            };
+            if (source != null)
+                fields.Add(new KeyValuePair<string, string>("source_lang", source));
+
+            using (var request = new HttpRequestMessage(HttpMethod.Post, endpoint))
+            {
+                request.Content = new FormUrlEncodedContent(fields);
+                request.Headers.TryAddWithoutValidation("Authorization", "DeepL-Auth-Key " + apiKey);
+
+                try
+                {
+                    using (var response = ApiHttpClient.SendSync(request))
+                    {
+                        var responseBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+
+                        if (response.StatusCode == (HttpStatusCode)429 || (int)response.StatusCode == 456)
+                        {
+                            throw new QuotaExceededException(TranslationEngineName.DeepLApi,
+                                "DeepL API quota exceeded (HTTP " + (int)response.StatusCode + ").");
+                        }
+
+                        if (!response.IsSuccessStatusCode)
+                        {
+                            _logger?.WriteLog("[DEEPLAPI_HTTP_" + (int)response.StatusCode + "] " + responseBody);
+                            return string.Empty;
+                        }
+
+                        return ParseTranslation(responseBody);
+                    }
+                }
+                catch (QuotaExceededException) { throw; }
+                catch (MissingApiKeyException) { throw; }
+                catch (Exception ex)
+                {
+                    _logger?.WriteLog("[DEEPLAPI_EXCEPTION] " + ex);
+                    return string.Empty;
+                }
+            }
+        }
+
+        internal static string ParseTranslation(string body)
+        {
+            if (string.IsNullOrWhiteSpace(body))
+                return string.Empty;
+
+            var translations = JToken.Parse(body)?["translations"] as JArray;
+            if (translations == null || translations.Count == 0)
+                return string.Empty;
+
+            var sb = new StringBuilder();
+            foreach (var t in translations)
+            {
+                var text = t?["text"]?.ToString();
+                if (!string.IsNullOrEmpty(text))
+                    sb.Append(text);
+            }
+
+            return sb.ToString();
+        }
+    }
+}

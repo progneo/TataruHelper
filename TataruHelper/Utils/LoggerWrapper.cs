@@ -1,5 +1,6 @@
 ﻿using FFXIVTataruHelper.Services.Logging;
-using Translation;
+
+using Translation.Abstractions;
 
 namespace FFXIVTataruHelper.Utils
 {

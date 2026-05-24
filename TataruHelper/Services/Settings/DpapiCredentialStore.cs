@@ -6,7 +6,7 @@ using System.Text;
 
 using Newtonsoft.Json;
 
-using Translation;
+using Translation.Core;
 using Translation.Credentials;
 
 namespace FFXIVTataruHelper.Services.Settings

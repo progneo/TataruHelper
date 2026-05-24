@@ -16,7 +16,7 @@ using FFXIVTataruHelper.ViewModel;
 
 using NUnit.Framework;
 
-using Translation;
+using Translation.Core;
 
 using Color = System.Windows.Media.Color;
 

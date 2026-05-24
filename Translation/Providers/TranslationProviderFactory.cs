@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Translation.AI;
 using Translation.Credentials;
-using Translation.DeepLApi;
-using Translation.Google;
-using Translation.GoogleCloud;
-using Translation.Papago;
-using Translation.YandexCloud;
+using Translation.Providers.Ai;
+using Translation.Providers.Azure;
+using Translation.Providers.DeepL;
+using Translation.Providers.Google;
+using Translation.Providers.GoogleCloud;
+using Translation.Providers.Papago;
+using Translation.Providers.YandexCloud;
 
 namespace Translation.Providers
 {
@@ -26,7 +27,7 @@ namespace Translation.Providers
                 new TranslationProviderAdapter(TranslationEngineName.Papago,
                     new PapagoTranslator(logger).Translate),
                 new TranslationProviderAdapter(TranslationEngineName.AzureTranslator,
-                    new AzureTranslator.AzureTranslator(logger, credentials).Translate),
+                    new AzureTranslator(logger, credentials).Translate),
                 new TranslationProviderAdapter(TranslationEngineName.GoogleCloudTranslate,
                     new GoogleCloudTranslator(logger, credentials).Translate),
                 new TranslationProviderAdapter(TranslationEngineName.DeepLApi,

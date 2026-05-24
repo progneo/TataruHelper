@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 using FFXIVTataruHelper.ViewModel;
 
-using Translation;
+using Translation.Core;
 
 namespace FFXIVTataruHelper.Services.UI
 {

@@ -1,6 +1,6 @@
 using NUnit.Framework;
 
-using Translation.Google;
+using Translation.Providers.Google;
 
 namespace Translation.Tests
 {

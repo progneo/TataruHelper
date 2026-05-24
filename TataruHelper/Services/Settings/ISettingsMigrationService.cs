@@ -1,9 +1,10 @@
-using Translation;
+using Translation.Core;
 
 namespace FFXIVTataruHelper.Services.Settings
 {
     public interface ISettingsMigrationService
     {
-        UserSettings LoadUserSettings(string systemSettingsFileName, ChatProcessor chatProcessor, WebTranslator webTranslator);
+        UserSettings LoadUserSettings(string systemSettingsFileName, ChatProcessor chatProcessor,
+            WebTranslator webTranslator);
     }
 }
