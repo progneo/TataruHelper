@@ -21,23 +21,26 @@ namespace FFXIVTataruHelper
         static extern bool SetProcessWorkingSetSize64(IntPtr pProcess, long dwMinimumWorkingSetSize,
             long dwMaximumWorkingSetSize);
 
-        bool _KeepWorking;
+        const int InitialDelayMs = 10000;
+        const int OptimizeIntervalMs = 60000;
 
-        CancellationTokenSource source;
-        CancellationToken token;
+        bool _keepWorking;
+
+        CancellationTokenSource _cts;
+        CancellationToken _token;
 
         Task _worker = Task.CompletedTask;
 
         public OptimizeFootprint()
         {
-            _KeepWorking = true;
+            _keepWorking = true;
         }
 
         public void Start()
         {
-            _KeepWorking = true;
-            source = new CancellationTokenSource();
-            token = source.Token;
+            _keepWorking = true;
+            _cts = new CancellationTokenSource();
+            _token = _cts.Token;
 
             _worker = Task.Factory.StartNew(async () =>
             {
@@ -55,20 +58,20 @@ namespace FFXIVTataruHelper
         async Task EntryPoint()
         {
             if (Environment.OSVersion.Platform != PlatformID.Win32NT)
-                _KeepWorking = false;
+                _keepWorking = false;
 
-            while (_KeepWorking)
+            while (_keepWorking)
             {
-                if (_KeepWorking)
+                if (_keepWorking)
                 {
                     try
                     {
-                        await Task.Delay(10000, token);
+                        await Task.Delay(InitialDelayMs, _token);
                     }
-                    catch (Exception) { }
+                    catch (OperationCanceledException) { }
                 }
 
-                if (_KeepWorking)
+                if (_keepWorking)
                 {
                     try
                     {
@@ -81,32 +84,32 @@ namespace FFXIVTataruHelper
                     }
                 }
 
-                if (_KeepWorking)
+                if (_keepWorking)
                 {
                     try
                     {
-                        await Task.Delay(60000, token);
+                        await Task.Delay(OptimizeIntervalMs, _token);
                     }
-                    catch (Exception) { }
+                    catch (OperationCanceledException) { }
                 }
             }
         }
 
         public void Stop()
         {
-            if (!_KeepWorking)
+            if (!_keepWorking)
                 return;
 
-            _KeepWorking = false;
+            _keepWorking = false;
 
-            try { source?.Cancel(); }
-            catch { }
+            try { _cts?.Cancel(); }
+            catch (Exception e) { Logger.WriteLog(e); }
 
             try { _worker?.Wait(TimeSpan.FromMilliseconds(500)); }
-            catch { }
+            catch (Exception e) { Logger.WriteLog(e); }
 
-            try { source?.Dispose(); }
-            catch { }
+            try { _cts?.Dispose(); }
+            catch (Exception e) { Logger.WriteLog(e); }
         }
 
         private void FlushMemory()
