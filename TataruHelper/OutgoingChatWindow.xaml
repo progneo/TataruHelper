@@ -9,18 +9,22 @@
         AllowsTransparency="True"
         WindowStyle="None"
         Title="{DynamicResource OutgoingChatWindowTitle}"
-        Width="520" Height="200"
-        MinWidth="320" MinHeight="140"
+        Top="{Binding WindowTop, Mode=TwoWay}"
+        Left="{Binding WindowLeft, Mode=TwoWay}"
+        Width="{Binding WindowWidth, Mode=TwoWay}"
+        Height="{Binding WindowHeight, Mode=TwoWay}"
+        MinWidth="320" MinHeight="90"
         Background="Transparent"
         ShowInTaskbar="False"
         Topmost="True"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="Manual">
     <Window.Resources>
         <BooleanToVisibilityConverter x:Key="BoolToVis" />
     </Window.Resources>
     <Grid x:Name="RootGrid">
         <Border x:Name="WindowSurface"
-                Background="#B0202020"
+                Background="{Binding BackgroundColor, Converter={utils:ColorToSolidColorBrush}, Mode=OneWay}"
+                Opacity="{Binding WindowOpacity, Mode=OneWay}"
                 CornerRadius="6"
                 BorderBrush="#40FFFFFF"
                 BorderThickness="1" />
@@ -59,7 +63,7 @@
             </Border.Style>
         </Border>
 
-        <Grid Margin="14,18,14,14">
+        <Grid Margin="10,12,10,10">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
@@ -67,7 +71,7 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0" Margin="0,0,0,6">
+            <Grid Grid.Row="0" Margin="0,0,0,4">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto" />
                     <ColumnDefinition Width="*" />
@@ -118,7 +122,7 @@
                      Padding="6"
                      Text="{Binding MessageText, UpdateSourceTrigger=PropertyChanged}" />
 
-            <DockPanel Grid.Row="3" Margin="0,8,0,0" LastChildFill="False">
+            <DockPanel Grid.Row="3" Margin="0,6,0,0" LastChildFill="False">
                 <TextBlock Text="{Binding StatusMessage}"
                            DockPanel.Dock="Left"
                            Foreground="#CCFFFFFF"

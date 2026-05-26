@@ -120,7 +120,7 @@ namespace FFXIVTataruHelper
 
             _TataruUIModel = new TataruUIModel(_SettingsStore, _UiDispatcher, _Logger);
 
-            outgoingChatWindowFactory?.Bind(_TataruUIModel, mainWindow);
+            outgoingChatWindowFactory?.Bind(_TataruUIModel, mainWindow, _HotKeyManager);
 
             _FFMemoryReader = ffMemoryReader;
 

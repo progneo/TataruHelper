@@ -177,6 +177,11 @@
     <system:String x:Key="OutgoingChatDefaultsHeader">Defaults</system:String>
     <system:String x:Key="OutgoingChatDefaultChannelLabel">Default channel</system:String>
     <system:String x:Key="OutgoingChatRestoreDelayLabel">Restore delay (seconds)</system:String>
+    <system:String x:Key="OutgoingChatAppearanceHeader">Appearance</system:String>
+    <system:String x:Key="OutgoingChatBackgroundColorLabel">Background color</system:String>
+    <system:String x:Key="OutgoingChatOpacityLabel">Opacity</system:String>
+    <system:String x:Key="OutgoingChatHotkeyHeader">Hotkey</system:String>
+    <system:String x:Key="OutgoingChatShowHideHotKeyLabel">Show / hide window</system:String>
 
     <system:String x:Key="DownloadingUpdate">Downloading new version:</system:String>
     <system:String x:Key="UpdateInstalled">Click here to update to new version.</system:String>

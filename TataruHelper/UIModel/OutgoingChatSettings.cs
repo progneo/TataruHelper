@@ -1,4 +1,11 @@
+using System.Drawing;
+
+using FFXIVTataruHelper.WinUtils;
+
 using Translation.OutgoingChat;
+
+using Color = System.Windows.Media.Color;
+using ColorConverter = System.Windows.Media.ColorConverter;
 
 namespace FFXIVTataruHelper.UIModel
 {
@@ -15,6 +22,14 @@ namespace FFXIVTataruHelper.UIModel
         public ChatChannel DefaultChannel { get; set; } = ChatChannel.Say;
 
         public string LastTellTarget { get; set; } = string.Empty;
+
+        public RectangleD WindowRect { get; set; } = new RectangleD(120, 120, 480, 140);
+
+        public Color BackgroundColor { get; set; } = (Color)ColorConverter.ConvertFromString("#B0202020");
+
+        public double WindowOpacity { get; set; } = 1.0;
+
+        public HotKeyCombination ShowHideKey { get; set; } = new HotKeyCombination("ShowHideOutgoingChat");
 
         public OutgoingChatSettings()
         {
@@ -33,6 +48,12 @@ namespace FFXIVTataruHelper.UIModel
             ClipboardRestoreDelaySeconds = other.ClipboardRestoreDelaySeconds;
             DefaultChannel = other.DefaultChannel;
             LastTellTarget = other.LastTellTarget;
+            WindowRect = other.WindowRect;
+            BackgroundColor = other.BackgroundColor;
+            WindowOpacity = other.WindowOpacity;
+            ShowHideKey = other.ShowHideKey != null
+                ? new HotKeyCombination(other.ShowHideKey)
+                : new HotKeyCombination("ShowHideOutgoingChat");
         }
     }
 }

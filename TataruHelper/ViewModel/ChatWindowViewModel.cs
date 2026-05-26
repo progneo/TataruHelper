@@ -32,7 +32,8 @@ namespace FFXIVTataruHelper.ViewModel
     {
         ShowHideChatWindow = 0,
         ClickThrough = 1,
-        ClearChat = 2
+        ClearChat = 2,
+        ShowHideOutgoingChat = 3
     }
 
     public class ChatWindowViewModel : INotifyPropertyChanged, IDisposable, INotifyPropertyChangedAsync

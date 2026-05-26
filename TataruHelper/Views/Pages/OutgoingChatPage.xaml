@@ -4,6 +4,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             xmlns:ctrl="clr-namespace:FFXIVTataruHelper.Controls"
              mc:Ignorable="d">
     <Grid Background="Transparent">
         <Grid.RowDefinitions>
@@ -65,7 +66,7 @@
                           IsChecked="{Binding RestoreClipboardAfterDelay, Mode=TwoWay}"
                           Content="{DynamicResource OutgoingChatRestoreClipboard}" />
 
-                <Grid Margin="20,0,0,0"
+                <Grid Margin="20,0,0,12"
                       IsEnabled="{Binding RestoreClipboardAfterDelay}">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="220" />
@@ -79,6 +80,67 @@
                                   Minimum="1"
                                   Maximum="300"
                                   Value="{Binding ClipboardRestoreDelaySeconds, Mode=TwoWay}" />
+                </Grid>
+
+                <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                           Text="{DynamicResource OutgoingChatAppearanceHeader}"
+                           Margin="0,8,0,12" />
+
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"
+                               VerticalAlignment="Center"
+                               Text="{DynamicResource OutgoingChatBackgroundColorLabel}" />
+                    <ctrl:ColorSwatchPicker Grid.Column="1"
+                                            HorizontalAlignment="Left"
+                                            SwatchWidth="160"
+                                            SwatchHeight="32"
+                                            SelectedColor="{Binding BackgroundColor, Mode=TwoWay}" />
+                </Grid>
+
+                <Grid Margin="0,0,0,12">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"
+                               VerticalAlignment="Center"
+                               Text="{DynamicResource OutgoingChatOpacityLabel}" />
+                    <Slider Grid.Column="1"
+                            VerticalAlignment="Center"
+                            Minimum="0.2" Maximum="1.0"
+                            SmallChange="0.05" LargeChange="0.1"
+                            TickFrequency="0.1"
+                            Value="{Binding WindowOpacity, Mode=TwoWay}" />
+                    <TextBlock Grid.Column="2"
+                               VerticalAlignment="Center"
+                               Margin="8,0,0,0"
+                               Text="{Binding WindowOpacity, StringFormat={}{0:P0}}" />
+                </Grid>
+
+                <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                           Text="{DynamicResource OutgoingChatHotkeyHeader}"
+                           Margin="0,8,0,12" />
+
+                <Grid Margin="0,0,0,4">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"
+                               VerticalAlignment="Center"
+                               Text="{DynamicResource OutgoingChatShowHideHotKeyLabel}" />
+                    <ui:TextBox Grid.Column="1"
+                                PlaceholderText="{DynamicResource HotkeyRecordHint}"
+                                Text="{Binding ShowHideKeyName, Mode=OneWay}"
+                                IsReadOnly="True"
+                                IsUndoEnabled="False"
+                                PreviewKeyDown="ShowHideHotKey_PreviewKeyDown"
+                                PreviewKeyUp="ShowHideHotKey_PreviewKeyUp" />
                 </Grid>
             </StackPanel>
         </Border>

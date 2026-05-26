@@ -10,6 +10,8 @@ using FFXIVTataruHelper.UIModel;
 
 using Translation.OutgoingChat;
 
+using Color = System.Windows.Media.Color;
+
 namespace FFXIVTataruHelper.ViewModel.Shell
 {
     public sealed class OutgoingChatSettingsViewModel : INotifyPropertyChanged
@@ -87,6 +89,46 @@ namespace FFXIVTataruHelper.ViewModel.Shell
                 Settings.DefaultChannel = value;
                 OnPropertyChanged();
             }
+        }
+
+        public Color BackgroundColor
+        {
+            get => Settings.BackgroundColor;
+            set
+            {
+                if (Settings.BackgroundColor == value) return;
+                Settings.BackgroundColor = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double WindowOpacity
+        {
+            get => Settings.WindowOpacity;
+            set
+            {
+                var clamped = value < 0.2 ? 0.2 : (value > 1.0 ? 1.0 : value);
+                if (Settings.WindowOpacity == clamped) return;
+                Settings.WindowOpacity = clamped;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ShowHideKeyName =>
+            Settings.ShowHideKey != null && Settings.ShowHideKey.IsInitialized
+                ? Settings.ShowHideKey.CombinationKeysName()
+                : string.Empty;
+
+        public void CaptureHotKeyDown(KeyEventArgs e)
+        {
+            _windowFactory?.CaptureHotKeyDown(e);
+            OnPropertyChanged(nameof(ShowHideKeyName));
+        }
+
+        public void CaptureHotKeyUp(KeyEventArgs e)
+        {
+            _windowFactory?.CaptureHotKeyUp(e);
+            OnPropertyChanged(nameof(ShowHideKeyName));
         }
 
         private void TryOpenWindow()

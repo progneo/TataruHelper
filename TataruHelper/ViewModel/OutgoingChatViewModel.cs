@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Drawing;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Threading;
@@ -13,6 +14,8 @@ using FFXIVTataruHelper.UIModel;
 
 using Translation.Core;
 using Translation.OutgoingChat;
+
+using Color = System.Windows.Media.Color;
 
 namespace FFXIVTataruHelper.ViewModel
 {
@@ -166,6 +169,92 @@ namespace FFXIVTataruHelper.ViewModel
                 if (_clipboardRestoreDelaySeconds == value) return;
                 _clipboardRestoreDelaySeconds = value;
                 _settings.ClipboardRestoreDelaySeconds = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public RectangleD WindowRect
+        {
+            get => _settings.WindowRect;
+            set
+            {
+                if (_settings.WindowRect == value) return;
+                _settings.WindowRect = value;
+                OnPropertyChanged();
+                OnPropertyChanged(nameof(WindowTop));
+                OnPropertyChanged(nameof(WindowLeft));
+                OnPropertyChanged(nameof(WindowWidth));
+                OnPropertyChanged(nameof(WindowHeight));
+            }
+        }
+
+        public double WindowTop
+        {
+            get => _settings.WindowRect.Y;
+            set
+            {
+                var rect = _settings.WindowRect;
+                if (rect.Y == value) return;
+                rect.Y = value;
+                WindowRect = rect;
+            }
+        }
+
+        public double WindowLeft
+        {
+            get => _settings.WindowRect.X;
+            set
+            {
+                var rect = _settings.WindowRect;
+                if (rect.X == value) return;
+                rect.X = value;
+                WindowRect = rect;
+            }
+        }
+
+        public double WindowWidth
+        {
+            get => _settings.WindowRect.Width;
+            set
+            {
+                var rect = _settings.WindowRect;
+                if (rect.Width == value) return;
+                rect.Width = value;
+                WindowRect = rect;
+            }
+        }
+
+        public double WindowHeight
+        {
+            get => _settings.WindowRect.Height;
+            set
+            {
+                var rect = _settings.WindowRect;
+                if (rect.Height == value) return;
+                rect.Height = value;
+                WindowRect = rect;
+            }
+        }
+
+        public Color BackgroundColor
+        {
+            get => _settings.BackgroundColor;
+            set
+            {
+                if (_settings.BackgroundColor == value) return;
+                _settings.BackgroundColor = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public double WindowOpacity
+        {
+            get => _settings.WindowOpacity;
+            set
+            {
+                var clamped = value < 0.2 ? 0.2 : (value > 1.0 ? 1.0 : value);
+                if (_settings.WindowOpacity == clamped) return;
+                _settings.WindowOpacity = clamped;
                 OnPropertyChanged();
             }
         }

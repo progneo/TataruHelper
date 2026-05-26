@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FFXIVTataruHelper.Services.Logging;
+using FFXIVTataruHelper.Services.UI;
 
 using Translation.Core;
 using Translation.OutgoingChat;
@@ -15,6 +16,7 @@ namespace FFXIVTataruHelper.Services.OutgoingChat
         private readonly OutgoingMessageComposer _composer;
         private readonly IClipboardService _clipboardService;
         private readonly ClipboardRestorer _clipboardRestorer;
+        private readonly IUiDispatcher _uiDispatcher;
         private readonly IAppLogger _logger;
 
         public OutgoingChatService(
@@ -22,12 +24,14 @@ namespace FFXIVTataruHelper.Services.OutgoingChat
             OutgoingMessageComposer composer,
             IClipboardService clipboardService,
             ClipboardRestorer clipboardRestorer,
+            IUiDispatcher uiDispatcher,
             IAppLogger logger)
         {
             _webTranslator = webTranslator ?? throw new ArgumentNullException(nameof(webTranslator));
             _composer = composer ?? throw new ArgumentNullException(nameof(composer));
             _clipboardService = clipboardService ?? throw new ArgumentNullException(nameof(clipboardService));
             _clipboardRestorer = clipboardRestorer ?? throw new ArgumentNullException(nameof(clipboardRestorer));
+            _uiDispatcher = uiDispatcher ?? throw new ArgumentNullException(nameof(uiDispatcher));
             _logger = logger;
         }
 
@@ -88,10 +92,14 @@ namespace FFXIVTataruHelper.Services.OutgoingChat
             string previousClipboard = null;
             if (request.RestoreClipboardAfterDelay)
             {
-                _clipboardService.TryGetText(out previousClipboard);
+                string snapshot = null;
+                _uiDispatcher.Invoke(() => _clipboardService.TryGetText(out snapshot));
+                previousClipboard = snapshot;
             }
 
-            if (!_clipboardService.TrySetText(clipboardPayload))
+            var setSucceeded = false;
+            _uiDispatcher.Invoke(() => setSucceeded = _clipboardService.TrySetText(clipboardPayload));
+            if (!setSucceeded)
             {
                 return OutgoingChatResult.Failure(OutgoingChatResultKind.ClipboardFailed,
                     "Failed to set clipboard text.", translation);
