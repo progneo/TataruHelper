@@ -323,7 +323,7 @@ public partial class MainWindow : FluentWindow
 
             _updater?.Dispose();
 
-            _logWriter?.Stop();
+            _logWriter?.Dispose();
         }
         catch (Exception ex)
         {
@@ -565,7 +565,7 @@ public partial class MainWindow : FluentWindow
 
     private void Window_Closed(object sender, EventArgs e)
     {
-        _logWriter?.Stop();
+        _logWriter?.Dispose();
     }
 
     public void ShutDown()
