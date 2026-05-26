@@ -7,5 +7,6 @@ public enum SettingsSection
     Appearance = 2,
     Hotkeys = 3,
     General = 4,
-    About = 5
+    About = 5,
+    OutgoingChat = 6
 }

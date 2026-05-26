@@ -1,0 +1,86 @@
+<UserControl x:Class="FFXIVTataruHelper.Views.Pages.OutgoingChatPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+             mc:Ignorable="d">
+    <Grid Background="Transparent">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Margin="0,0,0,16">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*" />
+                <ColumnDefinition Width="Auto" />
+            </Grid.ColumnDefinitions>
+            <StackPanel Grid.Column="0">
+                <TextBlock Style="{DynamicResource SectionTitleStyle}"
+                           Text="{DynamicResource OutgoingChatSectionTitle}" />
+                <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                           Text="{DynamicResource OutgoingChatPageDescription}" />
+            </StackPanel>
+            <ui:Button Grid.Column="1"
+                       VerticalAlignment="Center"
+                       Appearance="Primary"
+                       Icon="{ui:SymbolIcon Symbol=Open24}"
+                       Content="{DynamicResource OutgoingChatOpenWindowButton}"
+                       Command="{Binding Shell.OutgoingChat.OpenWindowCommand}" />
+        </Grid>
+
+        <Border Grid.Row="1"
+                Style="{DynamicResource CardBorderStyle}"
+                Padding="16"
+                VerticalAlignment="Top"
+                DataContext="{Binding Shell.OutgoingChat}">
+            <StackPanel>
+                <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                           Text="{DynamicResource OutgoingChatDefaultsHeader}"
+                           Margin="0,0,0,12" />
+
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="*" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"
+                               VerticalAlignment="Center"
+                               Text="{DynamicResource OutgoingChatDefaultChannelLabel}" />
+                    <ComboBox Grid.Column="1"
+                              MinWidth="220"
+                              HorizontalAlignment="Left"
+                              ItemsSource="{Binding Channels}"
+                              SelectedItem="{Binding DefaultChannel, Mode=TwoWay}" />
+                </Grid>
+
+                <CheckBox Margin="0,0,0,6"
+                          IsChecked="{Binding PrependChannelCommand, Mode=TwoWay}"
+                          Content="{DynamicResource OutgoingChatPrependChannel}" />
+                <CheckBox Margin="0,0,0,6"
+                          IsChecked="{Binding AppendOriginalInParentheses, Mode=TwoWay}"
+                          Content="{DynamicResource OutgoingChatAppendOriginal}" />
+                <CheckBox Margin="0,0,0,6"
+                          IsChecked="{Binding RestoreClipboardAfterDelay, Mode=TwoWay}"
+                          Content="{DynamicResource OutgoingChatRestoreClipboard}" />
+
+                <Grid Margin="20,0,0,0"
+                      IsEnabled="{Binding RestoreClipboardAfterDelay}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="220" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Column="0"
+                               VerticalAlignment="Center"
+                               Text="{DynamicResource OutgoingChatRestoreDelayLabel}" />
+                    <ui:NumberBox Grid.Column="1"
+                                  MinWidth="120"
+                                  Minimum="1"
+                                  Maximum="300"
+                                  Value="{Binding ClipboardRestoreDelaySeconds, Mode=TwoWay}" />
+                </Grid>
+            </StackPanel>
+        </Border>
+    </Grid>
+</UserControl>

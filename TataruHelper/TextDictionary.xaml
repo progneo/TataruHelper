@@ -163,6 +163,21 @@
     <system:String x:Key="SettingsHide">Hide</system:String>
     <system:String x:Key="SettingsExit">Exit</system:String>
 
+    <system:String x:Key="OutgoingChatMenuItem">Outgoing Chat…</system:String>
+    <system:String x:Key="OutgoingChatWindowTitle">Outgoing Chat</system:String>
+    <system:String x:Key="OutgoingChatChannelLabel">Channel:</system:String>
+    <system:String x:Key="OutgoingChatTellTargetLabel">Tell to:</system:String>
+    <system:String x:Key="OutgoingChatPrependChannel">Prepend channel command</system:String>
+    <system:String x:Key="OutgoingChatAppendOriginal">Append original</system:String>
+    <system:String x:Key="OutgoingChatRestoreClipboard">Restore clipboard</system:String>
+    <system:String x:Key="OutgoingChatCopyButton">Copy</system:String>
+    <system:String x:Key="OutgoingChatSectionTitle">Outgoing Chat</system:String>
+    <system:String x:Key="OutgoingChatPageDescription">Translate what you type and copy the result to the clipboard, ready to paste into FFXIV chat.</system:String>
+    <system:String x:Key="OutgoingChatOpenWindowButton">Open Window</system:String>
+    <system:String x:Key="OutgoingChatDefaultsHeader">Defaults</system:String>
+    <system:String x:Key="OutgoingChatDefaultChannelLabel">Default channel</system:String>
+    <system:String x:Key="OutgoingChatRestoreDelayLabel">Restore delay (seconds)</system:String>
+
     <system:String x:Key="DownloadingUpdate">Downloading new version:</system:String>
     <system:String x:Key="UpdateInstalled">Click here to update to new version.</system:String>
 

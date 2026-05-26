@@ -140,6 +140,16 @@ namespace FFXIVTataruHelper
             }
         }
 
+        public OutgoingChatSettings OutgoingChat
+        {
+            get => _OutgoingChat;
+            set
+            {
+                _OutgoingChat = value ?? new OutgoingChatSettings();
+                NotifyPropertyChanged();
+            }
+        }
+
         #endregion
 
         #region **LocalVariables.
@@ -149,6 +159,8 @@ namespace FFXIVTataruHelper
         PointD _SettingsWindowSize = new PointD(0.0, 0.0);
 
         AsyncBindingList<ChatWindowViewModelSettings> _ChatWindows;
+
+        OutgoingChatSettings _OutgoingChat = new OutgoingChatSettings();
 
         int _IsFirstTime;
 
@@ -201,6 +213,8 @@ namespace FFXIVTataruHelper
                 }
             });
 
+            OutgoingChat = new OutgoingChatSettings(userSettings.OutgoingChat);
+
             IsFirstTime = userSettings.IsFirstTime;
         }
 
@@ -218,6 +232,8 @@ namespace FFXIVTataruHelper
 
             userSettings.ChatWindows = this.ChatWindows.ToList()
                 .Select(element => new ChatWindowViewModelSettings(element)).ToList();
+
+            userSettings.OutgoingChat = new OutgoingChatSettings(this.OutgoingChat);
 
             userSettings.IsFirstTime = IsFirstTime;
 

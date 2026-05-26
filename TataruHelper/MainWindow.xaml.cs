@@ -47,6 +47,7 @@ public partial class MainWindow : FluentWindow
     private readonly IUiDispatcher _uiDispatcher;
     private readonly IHotkeyCaptureService _hotkeyCaptureService;
     private readonly TranslationCredentialsViewModel _translationCredentials;
+    private readonly IOutgoingChatWindowFactory _outgoingChatWindowFactory;
 
     private LogWriter _logWriter;
     private TataruModel _tataruModel;
@@ -64,6 +65,7 @@ public partial class MainWindow : FluentWindow
     private IWindowScopedSettingsPage _hotkeysPage;
     private IWindowScopedSettingsPage _generalPage;
     private IWindowScopedSettingsPage _aboutPage;
+    private IWindowScopedSettingsPage _outgoingChatPage;
 
     private bool _isShutdownCleanupCompleted;
 
@@ -73,7 +75,8 @@ public partial class MainWindow : FluentWindow
         IAppLogger logger,
         IUiDispatcher uiDispatcher,
         IHotkeyCaptureService hotkeyCaptureService,
-        TranslationCredentialsViewModel translationCredentials)
+        TranslationCredentialsViewModel translationCredentials,
+        IOutgoingChatWindowFactory outgoingChatWindowFactory)
     {
         _tataruModelFactory = tataruModelFactory;
         _updater = updater;
@@ -81,6 +84,7 @@ public partial class MainWindow : FluentWindow
         _uiDispatcher = uiDispatcher;
         _hotkeyCaptureService = hotkeyCaptureService;
         _translationCredentials = translationCredentials;
+        _outgoingChatWindowFactory = outgoingChatWindowFactory;
 
         if (!TataruSingleInstance.IsOnlyInstance)
         {
@@ -147,7 +151,8 @@ public partial class MainWindow : FluentWindow
                 _tataruUiModel,
                 _hotkeyCaptureService,
                 CheckUpdates,
-                _translationCredentials);
+                _translationCredentials,
+                _outgoingChatWindowFactory);
 
             _settingsShellViewModel.PropertyChanged += OnSettingsShellPropertyChanged;
             _settingsShellViewModel.FfStatusText = (string)Resources["FFStatusText"];
@@ -200,6 +205,7 @@ public partial class MainWindow : FluentWindow
         _hotkeysPage = new HotkeysPage(_settingsShellViewModel);
         _generalPage = new GeneralPage(_settingsShellViewModel);
         _aboutPage = new AboutPage(_settingsShellViewModel);
+        _outgoingChatPage = new OutgoingChatPage(_settingsShellViewModel);
     }
 
     private void OnSettingsShellPropertyChanged(object sender, PropertyChangedEventArgs e)
@@ -227,6 +233,7 @@ public partial class MainWindow : FluentWindow
         _hotkeysPage?.BindTo(current);
         _generalPage?.BindTo(current);
         _aboutPage?.BindTo(current);
+        _outgoingChatPage?.BindTo(current);
     }
 
     private void UpdateSectionContent()
@@ -239,6 +246,7 @@ public partial class MainWindow : FluentWindow
         SectionContentHost.Content = _settingsShellViewModel.SelectedSectionKey switch
         {
             SettingsSection.ChatWindows => _chatWindowsPage,
+            SettingsSection.OutgoingChat => _outgoingChatPage,
             SettingsSection.Translation => _translationPage,
             SettingsSection.Appearance => _appearancePage,
             SettingsSection.Hotkeys => _hotkeysPage,
@@ -498,6 +506,20 @@ public partial class MainWindow : FluentWindow
     private void TBMenuExit_Click(object sender, RoutedEventArgs e)
     {
         ShutDown();
+    }
+
+    private void TBMenuOpenOutgoingChat_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var window = _outgoingChatWindowFactory.GetOrCreate();
+            window.Owner = this;
+            window.ShowAndActivate();
+        }
+        catch (Exception ex)
+        {
+            _logger.WriteLog(ex);
+        }
     }
 
     private void TBDoubleClick(object sender, RoutedEventArgs e)

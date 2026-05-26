@@ -7,6 +7,7 @@ using System.Runtime.CompilerServices;
 using System.Windows;
 using System.Windows.Input;
 
+using FFXIVTataruHelper.Factories;
 using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Theme;
 
@@ -28,12 +29,15 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
     public TranslationCredentialsViewModel TranslationCredentials { get; }
 
+    public OutgoingChatSettingsViewModel OutgoingChat { get; }
+
     public SettingsShellViewModel(
         TataruViewModel settingsViewModel,
         TataruUIModel uiModel,
         IHotkeyCaptureService hotkeyCaptureService,
         Action checkUpdatesAction,
-        TranslationCredentialsViewModel translationCredentials)
+        TranslationCredentialsViewModel translationCredentials,
+        IOutgoingChatWindowFactory outgoingChatWindowFactory)
     {
         _settingsViewModel = settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
         _uiModel = uiModel ?? throw new ArgumentNullException(nameof(uiModel));
@@ -42,10 +46,14 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         TranslationCredentials =
             translationCredentials ?? throw new ArgumentNullException(nameof(translationCredentials));
 
+        OutgoingChat = new OutgoingChatSettingsViewModel(uiModel, outgoingChatWindowFactory);
+
         Sections = new ObservableCollection<SettingsSectionItem>
         {
             new(SettingsSection.ChatWindows, "SidebarGroupChatWindows", "Chat Windows",
                 "ChatWindowsTab", "Chat Windows", SymbolRegular.Chat24),
+            new(SettingsSection.OutgoingChat, "SidebarGroupChatWindows", "Chat Windows",
+                "OutgoingChatSectionTitle", "Outgoing Chat", SymbolRegular.Send24),
             new(SettingsSection.Appearance, "SidebarGroupPerWindow", "Per Window Settings",
                 "SectionAppearance", "Appearance", SymbolRegular.ColorBackground24),
             new(SettingsSection.Hotkeys, "SidebarGroupPerWindow", "Per Window Settings",

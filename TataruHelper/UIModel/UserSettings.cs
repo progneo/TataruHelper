@@ -84,6 +84,8 @@ namespace FFXIVTataruHelper
 
         public List<ChatWindowViewModelSettings> ChatWindows { get; set; }
 
+        public OutgoingChatSettings OutgoingChat { get; set; } = new OutgoingChatSettings();
+
         public int IsFirstTime { get; set; } = 0;
 
         public UserSettings()
@@ -153,6 +155,8 @@ namespace FFXIVTataruHelper
 
             ChatWindows = new List<ChatWindowViewModelSettings>();
 
+            OutgoingChat = new OutgoingChatSettings();
+
             IsFirstTime = 0;
         }
 
@@ -202,6 +206,8 @@ namespace FFXIVTataruHelper
             ChatCodes = userSettings.ChatCodes.ToDictionary(entry => entry.Key, entry => new ChatMsgType(entry.Value));
 
             ChatWindows = userSettings.ChatWindows.Select(element => new ChatWindowViewModelSettings(element)).ToList();
+
+            OutgoingChat = new OutgoingChatSettings(userSettings.OutgoingChat);
 
             IsFirstTime = userSettings.IsFirstTime;
         }

@@ -20,6 +20,7 @@ namespace FFXIVTataruHelper.Factories
         private readonly IChatWindowCoordinator _chatWindowCoordinator;
         private readonly IApplicationCoordinator _applicationCoordinator;
         private readonly TranslationCredentialsViewModel _translationCredentials;
+        private readonly IOutgoingChatWindowFactory _outgoingChatWindowFactory;
 
         public TataruModelFactory(
             IAppLogger logger,
@@ -30,7 +31,8 @@ namespace FFXIVTataruHelper.Factories
             IHotKeyBindingService hotKeyBindingService,
             IChatWindowCoordinator chatWindowCoordinator,
             IApplicationCoordinator applicationCoordinator,
-            TranslationCredentialsViewModel translationCredentials)
+            TranslationCredentialsViewModel translationCredentials,
+            IOutgoingChatWindowFactory outgoingChatWindowFactory)
         {
             _logger = logger;
             _settingsStore = settingsStore;
@@ -41,12 +43,14 @@ namespace FFXIVTataruHelper.Factories
             _chatWindowCoordinator = chatWindowCoordinator;
             _applicationCoordinator = applicationCoordinator;
             _translationCredentials = translationCredentials;
+            _outgoingChatWindowFactory = outgoingChatWindowFactory;
         }
 
         public TataruModel Create(MainWindow mainWindow)
         {
             return new TataruModel(mainWindow, _logger, _settingsStore, _uiDispatcher, _ffMemoryReader, _webTranslator,
-                _hotKeyBindingService, _chatWindowCoordinator, _applicationCoordinator, _translationCredentials);
+                _hotKeyBindingService, _chatWindowCoordinator, _applicationCoordinator, _translationCredentials,
+                _outgoingChatWindowFactory);
         }
     }
 }

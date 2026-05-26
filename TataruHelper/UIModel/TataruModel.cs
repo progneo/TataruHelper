@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Windows;
 
 using FFXIVTataruHelper.Compatibility.HotKeys;
+using FFXIVTataruHelper.Factories;
 using FFXIVTataruHelper.FFHandlers;
 using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Logging;
@@ -99,7 +100,8 @@ namespace FFXIVTataruHelper
             IHotKeyBindingService hotKeyBindingService,
             IChatWindowCoordinator chatWindowCoordinator,
             IApplicationCoordinator applicationCoordinator,
-            TranslationCredentialsViewModel translationCredentials)
+            TranslationCredentialsViewModel translationCredentials,
+            IOutgoingChatWindowFactory outgoingChatWindowFactory = null)
         {
             CmdArgsStatus.LoadArgs();
 
@@ -117,6 +119,8 @@ namespace FFXIVTataruHelper
             _WebTranslator = webTranslator;
 
             _TataruUIModel = new TataruUIModel(_SettingsStore, _UiDispatcher, _Logger);
+
+            outgoingChatWindowFactory?.Bind(_TataruUIModel, mainWindow);
 
             _FFMemoryReader = ffMemoryReader;
 

@@ -130,6 +130,8 @@
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
                     <Separator />
+                    <MenuItem Header="{DynamicResource OutgoingChatMenuItem}" Click="TBMenuOpenOutgoingChat_Click" />
+                    <Separator />
                     <MenuItem Header="{DynamicResource SettingsExit}" Click="TBMenuExit_Click" />
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>

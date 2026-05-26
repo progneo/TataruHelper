@@ -5,6 +5,7 @@ using FFXIVTataruHelper.FFHandlers;
 using FFXIVTataruHelper.Services.GameMemory;
 using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Logging;
+using FFXIVTataruHelper.Services.OutgoingChat;
 using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.Services.Update;
@@ -15,6 +16,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Translation.Core;
 using Translation.Credentials;
+using Translation.OutgoingChat;
 
 using Updater;
 
@@ -53,6 +55,14 @@ namespace FFXIVTataruHelper
             services.AddSingleton<IHotKeyBindingService, HotKeyBindingService>();
             services.AddSingleton<IHotkeyCaptureService, HotkeyCaptureService>();
             services.AddSingleton<IChatWindowFactory, ChatWindowFactory>();
+
+            services.AddSingleton<IClipboardService, WpfClipboardService>();
+            services.AddSingleton<IMessageSanitizer, MessageSanitizer>();
+            services.AddSingleton<IChannelPrefixFormatter, ChannelPrefixFormatter>();
+            services.AddSingleton<OutgoingMessageComposer>();
+            services.AddSingleton<ClipboardRestorer>();
+            services.AddSingleton<IOutgoingChatService, OutgoingChatService>();
+            services.AddSingleton<IOutgoingChatWindowFactory, OutgoingChatWindowFactory>();
             services.AddTransient<IChatWindowCoordinator, ChatWindowCoordinator>();
             services.AddTransient<IChatWindowsEventCoordinator, ChatWindowsEventCoordinator>();
             services.AddTransient<ITranslationPipelineCoordinator, TranslationPipelineCoordinator>();
