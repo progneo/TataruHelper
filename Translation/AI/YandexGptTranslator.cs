@@ -1,10 +1,7 @@
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -26,8 +23,6 @@ internal sealed class YandexGptTranslator
 {
     private const string Endpoint = "https://llm.api.cloud.yandex.net/foundationModels/v1/completion";
     private const string DefaultModelAlias = "yandexgpt-lite/latest";
-    private const int MaxAttempts = 3;
-    private const int BaseBackoffMs = 600;
 
     private readonly ILog _logger;
     private readonly ITranslationCredentialStore _credentials;
@@ -69,7 +64,7 @@ internal sealed class YandexGptTranslator
 
         Exception lastException = null;
 
-        for (var attempt = 1; attempt <= MaxAttempts; attempt++)
+        for (var attempt = 1; attempt <= AiRetryPolicy.MaxAttempts; attempt++)
         {
             using var request = new HttpRequestMessage(HttpMethod.Post, Endpoint);
             request.Content = new StringContent(payloadText, Encoding.UTF8, "application/json");
@@ -91,9 +86,9 @@ internal sealed class YandexGptTranslator
                 if (!response.IsSuccessStatusCode)
                 {
                     _logger?.WriteLog("[YandexGPT_HTTP_" + status + "_ATTEMPT_" + attempt + "] " + body);
-                    if (IsTransientStatus(status) && attempt < MaxAttempts)
+                    if (AiRetryPolicy.IsTransientStatus(status) && attempt < AiRetryPolicy.MaxAttempts)
                     {
-                        Sleep(attempt);
+                        AiRetryPolicy.Sleep(attempt);
                         continue;
                     }
 
@@ -106,9 +101,9 @@ internal sealed class YandexGptTranslator
 
                 _logger?.WriteLog("[YandexGPT_EMPTY_CONTENT_ATTEMPT_" + attempt + "] " + body);
 
-                if (attempt < MaxAttempts)
+                if (attempt < AiRetryPolicy.MaxAttempts)
                 {
-                    Sleep(attempt);
+                    AiRetryPolicy.Sleep(attempt);
                     continue;
                 }
 
@@ -121,9 +116,9 @@ internal sealed class YandexGptTranslator
                 lastException = ex;
                 _logger?.WriteLog("[YandexGPT_EXCEPTION_ATTEMPT_" + attempt + "] " + ex);
 
-                if (attempt < MaxAttempts && IsTransientException(ex))
+                if (attempt < AiRetryPolicy.MaxAttempts && AiRetryPolicy.IsTransientException(ex))
                 {
-                    Sleep(attempt);
+                    AiRetryPolicy.Sleep(attempt);
                     continue;
                 }
 
@@ -135,29 +130,12 @@ internal sealed class YandexGptTranslator
         return string.Empty;
     }
 
-    private static bool IsTransientStatus(int status)
-    {
-        return status == 408 || status == 425 || status == 429 ||
-               (status >= 500 && status <= 599);
-    }
-
-    private static bool IsTransientException(Exception ex)
-    {
-        return ex is HttpRequestException or TaskCanceledException or OperationCanceledException or IOException;
-    }
-
-    private static void Sleep(int attempt)
-    {
-        var delay = BaseBackoffMs * (1 << (attempt - 1));
-        Thread.Sleep(delay);
-    }
-
     internal static string ParseContent(string body)
     {
         if (string.IsNullOrWhiteSpace(body))
             return string.Empty;
 
         var text = JToken.Parse(body)?["result"]?["alternatives"]?[0]?["message"]?["text"]?.ToString();
-        return OpenAIChatClient.StripWrappingArtifacts(text);
+        return AiResponseSanitizer.StripWrappingArtifacts(text);
     }
 }

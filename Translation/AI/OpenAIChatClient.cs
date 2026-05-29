@@ -1,10 +1,7 @@
 using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -17,9 +14,6 @@ namespace Translation.AI
 {
     internal sealed class OpenAIChatClient
     {
-        private const int MaxAttempts = 3;
-        private const int BaseBackoffMs = 600;
-
         private readonly TranslationEngineName _engine;
         private readonly string _endpoint;
         private readonly string _defaultModel;
@@ -67,7 +61,7 @@ namespace Translation.AI
 
             Exception lastException = null;
 
-            for (var attempt = 1; attempt <= MaxAttempts; attempt++)
+            for (var attempt = 1; attempt <= AiRetryPolicy.MaxAttempts; attempt++)
             {
                 using var request = new HttpRequestMessage(HttpMethod.Post, _endpoint);
                 request.Content = new StringContent(payloadText, Encoding.UTF8, "application/json");
@@ -91,9 +85,9 @@ namespace Translation.AI
                     {
                         _logger?.WriteLog("[" + _engine + "_HTTP_" + status + "_ATTEMPT_" + attempt + "] " +
                                           body);
-                        if (IsTransientStatus(status) && attempt < MaxAttempts)
+                        if (AiRetryPolicy.IsTransientStatus(status) && attempt < AiRetryPolicy.MaxAttempts)
                         {
-                            Sleep(attempt);
+                            AiRetryPolicy.Sleep(attempt);
                             continue;
                         }
 
@@ -106,9 +100,9 @@ namespace Translation.AI
 
                     _logger?.WriteLog("[" + _engine + "_EMPTY_CONTENT_ATTEMPT_" + attempt + "] " + body);
 
-                    if (attempt < MaxAttempts)
+                    if (attempt < AiRetryPolicy.MaxAttempts)
                     {
-                        Sleep(attempt);
+                        AiRetryPolicy.Sleep(attempt);
                         continue;
                     }
 
@@ -121,9 +115,9 @@ namespace Translation.AI
                     lastException = ex;
                     _logger?.WriteLog("[" + _engine + "_EXCEPTION_ATTEMPT_" + attempt + "] " + ex);
 
-                    if (attempt < MaxAttempts && IsTransientException(ex))
+                    if (attempt < AiRetryPolicy.MaxAttempts && AiRetryPolicy.IsTransientException(ex))
                     {
-                        Sleep(attempt);
+                        AiRetryPolicy.Sleep(attempt);
                         continue;
                     }
 
@@ -135,64 +129,13 @@ namespace Translation.AI
             return string.Empty;
         }
 
-        private static bool IsTransientStatus(int status)
-        {
-            return status is 408 or 425 or 429 or >= 500 and <= 599;
-        }
-
-        private static bool IsTransientException(Exception ex)
-        {
-            return ex is HttpRequestException or TaskCanceledException or OperationCanceledException
-                or IOException;
-        }
-
-        private static void Sleep(int attempt)
-        {
-            var delay = BaseBackoffMs * (1 << (attempt - 1));
-            Thread.Sleep(delay);
-        }
-
         internal static string ParseContent(string body)
         {
             if (string.IsNullOrWhiteSpace(body))
                 return string.Empty;
 
             var content = JToken.Parse(body)?["choices"]?[0]?["message"]?["content"]?.ToString();
-            return StripWrappingArtifacts(content);
-        }
-
-        internal static string StripWrappingArtifacts(string text)
-        {
-            if (string.IsNullOrWhiteSpace(text))
-                return string.Empty;
-
-            var trimmed = text.Trim();
-
-            if (trimmed.StartsWith("```", StringComparison.Ordinal))
-            {
-                var firstNewline = trimmed.IndexOf('\n');
-                if (firstNewline > 0)
-                {
-                    trimmed = trimmed[(firstNewline + 1)..];
-                }
-
-                if (trimmed.EndsWith("```", StringComparison.Ordinal))
-                {
-                    trimmed = trimmed[..^3];
-                }
-
-                trimmed = trimmed.Trim();
-            }
-
-            if (trimmed.Length >= 2 &&
-                ((trimmed[0] == '"' && trimmed[^1] == '"') ||
-                 (trimmed[0] == '\'' && trimmed[^1] == '\'') ||
-                 (trimmed[0] == '“' && trimmed[^1] == '”')))
-            {
-                trimmed = trimmed.Substring(1, trimmed.Length - 2).Trim();
-            }
-
-            return trimmed;
+            return AiResponseSanitizer.StripWrappingArtifacts(content);
         }
     }
 }
