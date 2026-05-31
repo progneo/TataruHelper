@@ -2,6 +2,8 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -27,6 +29,12 @@ namespace Translation.GoogleCloud
 
         public string Translate(string sentence, string inLang, string outLang)
         {
+            return TranslateAsync(sentence, inLang, outLang, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        public async Task<string> TranslateAsync(string sentence, string inLang, string outLang,
+            CancellationToken cancellationToken)
+        {
             if (string.IsNullOrEmpty(sentence))
                 return string.Empty;
 
@@ -48,8 +56,9 @@ namespace Translation.GoogleCloud
 
             try
             {
-                using var response = ApiHttpClient.SendSync(request);
-                var responseBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                using var response = await ApiHttpClient.SendAsync(request, cancellationToken)
+                    .ConfigureAwait(false);
+                var responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                 if (response.StatusCode == (HttpStatusCode)429 ||
                     (response.StatusCode == HttpStatusCode.Forbidden &&
@@ -71,6 +80,7 @@ namespace Translation.GoogleCloud
             }
             catch (QuotaExceededException) { throw; }
             catch (MissingApiKeyException) { throw; }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
             catch (Exception ex)
             {
                 _logger?.WriteLog("[GCLOUD_EXCEPTION] " + ex);

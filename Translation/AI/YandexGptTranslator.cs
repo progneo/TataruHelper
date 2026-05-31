@@ -2,6 +2,8 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -34,6 +36,12 @@ internal sealed class YandexGptTranslator
     }
 
     public string Translate(string sentence, string inLang, string outLang)
+    {
+        return TranslateAsync(sentence, inLang, outLang, CancellationToken.None).GetAwaiter().GetResult();
+    }
+
+    public async Task<string> TranslateAsync(string sentence, string inLang, string outLang,
+        CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(sentence))
             return string.Empty;
@@ -73,8 +81,9 @@ internal sealed class YandexGptTranslator
 
             try
             {
-                using var response = ApiHttpClient.SendSync(request);
-                var body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                using var response = await ApiHttpClient.SendAsync(request, cancellationToken)
+                    .ConfigureAwait(false);
+                var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 var status = (int)response.StatusCode;
 
                 if (response.StatusCode == (HttpStatusCode)429)
@@ -88,7 +97,7 @@ internal sealed class YandexGptTranslator
                     _logger?.WriteLog("[YandexGPT_HTTP_" + status + "_ATTEMPT_" + attempt + "] " + body);
                     if (AiRetryPolicy.IsTransientStatus(status) && attempt < AiRetryPolicy.MaxAttempts)
                     {
-                        AiRetryPolicy.Sleep(attempt);
+                        await AiRetryPolicy.DelayAsync(attempt, cancellationToken).ConfigureAwait(false);
                         continue;
                     }
 
@@ -103,7 +112,7 @@ internal sealed class YandexGptTranslator
 
                 if (attempt < AiRetryPolicy.MaxAttempts)
                 {
-                    AiRetryPolicy.Sleep(attempt);
+                    await AiRetryPolicy.DelayAsync(attempt, cancellationToken).ConfigureAwait(false);
                     continue;
                 }
 
@@ -111,6 +120,7 @@ internal sealed class YandexGptTranslator
             }
             catch (QuotaExceededException) { throw; }
             catch (MissingApiKeyException) { throw; }
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
             catch (Exception ex)
             {
                 lastException = ex;
@@ -118,7 +128,7 @@ internal sealed class YandexGptTranslator
 
                 if (attempt < AiRetryPolicy.MaxAttempts && AiRetryPolicy.IsTransientException(ex))
                 {
-                    AiRetryPolicy.Sleep(attempt);
+                    await AiRetryPolicy.DelayAsync(attempt, cancellationToken).ConfigureAwait(false);
                     continue;
                 }
 

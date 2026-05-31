@@ -2,6 +2,8 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -36,6 +38,12 @@ namespace Translation.AI
 
         public string Translate(string sentence, string inLang, string outLang)
         {
+            return TranslateAsync(sentence, inLang, outLang, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        public async Task<string> TranslateAsync(string sentence, string inLang, string outLang,
+            CancellationToken cancellationToken)
+        {
             if (string.IsNullOrEmpty(sentence))
                 return string.Empty;
 
@@ -69,8 +77,9 @@ namespace Translation.AI
 
                 try
                 {
-                    using var response = ApiHttpClient.SendSync(request);
-                    var body = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                    using var response = await ApiHttpClient.SendAsync(request, cancellationToken)
+                        .ConfigureAwait(false);
+                    var body = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                     var status = (int)response.StatusCode;
 
                     if (response.StatusCode == (HttpStatusCode)429 ||
@@ -87,7 +96,7 @@ namespace Translation.AI
                                           body);
                         if (AiRetryPolicy.IsTransientStatus(status) && attempt < AiRetryPolicy.MaxAttempts)
                         {
-                            AiRetryPolicy.Sleep(attempt);
+                            await AiRetryPolicy.DelayAsync(attempt, cancellationToken).ConfigureAwait(false);
                             continue;
                         }
 
@@ -102,7 +111,7 @@ namespace Translation.AI
 
                     if (attempt < AiRetryPolicy.MaxAttempts)
                     {
-                        AiRetryPolicy.Sleep(attempt);
+                        await AiRetryPolicy.DelayAsync(attempt, cancellationToken).ConfigureAwait(false);
                         continue;
                     }
 
@@ -110,6 +119,7 @@ namespace Translation.AI
                 }
                 catch (QuotaExceededException) { throw; }
                 catch (MissingApiKeyException) { throw; }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested) { throw; }
                 catch (Exception ex)
                 {
                     lastException = ex;
@@ -117,7 +127,7 @@ namespace Translation.AI
 
                     if (attempt < AiRetryPolicy.MaxAttempts && AiRetryPolicy.IsTransientException(ex))
                     {
-                        AiRetryPolicy.Sleep(attempt);
+                        await AiRetryPolicy.DelayAsync(attempt, cancellationToken).ConfigureAwait(false);
                         continue;
                     }
 

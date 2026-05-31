@@ -27,6 +27,12 @@ namespace Translation.HttpUtils
             Thread.Sleep(BackoffDelayMs(attempt, baseBackoffMs));
         }
 
+        public static Task DelayAsync(int attempt, CancellationToken cancellationToken,
+            int baseBackoffMs = BaseBackoffMs)
+        {
+            return Task.Delay(BackoffDelayMs(attempt, baseBackoffMs), cancellationToken);
+        }
+
         public static int BackoffDelayMs(int attempt, int baseBackoffMs = BaseBackoffMs)
         {
             return baseBackoffMs * (1 << (attempt - 1));

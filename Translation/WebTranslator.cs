@@ -109,15 +109,21 @@ namespace Translation
             TranslatorLanguague toLang,
             CancellationToken cancellationToken)
         {
-            return Task.Run(() =>
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                return Translate(inSentence, translationEngine, fromLang, toLang);
-            }, cancellationToken);
+            return TranslateCoreAsync(inSentence, translationEngine, fromLang, toLang, cancellationToken);
         }
 
+        // Synchronous entry point kept for back-compat (and the characterization tests).
+        // Production code calls TranslateAsync; the HttpClient-based providers run truly async.
         public TranslationResult Translate(string inSentence, TranslationEngine translationEngine,
             TranslatorLanguague fromLang, TranslatorLanguague toLang)
+        {
+            return TranslateCoreAsync(inSentence, translationEngine, fromLang, toLang, CancellationToken.None)
+                .GetAwaiter().GetResult();
+        }
+
+        private async Task<TranslationResult> TranslateCoreAsync(string inSentence,
+            TranslationEngine translationEngine, TranslatorLanguague fromLang, TranslatorLanguague toLang,
+            CancellationToken cancellationToken)
         {
             if (translationEngine == null || fromLang == null || toLang == null)
             {
@@ -160,8 +166,8 @@ namespace Translation
                 return TranslationResult.Success(translationEngine.EngineName, cachedResult.Value);
             }
 
-            var result = InvokeSelectedProvider(translationEngine.EngineName, normalizedSentence, fromLangCode,
-                toLangCode);
+            var result = await InvokeSelectedProviderAsync(translationEngine.EngineName, normalizedSentence,
+                fromLangCode, toLangCode, cancellationToken).ConfigureAwait(false);
 
             if (result.IsSuccess && !string.IsNullOrEmpty(result.Text))
             {
@@ -179,11 +185,12 @@ namespace Translation
             return result;
         }
 
-        private TranslationResult InvokeSelectedProvider(
+        private async Task<TranslationResult> InvokeSelectedProviderAsync(
             TranslationEngineName engineName,
             string sentence,
             string fromLangCode,
-            string toLangCode)
+            string toLangCode,
+            CancellationToken cancellationToken)
         {
             if (!_TranslationProviders.TryGetValue(engineName, out var provider))
             {
@@ -193,7 +200,8 @@ namespace Translation
 
             try
             {
-                var text = provider.Translate(sentence, fromLangCode, toLangCode) ?? string.Empty;
+                var text = await provider.TranslateAsync(sentence, fromLangCode, toLangCode, cancellationToken)
+                    .ConfigureAwait(false) ?? string.Empty;
 
                 if (string.IsNullOrWhiteSpace(text))
                 {
