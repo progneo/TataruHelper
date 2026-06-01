@@ -10,7 +10,7 @@
     <Deterministic>true</Deterministic>
     <!-- CA1416: the entire project targets net10.0-windows, so platform-availability warnings are noise. -->
     <NoWarn>$(NoWarn);1591;CA1416</NoWarn>
-    <ApplicationIcon>app_icon2.ico</ApplicationIcon>
+    <ApplicationIcon>Resources\app_icon2.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ImplicitUsings>disable</ImplicitUsings>
     <Nullable>disable</Nullable>
@@ -73,7 +73,7 @@
     <Resource Include="Resources\heavy_heart.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Resource>
-    <Resource Include="app_icon2.ico" />
+    <Resource Include="Resources\app_icon2.ico" />
   </ItemGroup>
 
   <Target Name="CrowdinPreBuild" BeforeTargets="BeforeBuild" Condition="'$(ConfigurationName)' == 'ReleaseDeploy' and '$(OS)' == 'Windows_NT'">

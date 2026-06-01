@@ -1,11 +1,11 @@
-using FFXIVTataruHelper.Services.Logging;
-using FFXIVTataruHelper.Services.Settings;
-using FFXIVTataruHelper.UIModel;
-
-using NUnit.Framework;
-
 using System.ComponentModel;
 using System.Threading.Tasks;
+
+using FFXIVTataruHelper;
+using FFXIVTataruHelper.Services.Logging;
+using FFXIVTataruHelper.Services.Settings;
+
+using NUnit.Framework;
 
 namespace TataruHelper.Tests
 {

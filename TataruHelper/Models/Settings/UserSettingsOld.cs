@@ -11,7 +11,7 @@ using FFXIVTataruHelper.WinUtils;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 
-namespace FFXIVTataruHelper.UIModel
+namespace FFXIVTataruHelper
 {
     public class UserSettingsOld
     {

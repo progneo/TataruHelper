@@ -11,7 +11,6 @@ using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.Services.UI;
-using FFXIVTataruHelper.UIModel;
 using FFXIVTataruHelper.ViewModel;
 
 using NUnit.Framework;

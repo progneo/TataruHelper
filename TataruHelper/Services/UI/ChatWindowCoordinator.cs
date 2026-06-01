@@ -8,7 +8,6 @@ using System.Windows.Data;
 using FFXIVTataruHelper.Factories;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.TataruComponentModel;
-using FFXIVTataruHelper.UIModel;
 using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.WinUtils;
 

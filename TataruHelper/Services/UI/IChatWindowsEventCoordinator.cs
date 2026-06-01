@@ -1,4 +1,3 @@
-using FFXIVTataruHelper.UIModel;
 using FFXIVTataruHelper.ViewModel;
 
 namespace FFXIVTataruHelper.Services.UI
