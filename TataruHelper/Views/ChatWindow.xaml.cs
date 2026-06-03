@@ -424,6 +424,8 @@ namespace FFXIVTataruHelper
                 Paragraph paragraph = BuildMessageParagraph(translatedMsg, color, timeStamp);
                 ChatRtb.Document.Blocks.Add(paragraph);
 
+                TrimToMaxMessages();
+
                 ChatRtb.ScrollToEnd();
             }
             catch (Exception exc)
@@ -577,6 +579,20 @@ namespace FFXIVTataruHelper
         private void EnforceLastMessageOnly()
         {
             while (ChatRtb.Document.Blocks.Count > 1)
+            {
+                ChatRtb.Document.Blocks.Remove(ChatRtb.Document.Blocks.FirstBlock);
+            }
+        }
+
+        private void TrimToMaxMessages()
+        {
+            int maxMessages = _SettingsStore.MaxChatMessages;
+            if (maxMessages <= 0)
+            {
+                return;
+            }
+
+            while (ChatRtb.Document.Blocks.Count > maxMessages)
             {
                 ChatRtb.Document.Blocks.Remove(ChatRtb.Document.Blocks.FirstBlock);
             }

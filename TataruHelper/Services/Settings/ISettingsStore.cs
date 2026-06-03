@@ -26,6 +26,8 @@ namespace FFXIVTataruHelper.Services.Settings
 
         int MaxTranslateTryCount { get; }
 
+        int MaxChatMessages { get; }
+
         bool LoadGlobalSettings(string fileName);
 
         void SaveGlobalSettings(string fileName);

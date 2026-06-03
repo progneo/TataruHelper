@@ -156,6 +156,7 @@ namespace TataruHelper.Tests
             public int AutoHideWatcherDelayMs => 1;
             public int TranslatorWaitTimeMs => 1;
             public int MaxTranslateTryCount => 1;
+            public int MaxChatMessages => 500;
 
             public bool LoadGlobalSettings(string fileName)
             {

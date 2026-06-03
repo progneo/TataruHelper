@@ -60,6 +60,8 @@ namespace FFXIVTataruHelper.Services.Settings
 
         public int MaxTranslateTryCount => GlobalSettings.MaxTranslateTryCount;
 
+        public int MaxChatMessages => GlobalSettings.MaxChatMessages;
+
         public bool LoadGlobalSettings(string fileName)
         {
             return Helper.LoadStaticFromJson(typeof(GlobalSettings), ResolveGlobalSettingsPath(fileName));
