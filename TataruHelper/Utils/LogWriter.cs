@@ -15,6 +15,7 @@ namespace FFXIVTataruHelper
         const string LogFileName = @"Log.txt";
         const string BackUpLogFileName = @"Log_old.txt";
         const string ChatLogFileName = @"ChatLog.txt";
+        const string RawDialogLogFileName = @"RealtimeRawLog.txt";
 
         bool _keepWorking;
         bool _disposed;
@@ -22,6 +23,7 @@ namespace FFXIVTataruHelper
         StreamWriter _logStreamWriter;
 
         TextWriter _chatWriter;
+        TextWriter _rawDialogWriter;
 
         Task _worker = Task.CompletedTask;
 
@@ -78,6 +80,16 @@ namespace FFXIVTataruHelper
 
                     _chatWriter.WriteLine(str);
                     _chatWriter.Flush();
+                    dequeueFlag = true;
+                }
+
+                if (Logger.RawDialogLogQueue.TryDequeue(out str))
+                {
+                    if (_rawDialogWriter == null)
+                        _rawDialogWriter = new StreamWriter(RawDialogLogFileName, true);
+
+                    _rawDialogWriter.WriteLine(str);
+                    _rawDialogWriter.Flush();
                     dequeueFlag = true;
                 }
 
@@ -146,6 +158,13 @@ namespace FFXIVTataruHelper
                     _chatWriter.Flush();
                     _chatWriter.Dispose();
                     _chatWriter = null;
+                }
+
+                if (_rawDialogWriter != null)
+                {
+                    _rawDialogWriter.Flush();
+                    _rawDialogWriter.Dispose();
+                    _rawDialogWriter = null;
                 }
             }
             catch (Exception e)

@@ -47,6 +47,8 @@ namespace FFXIVTataruHelper
 
             base.OnStartup(e);
 
+            Logger.RawDialogLogEnabled = ShouldEnableRawDialogLog(e.Args);
+
             ShutdownMode = ShutdownMode.OnMainWindowClose;
 
             try
@@ -87,6 +89,30 @@ namespace FFXIVTataruHelper
             }
 
             e.Handled = true;
+        }
+
+        internal static bool ShouldEnableRawDialogLog(string[] args)
+        {
+            if (args == null)
+            {
+                return false;
+            }
+
+            foreach (var arg in args)
+            {
+                if (string.IsNullOrWhiteSpace(arg))
+                {
+                    continue;
+                }
+
+                var normalized = arg.Trim().TrimStart('-', '/');
+                if (string.Equals(normalized, "log-raw-dialog", StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private static bool ShouldElevateAfterVelopackInstall()
