@@ -110,7 +110,7 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
 Write-Host "[Velopack] Resolved version: $Version"
 
 $vpkChannel = if ($Channel -eq "prerelease") { "prerelease" } else { "stable" }
-$iconPath = Join-Path $repoRoot "TataruHelper/app_icon2.ico"
+$iconPath = Join-Path $repoRoot "TataruHelper/Resources/app_icon2.ico"
 
 if (-not $SkipPublish) {
     Write-Host "[Velopack] Publishing app binaries..."
