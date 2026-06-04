@@ -240,9 +240,9 @@ namespace FFXIVTataruHelper.Services.GameMemory
             if (allowNodeSpeaker)
             {
                 speakerName = normalizedNodeTexts
-                    .Where(text => !string.Equals(text, talkText, StringComparison.Ordinal))
-                    .OrderBy(text => text.Length)
-                    .FirstOrDefault() ?? string.Empty;
+                    .FirstOrDefault(text =>
+                        !string.Equals(text, talkText, StringComparison.Ordinal)
+                    ) ?? string.Empty;
             }
 
             if (speakerName.Length == 0 && DialogTextMatches(lastTalkText, talkText))
