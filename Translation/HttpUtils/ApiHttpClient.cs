@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Translation.HttpUtils
 {
@@ -27,10 +28,11 @@ namespace Translation.HttpUtils
             return client;
         }
 
-        public static HttpResponseMessage SendSync(HttpRequestMessage request)
+        public static Task<HttpResponseMessage> SendAsync(
+            HttpRequestMessage request,
+            CancellationToken cancellationToken = default)
         {
-            return Shared.SendAsync(request, HttpCompletionOption.ResponseContentRead, CancellationToken.None)
-                .GetAwaiter().GetResult();
+            return Shared.SendAsync(request, HttpCompletionOption.ResponseContentRead, cancellationToken);
         }
     }
 }

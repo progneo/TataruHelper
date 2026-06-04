@@ -1,6 +1,5 @@
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.TataruComponentModel;
-using FFXIVTataruHelper.UIModel;
 using FFXIVTataruHelper.ViewModel;
 using System;
 using System.ComponentModel;

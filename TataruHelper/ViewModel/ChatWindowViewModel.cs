@@ -18,7 +18,6 @@ using FFXIVTataruHelper.EventArguments;
 using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.TataruComponentModel;
-using FFXIVTataruHelper.UIModel;
 using FFXIVTataruHelper.WinUtils;
 
 using Translation;

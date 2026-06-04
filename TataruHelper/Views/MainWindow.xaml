@@ -9,7 +9,7 @@
     xmlns:data="clr-namespace:System.Windows.Data;assembly=PresentationFramework"
     x:Class="FFXIVTataruHelper.MainWindow"
     mc:Ignorable="d"
-    Icon="Resources/tray_icon.ico"
+    Icon="pack://application:,,,/Resources/tray_icon.ico"
     MinHeight="420"
     MinWidth="680"
     MaxWidth="2560"
@@ -116,7 +116,7 @@
             </ui:TitleBar.Header>
         </ui:TitleBar>
 
-        <tb:TaskbarIcon Grid.Row="0" x:Name="TaskBarIcon" IconSource="Resources/tray_icon.ico"
+        <tb:TaskbarIcon Grid.Row="0" x:Name="TaskBarIcon" IconSource="pack://application:,,,/Resources/tray_icon.ico"
                         TrayMouseDoubleClick="TBDoubleClick"
                         ToolTipText="{DynamicResource TrayTooltipText}">
             <tb:TaskbarIcon.ContextMenu>

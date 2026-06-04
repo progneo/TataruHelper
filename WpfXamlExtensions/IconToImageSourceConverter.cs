@@ -23,15 +23,8 @@ namespace WpfXamlExtensions
             var icon = value as Icon;
             if (icon == null)
             {
-                try
-                {
-                    Trace.TraceWarning("Attempted to convert {0} instead of Icon object in IconToImageSourceConverter",
-                        value);
-                }
-                catch (Exception)
-                {
-                    // ignored
-                }
+                Trace.TraceWarning("Attempted to convert {0} instead of Icon object in IconToImageSourceConverter",
+                    value);
 
                 return null;
             }

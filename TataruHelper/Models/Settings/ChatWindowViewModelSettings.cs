@@ -18,7 +18,7 @@ using Translation;
 using Color = System.Windows.Media.Color;
 using FontFamily = System.Windows.Media.FontFamily;
 
-namespace FFXIVTataruHelper.UIModel
+namespace FFXIVTataruHelper
 {
     public class ChatWindowViewModelSettings : INotifyPropertyChanged,
         INotifyPropertyChangedAsync

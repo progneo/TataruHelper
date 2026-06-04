@@ -5,7 +5,6 @@ using FFXIVTataruHelper;
 using FFXIVTataruHelper.Compatibility.HotKeys;
 using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Logging;
-using FFXIVTataruHelper.UIModel;
 using FFXIVTataruHelper.ViewModel;
 
 using NUnit.Framework;

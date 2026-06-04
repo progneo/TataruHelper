@@ -11,11 +11,10 @@ using FFXIVTataruHelper.WinUtils;
 using Color = System.Windows.Media.Color;
 using ColorConverter = System.Windows.Media.ColorConverter;
 
-namespace FFXIVTataruHelper.UIModel
+namespace FFXIVTataruHelper
 {
     public class UserSettingsOld
     {
-        //public static string BackgroundColor = "#90909090";
         public Color BackgroundColor { get; set; } = (Color)ColorConverter.ConvertFromString("#4B000000");
 
         public Color Font1Color { get; set; } = (Color)ColorConverter.ConvertFromString("#FFFFFFFF");

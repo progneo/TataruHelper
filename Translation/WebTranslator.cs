@@ -19,12 +19,12 @@ namespace Translation
     {
         public ReadOnlyCollection<TranslationEngine> TranslationEngines
         {
-            get { return _TranslationEngines; }
+            get { return _translationEngines; }
         }
 
-        private ReadOnlyCollection<TranslationEngine> _TranslationEngines;
+        private ReadOnlyCollection<TranslationEngine> _translationEngines;
 
-        private readonly List<KeyValuePair<TranslationRequest, string>> transaltionCache;
+        private readonly List<KeyValuePair<TranslationRequest, string>> _translationCache;
 
         private readonly KeyValuePair<TranslationRequest, string> defaultCachedResult =
             default(KeyValuePair<TranslationRequest, string>);
@@ -36,7 +36,7 @@ namespace Translation
 
         private readonly ILog _Logger;
 
-        private readonly string _TransaltionSettingsPath = "TranslationSysSettings.json";
+        private readonly string _translationSettingsPath = "TranslationSysSettings.json";
 
         public WebTranslator(ILog logger)
             : this(logger, null, true, null, null)
@@ -63,13 +63,13 @@ namespace Translation
             _Logger = logger;
 
             if (usePersistedSettings &&
-                !Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _TransaltionSettingsPath))
+                !Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _translationSettingsPath))
             {
-                Helper.SaveStaticToJson(typeof(GlobalTranslationSettings), _TransaltionSettingsPath);
-                Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _TransaltionSettingsPath);
+                Helper.SaveStaticToJson(typeof(GlobalTranslationSettings), _translationSettingsPath);
+                Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _translationSettingsPath);
             }
 
-            transaltionCache =
+            _translationCache =
                 new List<KeyValuePair<TranslationRequest, string>>(GlobalTranslationSettings.TranslationCacheSize);
 
             _TranslationProviders = translationProviders != null
@@ -109,15 +109,21 @@ namespace Translation
             TranslatorLanguague toLang,
             CancellationToken cancellationToken)
         {
-            return Task.Run(() =>
-            {
-                cancellationToken.ThrowIfCancellationRequested();
-                return Translate(inSentence, translationEngine, fromLang, toLang);
-            }, cancellationToken);
+            return TranslateCoreAsync(inSentence, translationEngine, fromLang, toLang, cancellationToken);
         }
 
+        // Synchronous entry point kept for back-compat (and the characterization tests).
+        // Production code calls TranslateAsync; the HttpClient-based providers run truly async.
         public TranslationResult Translate(string inSentence, TranslationEngine translationEngine,
             TranslatorLanguague fromLang, TranslatorLanguague toLang)
+        {
+            return TranslateCoreAsync(inSentence, translationEngine, fromLang, toLang, CancellationToken.None)
+                .GetAwaiter().GetResult();
+        }
+
+        private async Task<TranslationResult> TranslateCoreAsync(string inSentence,
+            TranslationEngine translationEngine, TranslatorLanguague fromLang, TranslatorLanguague toLang,
+            CancellationToken cancellationToken)
         {
             if (translationEngine == null || fromLang == null || toLang == null)
             {
@@ -153,37 +159,38 @@ namespace Translation
 
             var translationRequest =
                 new TranslationRequest(normalizedSentence, translationEngine.EngineName, fromLangCode, toLangCode);
-            var cachedResult = transaltionCache.FirstOrDefault(x => x.Key == translationRequest);
+            var cachedResult = _translationCache.FirstOrDefault(x => x.Key == translationRequest);
 
             if (!cachedResult.Equals(defaultCachedResult))
             {
                 return TranslationResult.Success(translationEngine.EngineName, cachedResult.Value);
             }
 
-            var result = InvokeSelectedProvider(translationEngine.EngineName, normalizedSentence, fromLangCode,
-                toLangCode);
+            var result = await InvokeSelectedProviderAsync(translationEngine.EngineName, normalizedSentence,
+                fromLangCode, toLangCode, cancellationToken).ConfigureAwait(false);
 
             if (result.IsSuccess && !string.IsNullOrEmpty(result.Text))
             {
-                cachedResult = transaltionCache.FirstOrDefault(x => x.Key == translationRequest);
+                cachedResult = _translationCache.FirstOrDefault(x => x.Key == translationRequest);
                 if (cachedResult.Equals(defaultCachedResult))
                 {
-                    transaltionCache.Add(
+                    _translationCache.Add(
                         new KeyValuePair<TranslationRequest, string>(translationRequest, result.Text));
                 }
 
-                if (transaltionCache.Count > GlobalTranslationSettings.TranslationCacheSize - 10)
-                    transaltionCache.RemoveRange(0, GlobalTranslationSettings.TranslationCacheSize / 2);
+                if (_translationCache.Count > GlobalTranslationSettings.TranslationCacheSize - 10)
+                    _translationCache.RemoveRange(0, GlobalTranslationSettings.TranslationCacheSize / 2);
             }
 
             return result;
         }
 
-        private TranslationResult InvokeSelectedProvider(
+        private async Task<TranslationResult> InvokeSelectedProviderAsync(
             TranslationEngineName engineName,
             string sentence,
             string fromLangCode,
-            string toLangCode)
+            string toLangCode,
+            CancellationToken cancellationToken)
         {
             if (!_TranslationProviders.TryGetValue(engineName, out var provider))
             {
@@ -193,7 +200,8 @@ namespace Translation
 
             try
             {
-                var text = provider.Translate(sentence, fromLangCode, toLangCode) ?? string.Empty;
+                var text = await provider.TranslateAsync(sentence, fromLangCode, toLangCode, cancellationToken)
+                    .ConfigureAwait(false) ?? string.Empty;
 
                 if (string.IsNullOrWhiteSpace(text))
                 {
@@ -283,7 +291,7 @@ namespace Translation
                 tmptranslationEngines = tmptranslationEngines.OrderByDescending(x => x.Quality).ToList();
 
 
-                _TranslationEngines = new ReadOnlyCollection<TranslationEngine>(tmptranslationEngines);
+                _translationEngines = new ReadOnlyCollection<TranslationEngine>(tmptranslationEngines);
             }
             catch (Exception e)
             {

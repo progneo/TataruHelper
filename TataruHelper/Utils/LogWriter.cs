@@ -8,26 +8,28 @@ using System.Threading.Tasks;
 
 namespace FFXIVTataruHelper
 {
-    class LogWriter
+    class LogWriter : IDisposable
     {
-        const int _MaxLogFileSize = 5242880;
+        const int MaxLogFileSize = 5242880;
 
-        bool _KeepWorking;
+        const string LogFileName = @"Log.txt";
+        const string BackUpLogFileName = @"Log_old.txt";
+        const string ChatLogFileName = @"ChatLog.txt";
+        const string RawDialogLogFileName = @"RealtimeRawLog.txt";
+
+        bool _keepWorking;
+        bool _disposed;
         TextWriter _logTextWriter;
         StreamWriter _logStreamWriter;
 
-        TextWriter chatsw = null;
-
-        string LogFileName = @"Log.txt";
-        string BackUpLogFileName = @"Log_old.txt";
-
-        string ChatLogFileName = @"ChatLog.txt";
+        TextWriter _chatWriter;
+        TextWriter _rawDialogWriter;
 
         Task _worker = Task.CompletedTask;
 
         public LogWriter()
         {
-            _KeepWorking = true;
+            _keepWorking = true;
 
             _logStreamWriter = new StreamWriter(LogFileName, true);
             _logTextWriter = _logStreamWriter;
@@ -54,7 +56,7 @@ namespace FFXIVTataruHelper
 
             string str;
 
-            while (_KeepWorking)
+            while (_keepWorking)
             {
                 bool dequeueFlag = false;
 
@@ -73,21 +75,29 @@ namespace FFXIVTataruHelper
 
                 if (Logger.ChatLogQueue.TryDequeue(out str))
                 {
-                    if (chatsw == null)
-                        chatsw = new StreamWriter(ChatLogFileName, true);
+                    if (_chatWriter == null)
+                        _chatWriter = new StreamWriter(ChatLogFileName, true);
 
-                    chatsw.WriteLine(str);
-                    chatsw.Flush();
+                    _chatWriter.WriteLine(str);
+                    _chatWriter.Flush();
+                    dequeueFlag = true;
+                }
+
+                if (Logger.RawDialogLogQueue.TryDequeue(out str))
+                {
+                    if (_rawDialogWriter == null)
+                        _rawDialogWriter = new StreamWriter(RawDialogLogFileName, true);
+
+                    _rawDialogWriter.WriteLine(str);
+                    _rawDialogWriter.Flush();
                     dequeueFlag = true;
                 }
 
                 if (!dequeueFlag)
                 {
-                    // Block until a producer signals or we're told to stop.
-                    // 500 ms cap is a safety net in case a Set was missed.
                     Logger.QueueSignal.WaitOne(500);
 
-                    if (_KeepWorking)
+                    if (_keepWorking)
                     {
                         LimitLogFileSize();
                     }
@@ -101,7 +111,7 @@ namespace FFXIVTataruHelper
         {
             if (_logStreamWriter != null && _logTextWriter != null)
             {
-                if (_logStreamWriter.BaseStream.Length >= _MaxLogFileSize)
+                if (_logStreamWriter.BaseStream.Length >= MaxLogFileSize)
                 {
                     try
                     {
@@ -124,7 +134,10 @@ namespace FFXIVTataruHelper
                         _logStreamWriter = new StreamWriter(LogFileName, true);
                         _logTextWriter = _logStreamWriter;
                     }
-                    catch (Exception) { }
+                    catch (Exception e)
+                    {
+                        Logger.WriteLog(e);
+                    }
                 }
             }
         }
@@ -136,29 +149,63 @@ namespace FFXIVTataruHelper
                 if (_logTextWriter != null)
                 {
                     _logTextWriter.Flush();
-                    _logTextWriter.Close();
+                    _logTextWriter.Dispose();
+                    _logTextWriter = null;
                 }
 
-                if (chatsw != null)
+                if (_chatWriter != null)
                 {
-                    chatsw.Flush();
-                    chatsw.Close();
+                    _chatWriter.Flush();
+                    _chatWriter.Dispose();
+                    _chatWriter = null;
+                }
+
+                if (_rawDialogWriter != null)
+                {
+                    _rawDialogWriter.Flush();
+                    _rawDialogWriter.Dispose();
+                    _rawDialogWriter = null;
                 }
             }
-            catch { }
+            catch (Exception e)
+            {
+                Logger.WriteLog(e);
+            }
         }
 
         public void Stop()
         {
-            _KeepWorking = false;
-            try { Logger.QueueSignal.Set(); }
-            catch { }
+            _keepWorking = false;
+
+            try
+            {
+                Logger.QueueSignal.Set();
+            }
+            catch (Exception e)
+            {
+                Logger.WriteLog(e);
+            }
 
             try
             {
                 _worker?.Wait(TimeSpan.FromMilliseconds(500));
             }
-            catch { }
+            catch (Exception e)
+            {
+                Logger.WriteLog(e);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (_disposed)
+                return;
+
+            _disposed = true;
+
+            Stop();
+
+            ReleaseResources();
         }
     }
 }

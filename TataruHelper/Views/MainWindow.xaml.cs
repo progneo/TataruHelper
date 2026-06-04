@@ -323,7 +323,7 @@ public partial class MainWindow : FluentWindow
 
             _updater?.Dispose();
 
-            _logWriter?.Stop();
+            _logWriter?.Dispose();
         }
         catch (Exception ex)
         {
@@ -538,10 +538,18 @@ public partial class MainWindow : FluentWindow
 
     private async Task UpdateTimerHandler()
     {
-        await Task.Run(() =>
+        // Invoked from an async-void timer handler, so exceptions must not escape.
+        try
         {
-            _updater?.CheckAndInstallUpdatesAsync(CmdArgsStatus.IsPreRelease, CancellationToken.None).Forget();
-        });
+            await Task.Run(() =>
+            {
+                _updater?.CheckAndInstallUpdatesAsync(CmdArgsStatus.IsPreRelease, CancellationToken.None).Forget();
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.WriteLog(ex);
+        }
     }
 
     protected override void OnStateChanged(EventArgs e)
@@ -565,7 +573,7 @@ public partial class MainWindow : FluentWindow
 
     private void Window_Closed(object sender, EventArgs e)
     {
-        _logWriter?.Stop();
+        _logWriter?.Dispose();
     }
 
     public void ShutDown()

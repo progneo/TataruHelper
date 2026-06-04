@@ -119,6 +119,13 @@ namespace FFXIVTataruHelper.Services.GameMemory
             {
                 _lastRealtimeDialogSignature = signature;
                 var line = BuildRealtimeDialogLine(speakerName, talkText);
+
+                if (Logger.RawDialogLogEnabled)
+                {
+                    Logger.WriteRawDialogLog(
+                        $"Emit code=[{chatCode}] speaker=[{speakerName}] text=[{talkText}] line=[{line}]");
+                }
+
                 if (line.Length > 0)
                 {
                     result.ChatLogItems.Enqueue(new ChatLogItem

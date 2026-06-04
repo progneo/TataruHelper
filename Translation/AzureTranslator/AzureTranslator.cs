@@ -2,6 +2,8 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -26,6 +28,12 @@ namespace Translation.AzureTranslator
         }
 
         public string Translate(string sentence, string inLang, string outLang)
+        {
+            return TranslateAsync(sentence, inLang, outLang, CancellationToken.None).GetAwaiter().GetResult();
+        }
+
+        public async Task<string> TranslateAsync(string sentence, string inLang, string outLang,
+            CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(sentence))
                 return string.Empty;
@@ -53,9 +61,10 @@ namespace Translation.AzureTranslator
 
                 try
                 {
-                    using (var response = ApiHttpClient.SendSync(request))
+                    using (var response = await ApiHttpClient.SendAsync(request, cancellationToken)
+                        .ConfigureAwait(false))
                     {
-                        var responseBody = response.Content.ReadAsStringAsync().GetAwaiter().GetResult();
+                        var responseBody = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
 
                         if (response.StatusCode == (HttpStatusCode)429 ||
                             (response.StatusCode == HttpStatusCode.Forbidden &&
@@ -79,6 +88,10 @@ namespace Translation.AzureTranslator
                     throw;
                 }
                 catch (MissingApiKeyException)
+                {
+                    throw;
+                }
+                catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
                 {
                     throw;
                 }

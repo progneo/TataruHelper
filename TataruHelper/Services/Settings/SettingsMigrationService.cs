@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 
 using FFXIVTataruHelper.Services.Logging;
-using FFXIVTataruHelper.UIModel;
 using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.WinUtils;
 

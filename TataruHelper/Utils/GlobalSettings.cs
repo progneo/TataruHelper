@@ -59,6 +59,8 @@ namespace FFXIVTataruHelper
 
         public static int MaxTranslateTryCount = 4;
 
+        public static int MaxChatMessages = 500;
+
         public static string OldSettings = "../UserSettings.json";
 
         public static string Settings = "../UserSettingsNew.json";

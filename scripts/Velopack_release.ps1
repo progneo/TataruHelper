@@ -9,7 +9,6 @@ param(
     [string]$OutputDir = "",
     [string]$RepoUrl = "https://github.com/progneo/TataruHelper",
     [string]$RepoToken = "",
-    [bool]$IncludeMsiDeploymentTool = $true,
     [switch]$SkipPublish,
     [switch]$SkipDownloadLatest,
     [switch]$InstallerOnly
@@ -110,7 +109,7 @@ if ([string]::IsNullOrWhiteSpace($Version)) {
 Write-Host "[Velopack] Resolved version: $Version"
 
 $vpkChannel = if ($Channel -eq "prerelease") { "prerelease" } else { "stable" }
-$iconPath = Join-Path $repoRoot "TataruHelper/app_icon2.ico"
+$iconPath = Join-Path $repoRoot "TataruHelper/Resources/app_icon2.ico"
 
 if (-not $SkipPublish) {
     Write-Host "[Velopack] Publishing app binaries..."
@@ -189,39 +188,6 @@ if (-not $SkipDownloadLatest) {
     }
 }
 
-$msiFlag = $null
-if ($IncludeMsiDeploymentTool) {
-    $previousRollForwardForHelp = $env:DOTNET_ROLL_FORWARD
-    $env:DOTNET_ROLL_FORWARD = "LatestMajor"
-    try {
-        $packHelpOutput = if ($vpkPrefix.Count -eq 1) {
-            & $vpkPrefix[0] "pack" "-h" 2>&1
-        }
-        else {
-            & $vpkPrefix[0] $vpkPrefix[1] $vpkPrefix[2] $vpkPrefix[3] "pack" "-h" 2>&1
-        }
-    }
-    finally {
-        if ($null -eq $previousRollForwardForHelp) {
-            Remove-Item Env:DOTNET_ROLL_FORWARD -ErrorAction SilentlyContinue
-        }
-        else {
-            $env:DOTNET_ROLL_FORWARD = $previousRollForwardForHelp
-        }
-    }
-
-    $packHelpText = ($packHelpOutput | Out-String)
-    if ($packHelpText -match "(?m)^\s*--msi\b") {
-        $msiFlag = "--msi"
-    }
-    elseif ($packHelpText -match "(?m)^\s*--msiDeploymentTool\b") {
-        $msiFlag = "--msiDeploymentTool"
-    }
-    else {
-        Write-Warning "MSI packaging flag was not found in current vpk build; Setup.exe only will be generated."
-    }
-}
-
 $vpkArgs = @(
     "pack",
     "--packId", $PackId,
@@ -232,10 +198,6 @@ $vpkArgs = @(
     "--outputDir", $OutputDir,
     "--icon", $iconPath
 )
-
-if ($msiFlag) {
-    $vpkArgs += $msiFlag
-}
 
 Write-Host "[Velopack] Packaging release..."
 Write-Host ("[Velopack] Command: " + ((@($vpkPrefix) + $vpkArgs) -join " "))

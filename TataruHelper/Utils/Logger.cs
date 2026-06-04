@@ -14,6 +14,9 @@ namespace FFXIVTataruHelper
         public static ConcurrentQueue<string> LogQueue = new ConcurrentQueue<string>();
         public static ConcurrentQueue<string> ConsoleLogQueue = new ConcurrentQueue<string>();
         public static ConcurrentQueue<string> ChatLogQueue = new ConcurrentQueue<string>();
+        public static ConcurrentQueue<string> RawDialogLogQueue = new ConcurrentQueue<string>();
+
+        public static volatile bool RawDialogLogEnabled;
 
         internal static readonly AutoResetEvent QueueSignal = new AutoResetEvent(false);
 
@@ -75,6 +78,17 @@ namespace FFXIVTataruHelper
             res += InputString; // + Environment.NewLine;
 
             ChatLogQueue.Enqueue(res);
+            QueueSignal.Set();
+        }
+
+        public static void WriteRawDialogLog(string InputString)
+        {
+            if (!RawDialogLogEnabled)
+                return;
+
+            string time = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+
+            RawDialogLogQueue.Enqueue(time + " " + InputString);
             QueueSignal.Set();
         }
     }

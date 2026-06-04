@@ -40,8 +40,6 @@ namespace FFXIVTataruHelper.WinUtils
             using (Process curProcess = Process.GetCurrentProcess())
             using (ProcessModule curModule = curProcess.MainModule)
             {
-                //return SetWindowsHookEx(WH_MOUSE, proc, GetModuleHandle(curModule.ModuleName), (uint)Thread.CurrentThread.ManagedThreadId);
-                //return SetWindowsHookEx(WH_MOUSE, proc, GetModuleHandle(curModule.ModuleName), (uint)AppDomain.GetCurrentThreadId());
                 return SetWindowsHookEx(WH_MOUSE_LL, proc, GetModuleHandle(curModule.ModuleName), 0);
             }
         }

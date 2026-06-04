@@ -2,9 +2,6 @@
 // PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace FFXIVTataruHelper
@@ -18,17 +15,15 @@ namespace FFXIVTataruHelper
                 TaskContinuationOptions.OnlyOnFaulted);
         }
 
-        public static void EndWith(this Task task, Action _action)
+        public static void EndWith(this Task task, Action action)
         {
-            task.ContinueWith(
-                t => { Logger.WriteLog(t.Exception); },
-                TaskContinuationOptions.OnlyOnFaulted);
+            task.ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                    Logger.WriteLog(t.Exception);
 
-            task.ContinueWith(t => { _action(); });
-
-            task.ContinueWith(
-                t => { Logger.WriteLog(t.Exception); },
-                TaskContinuationOptions.OnlyOnFaulted);
+                action();
+            });
         }
     }
 }

@@ -30,9 +30,28 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private readonly MemoryHandler _memoryHandler;
 
+        private string _lastLoggedLastTalk = string.Empty;
+        private string _lastLoggedAddonNodes = string.Empty;
+
         public TalkAddonRealtimeReader(MemoryHandler memoryHandler)
         {
             _memoryHandler = memoryHandler;
+        }
+
+        private static void WriteDistinctRawDialogLog(ref string lastPayload, string payload)
+        {
+            if (!Logger.RawDialogLogEnabled || string.IsNullOrEmpty(payload))
+            {
+                return;
+            }
+
+            if (string.Equals(lastPayload, payload, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            lastPayload = payload;
+            Logger.WriteRawDialogLog(payload);
         }
 
         public TalkAddonRealtimeDialogSnapshot TryReadSnapshot()
@@ -101,6 +120,12 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 out speakerName);
             var readText = TryReadUtf8String(uiModuleAddress, _uiDirectDialogOffsets.Value.LastTalkTextOffset,
                 out talkText);
+
+            if (Logger.RawDialogLogEnabled)
+            {
+                WriteDistinctRawDialogLog(ref _lastLoggedLastTalk,
+                    $"LastTalk name=[{speakerName}] text=[{talkText}]");
+            }
 
             speakerName = SharlayanGameMemoryGateway.NormalizeDialogToken(speakerName);
             talkText = SharlayanGameMemoryGateway.NormalizeDialogToken(talkText);
@@ -171,6 +196,14 @@ namespace FFXIVTataruHelper.Services.GameMemory
                     continue;
                 }
 
+                if (Logger.RawDialogLogEnabled)
+                {
+                    var joinedNodes = string.Join(" | ",
+                        (nodeTexts ?? Array.Empty<string>()).Select(text => $"[{text}]"));
+                    WriteDistinctRawDialogLog(ref _lastLoggedAddonNodes,
+                        $"Addon=[{addonSpec.AddonName}] code=[{addonSpec.ChatCode}] nodes={{ {joinedNodes} }}");
+                }
+
                 var addonSnapshot = BuildAddonSnapshot(addonSpec, nodeTexts, speakerName, lastTalkText);
                 if (SharlayanGameMemoryGateway.NormalizeDialogToken(addonSnapshot.TalkText).Length == 0)
                 {
@@ -207,9 +240,9 @@ namespace FFXIVTataruHelper.Services.GameMemory
             if (allowNodeSpeaker)
             {
                 speakerName = normalizedNodeTexts
-                    .Where(text => !string.Equals(text, talkText, StringComparison.Ordinal))
-                    .OrderBy(text => text.Length)
-                    .FirstOrDefault() ?? string.Empty;
+                    .FirstOrDefault(text =>
+                        !string.Equals(text, talkText, StringComparison.Ordinal)
+                    ) ?? string.Empty;
             }
 
             if (speakerName.Length == 0 && DialogTextMatches(lastTalkText, talkText))

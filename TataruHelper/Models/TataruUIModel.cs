@@ -14,7 +14,6 @@ using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.TataruComponentModel;
-using FFXIVTataruHelper.UIModel;
 
 namespace FFXIVTataruHelper
 {
