@@ -1,6 +1,3 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
 
 using System;
 using System.IO;
@@ -8,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace FFXIVTataruHelper
 {
-    class LogWriter : IDisposable
+    public sealed class LogWriter : IDisposable
     {
         const int MaxLogFileSize = 5242880;
 

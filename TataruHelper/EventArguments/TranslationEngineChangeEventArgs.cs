@@ -1,9 +1,7 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
-using Translation;
+
+using Translation.Models;
 
 namespace FFXIVTataruHelper.EventArguments
 {
@@ -13,7 +11,7 @@ namespace FFXIVTataruHelper.EventArguments
 
         public int NewEngine { get; internal set; }
 
-        public ReadOnlyCollection<TranslatorLanguague> SupportedLanguages { get; internal set; }
+        public ReadOnlyCollection<TranslatorLanguage> SupportedLanguages { get; internal set; }
 
         internal TranslationEngineChangeEventArgs(Object sender) : base(sender) { }
     }

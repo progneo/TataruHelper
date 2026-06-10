@@ -149,6 +149,8 @@ namespace TataruHelper.Tests
 
         private sealed class FakeSettingsStore : ISettingsStore
         {
+            public FFXIVTataruHelper.AppSettings AppSettings { get; } = new FFXIVTataruHelper.AppSettings();
+
             public string ChatCodesFilePath => string.Empty;
             public string BlackListPath => string.Empty;
             public string IgnoreNickNameChatCodesPath => string.Empty;

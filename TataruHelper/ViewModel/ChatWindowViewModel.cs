@@ -1,8 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -11,7 +7,6 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Data;
 using System.Windows.Input;
-using System.Windows.Media;
 
 using FFXIVTataruHelper.Compatibility.HotKeys;
 using FFXIVTataruHelper.EventArguments;
@@ -20,7 +15,7 @@ using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.TataruComponentModel;
 using FFXIVTataruHelper.WinUtils;
 
-using Translation;
+using Translation.Models;
 
 using Color = System.Windows.Media.Color;
 using FontFamily = System.Windows.Media.FontFamily;
@@ -308,7 +303,7 @@ namespace FFXIVTataruHelper.ViewModel
 
                 _ShowHideChatKeys = new HotKeyCombination("ShowHideChatKeys" + Convert.ToString(WinId), value);
 
-                ReRegisterGlobalHotekey(_HotKeyManager, ref _ShowHideChat, _ShowHideChatKeys);
+                ReRegisterGlobalHotkey(_HotKeyManager, ref _ShowHideChat, _ShowHideChatKeys);
 
                 OnPropertyChanged();
             }
@@ -334,7 +329,7 @@ namespace FFXIVTataruHelper.ViewModel
 
                 _ClickThoughtChatKeys = new HotKeyCombination("ClickThoughtChatKeys" + Convert.ToString(WinId), value);
 
-                ReRegisterGlobalHotekey(_HotKeyManager, ref _ClickThoughtChat, _ClickThoughtChatKeys);
+                ReRegisterGlobalHotkey(_HotKeyManager, ref _ClickThoughtChat, _ClickThoughtChatKeys);
 
                 OnPropertyChanged();
             }
@@ -360,7 +355,7 @@ namespace FFXIVTataruHelper.ViewModel
 
                 _ClearChatKeys = new HotKeyCombination("ClearChatKeys" + Convert.ToString(WinId), value);
 
-                ReRegisterGlobalHotekey(_HotKeyManager, ref _ClearChat, _ClearChatKeys);
+                ReRegisterGlobalHotkey(_HotKeyManager, ref _ClearChat, _ClearChatKeys);
 
                 OnPropertyChanged();
             }
@@ -400,34 +395,34 @@ namespace FFXIVTataruHelper.ViewModel
             }
         }
 
-        public CollectionView TranslateFromLanguagues
+        public CollectionView TranslateFromLanguages
         {
-            get { return _TranslateFromLanguagues; }
+            get { return _TranslateFromLanguages; }
             set
             {
-                if (_TranslateFromLanguagues == value) return;
-                _TranslateFromLanguagues = value;
+                if (_TranslateFromLanguages == value) return;
+                _TranslateFromLanguages = value;
             }
         }
 
-        public TranslatorLanguague CurrentTranslateFromLanguague
+        public TranslatorLanguage CurrentTranslateFromLanguage
         {
-            get { return (TranslatorLanguague)TranslateFromLanguagues.CurrentItem; }
+            get { return (TranslatorLanguage)TranslateFromLanguages.CurrentItem; }
         }
 
-        public CollectionView TranslateToLanguagues
+        public CollectionView TranslateToLanguages
         {
-            get { return _TranslateToLanguagues; }
+            get { return _TranslateToLanguages; }
             set
             {
-                if (_TranslateToLanguagues == value) return;
-                TranslateToLanguagues = value;
+                if (_TranslateToLanguages == value) return;
+                TranslateToLanguages = value;
             }
         }
 
-        public TranslatorLanguague CurrentTranslateToLanguague
+        public TranslatorLanguage CurrentTranslateToLanguage
         {
-            get { return (TranslatorLanguague)TranslateToLanguagues.CurrentItem; }
+            get { return (TranslatorLanguage)TranslateToLanguages.CurrentItem; }
         }
 
         public bool ShowTimestamps
@@ -591,8 +586,8 @@ namespace FFXIVTataruHelper.ViewModel
         TranslationEngine _selectedEngine;
         IReadOnlyList<TranslationEngine> _allTranslationEngines;
         TranslationCredentialsViewModel _engineAvailability;
-        CollectionView _TranslateFromLanguagues;
-        CollectionView _TranslateToLanguagues;
+        CollectionView _TranslateFromLanguages;
+        CollectionView _TranslateToLanguages;
 
         RectangleD _ChatWindowRectangle;
 
@@ -630,39 +625,6 @@ namespace FFXIVTataruHelper.ViewModel
 
         #endregion
 
-        public ChatWindowViewModel()
-        {
-            _Logger = new AppLogger();
-            _HotKeyBindingService = new HotKeyBindingService(_Logger);
-            this._asyncPropertyChanged = new AsyncEvent<AsyncPropertyChangedEventArgs>(this.EventErrorHandler,
-                "ChatWindowViewModel \n AsyncPropertyChanged");
-            ShowChatWindowCommand = new TataruUICommand(ShowChatWindow);
-            RestChatWindowPositionCommand = new TataruUICommand(ResetChatWindowPosition);
-
-            Random rnd = new Random(DateTime.UtcNow.Date.Millisecond);
-            WinId = (DateTime.Now.Ticks * 100u) + ((uint)rnd.Next(0, 100));
-
-            Name = "2";
-
-            ChatFontSize = 1;
-            LineBreakHeight = 1;
-            SpacingCount = 1;
-            BackGroundColor = Color.FromArgb(255, 0, 255, 128);
-            ChatWindowRectangle = new RectangleD(0, 0, 480, 320);
-            ContentPadding = 12;
-            MessagesInContainer = false;
-            MessageContainerPadding = 6;
-            MessageContainerAlpha = 32;
-            MessageContainerBorderThickness = 0;
-            MessageContainerBorderAlpha = 96;
-            ShowOnlyLastMessage = false;
-
-            ChatCodes = new BindingList<ChatCodeViewModel>()
-            {
-                new ChatCodeViewModel("0039", "System", Colors.Aqua, true),
-            };
-        }
-
         public ChatWindowViewModel(
             ChatWindowViewModelSettings settings,
             List<TranslationEngine> translationEngines,
@@ -685,35 +647,9 @@ namespace FFXIVTataruHelper.ViewModel
 
             _BoundSettings = settings;
 
-            Name = settings.Name;
             WinId = settings.WinId;
 
-            ChatFontSize = settings.ChatFontSize;
-            LineBreakHeight = settings.LineBreakHeight;
-            SpacingCount = settings.SpacingCount;
-
-            ChatFont = settings.ChatFont;
-
-            IsAlwaysOnTop = settings.IsAlwaysOnTop;
-            IsClickThrough = settings.IsClickThrough;
-            IsAutoHide = settings.IsAutoHide;
-
-            AutoHideTimeout = settings.AutoHideTimeout;
-
-            IsHiddenByUser = false;
-
-            ShowTimestamps = settings.ShowTimestamps;
-
-            WindowCornerRadius = settings.WindowCornerRadius > 0 ? settings.WindowCornerRadius : 12;
-            ContentPadding = settings.ContentPadding;
-            MessagesInContainer = settings.MessagesInContainer;
-            MessageContainerPadding = settings.MessageContainerPadding;
-            MessageContainerAlpha = settings.MessageContainerAlpha;
-            MessageContainerBorderThickness = settings.MessageContainerBorderThickness;
-            MessageContainerBorderAlpha = settings.MessageContainerBorderAlpha;
-            ShowOnlyLastMessage = settings.ShowOnlyLastMessage;
-
-            BackGroundColor = settings.BackGroundColor;
+            ChatWindowSettingsMapper.ApplyDisplaySettings(this, settings);
 
             _allTranslationEngines = translationEngines;
             _engineAvailability = engineAvailability;
@@ -734,10 +670,8 @@ namespace FFXIVTataruHelper.ViewModel
                 ? savedEngine
                 : AvailableEngines.FirstOrDefault();
 
-            TrySetLangugue(_TranslateFromLanguagues, settings.FromLanguague);
-            TrySetLangugue(_TranslateToLanguagues, settings.ToLanguague);
-
-            ChatWindowRectangle = settings.ChatWindowRectangle;
+            TrySetLanguage(_TranslateFromLanguages, settings.FromLanguague);
+            TrySetLanguage(_TranslateToLanguages, settings.ToLanguague);
 
             ChatCodes = LoadChatCodes(settings.ChatCodes, allChatCodes);
 
@@ -752,49 +686,7 @@ namespace FFXIVTataruHelper.ViewModel
 
         public ChatWindowViewModelSettings GetSettings()
         {
-            ChatWindowViewModelSettings settings = new ChatWindowViewModelSettings();
-
-            settings.Name = this.Name;
-            settings.WinId = this.WinId;
-
-            settings.ChatFontSize = this.ChatFontSize;
-            settings.LineBreakHeight = this.LineBreakHeight;
-            settings.SpacingCount = this.SpacingCount;
-
-            settings.IsAlwaysOnTop = this.IsAlwaysOnTop;
-            settings.IsClickThrough = this.IsClickThrough;
-            settings.IsAutoHide = this.IsAutoHide;
-
-            settings.AutoHideTimeout = this.AutoHideTimeout;
-
-            //settings.IsHiddenByUser = this.IsHiddenByUser;
-
-            settings.BackGroundColor = this.BackGroundColor;
-
-            settings.WindowCornerRadius = this.WindowCornerRadius;
-            settings.ShowTimestamps = this.ShowTimestamps;
-            settings.ContentPadding = this.ContentPadding;
-            settings.MessagesInContainer = this.MessagesInContainer;
-            settings.MessageContainerPadding = this.MessageContainerPadding;
-            settings.MessageContainerAlpha = this.MessageContainerAlpha;
-            settings.MessageContainerBorderThickness = this.MessageContainerBorderThickness;
-            settings.MessageContainerBorderAlpha = this.MessageContainerBorderAlpha;
-            settings.ShowOnlyLastMessage = this.ShowOnlyLastMessage;
-
-            settings.TranslationEngineName = SelectedEngine?.EngineName ?? TranslationEngineName.GoogleTranslate;
-
-            settings.FromLanguague = (TranslatorLanguague)TranslateFromLanguagues.CurrentItem;
-            settings.ToLanguague = (TranslatorLanguague)TranslateToLanguagues.CurrentItem;
-
-            settings.ChatWindowRectangle = this.ChatWindowRectangle;
-
-            settings.ChatCodes = this.ChatCodes.ToList().Select(entry => new ChatCodeViewModel(entry)).ToList();
-
-            settings.ShowHideChatKeys = new HotKeyCombination(this.ShowHideChatKeys);
-            settings.ClickThoughtChatKeys = new HotKeyCombination(this.ClickThoughtChatKeys);
-            settings.ClearChatKeys = new HotKeyCombination(this.ClearChatKeys);
-
-            return settings;
+            return ChatWindowSettingsMapper.ToSettings(this);
         }
 
         public void RegisterHotKeyDown(TatruHotkeyType type, KeyEventArgs e)
@@ -853,7 +745,7 @@ namespace FFXIVTataruHelper.ViewModel
             _HotKeyBindingService.RegisterHotKeyUp(_HotKeyManager, ref globalHotKey, hotKeyCombination, e, _disposed);
         }
 
-        private void ReRegisterGlobalHotekey(HotKeyManager hotKeyManager, ref GlobalHotKey globalHotKey,
+        private void ReRegisterGlobalHotkey(HotKeyManager hotKeyManager, ref GlobalHotKey globalHotKey,
             HotKeyCombination hotKeyCombination)
         {
             _HotKeyBindingService.ReRegisterGlobalHotKey(hotKeyManager, ref globalHotKey, hotKeyCombination, _disposed);
@@ -861,9 +753,9 @@ namespace FFXIVTataruHelper.ViewModel
 
         private void RebuildAvailableEngines()
         {
-            TranslatorLanguague prevFrom = null, prevTo = null;
-            if (_TranslateFromLanguagues != null) prevFrom = (TranslatorLanguague)_TranslateFromLanguagues.CurrentItem;
-            if (_TranslateToLanguagues != null) prevTo = (TranslatorLanguague)_TranslateToLanguagues.CurrentItem;
+            TranslatorLanguage prevFrom = null, prevTo = null;
+            if (_TranslateFromLanguages != null) prevFrom = (TranslatorLanguage)_TranslateFromLanguages.CurrentItem;
+            if (_TranslateToLanguages != null) prevTo = (TranslatorLanguage)_TranslateToLanguages.CurrentItem;
 
             AvailableEngines.Clear();
             if (_allTranslationEngines == null) return;
@@ -883,10 +775,10 @@ namespace FFXIVTataruHelper.ViewModel
                 return;
             }
 
-            if (_selectedEngine != null && _TranslateFromLanguagues != null)
+            if (_selectedEngine != null && _TranslateFromLanguages != null)
             {
-                TrySetLangugue(_TranslateFromLanguagues, prevFrom);
-                TrySetLangugue(_TranslateToLanguagues, prevTo);
+                TrySetLanguage(_TranslateFromLanguages, prevFrom);
+                TrySetLanguage(_TranslateToLanguages, prevTo);
             }
         }
 
@@ -897,51 +789,51 @@ namespace FFXIVTataruHelper.ViewModel
 
         private void RebuildLanguagesForSelectedEngine()
         {
-            TranslatorLanguague prevFrom = null, prevTo = null;
-            if (_TranslateFromLanguagues != null) prevFrom = (TranslatorLanguague)_TranslateFromLanguagues.CurrentItem;
-            if (_TranslateToLanguagues != null) prevTo = (TranslatorLanguague)_TranslateToLanguagues.CurrentItem;
+            TranslatorLanguage prevFrom = null, prevTo = null;
+            if (_TranslateFromLanguages != null) prevFrom = (TranslatorLanguage)_TranslateFromLanguages.CurrentItem;
+            if (_TranslateToLanguages != null) prevTo = (TranslatorLanguage)_TranslateToLanguages.CurrentItem;
 
-            if (_TranslateFromLanguagues != null)
-                _TranslateFromLanguagues.CurrentChanged -= OnTranslateFromLanguageChange;
-            if (_TranslateToLanguagues != null)
-                _TranslateToLanguagues.CurrentChanged -= OnTranslateToLanguageChange;
+            if (_TranslateFromLanguages != null)
+                _TranslateFromLanguages.CurrentChanged -= OnTranslateFromLanguageChange;
+            if (_TranslateToLanguages != null)
+                _TranslateToLanguages.CurrentChanged -= OnTranslateToLanguageChange;
 
             if (_selectedEngine == null)
             {
-                _TranslateFromLanguagues = null;
-                _TranslateToLanguagues = null;
-                OnPropertyChanged("TranslateFromLanguagues");
-                OnPropertyChanged("TranslateToLanguagues");
+                _TranslateFromLanguages = null;
+                _TranslateToLanguages = null;
+                OnPropertyChanged("TranslateFromLanguages");
+                OnPropertyChanged("TranslateToLanguages");
                 return;
             }
 
-            _TranslateFromLanguagues = new CollectionView(_selectedEngine.SupportedLanguages.ToList());
-            _TranslateFromLanguagues.CurrentChanged += OnTranslateFromLanguageChange;
-            OnPropertyChanged("TranslateFromLanguagues");
+            _TranslateFromLanguages = new CollectionView(_selectedEngine.SupportedLanguages.ToList());
+            _TranslateFromLanguages.CurrentChanged += OnTranslateFromLanguageChange;
+            OnPropertyChanged("TranslateFromLanguages");
 
             var supportedToLanguages = _selectedEngine.SupportedLanguages.ToList();
             var auto = supportedToLanguages.FirstOrDefault(x => x.SystemName == "Auto");
             if (auto != null) supportedToLanguages.Remove(auto);
 
-            _TranslateToLanguagues = new CollectionView(supportedToLanguages);
-            _TranslateToLanguagues.CurrentChanged += OnTranslateToLanguageChange;
-            OnPropertyChanged("TranslateToLanguagues");
+            _TranslateToLanguages = new CollectionView(supportedToLanguages);
+            _TranslateToLanguages.CurrentChanged += OnTranslateToLanguageChange;
+            OnPropertyChanged("TranslateToLanguages");
 
             if (prevFrom != null && prevTo != null)
             {
-                TrySetLangugue(_TranslateFromLanguagues, prevFrom);
-                TrySetLangugue(_TranslateToLanguagues, prevTo);
+                TrySetLanguage(_TranslateFromLanguages, prevFrom);
+                TrySetLanguage(_TranslateToLanguages, prevTo);
             }
         }
 
         private void OnTranslateFromLanguageChange(object sender, EventArgs e)
         {
-            OnPropertyChanged("TranslateFromLanguagues");
+            OnPropertyChanged("TranslateFromLanguages");
         }
 
         private void OnTranslateToLanguageChange(object sender, EventArgs e)
         {
-            OnPropertyChanged("TranslateToLanguagues");
+            OnPropertyChanged("TranslateToLanguages");
         }
 
         private void OnChatCodesChange(object sender, ListChangedEventArgs e)
@@ -1022,14 +914,14 @@ namespace FFXIVTataruHelper.ViewModel
                    string.Equals(chatCode, "0044", StringComparison.OrdinalIgnoreCase);
         }
 
-        private void TrySetLangugue(CollectionView collection, TranslatorLanguague languague)
+        private void TrySetLanguage(CollectionView collection, TranslatorLanguage language)
         {
-            if (languague == null)
+            if (language == null)
                 collection.MoveCurrentToFirst();
             else
             {
-                if (collection.Contains(languague))
-                    collection.MoveCurrentTo(languague);
+                if (collection.Contains(language))
+                    collection.MoveCurrentTo(language);
                 else
                     collection.MoveCurrentToFirst();
             }

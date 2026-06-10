@@ -1,30 +1,36 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Translation.AI;
+using Microsoft.Extensions.Logging;
+
 using Translation.Credentials;
-using Translation.DeepLApi;
-using Translation.Google;
-using Translation.GoogleCloud;
-using Translation.Papago;
-using Translation.YandexCloud;
+using Translation.Models;
+using Translation.Providers.Azure;
+using Translation.Providers.DeepL;
+using Translation.Providers.DeepSeek;
+using Translation.Providers.Google;
+using Translation.Providers.GoogleCloud;
+using Translation.Providers.OpenAI;
+using Translation.Providers.Papago;
+using Translation.Providers.YandexCloud;
+using Translation.Providers.YandexGpt;
+using Translation.Settings;
 
 namespace Translation.Providers
 {
     internal static class TranslationProviderFactory
     {
         public static IReadOnlyDictionary<TranslationEngineName, ITranslationProvider> CreateDefaultProviders(
-            ILog logger,
-            ITranslationCredentialStore credentials)
+            ILogger logger,
+            ITranslationCredentialStore credentials,
+            TranslationSettings settings)
         {
             credentials = credentials ?? NullCredentialStore.Instance;
+            settings = settings ?? new TranslationSettings();
 
-            // GoogleTranslate and Papago still use the legacy HttpReader (WebRequest) path and
-            // expose only a synchronous Translate; the adapter bridges them to async via
-            // Task.Run. The HttpClient-based engines below provide a genuinely async path.
-            var google = new GoogleTranslator(logger);
-            var papago = new PapagoTranslator(logger);
-            var azure = new AzureTranslator.AzureTranslator(logger, credentials);
+            var google = new GoogleTranslator(logger, settings);
+            var papago = new PapagoTranslator(logger, settings);
+            var azure = new AzureTranslator(logger, credentials);
             var googleCloud = new GoogleCloudTranslator(logger, credentials);
             var deepL = new DeepLApiTranslator(logger, credentials);
             var openAi = new OpenAITranslator(logger, credentials);
@@ -34,22 +40,7 @@ namespace Translation.Providers
 
             var providers = new ITranslationProvider[]
             {
-                new TranslationProviderAdapter(TranslationEngineName.GoogleTranslate, google.Translate),
-                new TranslationProviderAdapter(TranslationEngineName.Papago, papago.Translate),
-                new TranslationProviderAdapter(TranslationEngineName.AzureTranslator,
-                    azure.Translate, azure.TranslateAsync),
-                new TranslationProviderAdapter(TranslationEngineName.GoogleCloudTranslate,
-                    googleCloud.Translate, googleCloud.TranslateAsync),
-                new TranslationProviderAdapter(TranslationEngineName.DeepLApi,
-                    deepL.Translate, deepL.TranslateAsync),
-                new TranslationProviderAdapter(TranslationEngineName.OpenAI,
-                    openAi.Translate, openAi.TranslateAsync),
-                new TranslationProviderAdapter(TranslationEngineName.DeepSeek,
-                    deepSeek.Translate, deepSeek.TranslateAsync),
-                new TranslationProviderAdapter(TranslationEngineName.Yandex,
-                    yandexCloud.Translate, yandexCloud.TranslateAsync),
-                new TranslationProviderAdapter(TranslationEngineName.YandexGPT,
-                    yandexGpt.Translate, yandexGpt.TranslateAsync),
+                google, papago, azure, googleCloud, deepL, openAi, deepSeek, yandexCloud, yandexGpt,
             };
 
             return providers.ToDictionary(x => x.EngineName, x => x);

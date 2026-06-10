@@ -66,7 +66,7 @@
                         <StackPanel Grid.Column="2">
                             <Label Style="{DynamicResource BaseLabelStyle}"
                                    Content="{DynamicResource FFLanguage}" />
-                            <ComboBox ItemsSource="{Binding BoundWindow.TranslateFromLanguagues}"
+                            <ComboBox ItemsSource="{Binding BoundWindow.TranslateFromLanguages}"
                                       DisplayMemberPath="ShownName"
                                       IsSynchronizedWithCurrentItem="True" />
                         </StackPanel>
@@ -74,7 +74,7 @@
                         <StackPanel Grid.Column="4">
                             <Label Style="{DynamicResource BaseLabelStyle}"
                                    Content="{DynamicResource TraslateTo}" />
-                            <ComboBox ItemsSource="{Binding BoundWindow.TranslateToLanguagues}"
+                            <ComboBox ItemsSource="{Binding BoundWindow.TranslateToLanguages}"
                                       DisplayMemberPath="ShownName"
                                       IsSynchronizedWithCurrentItem="True" />
                         </StackPanel>

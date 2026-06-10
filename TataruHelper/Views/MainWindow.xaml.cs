@@ -1,7 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.ComponentModel;
 using System.Drawing;
 using System.Reflection;
@@ -13,6 +10,7 @@ using System.Windows.Interop;
 using System.Windows.Navigation;
 
 using FFXIVTataruHelper.EventArguments;
+using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.Factories;
 using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Logging;
@@ -48,15 +46,16 @@ public partial class MainWindow : FluentWindow
     private readonly IHotkeyCaptureService _hotkeyCaptureService;
     private readonly TranslationCredentialsViewModel _translationCredentials;
 
-    private LogWriter _logWriter;
+    private readonly LogWriter _logWriter;
     private TataruModel _tataruModel;
     private TataruUIModel _tataruUiModel;
     private SettingsShellViewModel _settingsShellViewModel;
 
     private Timer _updaterTimer;
-    private LanguagueWrapper _languagueWrapper;
-    private OptimizeFootprint _optimizeFootprint;
-    private WinMessagesHandler _winMessagesHandler;
+    private readonly LanguageWrapper _languageWrapper;
+    private readonly ISettingsStore _settingsStore;
+    private readonly OptimizeFootprint _optimizeFootprint;
+    private readonly WinMessagesHandler _winMessagesHandler;
 
     private IWindowScopedSettingsPage _chatWindowsPage;
     private IWindowScopedSettingsPage _translationPage;
@@ -73,14 +72,24 @@ public partial class MainWindow : FluentWindow
         IAppLogger logger,
         IUiDispatcher uiDispatcher,
         IHotkeyCaptureService hotkeyCaptureService,
-        TranslationCredentialsViewModel translationCredentials)
+        TranslationCredentialsViewModel translationCredentials,
+        ISettingsStore settingsStore,
+        LogWriter logWriter,
+        LanguageWrapper languageWrapper,
+        OptimizeFootprint optimizeFootprint,
+        WinMessagesHandler winMessagesHandler)
     {
+        _logWriter = logWriter;
         _tataruModelFactory = tataruModelFactory;
         _updater = updater;
         _logger = logger;
         _uiDispatcher = uiDispatcher;
         _hotkeyCaptureService = hotkeyCaptureService;
         _translationCredentials = translationCredentials;
+        _settingsStore = settingsStore;
+        _languageWrapper = languageWrapper;
+        _optimizeFootprint = optimizeFootprint;
+        _winMessagesHandler = winMessagesHandler;
 
         if (!TataruSingleInstance.IsOnlyInstance)
         {
@@ -101,7 +110,7 @@ public partial class MainWindow : FluentWindow
 
         try
         {
-            _languagueWrapper = new LanguagueWrapper(this);
+            _languageWrapper.Attach(this);
         }
         catch (Exception ex)
         {
@@ -113,7 +122,6 @@ public partial class MainWindow : FluentWindow
     {
         try
         {
-            _logWriter = new LogWriter();
             _logWriter.StartWriting();
             _logger.WriteLog("TataruHelper v" + Convert.ToString(Assembly.GetEntryAssembly()?.GetName().Version));
         }
@@ -160,10 +168,9 @@ public partial class MainWindow : FluentWindow
 
             _tataruModel.TataruViewModel.ShutdownRequested += OnShutDownRequsted;
 
-            _optimizeFootprint = new OptimizeFootprint();
             _optimizeFootprint.Start();
 
-            _winMessagesHandler = new WinMessagesHandler(this, _logger);
+            _winMessagesHandler.Attach(this);
             _winMessagesHandler.ShowFirstInstance += OnShowFirstInstance;
 
             _updater?.UpdateStateChanged += OnUpdaterEvent;
@@ -338,7 +345,7 @@ public partial class MainWindow : FluentWindow
         {
             if (ea.NewValue != ea.OldValue)
             {
-                _languagueWrapper.CurrentLanguage = (LanguagueWrapper.Languages)ea.NewValue;
+                _languageWrapper.CurrentLanguage = (LanguageWrapper.Languages)ea.NewValue;
             }
         });
     }

@@ -1,6 +1,6 @@
 using NUnit.Framework;
 
-using Translation.YandexCloud;
+using Translation.Providers.YandexCloud;
 
 namespace Translation.Tests
 {

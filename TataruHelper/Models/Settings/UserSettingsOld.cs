@@ -1,7 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -48,7 +45,7 @@ namespace FFXIVTataruHelper
 
         public string CurrentTranslateToLanguage { get; set; } = "English";
 
-        public int CurentUILanguague { get; set; } = (int)LanguagueWrapper.Languages.English;
+        public int CurentUILanguague { get; set; } = (int)LanguageWrapper.Languages.English;
 
         public HotKeyCombination ShowHideChatKeys { get; set; } = new HotKeyCombination("ShowHideChatWin");
 
@@ -117,7 +114,7 @@ namespace FFXIVTataruHelper
 
             CurrentTranslateToLanguage = "English";
 
-            CurentUILanguague = (int)LanguagueWrapper.Languages.English;
+            CurentUILanguague = (int)LanguageWrapper.Languages.English;
 
             SettingsWindowSize = new PointD(0.0, 0.0);
 

@@ -1,6 +1,3 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -8,9 +5,14 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using Translation.Credentials;
 using Translation.Exceptions;
+using Translation.Http;
+using Translation.Models;
 using Translation.Providers;
+using Translation.Settings;
 using Translation.Utils;
 
 namespace Translation
@@ -25,6 +27,7 @@ namespace Translation
         private ReadOnlyCollection<TranslationEngine> _translationEngines;
 
         private readonly List<KeyValuePair<TranslationRequest, string>> _translationCache;
+        private readonly object _cacheSync = new object();
 
         private readonly KeyValuePair<TranslationRequest, string> defaultCachedResult =
             default(KeyValuePair<TranslationRequest, string>);
@@ -34,70 +37,78 @@ namespace Translation
         private readonly LanguageDetector _LanguageDetector;
         private readonly Func<string, string> _detectLanguage;
 
-        private readonly ILog _Logger;
+        private readonly ILogger _Logger;
+        private readonly TranslationSettings _settings;
 
         private readonly string _translationSettingsPath = "TranslationSysSettings.json";
 
-        public WebTranslator(ILog logger)
-            : this(logger, null, true, null, null)
+        public WebTranslator(ILogger logger)
+            : this(logger, null, null, null, null)
         {
         }
 
-        public WebTranslator(ILog logger, ITranslationCredentialStore credentials)
-            : this(logger, null, true, null, credentials)
+        public WebTranslator(ILogger logger, ITranslationCredentialStore credentials)
+            : this(logger, null, null, null, credentials)
         {
         }
 
-        public WebTranslator(ILog logger, IEnumerable<ITranslationProvider> translationProviders)
-            : this(logger, translationProviders, true, null, null)
+        public WebTranslator(ILogger logger, IEnumerable<ITranslationProvider> translationProviders)
+            : this(logger, translationProviders, null, null, null)
         {
         }
 
         internal WebTranslator(
-            ILog logger,
+            ILogger logger,
             IEnumerable<ITranslationProvider> translationProviders,
-            bool usePersistedSettings,
+            TranslationSettings settings,
             Func<string, string> detectLanguage = null,
             ITranslationCredentialStore credentials = null)
         {
             _Logger = logger;
 
-            if (usePersistedSettings &&
-                !Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _translationSettingsPath))
+            if (settings == null)
             {
-                Helper.SaveStaticToJson(typeof(GlobalTranslationSettings), _translationSettingsPath);
-                Helper.LoadStaticFromJson(typeof(GlobalTranslationSettings), _translationSettingsPath);
+                settings = TranslationSettingsStorage.Load(_translationSettingsPath, _Logger);
+                if (settings == null)
+                {
+                    settings = new TranslationSettings();
+                    TranslationSettingsStorage.Save(settings, _translationSettingsPath, _Logger);
+                }
             }
 
+            _settings = settings;
+            ApiHttpClient.Configure(_settings.HttpRequestTimeoutMilliseconds,
+                _settings.HttpReadWriteTimeoutMilliseconds);
+
             _translationCache =
-                new List<KeyValuePair<TranslationRequest, string>>(GlobalTranslationSettings.TranslationCacheSize);
+                new List<KeyValuePair<TranslationRequest, string>>(_settings.TranslationCacheSize);
 
             _TranslationProviders = translationProviders != null
                 ? translationProviders.ToDictionary(x => x.EngineName, x => x)
                 : TranslationProviderFactory.CreateDefaultProviders(_Logger,
-                    credentials ?? NullCredentialStore.Instance);
+                    credentials ?? NullCredentialStore.Instance, _settings);
 
-            _LanguageDetector = new LanguageDetector(GlobalTranslationSettings.MaxSameLanguagePercent,
-                GlobalTranslationSettings.NTextCatLanguageModelsPath, _Logger);
-            _detectLanguage = detectLanguage ?? _LanguageDetector.TryDetectLanguague;
+            _LanguageDetector = new LanguageDetector(_settings.MaxSameLanguagePercent,
+                _settings.NTextCatLanguageModelsPath, _Logger);
+            _detectLanguage = detectLanguage ?? _LanguageDetector.TryDetectLanguage;
         }
 
         public void LoadLanguages()
         {
             LoadLanguages(
-                GlobalTranslationSettings.GoogleTranslateLanguages,
-                GlobalTranslationSettings.PapagoLanguages,
-                GlobalTranslationSettings.AzureTranslatorLanguages,
-                GlobalTranslationSettings.GoogleCloudTranslateLanguages,
-                GlobalTranslationSettings.DeepLApiLanguages,
-                GlobalTranslationSettings.OpenAILanguages,
-                GlobalTranslationSettings.DeepSeekLanguages,
-                GlobalTranslationSettings.YandexCloudLanguages,
-                GlobalTranslationSettings.YandexGptLanguages);
+                _settings.GoogleTranslateLanguages,
+                _settings.PapagoLanguages,
+                _settings.AzureTranslatorLanguages,
+                _settings.GoogleCloudTranslateLanguages,
+                _settings.DeepLApiLanguages,
+                _settings.OpenAILanguages,
+                _settings.DeepSeekLanguages,
+                _settings.YandexCloudLanguages,
+                _settings.YandexGptLanguages);
         }
 
         public Task<TranslationResult> TranslateAsync(string inSentence, TranslationEngine translationEngine,
-            TranslatorLanguague fromLang, TranslatorLanguague toLang)
+            TranslatorLanguage fromLang, TranslatorLanguage toLang)
         {
             return TranslateAsync(inSentence, translationEngine, fromLang, toLang, CancellationToken.None);
         }
@@ -105,24 +116,15 @@ namespace Translation
         public Task<TranslationResult> TranslateAsync(
             string inSentence,
             TranslationEngine translationEngine,
-            TranslatorLanguague fromLang,
-            TranslatorLanguague toLang,
+            TranslatorLanguage fromLang,
+            TranslatorLanguage toLang,
             CancellationToken cancellationToken)
         {
             return TranslateCoreAsync(inSentence, translationEngine, fromLang, toLang, cancellationToken);
         }
 
-        // Synchronous entry point kept for back-compat (and the characterization tests).
-        // Production code calls TranslateAsync; the HttpClient-based providers run truly async.
-        public TranslationResult Translate(string inSentence, TranslationEngine translationEngine,
-            TranslatorLanguague fromLang, TranslatorLanguague toLang)
-        {
-            return TranslateCoreAsync(inSentence, translationEngine, fromLang, toLang, CancellationToken.None)
-                .GetAwaiter().GetResult();
-        }
-
         private async Task<TranslationResult> TranslateCoreAsync(string inSentence,
-            TranslationEngine translationEngine, TranslatorLanguague fromLang, TranslatorLanguague toLang,
+            TranslationEngine translationEngine, TranslatorLanguage fromLang, TranslatorLanguage toLang,
             CancellationToken cancellationToken)
         {
             if (translationEngine == null || fromLang == null || toLang == null)
@@ -159,7 +161,11 @@ namespace Translation
 
             var translationRequest =
                 new TranslationRequest(normalizedSentence, translationEngine.EngineName, fromLangCode, toLangCode);
-            var cachedResult = _translationCache.FirstOrDefault(x => x.Key == translationRequest);
+            KeyValuePair<TranslationRequest, string> cachedResult;
+            lock (_cacheSync)
+            {
+                cachedResult = _translationCache.FirstOrDefault(x => x.Key == translationRequest);
+            }
 
             if (!cachedResult.Equals(defaultCachedResult))
             {
@@ -171,15 +177,18 @@ namespace Translation
 
             if (result.IsSuccess && !string.IsNullOrEmpty(result.Text))
             {
-                cachedResult = _translationCache.FirstOrDefault(x => x.Key == translationRequest);
-                if (cachedResult.Equals(defaultCachedResult))
+                lock (_cacheSync)
                 {
-                    _translationCache.Add(
-                        new KeyValuePair<TranslationRequest, string>(translationRequest, result.Text));
-                }
+                    cachedResult = _translationCache.FirstOrDefault(x => x.Key == translationRequest);
+                    if (cachedResult.Equals(defaultCachedResult))
+                    {
+                        _translationCache.Add(
+                            new KeyValuePair<TranslationRequest, string>(translationRequest, result.Text));
+                    }
 
-                if (_translationCache.Count > GlobalTranslationSettings.TranslationCacheSize - 10)
-                    _translationCache.RemoveRange(0, GlobalTranslationSettings.TranslationCacheSize / 2);
+                    if (_translationCache.Count > _settings.TranslationCacheSize - 10)
+                        _translationCache.RemoveRange(0, _settings.TranslationCacheSize / 2);
+                }
             }
 
             return result;
@@ -213,24 +222,24 @@ namespace Translation
             }
             catch (QuotaExceededException quotaEx)
             {
-                _Logger?.WriteLog("[PROVIDER_" + engineName + "_QUOTA] " + quotaEx.Message);
+                _Logger?.LogInformation("{Message}", "[PROVIDER_" + engineName + "_QUOTA] " + quotaEx.Message);
                 return TranslationResult.Failure(engineName, TranslationFailureKind.QuotaExceeded, quotaEx.Message);
             }
             catch (MissingApiKeyException keyEx)
             {
-                _Logger?.WriteLog("[PROVIDER_" + engineName + "_NO_KEY] " + keyEx.Message);
+                _Logger?.LogInformation("{Message}", "[PROVIDER_" + engineName + "_NO_KEY] " + keyEx.Message);
                 return TranslationResult.Failure(engineName, TranslationFailureKind.MissingCredentials, keyEx.Message);
             }
             catch (Exception ex)
             {
-                _Logger?.WriteLog("[PROVIDER_" + engineName + "_EXCEPTION] " + ex);
+                _Logger?.LogInformation("{Message}", "[PROVIDER_" + engineName + "_EXCEPTION] " + ex);
                 return TranslationResult.Failure(engineName, TranslationFailureKind.ProviderException, ex.Message);
             }
         }
 
-        private TranslatorLanguague ResolveSourceLanguage(
+        private TranslatorLanguage ResolveSourceLanguage(
             TranslationEngine translationEngine,
-            TranslatorLanguague fromLang,
+            TranslatorLanguage fromLang,
             string sentence)
         {
             if (fromLang == null || fromLang.SystemName != "Auto")
@@ -260,32 +269,32 @@ namespace Translation
             try
             {
                 List<TranslationEngine> tmptranslationEngines = new List<TranslationEngine>();
-                var tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(glTrPath, _Logger);
+                var tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(glTrPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.GoogleTranslate, tmpList, 9));
 
-                tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(PapagoTrPath, _Logger);
+                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(PapagoTrPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.Papago, tmpList, 6));
 
-                tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(azurePath, _Logger);
+                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(azurePath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.AzureTranslator, tmpList, 9));
 
-                tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(gCloudPath, _Logger);
+                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(gCloudPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.GoogleCloudTranslate, tmpList,
                     9));
 
-                tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(deepLApiPath, _Logger);
+                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(deepLApiPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.DeepLApi, tmpList, 10));
 
-                tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(openAiPath, _Logger);
+                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(openAiPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.OpenAI, tmpList, 8));
 
-                tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(deepSeekPath, _Logger);
+                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(deepSeekPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.DeepSeek, tmpList, 7));
 
-                tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(yandexCloudPath, _Logger);
+                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(yandexCloudPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.Yandex, tmpList, 8));
 
-                tmpList = Helper.LoadJsonData<List<TranslatorLanguague>>(yandexGptPath, _Logger);
+                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(yandexGptPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.YandexGPT, tmpList, 8));
 
                 tmptranslationEngines = tmptranslationEngines.OrderByDescending(x => x.Quality).ToList();
@@ -295,7 +304,7 @@ namespace Translation
             }
             catch (Exception e)
             {
-                _Logger.WriteLog(Convert.ToString(e));
+                _Logger.LogInformation("{Message}", Convert.ToString(e));
             }
         }
 

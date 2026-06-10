@@ -7,7 +7,7 @@ using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.WinUtils;
 
-using Translation;
+using Translation.Models;
 
 namespace FFXIVTataruHelper.Services.Settings
 {
@@ -22,8 +22,8 @@ namespace FFXIVTataruHelper.Services.Settings
             _logger = logger;
         }
 
-        public UserSettings LoadUserSettings(string systemSettingsFileName, ChatProcessor chatProcessor,
-            WebTranslator webTranslator)
+        public UserSettings LoadUserSettings(string systemSettingsFileName, IReadOnlyList<ChatMsgType> allChatCodes,
+            IReadOnlyList<TranslationEngine> translationEngines)
         {
             if (!_settingsStore.LoadGlobalSettings(systemSettingsFileName))
             {
@@ -32,7 +32,7 @@ namespace FFXIVTataruHelper.Services.Settings
             }
 
             var userSettings = Helper.LoadJsonData<UserSettings>(_settingsStore.SettingsPath);
-            LoadOldSettings(userSettings, webTranslator);
+            LoadOldSettings(userSettings, translationEngines);
 
             if (userSettings == null)
             {
@@ -40,7 +40,7 @@ namespace FFXIVTataruHelper.Services.Settings
                 _logger.WriteLog("userSettings == null");
             }
 
-            LoadMissingChatCodes(userSettings, chatProcessor);
+            LoadMissingChatCodes(userSettings, allChatCodes);
 
             for (int i = 0; i < userSettings.ChatWindows.Count; i++)
             {
@@ -54,15 +54,15 @@ namespace FFXIVTataruHelper.Services.Settings
             return userSettings;
         }
 
-        private void LoadMissingChatCodes(UserSettings userSettings, ChatProcessor chatProcessor)
+        private void LoadMissingChatCodes(UserSettings userSettings, IReadOnlyList<ChatMsgType> allChatCodes)
         {
             foreach (var win in userSettings.ChatWindows)
             {
-                if (win.ChatCodes.Count != chatProcessor.AllChatCodes.Count)
+                if (win.ChatCodes.Count != allChatCodes.Count)
                 {
-                    var newUserChatCodes = new List<ChatCodeViewModel>(chatProcessor.AllChatCodes.Count);
+                    var newUserChatCodes = new List<ChatCodeViewModel>(allChatCodes.Count);
 
-                    foreach (var code in chatProcessor.AllChatCodes)
+                    foreach (var code in allChatCodes)
                     {
                         var userCode = win.ChatCodes.FirstOrDefault(x => x.Code == code.ChatCode);
                         bool isChecked = false;
@@ -79,7 +79,7 @@ namespace FFXIVTataruHelper.Services.Settings
             }
         }
 
-        private void LoadOldSettings(UserSettings userSettings, WebTranslator webTranslator)
+        private void LoadOldSettings(UserSettings userSettings, IReadOnlyList<TranslationEngine> translationEngines)
         {
             if (!File.Exists(_settingsStore.OldSettingsPath))
             {
@@ -117,7 +117,7 @@ namespace FFXIVTataruHelper.Services.Settings
 
                     windowSettings.TranslationEngineName = (TranslationEngineName)oldSettings.CurrentTranslationEngine;
 
-                    var engine = webTranslator.TranslationEngines.FirstOrDefault(x =>
+                    var engine = translationEngines.FirstOrDefault(x =>
                         x.EngineName == windowSettings.TranslationEngineName);
                     if (engine != null)
                     {
@@ -127,8 +127,8 @@ namespace FFXIVTataruHelper.Services.Settings
                             x.ShownName == oldSettings.CurrentTranslateToLanguage);
                         if (lang1 != null && lang2 != null)
                         {
-                            windowSettings.FromLanguague = new TranslatorLanguague(lang1);
-                            windowSettings.ToLanguague = new TranslatorLanguague(lang2);
+                            windowSettings.FromLanguague = new TranslatorLanguage(lang1);
+                            windowSettings.ToLanguague = new TranslatorLanguage(lang2);
                         }
                     }
 

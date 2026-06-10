@@ -1,7 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -13,7 +10,7 @@ using FFXIVTataruHelper.TataruComponentModel;
 using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.WinUtils;
 
-using Translation;
+using Translation.Models;
 
 using Color = System.Windows.Media.Color;
 using FontFamily = System.Windows.Media.FontFamily;
@@ -51,8 +48,8 @@ namespace FFXIVTataruHelper
         private Color _backGroundColor;
 
         private TranslationEngineName _translationEngineName;
-        private TranslatorLanguague _fromLanguague;
-        private TranslatorLanguague _toLanguague;
+        private TranslatorLanguage _fromLanguage;
+        private TranslatorLanguage _toLanguage;
 
         private RectangleD _chatWindowRectangle;
 
@@ -342,26 +339,26 @@ namespace FFXIVTataruHelper
             }
         }
 
-        public TranslatorLanguague FromLanguague
+        public TranslatorLanguage FromLanguague
         {
-            get => _fromLanguague;
+            get => _fromLanguage;
             set
             {
-                if (_fromLanguague == value) return;
+                if (_fromLanguage == value) return;
 
-                _fromLanguague = value;
+                _fromLanguage = value;
                 OnPropertyChanged();
             }
         }
 
-        public TranslatorLanguague ToLanguague
+        public TranslatorLanguage ToLanguague
         {
-            get => _toLanguague;
+            get => _toLanguage;
             set
             {
-                if (_toLanguague == value) return;
+                if (_toLanguage == value) return;
 
-                _toLanguague = value;
+                _toLanguage = value;
                 OnPropertyChanged();
             }
         }
@@ -539,9 +536,9 @@ namespace FFXIVTataruHelper
 
             TranslationEngineName = settings.TranslationEngineName;
             if (settings.FromLanguague != null)
-                FromLanguague = new TranslatorLanguague(settings.FromLanguague);
+                FromLanguague = new TranslatorLanguage(settings.FromLanguague);
             if (settings.ToLanguague != null)
-                ToLanguague = new TranslatorLanguague(settings.ToLanguague);
+                ToLanguague = new TranslatorLanguage(settings.ToLanguague);
 
             ChatWindowRectangle = settings.ChatWindowRectangle;
 

@@ -1,16 +1,21 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+
+using Microsoft.Extensions.Logging;
 using Updater.EventArguments;
 using Velopack;
-using Velopack.Sources;
 
 namespace Updater
 {
     public sealed class VelopackUpdateService : IUpdateService
     {
-        private readonly ILog _logger;
+        public delegate IUpdateManagerAdapter UpdateManagerFactory(string repositoryUrl, bool prerelease,
+            string explicitChannel);
+
+        private readonly ILogger _logger;
         private readonly string _repositoryUrl;
+        private readonly UpdateManagerFactory _updateManagerFactory;
         private readonly SemaphoreSlim _updateLock;
         private readonly object _stateSync;
         private readonly AsyncEvent<UpdateStateChangedEventArgs> _updateStateChanged;
@@ -18,7 +23,8 @@ namespace Updater
         private CancellationTokenSource _activeUpdateCts;
         private VelopackAsset _pendingUpdate;
         private string _lastExplicitChannel;
-        private bool _disposed;
+        private bool _isUpdating;
+        private int _disposed;
 
         public event AsyncEventHandler<UpdateStateChangedEventArgs> UpdateStateChanged
         {
@@ -26,12 +32,24 @@ namespace Updater
             remove { _updateStateChanged.Unregister(value); }
         }
 
-        public bool IsUpdating { get; private set; }
+        public bool IsUpdating
+        {
+            get
+            {
+                lock (_stateSync)
+                {
+                    return _isUpdating;
+                }
+            }
+        }
 
-        public VelopackUpdateService(ILog logger, string repositoryUrl = "https://github.com/progneo/TataruHelper")
+        public VelopackUpdateService(ILogger logger, string repositoryUrl = "https://github.com/progneo/TataruHelper",
+            UpdateManagerFactory updateManagerFactory = null)
         {
             _logger = logger;
             _repositoryUrl = repositoryUrl;
+            _updateManagerFactory = updateManagerFactory ??
+                ((url, prerelease, explicitChannel) => new VelopackUpdateManagerAdapter(url, prerelease, explicitChannel));
             _updateLock = new SemaphoreSlim(1, 1);
             _stateSync = new object();
             _updateStateChanged = new AsyncEvent<UpdateStateChangedEventArgs>(OnEventError, "UpdateStateChanged");
@@ -44,18 +62,18 @@ namespace Updater
 
             if (!await _updateLock.WaitAsync(0, cancellationToken).ConfigureAwait(false))
             {
-                _logger?.WriteLog("Update check skipped: update is already in progress.");
+                _logger?.LogInformation("Update check skipped: update is already in progress.");
                 return;
             }
 
             CancellationTokenSource linkedTokenSource = null;
             try
             {
-                IsUpdating = true;
-
                 linkedTokenSource = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
                 lock (_stateSync)
                 {
+                    _isUpdating = true;
+
                     if (_activeUpdateCts != null)
                     {
                         _activeUpdateCts.Dispose();
@@ -68,13 +86,7 @@ namespace Updater
                 await PublishStateAsync(UpdateState.Initializing).ConfigureAwait(false);
 
                 var explicitChannel = UpdateChannelResolver.ResolveExplicitChannel(prerelease);
-                var source = new GithubSource(_repositoryUrl, null, prerelease);
-                var options = new UpdateOptions()
-                {
-                    ExplicitChannel = explicitChannel
-                };
-
-                var updateManager = new UpdateManager(source, options);
+                var updateManager = _updateManagerFactory(_repositoryUrl, prerelease, explicitChannel);
                 if (!updateManager.IsInstalled)
                 {
                     await PublishStateAsync(UpdateState.Error, "Updater is unavailable for a non-installed build.").ConfigureAwait(false);
@@ -92,7 +104,7 @@ namespace Updater
                 }
 
                 await PublishStateAsync(UpdateState.Downloading).ConfigureAwait(false);
-                await updateManager.DownloadUpdatesAsync(updateInfo, null, linkedTokenSource.Token).ConfigureAwait(false);
+                await updateManager.DownloadUpdatesAsync(updateInfo, linkedTokenSource.Token).ConfigureAwait(false);
 
                 lock (_stateSync)
                 {
@@ -109,26 +121,29 @@ namespace Updater
             }
             catch (Exception ex)
             {
-                _logger?.WriteLog(ex.ToString());
+                _logger?.LogError(ex, "Update operation failed.");
                 await PublishStateAsync(UpdateState.Error, "Update check failed.", ex).ConfigureAwait(false);
             }
             finally
             {
+                // Clearing and disposing the CTS under the same lock used by
+                // StopUpdate guarantees Cancel can never hit a disposed source.
                 lock (_stateSync)
                 {
                     if (_activeUpdateCts == linkedTokenSource)
                     {
                         _activeUpdateCts = null;
                     }
+
+                    _isUpdating = false;
+
+                    if (linkedTokenSource != null)
+                    {
+                        linkedTokenSource.Dispose();
+                    }
                 }
 
-                IsUpdating = false;
                 _updateLock.Release();
-
-                if (linkedTokenSource != null)
-                {
-                    linkedTokenSource.Dispose();
-                }
             }
         }
 
@@ -138,13 +153,13 @@ namespace Updater
 
             try
             {
-                var source = new GithubSource(_repositoryUrl, null, false);
-                var options = new UpdateOptions()
+                string explicitChannel;
+                lock (_stateSync)
                 {
-                    ExplicitChannel = _lastExplicitChannel
-                };
+                    explicitChannel = _lastExplicitChannel;
+                }
 
-                var updateManager = new UpdateManager(source, options);
+                var updateManager = _updateManagerFactory(_repositoryUrl, false, explicitChannel);
                 VelopackAsset pendingUpdate = null;
                 lock (_stateSync)
                 {
@@ -157,12 +172,12 @@ namespace Updater
                 }
                 else
                 {
-                    _logger?.WriteLog("Restart requested but no pending update was found.");
+                    _logger?.LogInformation("Restart requested but no pending update was found.");
                 }
             }
             catch (Exception ex)
             {
-                _logger?.WriteLog(ex.ToString());
+                _logger?.LogError(ex, "Update operation failed.");
             }
         }
 
@@ -179,10 +194,9 @@ namespace Updater
 
         public void Dispose()
         {
-            if (_disposed)
+            if (Interlocked.Exchange(ref _disposed, 1) != 0)
                 return;
 
-            _disposed = true;
             StopUpdate();
 
             lock (_stateSync)
@@ -204,12 +218,12 @@ namespace Updater
 
         private void OnEventError(string eventName, Exception ex)
         {
-            _logger?.WriteLog(eventName + Environment.NewLine + ex);
+            _logger?.LogError(ex, "Unhandled exception in {EventName} handler.", eventName);
         }
 
         private void ThrowIfDisposed()
         {
-            if (_disposed)
+            if (Volatile.Read(ref _disposed) != 0)
             {
                 throw new ObjectDisposedException(nameof(VelopackUpdateService));
             }

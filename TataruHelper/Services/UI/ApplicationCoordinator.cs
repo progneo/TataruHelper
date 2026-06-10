@@ -129,8 +129,8 @@ namespace FFXIVTataruHelper.Services.UI
         public void LoadSettings(TataruUIModel uiModel, string systemSettingFileName, ChatProcessor chatProcessor,
             WebTranslator webTranslator, Func<Task> persistSettingsAsync)
         {
-            var userSettings =
-                _settingsMigrationService.LoadUserSettings(systemSettingFileName, chatProcessor, webTranslator);
+            var userSettings = _settingsMigrationService.LoadUserSettings(systemSettingFileName,
+                chatProcessor.AllChatCodes, webTranslator.TranslationEngines);
             uiModel.SetSettings(userSettings);
             _settingsSyncService.Start(uiModel, persistSettingsAsync);
         }

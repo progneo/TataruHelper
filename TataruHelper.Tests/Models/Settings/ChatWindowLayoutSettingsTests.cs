@@ -9,7 +9,7 @@ using FFXIVTataruHelper.ViewModel;
 
 using NUnit.Framework;
 
-using Translation;
+using Translation.Models;
 
 using Color = System.Windows.Media.Color;
 
@@ -70,7 +70,7 @@ namespace TataruHelper.Tests
                 ShowOnlyLastMessage = true
             };
 
-            var languages = new List<TranslatorLanguague>
+            var languages = new List<TranslatorLanguage>
             {
                 new("Auto", "Auto", "auto"), new("English", "English", "en")
             };
@@ -122,7 +122,7 @@ namespace TataruHelper.Tests
         public void NewWindow_DefaultsDelayedDialogCodesOffAndRealtimeDialogCodesOn()
         {
             var settings = new ChatWindowViewModelSettings("1", 0);
-            var languages = new List<TranslatorLanguague>
+            var languages = new List<TranslatorLanguage>
             {
                 new("Auto", "Auto", "auto"), new("English", "English", "en")
             };

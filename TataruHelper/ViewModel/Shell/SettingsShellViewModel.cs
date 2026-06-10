@@ -296,20 +296,20 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
     private LanguageOption ResolveLanguageOption(int languageId)
     {
-        var language = (LanguagueWrapper.Languages)languageId;
+        var language = (LanguageWrapper.Languages)languageId;
         var value = language switch
         {
-            LanguagueWrapper.Languages.Russian => "Russian",
-            LanguagueWrapper.Languages.Spanish => "Spanish",
-            LanguagueWrapper.Languages.Polish => "Polish",
-            LanguagueWrapper.Languages.Korean => "Korean",
-            LanguagueWrapper.Languages.PortugueseBR => "PortugueseBR",
-            LanguagueWrapper.Languages.Catalan => "Catalan",
-            LanguagueWrapper.Languages.Italian => "Italian",
-            LanguagueWrapper.Languages.Ukrainian => "Ukrainian",
-            LanguagueWrapper.Languages.Chinese => "Chinese",
-            LanguagueWrapper.Languages.ChineseTR => "ChineseTR",
-            LanguagueWrapper.Languages.Japanese => "Japanese",
+            LanguageWrapper.Languages.Russian => "Russian",
+            LanguageWrapper.Languages.Spanish => "Spanish",
+            LanguageWrapper.Languages.Polish => "Polish",
+            LanguageWrapper.Languages.Korean => "Korean",
+            LanguageWrapper.Languages.PortugueseBR => "PortugueseBR",
+            LanguageWrapper.Languages.Catalan => "Catalan",
+            LanguageWrapper.Languages.Italian => "Italian",
+            LanguageWrapper.Languages.Ukrainian => "Ukrainian",
+            LanguageWrapper.Languages.Chinese => "Chinese",
+            LanguageWrapper.Languages.ChineseTR => "ChineseTR",
+            LanguageWrapper.Languages.Japanese => "Japanese",
             _ => "English"
         };
 

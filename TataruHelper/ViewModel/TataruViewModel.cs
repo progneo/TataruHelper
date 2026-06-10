@@ -1,7 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -13,7 +10,7 @@ using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.TataruComponentModel;
 
-using Translation;
+using Translation.Models;
 
 namespace FFXIVTataruHelper.ViewModel
 {
@@ -247,7 +244,7 @@ namespace FFXIVTataruHelper.ViewModel
             int lang = 2;
             try
             {
-                lang = (int)Enum.Parse(typeof(LanguagueWrapper.Languages), (string)parameter);
+                lang = (int)Enum.Parse(typeof(LanguageWrapper.Languages), (string)parameter);
             }
             catch (Exception ex)
             {

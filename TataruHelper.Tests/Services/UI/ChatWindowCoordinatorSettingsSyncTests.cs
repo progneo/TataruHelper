@@ -15,7 +15,7 @@ using FFXIVTataruHelper.ViewModel;
 
 using NUnit.Framework;
 
-using Translation;
+using Translation.Models;
 
 using Color = System.Windows.Media.Color;
 
@@ -72,7 +72,7 @@ namespace TataruHelper.Tests
         private static ChatWindowViewModelSettings CreateBaseSettings()
         {
             var settings = new ChatWindowViewModelSettings("1", 0);
-            var languages = new List<TranslatorLanguague>
+            var languages = new List<TranslatorLanguage>
             {
                 new("Auto", "Auto", "auto"), new("English", "English", "en")
             };
@@ -83,7 +83,7 @@ namespace TataruHelper.Tests
 
         private static ChatWindowViewModel CreateViewModel(ChatWindowViewModelSettings settings, IAppLogger logger)
         {
-            var languages = new List<TranslatorLanguague>
+            var languages = new List<TranslatorLanguage>
             {
                 new("Auto", "Auto", "auto"), new("English", "English", "en")
             };
@@ -144,6 +144,8 @@ namespace TataruHelper.Tests
 
         private sealed class FakeSettingsStore : ISettingsStore
         {
+            public AppSettings AppSettings { get; } = new AppSettings();
+
             public string ChatCodesFilePath => string.Empty;
             public string BlackListPath => string.Empty;
             public string IgnoreNickNameChatCodesPath => string.Empty;

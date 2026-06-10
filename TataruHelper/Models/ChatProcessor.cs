@@ -1,7 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -13,6 +10,7 @@ using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
 
 using Translation;
+using Translation.Models;
 
 namespace FFXIVTataruHelper
 {
@@ -82,11 +80,12 @@ namespace FFXIVTataruHelper
             _Logger = logger;
 
             _translationBufferStates = new Dictionary<string, TranslationBufferState>(StringComparer.Ordinal);
-            _translationContextBufferWindowMs = Math.Max(0, GlobalSettings.TranslationContextBufferWindowMs);
-            _translationContextMaxBatchSize = Math.Max(1, GlobalSettings.TranslationContextMaxBatchSize);
-            _translationBatchDelimiter = string.IsNullOrEmpty(GlobalSettings.TranslationContextBatchDelimiter)
-                ? "\n<<<TATARU_TRANSLATION_SEGMENT>>>\n"
-                : GlobalSettings.TranslationContextBatchDelimiter;
+            _translationContextBufferWindowMs = Math.Max(0, settingsStore.AppSettings.TranslationContextBufferWindowMs);
+            _translationContextMaxBatchSize = Math.Max(1, settingsStore.AppSettings.TranslationContextMaxBatchSize);
+            _translationBatchDelimiter =
+                string.IsNullOrEmpty(settingsStore.AppSettings.TranslationContextBatchDelimiter)
+                    ? "\n<<<TATARU_TRANSLATION_SEGMENT>>>\n"
+                    : settingsStore.AppSettings.TranslationContextBatchDelimiter;
 
             _AllChatCodes = Helper.LoadJsonData<List<ChatMsgType>>(_SettingsStore.ChatCodesFilePath);
 
@@ -101,79 +100,29 @@ namespace FFXIVTataruHelper
 
         private void Init()
         {
-            var tmpMsgBlackList = new List<string>();
-            tmpMsgBlackList.Add("Triple Triad matches not allowed in current area.");
-            tmpMsgBlackList.Add("Triple Triad matches allowed in current area.");
-            tmpMsgBlackList.Add("You have left the sanctuary.");
-            tmpMsgBlackList.Add("You have entered a sanctuary.");
-            tmpMsgBlackList.Add("Updating online status to Away from Keyboard.");
-            tmpMsgBlackList.Add("Updating online status. No longer away from keyboard.");
-
             MsgBlackList = Helper.LoadJsonData<List<string>>(_SettingsStore.BlackListPath);
             if (MsgBlackList == null)
-                MsgBlackList = new List<string>();
-
-            foreach (var st in tmpMsgBlackList)
             {
-                if (!MsgBlackList.Contains(st))
-                    MsgBlackList.Add(st);
+                _Logger.WriteLog("ChatProcessor: message blacklist not found at " + _SettingsStore.BlackListPath);
+                MsgBlackList = new List<string>();
             }
 
             MsgBlackList = MsgBlackList.Distinct().ToList();
-
-            Helper.SaveJson(MsgBlackList, _SettingsStore.BlackListPath);
 
             for (int i = 0; i < MsgBlackList.Count; i++)
             {
                 MsgBlackList[i] = Helper.ClearBlackListString(MsgBlackList[i]);
             }
 
-            var tmpChatCodesWithNickNames = new List<string>(31);
-            tmpChatCodesWithNickNames.Add("003D");
-            tmpChatCodesWithNickNames.Add("0044");
-            tmpChatCodesWithNickNames.Add("F03D");
-            tmpChatCodesWithNickNames.Add("F044");
-            tmpChatCodesWithNickNames.Add("0048");
-            tmpChatCodesWithNickNames.Add("000A");
-            tmpChatCodesWithNickNames.Add("000B");
-            tmpChatCodesWithNickNames.Add("000E");
-            tmpChatCodesWithNickNames.Add("000D");
-            tmpChatCodesWithNickNames.Add("001D");
-            tmpChatCodesWithNickNames.Add("001C");
-            tmpChatCodesWithNickNames.Add("0018");
-            tmpChatCodesWithNickNames.Add("001E");
-            tmpChatCodesWithNickNames.Add("000F");
-            tmpChatCodesWithNickNames.Add("0010");
-            tmpChatCodesWithNickNames.Add("0011");
-            tmpChatCodesWithNickNames.Add("0012");
-            tmpChatCodesWithNickNames.Add("0013");
-            tmpChatCodesWithNickNames.Add("0014");
-            tmpChatCodesWithNickNames.Add("0015");
-            tmpChatCodesWithNickNames.Add("0016");
-            tmpChatCodesWithNickNames.Add("0017");
-            tmpChatCodesWithNickNames.Add("001B");
-            tmpChatCodesWithNickNames.Add("0025");
-            tmpChatCodesWithNickNames.Add("0065");
-            tmpChatCodesWithNickNames.Add("0066");
-            tmpChatCodesWithNickNames.Add("0067");
-            tmpChatCodesWithNickNames.Add("0068");
-            tmpChatCodesWithNickNames.Add("0069");
-            tmpChatCodesWithNickNames.Add("006A");
-            tmpChatCodesWithNickNames.Add("006B");
-
             ChatCodesWithNickNames = Helper.LoadJsonData<List<string>>(_SettingsStore.IgnoreNickNameChatCodesPath);
             if (ChatCodesWithNickNames == null)
-                ChatCodesWithNickNames = new List<string>();
-
-            foreach (var st in tmpChatCodesWithNickNames)
             {
-                if (!ChatCodesWithNickNames.Contains(st))
-                    ChatCodesWithNickNames.Add(st);
+                _Logger.WriteLog("ChatProcessor: nickname chat code list not found at " +
+                                 _SettingsStore.IgnoreNickNameChatCodesPath);
+                ChatCodesWithNickNames = new List<string>();
             }
 
             ChatCodesWithNickNames = ChatCodesWithNickNames.Distinct().ToList();
-
-            Helper.SaveJson(ChatCodesWithNickNames, _SettingsStore.IgnoreNickNameChatCodesPath);
 
             _ChatMessageFilter = new ChatMessageFilter(MsgBlackList, ChatCodesWithNickNames);
         }
@@ -191,7 +140,7 @@ namespace FFXIVTataruHelper
         }
 
         public async Task<TranslationResult> Translate(string inSentence, TranslationEngine translationEngine,
-            TranslatorLanguague fromLang, TranslatorLanguague toLang, string chatCode,
+            TranslatorLanguage fromLang, TranslatorLanguage toLang, string chatCode,
             CancellationToken cancellationToken = default(CancellationToken))
         {
             string nickName;
@@ -219,8 +168,8 @@ namespace FFXIVTataruHelper
             string sentenceToTranslate,
             string batchKey,
             TranslationEngine translationEngine,
-            TranslatorLanguague fromLang,
-            TranslatorLanguague toLang,
+            TranslatorLanguage fromLang,
+            TranslatorLanguage toLang,
             CancellationToken cancellationToken)
         {
             var request = new BufferedTranslationRequest(sentenceToTranslate, cancellationToken);
@@ -258,7 +207,9 @@ namespace FFXIVTataruHelper
 
             if (batchToFlush != null)
             {
-                _ = FlushBatchAsync(batchKey, batchToFlush, translationEngine, fromLang, toLang);
+                ObserveBackgroundTask(
+                    FlushBatchAsync(batchKey, batchToFlush, translationEngine, fromLang, toLang),
+                    "translation batch flush");
             }
 
             return await request.CompletionSource.Task;
@@ -268,8 +219,8 @@ namespace FFXIVTataruHelper
             string batchKey,
             TranslationBufferState state,
             TranslationEngine translationEngine,
-            TranslatorLanguague fromLang,
-            TranslatorLanguague toLang)
+            TranslatorLanguage fromLang,
+            TranslatorLanguage toLang)
         {
             if (state.DelayCts != null)
                 return;
@@ -277,7 +228,7 @@ namespace FFXIVTataruHelper
             state.DelayCts = new CancellationTokenSource();
             var delayToken = state.DelayCts.Token;
 
-            _ = Task.Run(async () =>
+            ObserveBackgroundTask(Task.Run(async () =>
             {
                 try
                 {
@@ -326,15 +277,15 @@ namespace FFXIVTataruHelper
                 catch (OperationCanceledException)
                 {
                 }
-            });
+            }), "delayed translation flush");
         }
 
         private async Task FlushBatchAsync(
             string batchKey,
             List<BufferedTranslationRequest> requests,
             TranslationEngine translationEngine,
-            TranslatorLanguague fromLang,
-            TranslatorLanguague toLang)
+            TranslatorLanguage fromLang,
+            TranslatorLanguage toLang)
         {
             if (requests == null || requests.Count == 0)
             {
@@ -396,8 +347,8 @@ namespace FFXIVTataruHelper
         private async Task TranslateSingleRequest(
             BufferedTranslationRequest request,
             TranslationEngine translationEngine,
-            TranslatorLanguague fromLang,
-            TranslatorLanguague toLang)
+            TranslatorLanguage fromLang,
+            TranslatorLanguage toLang)
         {
             if (request.CancellationToken.IsCancellationRequested)
             {
@@ -410,7 +361,7 @@ namespace FFXIVTataruHelper
                 translationEngine,
                 fromLang,
                 toLang,
-                CancellationToken.None);
+                request.CancellationToken);
 
             request.CompletionSource.TrySetResult(result);
         }
@@ -418,8 +369,8 @@ namespace FFXIVTataruHelper
         private async Task TranslateBatchRequests(
             IReadOnlyList<BufferedTranslationRequest> requests,
             TranslationEngine translationEngine,
-            TranslatorLanguague fromLang,
-            TranslatorLanguague toLang)
+            TranslatorLanguage fromLang,
+            TranslatorLanguage toLang)
         {
             var combinedInput =
                 string.Join(_translationBatchDelimiter, requests.Select(x => x.InputText ?? string.Empty));
@@ -515,8 +466,8 @@ namespace FFXIVTataruHelper
             string chatCode,
             string nickName,
             TranslationEngine translationEngine,
-            TranslatorLanguague fromLang,
-            TranslatorLanguague toLang)
+            TranslatorLanguage fromLang,
+            TranslatorLanguage toLang)
         {
             return string.Join("|",
                 new[]
@@ -540,6 +491,19 @@ namespace FFXIVTataruHelper
                         break;
                     }
             }
+        }
+
+        private void ObserveBackgroundTask(Task task, string operationName)
+        {
+            task.ContinueWith(
+                t =>
+                {
+                    _Logger.WriteLog($"Background {operationName} faulted.");
+                    _Logger.WriteLog(t.Exception);
+                },
+                CancellationToken.None,
+                TaskContinuationOptions.OnlyOnFaulted,
+                TaskScheduler.Default);
         }
 
         private void EventErrorHandler(string evname, Exception ex)

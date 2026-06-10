@@ -1,6 +1,3 @@
-// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -22,7 +19,7 @@ using FFXIVTataruHelper.TataruComponentModel;
 using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.WinUtils;
 
-using Translation;
+using Translation.Models;
 
 namespace FFXIVTataruHelper
 {
@@ -43,10 +40,15 @@ namespace FFXIVTataruHelper
 
         private WindowResizer _WindowResizer;
 
-        private bool _IsClickThrought = false;
+        private WindowClickThroughBehavior _clickThroughBehavior;
+
+        private ChatMessageParagraphBuilder _paragraphBuilder;
 
         private DateTime _TextArrivedTime;
-        protected bool _KeepWorking;
+
+        private readonly CancellationTokenSource _lifecycleCts =
+            new CancellationTokenSource();
+
         private bool _AutoHidden;
 
         private readonly HashSet<string> _reportedFailureEngines = new HashSet<string>(StringComparer.Ordinal);
@@ -100,9 +102,10 @@ namespace FFXIVTataruHelper
 
                 _TextArrivedTime = DateTime.UtcNow;
 
-                _KeepWorking = true;
                 _AutoHidden = false;
                 _WindowResizer = new WindowResizer(this, _Logger);
+                _clickThroughBehavior = new WindowClickThroughBehavior(this, _Logger);
+                _paragraphBuilder = new ChatMessageParagraphBuilder(_ChatWindowViewModel);
             }
             catch (Exception e)
             {
@@ -147,7 +150,7 @@ namespace FFXIVTataruHelper
 
         private void Window_Closing(object sender, CancelEventArgs e)
         {
-            _KeepWorking = false;
+            _lifecycleCts.Cancel();
         }
 
         protected virtual void Window_Deactivated(object sender, EventArgs e)
@@ -186,8 +189,8 @@ namespace FFXIVTataruHelper
                         result = await _TataruModel.ChatProcessor.Translate(
                             ea.ChatMessage.Text,
                             _ChatWindowViewModel.SelectedEngine,
-                            _ChatWindowViewModel.CurrentTranslateFromLanguague,
-                            _ChatWindowViewModel.CurrentTranslateToLanguague,
+                            _ChatWindowViewModel.CurrentTranslateFromLanguage,
+                            _ChatWindowViewModel.CurrentTranslateToLanguage,
                             chatCode.Code,
                             translationCts.Token);
                     }
@@ -421,7 +424,7 @@ namespace FFXIVTataruHelper
                     ChatRtb.Document.Blocks.Clear();
                 }
 
-                Paragraph paragraph = BuildMessageParagraph(translatedMsg, color, timeStamp);
+                Paragraph paragraph = _paragraphBuilder.BuildMessageParagraph(translatedMsg, color, timeStamp);
                 ChatRtb.Document.Blocks.Add(paragraph);
 
                 TrimToMaxMessages();
@@ -432,110 +435,6 @@ namespace FFXIVTataruHelper
             {
                 _Logger.WriteLog(Convert.ToString(exc));
             }
-        }
-
-        private Paragraph BuildMessageParagraph(string translatedMsg, Color color, DateTime timeStamp)
-        {
-            string leadingSpaces = _ChatWindowViewModel.SpacingCount > 0
-                ? new string(' ', _ChatWindowViewModel.SpacingCount)
-                : string.Empty;
-
-            string name = null;
-            string text = translatedMsg;
-
-            int nameInd = translatedMsg.IndexOf(":", StringComparison.Ordinal);
-            if (nameInd > 0)
-            {
-                name = translatedMsg.Substring(0, nameInd);
-                text = translatedMsg.Substring(nameInd, translatedMsg.Length - nameInd);
-            }
-
-            if (timeStamp != default(DateTime))
-            {
-                if (!string.IsNullOrEmpty(name))
-                {
-                    name = timeStamp.ToString("HH:mm") + " " + name;
-                }
-                else
-                {
-                    text = timeStamp.ToString("HH:mm") + " " + text;
-                }
-            }
-
-            if (_ChatWindowViewModel.MessagesInContainer)
-            {
-                return BuildContainedMessageParagraph(leadingSpaces, name, text, color);
-            }
-
-            return BuildPlainMessageParagraph(leadingSpaces, name, text, color);
-        }
-
-        private Paragraph BuildPlainMessageParagraph(string leadingSpaces, string name, string text, Color color)
-        {
-            var paragraph = new Paragraph
-            {
-                Margin = new Thickness(0, _ChatWindowViewModel.LineBreakHeight, 0, 0),
-                TextAlignment = TextAlignment.Left
-            };
-
-            if (!string.IsNullOrEmpty(leadingSpaces))
-            {
-                paragraph.Inlines.Add(CreateRun(leadingSpaces, color, FontWeights.Normal));
-            }
-
-            if (!string.IsNullOrEmpty(name))
-            {
-                paragraph.Inlines.Add(CreateRun(name, color, FontWeights.Bold));
-            }
-
-            paragraph.Inlines.Add(CreateRun(text, color, FontWeights.Normal));
-            return paragraph;
-        }
-
-        private Paragraph BuildContainedMessageParagraph(string leadingSpaces, string name, string text, Color color)
-        {
-            var messageText = new TextBlock
-            {
-                TextWrapping = TextWrapping.Wrap,
-                FontFamily = _ChatWindowViewModel.ChatFont,
-                FontSize = _ChatWindowViewModel.ChatFontSize,
-                Foreground = new SolidColorBrush(color)
-            };
-
-            if (!string.IsNullOrEmpty(leadingSpaces))
-            {
-                messageText.Inlines.Add(new Run(leadingSpaces));
-            }
-
-            if (!string.IsNullOrEmpty(name))
-            {
-                messageText.Inlines.Add(new Run(name) { FontWeight = FontWeights.Bold });
-            }
-
-            messageText.Inlines.Add(new Run(text));
-
-            var messageBorder = new Border { CornerRadius = new CornerRadius(6), Tag = color, Child = messageText };
-            ApplyMessageContainerVisual(messageBorder);
-
-            var paragraph = new Paragraph
-            {
-                Margin = new Thickness(0, _ChatWindowViewModel.LineBreakHeight, 0, 0),
-                TextAlignment = TextAlignment.Left
-            };
-
-            paragraph.Inlines.Add(new InlineUIContainer(messageBorder));
-            return paragraph;
-        }
-
-        private Run CreateRun(string text, Color color, FontWeight fontWeight)
-        {
-            return new Run(text)
-            {
-                Foreground = new SolidColorBrush(color),
-                FontWeight = fontWeight,
-                FontFamily = _ChatWindowViewModel.ChatFont,
-                FontSize = _ChatWindowViewModel.ChatFontSize
-            };
         }
 
         private void ApplyContentPadding()
@@ -551,29 +450,10 @@ namespace FFXIVTataruHelper
                 {
                     if (inline is InlineUIContainer container && container.Child is Border border)
                     {
-                        ApplyMessageContainerVisual(border);
+                        _paragraphBuilder.ApplyMessageContainerVisual(border);
                     }
                 }
             }
-        }
-
-        private void ApplyMessageContainerVisual(Border border)
-        {
-            if (border == null)
-            {
-                return;
-            }
-
-            var baseColor = border.Tag is Color color ? color : Colors.White;
-            var backgroundAlpha = (byte)Math.Clamp(_ChatWindowViewModel.MessageContainerAlpha, 0, 255);
-            var borderAlpha = (byte)Math.Clamp(_ChatWindowViewModel.MessageContainerBorderAlpha, 0, 255);
-
-            border.Padding = new Thickness(_ChatWindowViewModel.MessageContainerPadding);
-            border.Background = new SolidColorBrush(
-                Color.FromArgb(backgroundAlpha, baseColor.R, baseColor.G, baseColor.B));
-            border.BorderThickness = new Thickness(_ChatWindowViewModel.MessageContainerBorderThickness);
-            border.BorderBrush = new SolidColorBrush(
-                Color.FromArgb(borderAlpha, baseColor.R, baseColor.G, baseColor.B));
         }
 
         private void EnforceLastMessageOnly()
@@ -653,46 +533,12 @@ namespace FFXIVTataruHelper
 
         protected void MakeWindowClickThrough()
         {
-            try
-            {
-                if (!_IsClickThrought)
-                {
-                    this.UIThread(() =>
-                    {
-                        var hwnd = new WindowInteropHelper(this).Handle;
-                        var style = Win32Interfaces.GetWindowLong(hwnd, Win32Interfaces.GWL_EXSTYLE);
-                        Win32Interfaces.SetWindowLong(hwnd, Win32Interfaces.GWL_EXSTYLE,
-                            style | Win32Interfaces.WS_EX_LAYERED | Win32Interfaces.WS_EX_TRANSPARENT);
-                        _IsClickThrought = true;
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                _Logger.WriteLog(Convert.ToString(e));
-            }
+            _clickThroughBehavior.MakeClickThrough();
         }
 
         protected void MakeWindowClickable()
         {
-            try
-            {
-                if (_IsClickThrought)
-                {
-                    this.UIThread(() =>
-                    {
-                        var hwnd = new WindowInteropHelper(this).Handle;
-                        var style = Win32Interfaces.GetWindowLong(hwnd, Win32Interfaces.GWL_EXSTYLE);
-                        Win32Interfaces.SetWindowLong(hwnd, Win32Interfaces.GWL_EXSTYLE,
-                            style ^ Win32Interfaces.WS_EX_LAYERED ^ Win32Interfaces.WS_EX_TRANSPARENT);
-                        _IsClickThrought = false;
-                    });
-                }
-            }
-            catch (Exception e)
-            {
-                _Logger.WriteLog(Convert.ToString(e));
-            }
+            _clickThroughBehavior.MakeClickable();
         }
 
         void HideThisWindow_Click(object sender, RoutedEventArgs e)
@@ -790,30 +636,43 @@ namespace FFXIVTataruHelper
 
         protected virtual void AutoHideStatusCheck()
         {
-            Task.Factory.StartNew(async () =>
+            var cancellationToken = _lifecycleCts.Token;
+
+            Task.Run(async () =>
             {
-                while (_KeepWorking)
+                try
                 {
-                    if (_ChatWindowViewModel.IsAutoHide)
+                    while (!cancellationToken.IsCancellationRequested)
                     {
-                        var ts = DateTime.UtcNow - _TextArrivedTime;
-                        if (ts > _ChatWindowViewModel.AutoHideTimeout)
+                        if (_ChatWindowViewModel.IsAutoHide)
                         {
-                            this.UIThread(() =>
+                            var ts = DateTime.UtcNow - _TextArrivedTime;
+                            if (ts > _ChatWindowViewModel.AutoHideTimeout)
                             {
-                                _AutoHidden = true;
-                                _ChatWindowViewModel.IsWindowVisible = false;
-                            });
+                                this.UIThread(() =>
+                                {
+                                    _AutoHidden = true;
+                                    _ChatWindowViewModel.IsWindowVisible = false;
+                                });
+                            }
+                            else
+                                _AutoHidden = false;
                         }
                         else
                             _AutoHidden = false;
-                    }
-                    else
-                        _AutoHidden = false;
 
-                    await Task.Delay(_SettingsStore.AutoHideWatcherDelayMs);
+                        await Task.Delay(_SettingsStore.AutoHideWatcherDelayMs, cancellationToken);
+                    }
                 }
-            }, TaskCreationOptions.LongRunning);
+                catch (OperationCanceledException)
+                {
+                }
+                catch (Exception ex)
+                {
+                    _Logger.WriteLog("AutoHide watcher failed.");
+                    _Logger.WriteLog(ex);
+                }
+            }, cancellationToken);
         }
 
         protected override void OnClosed(EventArgs e)
@@ -824,6 +683,9 @@ namespace FFXIVTataruHelper
 
             _TataruModel.ChatProcessor.TextArrived -= OnTextArrived;
             _TataruModel.FFMemoryReader.FFWindowStateChanged -= OnFFWindowStateChange;
+
+            _lifecycleCts.Cancel();
+            _lifecycleCts.Dispose();
 
             base.OnClosed(e);
         }

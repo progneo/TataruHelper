@@ -1,11 +1,10 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+
+using FFXIVTataruHelper.Services.Logging;
 
 namespace FFXIVTataruHelper
 {
@@ -31,8 +30,11 @@ namespace FFXIVTataruHelper
 
         Task _worker = Task.CompletedTask;
 
-        public OptimizeFootprint()
+        readonly IAppLogger _logger;
+
+        public OptimizeFootprint(IAppLogger logger)
         {
+            _logger = logger;
             _keepWorking = true;
         }
 
@@ -42,7 +44,7 @@ namespace FFXIVTataruHelper
             _cts = new CancellationTokenSource();
             _token = _cts.Token;
 
-            _worker = Task.Factory.StartNew(async () =>
+            _worker = Task.Run(async () =>
             {
                 try
                 {
@@ -50,9 +52,9 @@ namespace FFXIVTataruHelper
                 }
                 catch (Exception e)
                 {
-                    Logger.WriteLog(e);
+                    _logger.WriteLog(e);
                 }
-            }, TaskCreationOptions.LongRunning).Unwrap();
+            });
         }
 
         async Task EntryPoint()
@@ -80,7 +82,7 @@ namespace FFXIVTataruHelper
                     }
                     catch (Exception ex)
                     {
-                        Logger.WriteLog(ex);
+                        _logger.WriteLog(ex);
                     }
                 }
 
@@ -103,13 +105,13 @@ namespace FFXIVTataruHelper
             _keepWorking = false;
 
             try { _cts?.Cancel(); }
-            catch (Exception e) { Logger.WriteLog(e); }
+            catch (Exception e) { _logger.WriteLog(e); }
 
             try { _worker?.Wait(TimeSpan.FromMilliseconds(500)); }
-            catch (Exception e) { Logger.WriteLog(e); }
+            catch (Exception e) { _logger.WriteLog(e); }
 
             try { _cts?.Dispose(); }
-            catch (Exception e) { Logger.WriteLog(e); }
+            catch (Exception e) { _logger.WriteLog(e); }
         }
 
         private void FlushMemory()
