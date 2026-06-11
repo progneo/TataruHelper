@@ -15,6 +15,7 @@ namespace Translation.Models
         OpenAI = 10,
         DeepSeek = 11,
         YandexGPT = 12,
+        DeepL = 13,
     }
 
     public class TranslationEngine : IEquatable<TranslationEngine>

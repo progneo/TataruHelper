@@ -39,6 +39,8 @@ namespace Translation.Settings
 
         public string DeepLApiLanguages { get; set; } = "TranslationResources/DeeplLanguages.json";
 
+        public string DeepLLanguages { get; set; } = "TranslationResources/DeeplLanguages.json";
+
         public string OpenAILanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
 
         public string DeepSeekLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";

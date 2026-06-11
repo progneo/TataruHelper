@@ -4,9 +4,7 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.Logging;
-
 using Translation.Credentials;
 using Translation.Exceptions;
 using Translation.Http;
@@ -98,6 +96,7 @@ namespace Translation
             LoadLanguages(
                 _settings.GoogleTranslateLanguages,
                 _settings.PapagoLanguages,
+                _settings.DeepLLanguages,
                 _settings.AzureTranslatorLanguages,
                 _settings.GoogleCloudTranslateLanguages,
                 _settings.DeepLApiLanguages,
@@ -258,6 +257,7 @@ namespace Translation
         private void LoadLanguages(
             string glTrPath,
             string PapagoTrPath,
+            string deepLPath,
             string azurePath,
             string gCloudPath,
             string deepLApiPath,
@@ -274,6 +274,9 @@ namespace Translation
 
                 tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(PapagoTrPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.Papago, tmpList, 6));
+
+                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(deepLPath, _Logger);
+                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.DeepL, tmpList, 10));
 
                 tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(azurePath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.AzureTranslator, tmpList, 9));
