@@ -1,5 +1,7 @@
 using System;
 
+using Translation.Models;
+
 namespace Translation.Exceptions
 {
     public class MissingApiKeyException : Exception

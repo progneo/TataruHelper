@@ -1,10 +1,9 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.Linq;
 
 using NTextCat;
+
+using Microsoft.Extensions.Logging;
 
 namespace Translation.Utils
 {
@@ -17,9 +16,9 @@ namespace Translation.Utils
         bool _LanguageIdentificationFailed = false;
         string _NTextCatLanguageModelsPath;
 
-        ILog _Logger;
+        ILogger _Logger;
 
-        public LanguageDetector(double maxSameLanguagePercent, string nTextCatLanguageModelsPath, ILog logger)
+        public LanguageDetector(double maxSameLanguagePercent, string nTextCatLanguageModelsPath, ILogger logger)
         {
             _Logger = logger;
             _MaxSameLanguagePercent = maxSameLanguagePercent;
@@ -27,7 +26,7 @@ namespace Translation.Utils
             _NTextCatLanguageModelsPath = nTextCatLanguageModelsPath;
         }
 
-        public string TryDetectLanguague(string text)
+        public string TryDetectLanguage(string text)
         {
             string result = string.Empty;
 
@@ -51,7 +50,7 @@ namespace Translation.Utils
             catch (Exception e)
             {
                 _LanguageIdentificationFailed = true;
-                _Logger?.WriteLog(e.ToString());
+                _Logger?.LogInformation("{Message}", e.ToString());
             }
 
             return result;

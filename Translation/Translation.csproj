@@ -10,36 +10,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="NTextCat"/>
     <PackageReference Include="Jurassic" />
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\HttpUtilities\HttpUtilities.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="TranslationResources\DeeplLanguages.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TranslationResources\GoogleTranslateLanguages.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TranslationResources\PapagoEncoder">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TranslationResources\PapagoLanguages.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TranslationResources\AzureTranslatorLanguages.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TranslationResources\YandexCloudLanguages.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="TranslationResources\Core14.profile.xml">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <None Update="TranslationResources\**" CopyToOutputDirectory="PreserveNewest"/>
   </ItemGroup>
 </Project>

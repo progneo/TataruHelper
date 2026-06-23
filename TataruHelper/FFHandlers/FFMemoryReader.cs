@@ -1,7 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -148,7 +145,7 @@ namespace FFXIVTataruHelper.FFHandlers
                 FFWindowState = WindowState.Minimized;
                 IsGameWindowForeground = false;
 
-                _entryPointTask = Task.Factory.StartNew(async () =>
+                _entryPointTask = Task.Run(async () =>
                 {
                     try
                     {
@@ -163,7 +160,7 @@ namespace FFXIVTataruHelper.FFHandlers
                         _logger.WriteLog("FFMemoryReader.Start/EntryPoint failed.");
                         _logger.WriteLog(e);
                     }
-                }, lifecycleToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+                }, lifecycleToken);
             }
         }
 
@@ -265,10 +262,9 @@ namespace FFXIVTataruHelper.FFHandlers
                 return;
             }
 
-            _watchWindowStateTask = Task.Factory.StartNew(async () =>
-            {
-                await WatchFFWindowStateLoop(cancellationToken);
-            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+            _watchWindowStateTask = Task.Run(
+                () => WatchFFWindowStateLoop(cancellationToken),
+                cancellationToken);
         }
 
         private async Task WatchFFWindowStateLoop(CancellationToken cancellationToken)
@@ -495,10 +491,9 @@ namespace FFXIVTataruHelper.FFHandlers
                 return;
             }
 
-            _chatMessageEventRiserTask = Task.Factory.StartNew(async () =>
-            {
-                await ChatMessageEvetRiserLoop(cancellationToken);
-            }, cancellationToken, TaskCreationOptions.LongRunning, TaskScheduler.Default).Unwrap();
+            _chatMessageEventRiserTask = Task.Run(
+                () => ChatMessageEvetRiserLoop(cancellationToken),
+                cancellationToken);
         }
 
         private async Task ChatMessageEvetRiserLoop(CancellationToken cancellationToken)

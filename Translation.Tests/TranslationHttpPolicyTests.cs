@@ -1,7 +1,14 @@
-using NUnit.Framework;
 using System;
+using System.Net.Http;
 using System.Threading;
-using Translation.HttpUtils;
+using System.Threading.Tasks;
+
+using Microsoft.Extensions.Logging.Abstractions;
+
+using NUnit.Framework;
+
+using Translation.Http;
+using Translation.Settings;
 
 namespace Translation.Tests
 {
@@ -9,42 +16,81 @@ namespace Translation.Tests
     public class TranslationHttpPolicyTests
     {
         [Test]
-        public void ExecuteTranslationWithRetry_Throws_WhenTokenIsAlreadyCanceled()
+        public void ExecuteTranslationWithRetryAsync_Throws_WhenTokenIsAlreadyCanceled()
         {
             var cts = new CancellationTokenSource();
             cts.Cancel();
 
-            Assert.Throws<OperationCanceledException>(() =>
-                TranslationHttpPolicy.ExecuteTranslationWithRetry(
-                    () => string.Empty,
-                    new NullLog(),
+            Assert.ThrowsAsync<OperationCanceledException>(() =>
+                TranslationHttpPolicy.ExecuteTranslationWithRetryAsync(
+                    () => Task.FromResult(string.Empty),
+                    new TranslationSettings(),
+                    NullLogger.Instance,
                     "test",
                     cts.Token));
         }
 
         [Test]
-        public void ExecuteTranslationWithRetry_StopsAfterSuccessfulAttempt()
+        public async Task ExecuteTranslationWithRetryAsync_StopsAfterSuccessfulAttempt()
         {
             var attempt = 0;
 
-            var result = TranslationHttpPolicy.ExecuteTranslationWithRetry(
+            var result = await TranslationHttpPolicy.ExecuteTranslationWithRetryAsync(
                 () =>
                 {
                     attempt++;
-                    return attempt == 2 ? "ok" : string.Empty;
+                    return Task.FromResult(attempt == 2 ? "ok" : string.Empty);
                 },
-                new NullLog(),
-                "test");
+                new TranslationSettings(),
+                NullLogger.Instance,
+                "test",
+                CancellationToken.None);
 
             Assert.That(result, Is.EqualTo("ok"));
             Assert.That(attempt, Is.EqualTo(2));
         }
 
-        private sealed class NullLog : ILog
+        [Test]
+        public async Task ExecuteHttpRequestWithRetryAsync_RetriesTransientFailures()
         {
-            public void WriteLog(string inputString, string memberName = "", int sourceLineNumber = 0)
-            {
-            }
+            var attempt = 0;
+
+            var result = await TranslationHttpPolicy.ExecuteHttpRequestWithRetryAsync(
+                () =>
+                {
+                    attempt++;
+                    if (attempt == 1)
+                        throw new HttpRequestException("transient");
+
+                    return Task.FromResult("body");
+                },
+                new TranslationSettings(),
+                NullLogger.Instance,
+                "test",
+                CancellationToken.None);
+
+            Assert.That(result, Is.EqualTo("body"));
+            Assert.That(attempt, Is.EqualTo(2));
+        }
+
+        [Test]
+        public void ExecuteHttpRequestWithRetryAsync_DoesNotRetry_NonTransientFailures()
+        {
+            var attempt = 0;
+
+            Assert.ThrowsAsync<InvalidOperationException>(() =>
+                TranslationHttpPolicy.ExecuteHttpRequestWithRetryAsync(
+                    () =>
+                    {
+                        attempt++;
+                        throw new InvalidOperationException("hard failure");
+                    },
+                    new TranslationSettings(),
+                    NullLogger.Instance,
+                    "test",
+                    CancellationToken.None));
+
+            Assert.That(attempt, Is.EqualTo(1));
         }
     }
 }

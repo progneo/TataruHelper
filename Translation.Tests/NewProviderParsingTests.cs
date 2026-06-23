@@ -1,8 +1,9 @@
 using NUnit.Framework;
 
-using Translation.AI;
-using Translation.DeepLApi;
-using Translation.GoogleCloud;
+using Translation.Providers.AI;
+using Translation.Providers.Azure;
+using Translation.Providers.DeepL;
+using Translation.Providers.GoogleCloud;
 
 namespace Translation.Tests
 {
@@ -14,14 +15,14 @@ namespace Translation.Tests
         {
             var body =
                 @"[{""detectedLanguage"":{""language"":""en"",""score"":1.0},""translations"":[{""text"":""Hallo Welt"",""to"":""de""}]}]";
-            var result = AzureTranslator.AzureTranslator.ParseTranslation(body);
+            var result = AzureTranslator.ParseTranslation(body);
             Assert.That(result, Is.EqualTo("Hallo Welt"));
         }
 
         [Test]
         public void Azure_EmptyOnInvalidJson()
         {
-            Assert.That(AzureTranslator.AzureTranslator.ParseTranslation("[]"), Is.EqualTo(string.Empty));
+            Assert.That(AzureTranslator.ParseTranslation("[]"), Is.EqualTo(string.Empty));
         }
 
         [Test]

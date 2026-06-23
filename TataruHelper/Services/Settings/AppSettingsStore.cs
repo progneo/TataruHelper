@@ -36,11 +36,13 @@ namespace FFXIVTataruHelper.Services.Settings
             MigrateLegacyUserSettingsIfNeeded();
         }
 
-        public string ChatCodesFilePath => ResolveBaseDirectoryPath(GlobalSettings.ChatCodesFilePath);
+        public AppSettings AppSettings { get; private set; } = new AppSettings();
 
-        public string BlackListPath => ResolveBaseDirectoryPath(GlobalSettings.BlackList);
+        public string ChatCodesFilePath => ResolveBaseDirectoryPath(AppSettings.ChatCodesFilePath);
 
-        public string IgnoreNickNameChatCodesPath => ResolveBaseDirectoryPath(GlobalSettings.IgnoreNickNameChatCodes);
+        public string BlackListPath => ResolveBaseDirectoryPath(AppSettings.BlackList);
+
+        public string IgnoreNickNameChatCodesPath => ResolveBaseDirectoryPath(AppSettings.IgnoreNickNameChatCodes);
 
         public string SystemSettingsPath => _systemSettingsPath;
 
@@ -48,28 +50,33 @@ namespace FFXIVTataruHelper.Services.Settings
 
         public string OldSettingsPath => _oldSettingsPath;
 
-        public int SettingsSaveDelayMs => GlobalSettings.SettingsSaveDelay;
+        public int SettingsSaveDelayMs => AppSettings.SettingsSaveDelay;
 
-        public int LookForProcessDelayMs => GlobalSettings.LookForPorcessDelay;
+        public int LookForProcessDelayMs => AppSettings.LookForPorcessDelay;
 
-        public int MemoryReaderDelayMs => GlobalSettings.MemoryReaderDelay;
+        public int MemoryReaderDelayMs => AppSettings.MemoryReaderDelay;
 
-        public int AutoHideWatcherDelayMs => GlobalSettings.AutoHideWatcherDelay;
+        public int AutoHideWatcherDelayMs => AppSettings.AutoHideWatcherDelay;
 
-        public int TranslatorWaitTimeMs => GlobalSettings.TranslatorWaitTime;
+        public int TranslatorWaitTimeMs => AppSettings.TranslatorWaitTime;
 
-        public int MaxTranslateTryCount => GlobalSettings.MaxTranslateTryCount;
+        public int MaxTranslateTryCount => AppSettings.MaxTranslateTryCount;
 
-        public int MaxChatMessages => GlobalSettings.MaxChatMessages;
+        public int MaxChatMessages => AppSettings.MaxChatMessages;
 
         public bool LoadGlobalSettings(string fileName)
         {
-            return Helper.LoadStaticFromJson(typeof(GlobalSettings), ResolveGlobalSettingsPath(fileName));
+            var loaded = LegacySettingsStorage.Load<AppSettings>(ResolveGlobalSettingsPath(fileName));
+            if (loaded == null)
+                return false;
+
+            AppSettings = loaded;
+            return true;
         }
 
         public void SaveGlobalSettings(string fileName)
         {
-            Helper.SaveStaticToJson(typeof(GlobalSettings), ResolveGlobalSettingsPath(fileName));
+            LegacySettingsStorage.Save(AppSettings, ResolveGlobalSettingsPath(fileName));
         }
 
         private string ResolveGlobalSettingsPath(string fileName)
@@ -102,8 +109,8 @@ namespace FFXIVTataruHelper.Services.Settings
 
             var legacyCandidates = new[]
             {
-                ResolveBaseDirectoryPath(GlobalSettings.Settings),
-                Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, GlobalSettings.Settings))
+                ResolveBaseDirectoryPath(AppSettings.Settings),
+                Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, AppSettings.Settings))
             };
 
             foreach (var legacyPath in legacyCandidates)
@@ -119,8 +126,8 @@ namespace FFXIVTataruHelper.Services.Settings
 
             var legacyOldCandidates = new[]
             {
-                ResolveBaseDirectoryPath(GlobalSettings.OldSettings),
-                Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, GlobalSettings.OldSettings))
+                ResolveBaseDirectoryPath(AppSettings.OldSettings),
+                Path.GetFullPath(Path.Combine(Environment.CurrentDirectory, AppSettings.OldSettings))
             };
 
             foreach (var legacyPath in legacyOldCandidates)

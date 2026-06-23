@@ -10,15 +10,15 @@ using FFXIVTataruHelper.Services.UI;
 using FFXIVTataruHelper.Services.Update;
 using FFXIVTataruHelper.Utils;
 using FFXIVTataruHelper.ViewModel;
+using FFXIVTataruHelper.WinUtils;
 
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 using Translation;
 using Translation.Credentials;
 
 using Updater;
-
-using ILog = Translation.ILog;
 
 namespace FFXIVTataruHelper
 {
@@ -34,6 +34,7 @@ namespace FFXIVTataruHelper
         public static void ConfigureServices(IServiceCollection services)
         {
             services.AddSingleton<IAppLogger, AppLogger>();
+            services.AddSingleton<LogWriter>();
             services.AddSingleton<ISettingsStore, AppSettingsStore>();
             services.AddSingleton<ISettingsSyncService, SettingsSyncService>();
             services.AddSingleton<ISettingsMigrationService, SettingsMigrationService>();
@@ -42,11 +43,16 @@ namespace FFXIVTataruHelper
             services.AddSingleton<IDirectDialogReader, HeuristicDirectDialogReader>();
             services.AddSingleton<IGameMemoryGateway, SharlayanGameMemoryGateway>();
 
-            services.AddSingleton<ILog>(provider => new LoggerWrapper(provider.GetRequiredService<IAppLogger>()));
+            services.AddSingleton<ILoggerFactory>(_ =>
+                LoggerFactory.Create(builder => builder.AddProvider(new QueueLoggerProvider())));
+            services.AddSingleton(typeof(ILogger<>), typeof(Logger<>));
+            services.AddSingleton<ILogger>(provider =>
+                provider.GetRequiredService<ILoggerFactory>().CreateLogger("TataruHelper"));
+
             services.AddSingleton<ITranslationCredentialStore>(_ => new DpapiCredentialStore());
             services.AddSingleton<TranslationCredentialsViewModel>();
             services.AddSingleton<WebTranslator>(provider => new WebTranslator(
-                provider.GetRequiredService<ILog>(),
+                provider.GetRequiredService<ILogger>(),
                 provider.GetRequiredService<ITranslationCredentialStore>()));
             services.AddSingleton<IFFMemoryReaderService, FFMemoryReader>();
 
@@ -64,7 +70,7 @@ namespace FFXIVTataruHelper
                 var logger = provider.GetRequiredService<IAppLogger>();
                 try
                 {
-                    return (IUpdateService)new VelopackUpdateService(new LoggerWrapper(logger));
+                    return (IUpdateService)new VelopackUpdateService(provider.GetRequiredService<ILogger>());
                 }
                 catch (Exception ex)
                 {
@@ -73,6 +79,10 @@ namespace FFXIVTataruHelper
                     return new DisabledUpdateService();
                 }
             });
+            services.AddSingleton<OptimizeFootprint>();
+            services.AddSingleton<WinMessagesHandler>();
+            services.AddSingleton(provider =>
+                new LanguageWrapper(provider.GetRequiredService<ISettingsStore>().AppSettings));
             services.AddTransient<MainWindow>();
         }
     }

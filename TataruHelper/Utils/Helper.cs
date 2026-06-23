@@ -1,7 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -71,106 +68,6 @@ namespace FFXIVTataruHelper
             catch (Exception e)
             {
                 Logger.WriteLog(Convert.ToString(e));
-            }
-        }
-
-        public static bool SaveStaticToJson(Type static_class, string filename)
-        {
-            try
-            {
-                FieldInfo[] fields = static_class.GetFields(BindingFlags.Static | BindingFlags.Public);
-                object[,] a = new object[fields.Length, 2];
-                int i = 0;
-                foreach (FieldInfo field in fields)
-                {
-                    a[i, 0] = field.Name;
-                    a[i, 1] = field.GetValue(null);
-                    i++;
-                }
-
-                string output = JsonConvert.SerializeObject(a, Formatting.Indented);
-                using (StreamWriter sw = new StreamWriter(filename))
-                {
-                    sw.WriteLine(output);
-                }
-
-                return true;
-            }
-            catch (Exception e)
-            {
-                Logger.WriteLog(Convert.ToString(e));
-                return false;
-            }
-        }
-
-        public static bool LoadStaticFromJson(Type static_class, string filename)
-        {
-            try
-            {
-                FieldInfo[] fields = static_class.GetFields(BindingFlags.Static | BindingFlags.Public);
-                object[,] a;
-
-                a = JsonConvert.DeserializeObject<object[,]>(File.ReadAllText(filename));
-
-                int i = 0;
-                foreach (FieldInfo field in fields)
-                {
-                    if (field.Name == (a[i, 0] as string))
-                    {
-                        if (field.FieldType.Name.Contains("List"))
-                        {
-                            var filedVal = field.GetValue(null);
-
-                            Type itemType = filedVal.GetType().GetProperty("Item").PropertyType;
-
-                            var backUpList =
-                                Activator.CreateInstance(typeof(List<>).MakeGenericType(itemType), filedVal);
-
-                            try
-                            {
-                                Type typeTest = a[i, 1].GetType();
-
-                                var arr = (JArray)(a[i, 1]);
-
-                                int len = arr.Count;
-
-                                filedVal = field.GetValue(null);
-
-                                filedVal.GetType().GetMethod("Clear").Invoke(filedVal, null);
-
-                                MethodInfo voidMethodInfo = filedVal.GetType().GetMethod("Add");
-
-                                for (int j = 0; j < len; j++)
-                                {
-                                    object obj = Convert.ChangeType(arr[j], itemType);
-
-                                    voidMethodInfo.Invoke(filedVal, new object[] { obj });
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Logger.WriteLog("Wrong Settings File. Rolling to partially default");
-                                Logger.WriteLog(Convert.ToString(e));
-                                filedVal = backUpList;
-                            }
-                        }
-                        else
-                            field.SetValue(null, Convert.ChangeType(a[i, 1], field.FieldType));
-                    }
-                    else
-                    {
-                        throw new ArgumentException("Wrong Settings File. Rolling to default");
-                    }
-
-                    i++;
-                }
-
-                return true;
-            }
-            catch (Exception e)
-            {
-                Logger.WriteLog(Convert.ToString(e));
-                return false;
             }
         }
 
@@ -288,7 +185,7 @@ namespace FFXIVTataruHelper
             return comparer.Compare(hashOfInput, hash) == 0;
         }
 
-        public static string ConvertISOLangugueNameToSystemName(string lang)
+        public static string ConvertISOLanguageNameToSystemName(string lang)
         {
             string result = string.Empty;
             switch (lang)

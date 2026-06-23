@@ -2,6 +2,8 @@ namespace FFXIVTataruHelper.Services.Settings
 {
     public interface ISettingsStore
     {
+        AppSettings AppSettings { get; }
+
         string ChatCodesFilePath { get; }
 
         string BlackListPath { get; }

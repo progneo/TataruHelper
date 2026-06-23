@@ -6,8 +6,8 @@ using System.Text;
 
 using Newtonsoft.Json;
 
-using Translation;
 using Translation.Credentials;
+using Translation.Models;
 
 namespace FFXIVTataruHelper.Services.Settings
 {

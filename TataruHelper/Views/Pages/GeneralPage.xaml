@@ -173,12 +173,20 @@
                             <TextBlock Text="Google Translate" VerticalAlignment="Center" />
                         </DockPanel>
                     </Border>
-                    <Border Padding="12,10" Margin="0,0,0,14" CornerRadius="6"
+                    <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
                             Background="{DynamicResource Brush.SurfaceSubtle}">
                         <DockPanel>
                             <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
                                              IsChecked="{Binding Shell.TranslationCredentials.IsPapagoEnabled, Mode=TwoWay}" />
                             <TextBlock Text="Papago" VerticalAlignment="Center" />
+                        </DockPanel>
+                    </Border>
+                    <Border Padding="12,10" Margin="0,0,0,14" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <DockPanel>
+                            <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                             IsChecked="{Binding Shell.TranslationCredentials.IsDeepLEnabled, Mode=TwoWay}" />
+                            <TextBlock Text="DeepL" VerticalAlignment="Center" />
                         </DockPanel>
                     </Border>
 

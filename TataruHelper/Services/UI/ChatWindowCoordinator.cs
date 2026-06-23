@@ -11,7 +11,7 @@ using FFXIVTataruHelper.TataruComponentModel;
 using FFXIVTataruHelper.ViewModel;
 using FFXIVTataruHelper.WinUtils;
 
-using Translation;
+using Translation.Models;
 
 using Color = System.Windows.Media.Color;
 using FontFamily = System.Windows.Media.FontFamily;
@@ -179,20 +179,20 @@ namespace FFXIVTataruHelper.Services.UI
                 binder.AddPropertyCouple(
                     new PropertyCouple<RectangleD, RectangleD>("ChatWindowRectangle",
                         "ChatWindowRectangle"));
-                binder.AddPropertyCouple(new PropertyCouple<TranslatorLanguague, CollectionView>(
-                    "FromLanguague", "TranslateFromLanguagues",
-                    (ref TranslatorLanguague x, ref CollectionView y) =>
+                binder.AddPropertyCouple(new PropertyCouple<TranslatorLanguage, CollectionView>(
+                    "FromLanguague", "TranslateFromLanguages",
+                    (ref TranslatorLanguage x, ref CollectionView y) =>
                     {
-                        var languague = x;
+                        var language = x;
                         var collection = y;
 
                         _uiDispatcher.Invoke(() =>
                         {
-                            TranslatorLanguague result = null;
+                            TranslatorLanguage result = null;
 
-                            foreach (TranslatorLanguague elem in collection.SourceCollection)
+                            foreach (TranslatorLanguage elem in collection.SourceCollection)
                             {
-                                if (elem.SystemName == languague.SystemName)
+                                if (elem.SystemName == language.SystemName)
                                 {
                                     result = elem;
                                     break;
@@ -205,31 +205,31 @@ namespace FFXIVTataruHelper.Services.UI
                             }
                         });
                     },
-                    (ref CollectionView y, ref TranslatorLanguague x) =>
+                    (ref CollectionView y, ref TranslatorLanguage x) =>
                     {
                         var collection = y;
-                        TranslatorLanguague lang = new TranslatorLanguague();
+                        TranslatorLanguage lang = new TranslatorLanguage();
 
                         _uiDispatcher.Invoke(() =>
                         {
-                            lang = new TranslatorLanguague((TranslatorLanguague)collection.CurrentItem);
+                            lang = new TranslatorLanguage((TranslatorLanguage)collection.CurrentItem);
                         });
                         x = lang;
                     }));
-                binder.AddPropertyCouple(new PropertyCouple<TranslatorLanguague, CollectionView>(
-                    "ToLanguague", "TranslateToLanguagues",
-                    (ref TranslatorLanguague x, ref CollectionView y) =>
+                binder.AddPropertyCouple(new PropertyCouple<TranslatorLanguage, CollectionView>(
+                    "ToLanguague", "TranslateToLanguages",
+                    (ref TranslatorLanguage x, ref CollectionView y) =>
                     {
-                        var languague = x;
+                        var language = x;
                         var collection = y;
 
                         _uiDispatcher.Invoke(() =>
                         {
-                            TranslatorLanguague result = null;
+                            TranslatorLanguage result = null;
 
-                            foreach (TranslatorLanguague elem in collection.SourceCollection)
+                            foreach (TranslatorLanguage elem in collection.SourceCollection)
                             {
-                                if (elem.SystemName == languague.SystemName)
+                                if (elem.SystemName == language.SystemName)
                                 {
                                     result = elem;
                                     break;
@@ -242,14 +242,14 @@ namespace FFXIVTataruHelper.Services.UI
                             }
                         });
                     },
-                    (ref CollectionView y, ref TranslatorLanguague x) =>
+                    (ref CollectionView y, ref TranslatorLanguage x) =>
                     {
                         var collection = y;
-                        TranslatorLanguague lang = new TranslatorLanguague();
+                        TranslatorLanguage lang = new TranslatorLanguage();
 
                         _uiDispatcher.Invoke(() =>
                         {
-                            lang = new TranslatorLanguague((TranslatorLanguague)collection.CurrentItem);
+                            lang = new TranslatorLanguage((TranslatorLanguage)collection.CurrentItem);
                         });
                         x = lang;
                     }));

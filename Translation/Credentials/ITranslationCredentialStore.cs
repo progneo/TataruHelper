@@ -1,3 +1,5 @@
+using Translation.Models;
+
 namespace Translation.Credentials
 {
     public interface ITranslationCredentialStore

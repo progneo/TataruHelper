@@ -3,9 +3,8 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-
-using Translation;
 using Translation.Credentials;
+using Translation.Models;
 
 namespace FFXIVTataruHelper.ViewModel
 {
@@ -13,7 +12,7 @@ namespace FFXIVTataruHelper.ViewModel
     {
         private static readonly TranslationEngineName[] EngineUiOrder =
         {
-            TranslationEngineName.GoogleTranslate, TranslationEngineName.Papago,
+            TranslationEngineName.GoogleTranslate, TranslationEngineName.Papago, TranslationEngineName.DeepL,
             TranslationEngineName.AzureTranslator, TranslationEngineName.GoogleCloudTranslate,
             TranslationEngineName.DeepLApi, TranslationEngineName.OpenAI, TranslationEngineName.DeepSeek,
             TranslationEngineName.YandexGPT, TranslationEngineName.Yandex
@@ -45,6 +44,12 @@ namespace FFXIVTataruHelper.ViewModel
         {
             get => _store.IsEngineEnabled(TranslationEngineName.Papago);
             set => SetEngineEnabled(TranslationEngineName.Papago, value);
+        }
+
+        public bool IsDeepLEnabled
+        {
+            get => _store.IsEngineEnabled(TranslationEngineName.DeepL);
+            set => SetEngineEnabled(TranslationEngineName.DeepL, value);
         }
 
         public bool IsAzureEnabled
@@ -225,6 +230,7 @@ namespace FFXIVTataruHelper.ViewModel
         {
             TranslationEngineName.GoogleTranslate => nameof(IsGoogleTranslateEnabled),
             TranslationEngineName.Papago => nameof(IsPapagoEnabled),
+            TranslationEngineName.DeepL => nameof(IsDeepLEnabled),
             TranslationEngineName.AzureTranslator => nameof(IsAzureEnabled),
             TranslationEngineName.GoogleCloudTranslate => nameof(IsGoogleCloudEnabled),
             TranslationEngineName.DeepLApi => nameof(IsDeepLApiEnabled),

@@ -1,7 +1,4 @@
-﻿// This is an open source non-commercial project. Dear PVS-Studio, please check it.
-// PVS-Studio Static Code Analyzer for C, C++, C#, and Java: http://www.viva64.com
-
-using FFXIVTataruHelper.EventArguments;
+﻿using FFXIVTataruHelper.EventArguments;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Utils;
 using System;
@@ -10,7 +7,7 @@ using System.Windows.Interop;
 
 namespace FFXIVTataruHelper.WinUtils
 {
-    class WinMessagesHandler
+    public sealed class WinMessagesHandler
     {
         #region **Events.
 
@@ -31,10 +28,16 @@ namespace FFXIVTataruHelper.WinUtils
 
         #endregion
 
-        public WinMessagesHandler(Window window, IAppLogger logger)
+        public WinMessagesHandler(IAppLogger logger)
         {
             _logger = logger;
             _ShowFirstInstance = new AsyncEvent<BooleanChangeEventArgs>(EventErrorHandler, "ShowFirstInstance");
+        }
+
+        public void Attach(Window window)
+        {
+            if (_HwndSource != null)
+                return;
 
             _HwndSource = (HwndSource)HwndSource.FromVisual(window);
 
