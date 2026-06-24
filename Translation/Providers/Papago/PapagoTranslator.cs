@@ -1,11 +1,9 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-
 using Microsoft.Extensions.Logging;
-
 using Translation.Http;
 using Translation.Models;
 using Translation.Settings;
@@ -17,11 +15,11 @@ namespace Translation.Providers.Papago
     {
         public TranslationEngineName EngineName => TranslationEngineName.Papago;
 
-        const string TranslateUrl = "https://papago.naver.com/apis/n2mt/translate";
+        const string TranslateUrl = "https://papago.naver.com/api/text/translation";
 
-        volatile PapagoEncoder _PapagoEncoder;
-        readonly object _encoderSync = new object();
-        readonly PapagoKeyResolver _KeyResolver;
+        const string BrowserUserAgent =
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+            "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36";
 
         readonly ILogger _Logger;
         readonly TranslationSettings _Settings;
@@ -30,9 +28,7 @@ namespace Translation.Providers.Papago
         {
             _Logger = logger;
             _Settings = settings ?? new TranslationSettings();
-            _KeyResolver = new PapagoKeyResolver(logger, _Settings.PapagoKeyCachePath);
         }
-
 
         public Task<string> TranslateAsync(string sentence, string inLang, string outLang,
             CancellationToken cancellationToken)
@@ -51,84 +47,29 @@ namespace Translation.Providers.Papago
             if (string.IsNullOrEmpty(inLang))
                 return string.Empty;
 
-            sentence = sentence.Replace(":", " : ");
-
-            if (_PapagoEncoder == null)
+            var formFields = new Dictionary<string, string>
             {
-                lock (_encoderSync)
-                {
-                    if (_PapagoEncoder == null)
-                        _PapagoEncoder = new PapagoEncoder(_Settings.PapagoEncoderPath, _Logger);
-                }
-            }
-
-            if (!_PapagoEncoder.IsAvailable)
-                return string.Empty;
-
-            var (result, authFailure) =
-                await TryTranslateOnceAsync(sentence, inLang, outLang, cancellationToken).ConfigureAwait(false);
-            if (authFailure)
-            {
-                // HMAC key probably rotated — drop the cache and retry once.
-                _KeyResolver.Invalidate();
-                (result, _) =
-                    await TryTranslateOnceAsync(sentence, inLang, outLang, cancellationToken).ConfigureAwait(false);
-            }
-
-            return result ?? string.Empty;
-        }
-
-        async Task<(string Result, bool AuthFailure)> TryTranslateOnceAsync(string sentence, string inLang,
-            string outLang, CancellationToken cancellationToken)
-        {
-            string hmacKey = await _KeyResolver.GetKeyAsync(cancellationToken).ConfigureAwait(false);
-            if (string.IsNullOrEmpty(hmacKey))
-            {
-                _Logger?.LogInformation("Papago translate skipped: HMAC key could not be resolved.");
-                return (string.Empty, false);
-            }
-
-            var papagoRequest = new PapagoTranslationRequest
-            {
-                deviceId = "",
-                dict = false,
-                dictDisplay = 0,
-                honorific = false,
-                instant = false,
-                paging = false,
-                source = inLang,
-                target = outLang,
-                locale = "ko-KR",
-                text = sentence
+                ["source"] = inLang,
+                ["target"] = outLang,
+                ["text"] = sentence,
+                ["dict"] = "false",
+                ["useGlossary"] = "false",
+                ["honorific"] = "false"
             };
-
-            var reqvObj = _PapagoEncoder.EncodePapagoTranslationRequest(papagoRequest, hmacKey);
-            if (reqvObj == null)
-            {
-                _Logger?.LogInformation("Papago translate skipped: encoder returned null.");
-                return (string.Empty, false);
-            }
 
             try
             {
-                var requestBody = reqvObj.StringRequest +
-                                  $"&authroization={Uri.EscapeDataString(reqvObj.AuthorizationHeader)}" +
-                                  $"&timestamp={reqvObj.Timestamp}";
-
                 using (var request = new HttpRequestMessage(HttpMethod.Post, TranslateUrl))
                 {
-                    request.Content = new StringContent(requestBody, Encoding.UTF8,
-                        "application/x-www-form-urlencoded");
+                    request.Content = new FormUrlEncodedContent(formFields);
 
+                    request.Headers.UserAgent.ParseAdd(BrowserUserAgent);
                     request.Headers.Add("device-type", "pc");
-                    request.Headers.Add("x-apigw-partnerid", "papago");
                     request.Headers.Add("Origin", "https://papago.naver.com");
                     request.Headers.Add("Referer", "https://papago.naver.com/");
                     request.Headers.Add("Sec-Fetch-Site", "same-origin");
                     request.Headers.Add("Sec-Fetch-Mode", "cors");
                     request.Headers.Add("Sec-Fetch-Dest", "empty");
-                    request.Headers.TryAddWithoutValidation("Authorization", reqvObj.AuthorizationHeader);
-                    request.Headers.Add("Timestamp", reqvObj.Timestamp);
 
                     using (var response = await ApiHttpClient.SendAsync(request, cancellationToken)
                                .ConfigureAwait(false))
@@ -139,14 +80,12 @@ namespace Translation.Providers.Papago
                         if (response.IsSuccessStatusCode)
                         {
                             var parsed = SafeJson.DeserializeExternal<PapagoResponse>(body);
-                            return (parsed?.translatedText ?? string.Empty, false);
+                            return parsed?.translatedText ?? string.Empty;
                         }
 
-                        var status = (int)response.StatusCode;
-                        var authFailure = status == 401 || status == 403;
-
-                        _Logger?.LogInformation("{Message}", "[PAPAGO_HTTP_" + status + "] " + body);
-                        return (string.Empty, authFailure);
+                        _Logger?.LogInformation("{Message}",
+                            "[PAPAGO_HTTP_" + (int)response.StatusCode + "] " + body);
+                        return string.Empty;
                     }
                 }
             }
@@ -157,7 +96,7 @@ namespace Translation.Providers.Papago
             catch (Exception e)
             {
                 _Logger?.LogInformation("{Message}", e.ToString());
-                return (string.Empty, false);
+                return string.Empty;
             }
         }
     }
