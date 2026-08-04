@@ -306,6 +306,37 @@ namespace TataruHelper.Tests
             Assert.That(line, Is.EqualTo("LiveNpc:LiveText"));
         }
 
+        [Test]
+        public void Gateway_SuppressesFirstRealtimeSnapshot_AfterAttaching()
+        {
+            var directDialogReader = new FakeDirectDialogReader();
+            var snapshot = TalkAddonRealtimeDialogSnapshot.Available("003D", "OldNpc", "Line from a past conversation");
+            var gateway = CreateGateway(directDialogReader, () => snapshot);
+
+            // Attaching arms the priming: the Talk addon still holds whatever was
+            // said before the app started, and that must not be announced.
+            gateway.ResetRealtimeDialogState();
+
+            Assert.That(gateway.GetDirectDialog().ChatLogItems, Is.Empty);
+        }
+
+        [Test]
+        public void Gateway_EmitsRealtimeSnapshot_AfterPrimingSnapshotChanges()
+        {
+            var directDialogReader = new FakeDirectDialogReader();
+            var current = TalkAddonRealtimeDialogSnapshot.Available("003D", "OldNpc", "Stale line");
+            var gateway = CreateGateway(directDialogReader, () => current);
+
+            gateway.ResetRealtimeDialogState();
+            gateway.GetDirectDialog();
+
+            current = TalkAddonRealtimeDialogSnapshot.Available("003D", "NewNpc", "Fresh line");
+
+            var item = gateway.GetDirectDialog().ChatLogItems.Single();
+
+            Assert.That(item.Line, Is.EqualTo("NewNpc:Fresh line"));
+        }
+
         private static SharlayanGameMemoryGateway CreateGateway(
             FakeDirectDialogReader directDialogReader,
             Func<TalkAddonRealtimeDialogSnapshot> realtimeReader)
