@@ -26,8 +26,12 @@ namespace FFXIVTataruHelper.Services.UI
             string name = null;
             string text = translatedMsg;
 
+            // Only a plausible speaker name gets the bold treatment. A cutscene
+            // subtitle has no speaker, so a line like "Ради всех нас, я умоляю
+            // тебя: избавь нас от этой участи!" would otherwise have its opening
+            // clause rendered as if someone were named that.
             int nameInd = translatedMsg.IndexOf(":", StringComparison.Ordinal);
-            if (nameInd > 0)
+            if (nameInd > 0 && ChatMessageFilter.LooksLikeSpeakerName(translatedMsg.Substring(0, nameInd)))
             {
                 name = translatedMsg.Substring(0, nameInd);
                 text = translatedMsg.Substring(nameInd, translatedMsg.Length - nameInd);

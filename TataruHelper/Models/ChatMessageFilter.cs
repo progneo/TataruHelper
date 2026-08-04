@@ -68,9 +68,16 @@ namespace FFXIVTataruHelper
             if (candidate.Length > maxSpeakerNameLength)
                 return false;
 
+            var hasSpace = candidate.IndexOf(' ') >= 0;
+
             foreach (var c in candidate)
             {
-                if (c == ',' || c == '.' || c == '!' || c == '?' || c == ';')
+                if (c == ',' || c == '.' || c == ';')
+                    return false;
+
+                // "???" is a real speaker for an NPC whose name is not known yet,
+                // so ? and ! only disqualify a candidate that reads like a sentence.
+                if ((c == '!' || c == '?') && hasSpace)
                     return false;
             }
 
