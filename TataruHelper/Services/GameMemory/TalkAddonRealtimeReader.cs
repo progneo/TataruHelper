@@ -14,6 +14,18 @@ namespace FFXIVTataruHelper.Services.GameMemory
         private const string TalkAddonName = "Talk";
         private const string MiniTalkAddonName = "MiniTalk";
         private const string AlternateMiniTalkAddonName = "_MiniTalk";
+        private const string TalkSubtitleAddonName = "TalkSubtitle";
+
+        /// <summary>
+        /// Offset of the subtitle Utf8String inside AddonTalkSubtitle.
+        ///
+        /// FFXIVClientStructs has no AddonTalkSubtitle type, so unlike every other
+        /// addon here this offset cannot be resolved by reflection and was derived
+        /// from the running client (verified against 2026.07.16). If cutscene
+        /// subtitles stop appearing after a game patch, this is the value to
+        /// re-check.
+        /// </summary>
+        private const long TalkSubtitleTextOffset = 0x238;
         private const string DirectDialogCode = "003D";
         private const string CutsceneDialogCode = "0044";
         private const string UiNamespace = "FFXIVClientStructs.FFXIV.Client.UI.";
@@ -183,41 +195,49 @@ namespace FFXIVTataruHelper.Services.GameMemory
             var matchedEmptySource = false;
             foreach (var addonSpec in _uiDirectDialogOffsets.Value.AddonSpecs)
             {
-                var loadedAddon = loadedAddons
-                    .FirstOrDefault(addon =>
-                        string.Equals(addonSpec.AddonName, addon.AddonName, StringComparison.OrdinalIgnoreCase));
-                if (loadedAddon.AddonAddress == IntPtr.Zero)
-                {
-                    continue;
-                }
+                // A cutscene keeps several TalkSubtitle addons loaded at once and
+                // leaves earlier lines sitting in the ones it is not using, so every
+                // match has to be considered rather than just the first.
+                var matchingAddons = loadedAddons
+                    .Where(addon =>
+                        string.Equals(addonSpec.AddonName, addon.AddonName, StringComparison.OrdinalIgnoreCase))
+                    .ToArray();
 
-                if (!TryReadAddonNodeTexts(loadedAddon.AddonAddress, addonSpec, out var nodeTexts))
+                foreach (var loadedAddon in matchingAddons)
                 {
-                    continue;
-                }
-
-                if (Logger.RawDialogLogEnabled)
-                {
-                    var joinedNodes = string.Join(" | ",
-                        (nodeTexts ?? Array.Empty<string>()).Select(text => $"[{text}]"));
-                    WriteDistinctRawDialogLog(ref _lastLoggedAddonNodes,
-                        $"Addon=[{addonSpec.AddonName}] code=[{addonSpec.ChatCode}] nodes={{ {joinedNodes} }}");
-                }
-
-                var addonSnapshot = BuildAddonSnapshot(addonSpec, nodeTexts, speakerName, lastTalkText);
-                if (SharlayanGameMemoryGateway.NormalizeDialogToken(addonSnapshot.TalkText).Length == 0)
-                {
-                    if (!matchedEmptySource)
+                    if (loadedAddon.AddonAddress == IntPtr.Zero)
                     {
-                        snapshot = addonSnapshot;
-                        matchedEmptySource = true;
+                        continue;
                     }
 
-                    continue;
-                }
+                    if (!TryReadAddonNodeTexts(loadedAddon.AddonAddress, addonSpec, out var nodeTexts))
+                    {
+                        continue;
+                    }
 
-                snapshot = addonSnapshot;
-                return true;
+                    if (Logger.RawDialogLogEnabled)
+                    {
+                        var joinedNodes = string.Join(" | ",
+                            (nodeTexts ?? Array.Empty<string>()).Select(text => $"[{text}]"));
+                        WriteDistinctRawDialogLog(ref _lastLoggedAddonNodes,
+                            $"Addon=[{addonSpec.AddonName}] code=[{addonSpec.ChatCode}] nodes={{ {joinedNodes} }}");
+                    }
+
+                    var addonSnapshot = BuildAddonSnapshot(addonSpec, nodeTexts, speakerName, lastTalkText);
+                    if (SharlayanGameMemoryGateway.NormalizeDialogToken(addonSnapshot.TalkText).Length == 0)
+                    {
+                        if (!matchedEmptySource)
+                        {
+                            snapshot = addonSnapshot;
+                            matchedEmptySource = true;
+                        }
+
+                        continue;
+                    }
+
+                    snapshot = addonSnapshot;
+                    return true;
+                }
             }
 
             return matchedEmptySource;
@@ -354,6 +374,14 @@ namespace FFXIVTataruHelper.Services.GameMemory
             AddonRealtimeTextSpec addonSpec,
             out string[] nodeTexts)
         {
+            if (addonSpec.InlineTextOffset >= 0)
+            {
+                nodeTexts = TryReadUtf8String(addonAddress, addonSpec.InlineTextOffset, out var inlineText)
+                    ? new[] { inlineText }
+                    : Array.Empty<string>();
+                return true;
+            }
+
             if (addonSpec.TextNodeOffsets != null && addonSpec.TextNodeOffsets.Length > 0)
             {
                 return TryReadDirectTextNodeTexts(addonAddress, addonSpec.TextNodeOffsets, out nodeTexts);
@@ -649,6 +677,11 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 addonSpecs.Add(alternateMiniTalkSpec);
             }
 
+            addonSpecs.Add(AddonRealtimeTextSpec.InlineText(
+                TalkSubtitleAddonName,
+                CutsceneDialogCode,
+                TalkSubtitleTextOffset));
+
             return addonSpecs.ToArray();
         }
 
@@ -786,7 +819,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 long talkBubbleEntriesOffset,
                 int talkBubbleEntrySize,
                 long talkBubbleTextNodeOffset,
-                int talkBubbleEntryCount)
+                int talkBubbleEntryCount,
+                long inlineTextOffset)
             {
                 AddonName = addonName;
                 ChatCode = chatCode;
@@ -796,6 +830,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 TalkBubbleEntrySize = talkBubbleEntrySize;
                 TalkBubbleTextNodeOffset = talkBubbleTextNodeOffset;
                 TalkBubbleEntryCount = talkBubbleEntryCount;
+                InlineTextOffset = inlineTextOffset;
             }
 
             public string AddonName { get; }
@@ -807,13 +842,30 @@ namespace FFXIVTataruHelper.Services.GameMemory
             public long TalkBubbleTextNodeOffset { get; }
             public int TalkBubbleEntryCount { get; }
 
+            /// <summary>Offset of a Utf8String stored in the addon itself, or -1.</summary>
+            public long InlineTextOffset { get; }
+
             public static AddonRealtimeTextSpec Direct(
                 string addonName,
                 string chatCode,
                 long[] textNodeOffsets,
                 bool allowNodeSpeaker)
             {
-                return new AddonRealtimeTextSpec(addonName, chatCode, textNodeOffsets, allowNodeSpeaker, -1, 0, -1, 0);
+                return new AddonRealtimeTextSpec(addonName, chatCode, textNodeOffsets, allowNodeSpeaker, -1, 0, -1, 0,
+                    -1);
+            }
+
+            /// <summary>
+            /// For addons that keep their line in an inline Utf8String rather than
+            /// behind an AtkTextNode pointer.
+            /// </summary>
+            public static AddonRealtimeTextSpec InlineText(
+                string addonName,
+                string chatCode,
+                long inlineTextOffset)
+            {
+                return new AddonRealtimeTextSpec(addonName, chatCode, Array.Empty<long>(), false, -1, 0, -1, 0,
+                    inlineTextOffset);
             }
 
             public static AddonRealtimeTextSpec TalkBubbles(
@@ -832,7 +884,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
                     talkBubbleEntriesOffset,
                     talkBubbleEntrySize,
                     talkBubbleTextNodeOffset,
-                    talkBubbleEntryCount);
+                    talkBubbleEntryCount,
+                    -1);
             }
         }
     }
