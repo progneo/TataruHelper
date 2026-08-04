@@ -2,10 +2,16 @@
 #
 #   crowdin upload sources        - push newly added strings for translation
 #   crowdin upload translations   - push translations made in the repository
-#   crowdin download              - pull finished translations back
-#   python scripts/compile_locales.py
-#                                 - required afterwards: Crowdin round-trips
-#                                   .po, the app reads .mo
+#   scripts/crowdin_pull.ps1      - pull finished translations back
+#
+# Pull through the script rather than calling `crowdin download` directly.
+# English is a target language on this project as well as the source, so a
+# bare download overwrites Locale/en-US - and that file is not a translation:
+# Crowdin only ever reads its msgid column, while the msgstr column is the
+# English text the application displays ("Not found" shows as "Tataru Helper
+# is up to date."). A download would replace it with an echo of the msgid.
+# The project also carries 18 languages the application has no UI for, which
+# a bare download drops into Locale/ as new folders.
 #
 # Needs CROWDIN_PROJECT_ID and CROWDIN_PERSONAL_TOKEN in the environment.
 

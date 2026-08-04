@@ -135,10 +135,6 @@ msgstr "Overlay behavior"
 msgid "Application flags"
 msgstr "Application flags"
 
-#: TataruHelper/Utils/LanguagueWrapper.cs:167
-msgid "Fork repository:"
-msgstr "Fork repository:"
-
 #: TataruHelper/Utils/LanguagueWrapper.cs:168
 msgid "Original repository:"
 msgstr "Original repository:"
