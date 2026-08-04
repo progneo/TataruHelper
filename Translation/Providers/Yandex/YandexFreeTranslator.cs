@@ -47,8 +47,10 @@ namespace Translation.Providers.Yandex
                 return string.Empty;
             }
 
-            var sourceLang = string.IsNullOrWhiteSpace(inLang) ? "auto" : inLang;
-            var targetLang = string.IsNullOrWhiteSpace(outLang) ? "en" : outLang;
+            // Yandex answers "Invalid parameter: lang" to anything but lowercase,
+            // and other engines' language lists spell their codes in caps.
+            var sourceLang = (string.IsNullOrWhiteSpace(inLang) ? "auto" : inLang).ToLowerInvariant();
+            var targetLang = (string.IsNullOrWhiteSpace(outLang) ? "en" : outLang).ToLowerInvariant();
 
             if (string.Equals(sourceLang, targetLang, StringComparison.OrdinalIgnoreCase))
             {
@@ -80,8 +82,14 @@ namespace Translation.Providers.Yandex
                     {
                         if (!response.IsSuccessStatusCode)
                         {
+                            // The status alone says nothing about which of the
+                            // language pair, the text or the session was rejected.
+                            var error = await response.Content.ReadAsStringAsync(cancellationToken)
+                                .ConfigureAwait(false);
+
                             _logger?.LogInformation("{Message}",
-                                "[YANDEX_HTTP_" + (int)response.StatusCode + "]");
+                                "[YANDEX_HTTP_" + (int)response.StatusCode + "] lang=" + langPair +
+                                " len=" + sentence.Length + " body=" + Truncate(error, 300));
                             return string.Empty;
                         }
 
@@ -99,6 +107,17 @@ namespace Translation.Providers.Yandex
                 _logger?.LogInformation("{Message}", "[YANDEX] " + e.Message);
                 return string.Empty;
             }
+        }
+
+        private static string Truncate(string value, int maxLength)
+        {
+            if (string.IsNullOrEmpty(value))
+            {
+                return string.Empty;
+            }
+
+            value = value.Replace('\n', ' ').Replace('\r', ' ');
+            return value.Length <= maxLength ? value : value.Substring(0, maxLength);
         }
 
         /// <summary>Parses {"code":200,"lang":"en-ru","text":["...","..."]}.</summary>

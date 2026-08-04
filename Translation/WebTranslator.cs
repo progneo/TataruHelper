@@ -233,13 +233,22 @@ namespace Translation
                     continue;
                 }
 
-                if (!SupportsLanguage(candidate, toLang))
+                // Every engine ships its own language list with its own spelling of
+                // the codes - DeepL says "RU", Yandex wants "ru" and rejects the
+                // request outright otherwise - so the codes have to be re-resolved
+                // against the engine actually being called.
+                var candidateToCode = ResolveLanguageCode(candidate, toLang, toLangCode);
+                if (candidateToCode == null)
                 {
                     continue;
                 }
 
-                var result = await InvokeSelectedProviderAsync(candidate.EngineName, sentence, fromLangCode,
-                    toLangCode, cancellationToken).ConfigureAwait(false);
+                var candidateFromCode = string.Equals(fromLangCode, "auto", StringComparison.OrdinalIgnoreCase)
+                    ? fromLangCode
+                    : ResolveLanguageCode(candidate, null, fromLangCode) ?? "auto";
+
+                var result = await InvokeSelectedProviderAsync(candidate.EngineName, sentence, candidateFromCode,
+                    candidateToCode, cancellationToken).ConfigureAwait(false);
 
                 if (result.IsSuccess && !string.IsNullOrEmpty(result.Text))
                 {
@@ -257,15 +266,41 @@ namespace Translation
             return originalFailure;
         }
 
-        private static bool SupportsLanguage(TranslationEngine engine, TranslatorLanguage language)
+        /// <summary>
+        /// Finds how <paramref name="engine"/> spells a language, matching first on
+        /// the language's own name and then on the code. Returns null when the
+        /// engine does not offer it at all.
+        /// </summary>
+        internal static string ResolveLanguageCode(TranslationEngine engine, TranslatorLanguage language,
+            string languageCode)
         {
-            if (engine?.SupportedLanguages == null || language == null)
+            if (engine?.SupportedLanguages == null)
             {
-                return false;
+                return null;
             }
 
-            return engine.SupportedLanguages.Any(x =>
-                string.Equals(x.LanguageCode, language.LanguageCode, StringComparison.OrdinalIgnoreCase));
+            if (language != null && !string.IsNullOrEmpty(language.SystemName))
+            {
+                var byName = engine.SupportedLanguages.FirstOrDefault(x =>
+                    string.Equals((x.SystemName ?? string.Empty).Trim(), language.SystemName.Trim(),
+                        StringComparison.OrdinalIgnoreCase));
+
+                if (byName != null)
+                {
+                    return byName.LanguageCode;
+                }
+            }
+
+            var wanted = language?.LanguageCode ?? languageCode;
+            if (string.IsNullOrEmpty(wanted))
+            {
+                return null;
+            }
+
+            var byCode = engine.SupportedLanguages.FirstOrDefault(x =>
+                string.Equals(x.LanguageCode, wanted, StringComparison.OrdinalIgnoreCase));
+
+            return byCode?.LanguageCode;
         }
 
         private async Task<TranslationResult> InvokeSelectedProviderAsync(
