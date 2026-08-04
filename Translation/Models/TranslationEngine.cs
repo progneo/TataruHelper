@@ -42,6 +42,16 @@ namespace Translation.Models
                     return "Yandex";
                 case TranslationEngineName.Yandex:
                     return "Yandex Cloud";
+                case TranslationEngineName.GoogleTranslate:
+                    return "Google Translate";
+                case TranslationEngineName.GoogleCloudTranslate:
+                    return "Google Cloud Translate";
+                case TranslationEngineName.DeepLApi:
+                    return "DeepL API";
+                case TranslationEngineName.AzureTranslator:
+                    return "Azure Translator";
+                case TranslationEngineName.YandexGPT:
+                    return "YandexGPT";
                 default:
                     return engineName.ToString();
             }
