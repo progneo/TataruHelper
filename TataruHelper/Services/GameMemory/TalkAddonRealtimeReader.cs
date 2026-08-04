@@ -47,6 +47,11 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private string _lastLoggedLoadedAddons = string.Empty;
 
+        private Dictionary<string, string> _lastAddonText =
+            new Dictionary<string, string>(StringComparer.Ordinal);
+
+        private string _stickyCandidateKey;
+
         public TalkAddonRealtimeReader(MemoryHandler memoryHandler)
         {
             _memoryHandler = memoryHandler;
@@ -208,9 +213,11 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             var matchedEmptySource = false;
-            var matchedStaleSource = false;
-            var staleSnapshot = TalkAddonRealtimeDialogSnapshot.Unavailable();
-            var normalizedLastEmitted = SharlayanGameMemoryGateway.NormalizeDialogToken(lastEmittedText);
+
+            // Candidates are ranked after the sweep rather than taking the first
+            // with any text: the Talk addon holds its line forever, so first-wins
+            // let a finished conversation hide a subtitle that is on screen.
+            var candidates = new List<(string Key, TalkAddonRealtimeDialogSnapshot Snapshot, string Text)>();
 
             foreach (var addonSpec in _uiDirectDialogOffsets.Value.AddonSpecs)
             {
@@ -255,30 +262,88 @@ namespace FFXIVTataruHelper.Services.GameMemory
                         continue;
                     }
 
-                    // A line we have not reported yet wins outright. Otherwise keep
-                    // it as a fallback and carry on looking, so a Talk addon still
-                    // holding a finished conversation cannot mask a live subtitle.
-                    if (!string.Equals(addonText, normalizedLastEmitted, StringComparison.Ordinal))
-                    {
-                        snapshot = addonSnapshot;
-                        return true;
-                    }
-
-                    if (!matchedStaleSource)
-                    {
-                        staleSnapshot = addonSnapshot;
-                        matchedStaleSource = true;
-                    }
+                    candidates.Add((
+                        addonSpec.AddonName + "@" + loadedAddon.AddonAddress.ToInt64().ToString("X"),
+                        addonSnapshot,
+                        addonText));
                 }
             }
 
-            if (matchedStaleSource)
+            if (TrySelectActiveCandidate(candidates, out snapshot))
             {
-                snapshot = staleSnapshot;
                 return true;
             }
 
             return matchedEmptySource;
+        }
+
+        /// <summary>
+        /// Picks the addon that is actually speaking.
+        ///
+        /// An addon counts as active when its own text changed since the last poll.
+        /// Comparing against the last reported line instead would flip between a
+        /// stale Talk line and a live subtitle on alternate polls, re-emitting both
+        /// about twenty times a second. When nothing changed the previous choice is
+        /// kept, so the signature stays put and nothing is re-emitted.
+        /// </summary>
+        private bool TrySelectActiveCandidate(
+            List<(string Key, TalkAddonRealtimeDialogSnapshot Snapshot, string Text)> candidates,
+            out TalkAddonRealtimeDialogSnapshot snapshot)
+        {
+            snapshot = TalkAddonRealtimeDialogSnapshot.Unavailable();
+
+            if (candidates.Count == 0)
+            {
+                _stickyCandidateKey = null;
+                return false;
+            }
+
+            string changedKey = null;
+            TalkAddonRealtimeDialogSnapshot changedSnapshot = default;
+
+            // Rebuilt from this sweep so entries for addons the game unloaded do not
+            // pile up. Trimming by size instead would make every addon look new
+            // again the moment the cap was hit, replaying finished dialogue.
+            var seenNow = new Dictionary<string, string>(candidates.Count, StringComparer.Ordinal);
+
+            foreach (var candidate in candidates)
+            {
+                var isNew = !_lastAddonText.TryGetValue(candidate.Key, out var previous)
+                            || !string.Equals(previous, candidate.Text, StringComparison.Ordinal);
+
+                seenNow[candidate.Key] = candidate.Text;
+
+                if (isNew && changedKey == null)
+                {
+                    changedKey = candidate.Key;
+                    changedSnapshot = candidate.Snapshot;
+                }
+            }
+
+            _lastAddonText = seenNow;
+
+            if (changedKey != null)
+            {
+                _stickyCandidateKey = changedKey;
+                snapshot = changedSnapshot;
+                return true;
+            }
+
+            if (_stickyCandidateKey != null)
+            {
+                foreach (var candidate in candidates)
+                {
+                    if (string.Equals(candidate.Key, _stickyCandidateKey, StringComparison.Ordinal))
+                    {
+                        snapshot = candidate.Snapshot;
+                        return true;
+                    }
+                }
+            }
+
+            _stickyCandidateKey = candidates[0].Key;
+            snapshot = candidates[0].Snapshot;
+            return true;
         }
 
         internal static TalkAddonRealtimeDialogSnapshot BuildAddonSnapshot(
