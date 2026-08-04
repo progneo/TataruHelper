@@ -218,11 +218,12 @@ namespace FFXIVTataruHelper
 
                         if (substitute != null)
                         {
-                            _UiDispatcher.Invoke(() =>
-                            {
-                                _ChatWindowViewModel.SelectedEngine = substitute;
-                                ShowEngineSwitchNotice(previousEngineName, substitute.Name, textColor);
-                            });
+                            // Attached to the line rather than sent as its own
+                            // message: with "show only the last message" on, a
+                            // separate notice is wiped by the very next translation.
+                            text = FormatEngineSwitchNotice(previousEngineName, substitute.Name) + " " + text;
+
+                            _UiDispatcher.Invoke(() => _ChatWindowViewModel.SelectedEngine = substitute);
                         }
                     }
                 }
@@ -497,21 +498,10 @@ namespace FFXIVTataruHelper
             }
         }
 
-        void ShowEngineSwitchNotice(string failedEngineName, string newEngineName, Color textColor)
+        static string FormatEngineSwitchNotice(string failedEngineName, string newEngineName)
         {
             var template = (string)Application.Current.Resources["TranslationEngineSwitched"];
-            var text = string.Format(template ?? "Switched translation engine: {0} → {1}",
-                failedEngineName, newEngineName);
-
-            ShowWindow();
-
-            if (_ChatWindowViewModel.IsHiddenByUser == false)
-                _TextArrivedTime = DateTime.UtcNow;
-
-            ShowTranslatedText(text, textColor);
-
-            if (_ChatWindowViewModel.IsHiddenByUser == false)
-                _TextArrivedTime = DateTime.UtcNow;
+            return string.Format(template ?? "[{0} → {1}]", failedEngineName, newEngineName);
         }
 
         void ShowFailureNotice(string engineName, Color textColor)

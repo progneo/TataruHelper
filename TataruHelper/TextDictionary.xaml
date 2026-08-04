@@ -108,7 +108,7 @@
     <system:String x:Key="StreamerWindowCB">Streamer Window</system:String>
     <system:String x:Key="HideToTrayCB">Hide to Tray</system:String>
     <system:String x:Key="RealtimeTranslationCB">Real-Time Translation</system:String>
-    <system:String x:Key="TranslationEngineSwitched">Switched translation engine: {0} → {1}</system:String>
+    <system:String x:Key="TranslationEngineSwitched">[{0} → {1}]</system:String>
     <system:String x:Key="ShowTimestampsCb">Show Timestamps</system:String>
 
     <system:String x:Key="ShowChatBox">Show Chat Window</system:String>
