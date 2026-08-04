@@ -52,6 +52,10 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private string _stickyCandidateKey;
 
+        private TalkAddonRealtimeDialogSnapshot _lastSelectedSnapshot;
+
+        private bool _hasLastSelectedSnapshot;
+
         public TalkAddonRealtimeReader(MemoryHandler memoryHandler)
         {
             _memoryHandler = memoryHandler;
@@ -295,6 +299,17 @@ namespace FFXIVTataruHelper.Services.GameMemory
             if (candidates.Count == 0)
             {
                 _stickyCandidateKey = null;
+                _lastAddonText.Clear();
+
+                // Nothing on screen. Holding the previous line keeps the signature
+                // stable rather than letting the UIModule fallback re-announce the
+                // conversation that just ended.
+                if (_hasLastSelectedSnapshot)
+                {
+                    snapshot = _lastSelectedSnapshot;
+                    return true;
+                }
+
                 return false;
             }
 
@@ -325,6 +340,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
             if (changedKey != null)
             {
                 _stickyCandidateKey = changedKey;
+                _lastSelectedSnapshot = changedSnapshot;
+                _hasLastSelectedSnapshot = true;
                 snapshot = changedSnapshot;
                 return true;
             }
@@ -341,7 +358,19 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 }
             }
 
+            // The chosen addon went away - a subtitle clears itself between lines -
+            // and nothing else changed. Repeating the previous choice keeps the
+            // signature stable so the gap stays silent; falling back to whatever
+            // else has text would announce a finished conversation again.
+            if (_hasLastSelectedSnapshot)
+            {
+                snapshot = _lastSelectedSnapshot;
+                return true;
+            }
+
             _stickyCandidateKey = candidates[0].Key;
+            _lastSelectedSnapshot = candidates[0].Snapshot;
+            _hasLastSelectedSnapshot = true;
             snapshot = candidates[0].Snapshot;
             return true;
         }
