@@ -21,7 +21,9 @@ namespace Translation.Providers.Gemini
                 TranslationEngineName.Gemini,
                 // Flash rather than Pro: dialogue arrives line by line, so latency
                 // matters more here than the extra quality on long documents.
-                "gemini-2.0-flash",
+                // 2.5 specifically - 1.5 is retired and answers 404, and the free
+                // tier for 2.0 runs out quickly.
+                "gemini-2.5-flash",
                 logger,
                 credentials);
         }
