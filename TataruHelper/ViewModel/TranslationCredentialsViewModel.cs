@@ -12,7 +12,8 @@ namespace FFXIVTataruHelper.ViewModel
     {
         private static readonly TranslationEngineName[] EngineUiOrder =
         {
-            TranslationEngineName.GoogleTranslate, TranslationEngineName.Papago, TranslationEngineName.DeepL,
+            TranslationEngineName.GoogleTranslate, TranslationEngineName.YandexFree, TranslationEngineName.Papago,
+            TranslationEngineName.DeepL,
             TranslationEngineName.AzureTranslator, TranslationEngineName.GoogleCloudTranslate,
             TranslationEngineName.DeepLApi, TranslationEngineName.OpenAI, TranslationEngineName.DeepSeek,
             TranslationEngineName.YandexGPT, TranslationEngineName.Yandex
@@ -38,6 +39,12 @@ namespace FFXIVTataruHelper.ViewModel
         {
             get => _store.IsEngineEnabled(TranslationEngineName.GoogleTranslate);
             set => SetEngineEnabled(TranslationEngineName.GoogleTranslate, value);
+        }
+
+        public bool IsYandexFreeEnabled
+        {
+            get => _store.IsEngineEnabled(TranslationEngineName.YandexFree);
+            set => SetEngineEnabled(TranslationEngineName.YandexFree, value);
         }
 
         public bool IsPapagoEnabled
@@ -229,6 +236,7 @@ namespace FFXIVTataruHelper.ViewModel
         private static string EngineTogglePropertyName(TranslationEngineName engine) => engine switch
         {
             TranslationEngineName.GoogleTranslate => nameof(IsGoogleTranslateEnabled),
+            TranslationEngineName.YandexFree => nameof(IsYandexFreeEnabled),
             TranslationEngineName.Papago => nameof(IsPapagoEnabled),
             TranslationEngineName.DeepL => nameof(IsDeepLEnabled),
             TranslationEngineName.AzureTranslator => nameof(IsAzureEnabled),

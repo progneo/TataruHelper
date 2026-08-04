@@ -103,7 +103,8 @@ namespace Translation
                 _settings.OpenAILanguages,
                 _settings.DeepSeekLanguages,
                 _settings.YandexCloudLanguages,
-                _settings.YandexGptLanguages);
+                _settings.YandexGptLanguages,
+                _settings.YandexLanguages);
         }
 
         public Task<TranslationResult> TranslateAsync(string inSentence, TranslationEngine translationEngine,
@@ -264,7 +265,8 @@ namespace Translation
             string openAiPath,
             string deepSeekPath,
             string yandexCloudPath,
-            string yandexGptPath)
+            string yandexGptPath,
+            string yandexFreePath)
         {
             try
             {
@@ -299,6 +301,9 @@ namespace Translation
 
                 tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(yandexGptPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.YandexGPT, tmpList, 8));
+
+                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(yandexFreePath, _Logger);
+                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.YandexFree, tmpList, 8));
 
                 tmptranslationEngines = tmptranslationEngines.OrderByDescending(x => x.Quality).ToList();
 

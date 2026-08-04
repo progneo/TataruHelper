@@ -16,6 +16,9 @@ namespace Translation.Models
         DeepSeek = 11,
         YandexGPT = 12,
         DeepL = 13,
+
+        /// <summary>Keyless Yandex, as opposed to <see cref="Yandex"/> which is Yandex Cloud.</summary>
+        YandexFree = 14,
     }
 
     public class TranslationEngine : IEquatable<TranslationEngine>

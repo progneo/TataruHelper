@@ -10,6 +10,7 @@ using Translation.Providers.Google;
 using Translation.Providers.GoogleCloud;
 using Translation.Providers.OpenAI;
 using Translation.Providers.Papago;
+using Translation.Providers.Yandex;
 using Translation.Providers.YandexCloud;
 using Translation.Providers.YandexGpt;
 using Translation.Settings;
@@ -36,10 +37,12 @@ namespace Translation.Providers
             var deepSeek = new DeepSeekTranslator(logger, credentials);
             var yandexCloud = new YandexCloudTranslator(logger, credentials);
             var yandexGpt = new YandexGptTranslator(logger, credentials);
+            var yandexFree = new YandexFreeTranslator(logger);
 
             var providers = new ITranslationProvider[]
             {
                 google, papago, deepLF, azure, googleCloud, deepLApi, openAi, deepSeek, yandexCloud, yandexGpt,
+                yandexFree,
             };
 
             return providers.ToDictionary(x => x.EngineName, x => x);
