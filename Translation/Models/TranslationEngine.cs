@@ -19,6 +19,8 @@ namespace Translation.Models
 
         /// <summary>Keyless Yandex, as opposed to <see cref="Yandex"/> which is Yandex Cloud.</summary>
         YandexFree = 14,
+
+        Gemini = 15,
     }
 
     public class TranslationEngine : IEquatable<TranslationEngine>

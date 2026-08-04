@@ -341,6 +341,31 @@
                         <StackPanel>
                             <DockPanel>
                                 <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                                 IsChecked="{Binding Shell.TranslationCredentials.IsGeminiEnabled, Mode=TwoWay}" />
+                                <TextBlock Text="Gemini" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <StackPanel Margin="0,8,0,0"
+                                        Visibility="{Binding Shell.TranslationCredentials.ShowGeminiSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource GeminiKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.GeminiApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.GeminiApiKeyMasked}"
+                                    Margin="0,0,0,6" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource GeminiModelLabel}" />
+                                <TextBox
+                                    Text="{Binding Shell.TranslationCredentials.GeminiModel, UpdateSourceTrigger=LostFocus}"
+                                    KeyDown="CredentialTextBox_KeyDown" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
                                                  IsChecked="{Binding Shell.TranslationCredentials.IsDeepSeekEnabled, Mode=TwoWay}" />
                                 <TextBlock Text="DeepSeek" VerticalAlignment="Center" />
                             </DockPanel>

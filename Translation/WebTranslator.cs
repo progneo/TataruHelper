@@ -104,7 +104,8 @@ namespace Translation
                 _settings.DeepSeekLanguages,
                 _settings.YandexCloudLanguages,
                 _settings.YandexGptLanguages,
-                _settings.YandexLanguages);
+                _settings.YandexLanguages,
+                _settings.GeminiLanguages);
         }
 
         public Task<TranslationResult> TranslateAsync(string inSentence, TranslationEngine translationEngine,
@@ -375,7 +376,8 @@ namespace Translation
             string deepSeekPath,
             string yandexCloudPath,
             string yandexGptPath,
-            string yandexFreePath)
+            string yandexFreePath,
+            string geminiPath)
         {
             try
             {
@@ -410,6 +412,9 @@ namespace Translation
 
                 tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(yandexGptPath, _Logger);
                 tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.YandexGPT, tmpList, 8));
+
+                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(geminiPath, _Logger);
+                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.Gemini, tmpList, 8));
 
                 tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(yandexFreePath, _Logger);
                 // Ranked above Google: on game dialogue it reads more naturally and

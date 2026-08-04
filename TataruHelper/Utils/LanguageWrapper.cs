@@ -390,6 +390,9 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["YandexFolderIdLabel"] = catalog.GetString("Yandex folder ID");
             _SettingsWindow.Resources["OpenAIKeyLabel"] = catalog.GetString("OpenAI key");
             _SettingsWindow.Resources["OpenAIModelLabel"] = catalog.GetString("OpenAI model (optional)");
+            _SettingsWindow.Resources["GeminiKeyLabel"] = catalog.GetString("Gemini API key");
+            _SettingsWindow.Resources["GeminiModelLabel"] =
+                catalog.GetString("Gemini model (optional, e.g. gemini-2.0-flash)");
             _SettingsWindow.Resources["DeepSeekKeyLabel"] = catalog.GetString("DeepSeek key");
             _SettingsWindow.Resources["DeepSeekModelLabel"] = catalog.GetString("DeepSeek model (optional)");
             _SettingsWindow.Resources["YandexGptUsesYandexHint"] =

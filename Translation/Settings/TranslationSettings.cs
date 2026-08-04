@@ -47,6 +47,8 @@ namespace Translation.Settings
 
         public string YandexGptLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
 
+        public string GeminiLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
+
         public string YandexLanguages { get; set; } = "TranslationResources/YandexTranslateLanguages.json";
 
         public string YandexCloudLanguages { get; set; } = "TranslationResources/YandexCloudLanguages.json";
