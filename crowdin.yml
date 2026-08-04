@@ -1,23 +1,38 @@
 # Crowdin sync for the settings-window and overlay strings.
 #
-# The English catalog is the source; every other language is downloaded from
-# Crowdin rather than edited here. Russian is kept in the repository as well so
-# the language the project is developed against does not depend on a round trip
-# through Crowdin.
-#
-#   crowdin upload sources      - push newly added strings for translation
-#   crowdin download            - pull finished translations back
+#   crowdin upload sources   - push newly added strings for translation
+#   crowdin download         - pull finished translations back
+#   python scripts/compile_locales.py
+#                            - required afterwards: Crowdin round-trips .po,
+#                              the app reads .mo
 #
 # Needs CROWDIN_PROJECT_ID and CROWDIN_PERSONAL_TOKEN in the environment.
 
 "project_id_env": "CROWDIN_PROJECT_ID"
 "api_token_env": "CROWDIN_PERSONAL_TOKEN"
 
+# The project keeps its files flat at the root, so the local path is mapped
+# onto the existing /en_US.po through 'dest' rather than mirrored. Without that
+# a second, parallel source file would appear and none of the existing
+# translations would apply to it. 'dest' in turn requires preserve_hierarchy.
 "preserve_hierarchy": true
 
 files:
   - source: /TataruHelper/Locale/en/en_US.po
+    dest: /en_US.po
     translation: /TataruHelper/Locale/%locale%/%locale_with_underscores%.po
+
+    # Folder names the app expects. AppSettings pins one path per language, so a
+    # language outside this list sits unused until it is added to the Languages
+    # enum and AppSettings too.
+    #
+    # This renames, it does not filter: pass the languages explicitly when
+    # pulling, so folders for barely-started languages are not created.
+    #
+    #   crowdin download -l es-ES -l it -l ko -l pt-BR -l ru -l uk -l pl -l ja -l ca
+    #
+    # zh-CN and zh-TW are deliberately absent: the project has no Chinese, and
+    # those catalogs came into the repository from elsewhere.
     languages_mapping:
       locale:
         ca: ca
@@ -29,5 +44,3 @@ files:
         pt-BR: pt-BR
         ru: ru
         uk: uk
-        zh-CN: zh-CN
-        zh-TW: zh-TW
