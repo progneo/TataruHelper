@@ -120,7 +120,11 @@ namespace FFXIVTataruHelper.FFHandlers
         private Task _watchWindowStateTask = Task.CompletedTask;
         private Task _chatMessageEventRiserTask = Task.CompletedTask;
 
-        private readonly bool _useDirectReadingInternal;
+        /// <summary>
+        /// Reads dialogue from the game's UI as it appears rather than waiting for
+        /// the chat log. Off falls back to chat-log-only behaviour.
+        /// </summary>
+        public bool IsRealtimeTranslationEnabled { get; set; } = true;
 
         private readonly ConcurrentDictionary<string, DateTime> _recentEmittedMessages;
         private static readonly TimeSpan DuplicateSuppressionWindow = TimeSpan.FromSeconds(2);
@@ -155,7 +159,6 @@ namespace FFXIVTataruHelper.FFHandlers
                 new AsyncEvent<AsyncPropertyChangedEventArgs>(EventErrorHandler,
                     "FFMemoryReader \n FFChatMessageArrived");
 
-            _useDirectReadingInternal = true;
         }
 
         public void Start()
@@ -458,10 +461,18 @@ namespace FFXIVTataruHelper.FFHandlers
 
             foreach (var chatLogItem in chatLogEntries)
             {
+                // While reading live, the chat log will repeat every NPC line the
+                // moment the player clicks through it. Letting both in translated
+                // and displayed each line twice.
+                if (IsRealtimeTranslationEnabled && IsCoveredByRealtimeReading(chatLogItem))
+                {
+                    continue;
+                }
+
                 ProcessChatMsg(chatLogItem);
             }
 
-            if (!_useDirectReadingInternal)
+            if (!IsRealtimeTranslationEnabled)
             {
                 return;
             }
@@ -479,6 +490,21 @@ namespace FFXIVTataruHelper.FFHandlers
                     ProcessChatMsg(directItem);
                 }
             }
+        }
+
+        /// <summary>
+        /// Chat-log codes whose lines the realtime reader already reports, in its
+        /// own F-prefixed codes, before the player clicks through.
+        /// </summary>
+        internal static bool IsCoveredByRealtimeReading(ChatLogItem chatLogItem)
+        {
+            if (chatLogItem == null || string.IsNullOrEmpty(chatLogItem.Code))
+            {
+                return false;
+            }
+
+            return string.Equals(chatLogItem.Code, "003D", StringComparison.OrdinalIgnoreCase) ||
+                   string.Equals(chatLogItem.Code, "0044", StringComparison.OrdinalIgnoreCase);
         }
 
         internal static bool IsRealtimeDirectDialogCode(ChatLogItem chatLogItem)

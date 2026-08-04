@@ -163,6 +163,26 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
     public ChatWindowViewModel CurrentChatWindow => _settingsViewModel.CurrentChatWindow;
 
+    /// <summary>
+    /// Translates NPC dialogue as it appears on screen instead of waiting for it
+    /// to reach the chat log, and drops the chat-log copies so nothing is shown
+    /// twice.
+    /// </summary>
+    public bool IsRealtimeTranslation
+    {
+        get => _uiModel.IsRealtimeTranslation;
+        set
+        {
+            if (_uiModel.IsRealtimeTranslation == value)
+            {
+                return;
+            }
+
+            _uiModel.IsRealtimeTranslation = value;
+            OnPropertyChanged();
+        }
+    }
+
     public bool IsHideSettingsToTray
     {
         get => _uiModel.IsHideSettingsToTray;

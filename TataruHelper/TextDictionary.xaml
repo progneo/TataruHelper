@@ -107,6 +107,7 @@
     <system:String x:Key="AutoHideCB">Auto Hide</system:String>
     <system:String x:Key="StreamerWindowCB">Streamer Window</system:String>
     <system:String x:Key="HideToTrayCB">Hide to Tray</system:String>
+    <system:String x:Key="RealtimeTranslationCB">Real-Time Translation</system:String>
     <system:String x:Key="ShowTimestampsCb">Show Timestamps</system:String>
 
     <system:String x:Key="ShowChatBox">Show Chat Window</system:String>
@@ -195,6 +196,7 @@
     <system:String x:Key="HotkeyClear">Clear</system:String>
 
     <system:String x:Key="HideToTrayDescription">Hide the settings window to the system tray when minimized.</system:String>
+    <system:String x:Key="RealtimeTranslationDescription">Translate NPC dialogue and cutscene subtitles as they appear, without waiting for the chat log. The chat-log copies of those lines are skipped so nothing is shown twice.</system:String>
 
     <system:String x:Key="UpdatesGroupTitle">Updates</system:String>
     <system:String x:Key="UpdatesGroupHint">Check whether a newer release of Tataru Helper is available.</system:String>

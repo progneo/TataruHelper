@@ -79,6 +79,24 @@ namespace FFXIVTataruHelper
             }
         }
 
+        /// <summary>
+        /// Reads NPC dialogue straight from the game's UI instead of waiting for it
+        /// to reach the chat log.
+        ///
+        /// While on, the chat-log copies of those same lines are dropped. Without
+        /// that every line was translated twice - once live and once on click-through
+        /// - and the only workaround was unticking the NPC chat codes by hand.
+        /// </summary>
+        public bool IsRealtimeTranslation
+        {
+            get { return _IsRealtimeTranslation; }
+            set
+            {
+                _IsRealtimeTranslation = value;
+                NotifyPropertyChanged();
+            }
+        }
+
         public PointD SettingsWindowSize
         {
             get { return _SettingsWindowSize; }
@@ -142,6 +160,8 @@ namespace FFXIVTataruHelper
 
         bool _IsHideSettingsToTray;
 
+        bool _IsRealtimeTranslation = true;
+
         PointD _SettingsWindowSize = new PointD(0.0, 0.0);
 
         AsyncBindingList<ChatWindowViewModelSettings> _ChatWindows;
@@ -185,6 +205,8 @@ namespace FFXIVTataruHelper
 
             IsHideSettingsToTray = userSettings.IsHideToTray;
 
+            IsRealtimeTranslation = userSettings.IsDirecMemoryReading;
+
             SettingsWindowSize = userSettings.SettingsWindowSize;
 
             var tmpChatWindows = new List<ChatWindowViewModelSettings>(userSettings.ChatWindows);
@@ -208,7 +230,7 @@ namespace FFXIVTataruHelper
 
             userSettings.IsHideToTray = this.IsHideSettingsToTray;
 
-            userSettings.IsDirecMemoryReading = true;
+            userSettings.IsDirecMemoryReading = this.IsRealtimeTranslation;
 
             userSettings.SettingsWindowSize = this.SettingsWindowSize;
 

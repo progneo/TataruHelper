@@ -29,6 +29,12 @@ namespace FFXIVTataruHelper.FFHandlers
         /// <summary>Process name and PID of the attached game, empty when detached.</summary>
         string GameProcessDescription { get; }
 
+        /// <summary>
+        /// Reads dialogue from the game's UI as it appears rather than waiting for
+        /// the chat log. Off falls back to chat-log-only behaviour.
+        /// </summary>
+        bool IsRealtimeTranslationEnabled { get; set; }
+
         void Start();
 
         void Stop();

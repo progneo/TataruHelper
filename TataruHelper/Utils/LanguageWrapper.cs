@@ -236,6 +236,7 @@ namespace FFXIVTataruHelper
 
             _SettingsWindow.Resources["AlwaysOnTopCB"] = catalog.GetString("Always On Top");
             _SettingsWindow.Resources["HideToTrayCB"] = catalog.GetString("Hide to Tray");
+            _SettingsWindow.Resources["RealtimeTranslationCB"] = catalog.GetString("Real-Time Translation");
             _SettingsWindow.Resources["ShowTimestampsCb"] = catalog.GetString("Show Timestamps");
 
             _SettingsWindow.Resources["StreamerWindowCB"] = catalog.GetString("Streamer Window");
@@ -357,6 +358,9 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["HotkeyClear"] = catalog.GetString("Clear");
             _SettingsWindow.Resources["HideToTrayDescription"] =
                 catalog.GetString("Hide the settings window to the system tray when minimized.");
+            _SettingsWindow.Resources["RealtimeTranslationDescription"] =
+                catalog.GetString(
+                    "Translate NPC dialogue and cutscene subtitles as they appear, without waiting for the chat log. The chat-log copies of those lines are skipped so nothing is shown twice.");
             _SettingsWindow.Resources["LanguageGroupHint"] =
                 catalog.GetString("Interface language for the settings window and overlays.");
 

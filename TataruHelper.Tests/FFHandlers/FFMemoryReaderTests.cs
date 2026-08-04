@@ -18,7 +18,7 @@ namespace TataruHelper.Tests
     public class FFMemoryReaderTests
     {
         [Test]
-        public void ProcessReadResult_KeepsLogMessagesAndAddsRealtimeMessages()
+        public void ProcessReadResult_WithRealtimeOn_DropsTheChatLogCopiesOfDialogue()
         {
             var gateway = new FakeGameMemoryGateway
             {
@@ -33,19 +33,45 @@ namespace TataruHelper.Tests
                 reader,
                 BuildResult(
                     new ChatLogItem { Code = "003D", Line = "LogNpc:DelayedDialog" },
-                    new ChatLogItem { Code = "0044", Line = "DelayedCutscene" }));
+                    new ChatLogItem { Code = "0044", Line = "DelayedCutscene" },
+                    new ChatLogItem { Code = "000A", Line = "Someone:Say something" }));
 
             var messages = ReadQueuedMessages(reader);
 
+            // The chat log repeats every NPC line once the player clicks through it,
+            // so with realtime on those copies must not be shown a second time.
             Assert.That(messages.Select(message => message.Code),
-                Is.EquivalentTo(new[] { "003D", "0044", "F03D", "F044" }));
-            Assert.That(messages.Any(message => message.Code == "003D" && message.Text == "LogNpc:DelayedDialog"),
-                Is.True);
-            Assert.That(messages.Any(message => message.Code == "0044" && message.Text == "DelayedCutscene"), Is.True);
+                Is.EquivalentTo(new[] { "000A", "F03D", "F044" }));
             Assert.That(messages.Any(message => message.Code == "F03D" && message.Text == "RealtimeNpc:RealtimeDialog"),
                 Is.True);
             Assert.That(messages.Any(message => message.Code == "F044" && message.Text == "RealtimeCutscene"), Is.True);
-            Assert.That(messages.Any(message => message.Text == "FallbackNpc:DelayedFallback"), Is.False);
+
+            // Unrelated chat channels are untouched.
+            Assert.That(messages.Any(message => message.Code == "000A" && message.Text == "Someone:Say something"),
+                Is.True);
+        }
+
+        [Test]
+        public void ProcessReadResult_WithRealtimeOff_UsesTheChatLogOnly()
+        {
+            var gateway = new FakeGameMemoryGateway
+            {
+                DirectDialogResult =
+                    BuildResult(new ChatLogItem { Code = "F03D", Line = "RealtimeNpc:RealtimeDialog" })
+            };
+            var reader = new FFMemoryReader(gateway, new NullLogger(), new FakeSettingsStore())
+            {
+                IsRealtimeTranslationEnabled = false
+            };
+
+            InvokeProcessReadResult(
+                reader,
+                BuildResult(new ChatLogItem { Code = "003D", Line = "LogNpc:DelayedDialog" }));
+
+            var messages = ReadQueuedMessages(reader);
+
+            Assert.That(gateway.GetDirectDialogCalls, Is.EqualTo(0));
+            Assert.That(messages.Select(message => message.Code), Is.EquivalentTo(new[] { "003D" }));
         }
 
         [Test]
@@ -65,9 +91,7 @@ namespace TataruHelper.Tests
             var messages = ReadQueuedMessages(reader);
 
             Assert.That(gateway.GetDirectDialogCalls, Is.EqualTo(1));
-            Assert.That(messages.Select(message => message.Code), Is.EquivalentTo(new[] { "003D", "F03D" }));
-            Assert.That(messages.Any(message => message.Code == "003D" && message.Text == "LogNpc:DelayedDialog"),
-                Is.True);
+            Assert.That(messages.Select(message => message.Code), Is.EquivalentTo(new[] { "F03D" }));
             Assert.That(messages.Any(message => message.Code == "F03D" && message.Text == "RealtimeNpc:RealtimeDialog"),
                 Is.True);
         }

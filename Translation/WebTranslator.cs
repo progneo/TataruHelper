@@ -175,6 +175,12 @@ namespace Translation
             var result = await InvokeSelectedProviderAsync(translationEngine.EngineName, normalizedSentence,
                 fromLangCode, toLangCode, cancellationToken).ConfigureAwait(false);
 
+            if (!result.IsSuccess)
+            {
+                result = await TryFallbackProvidersAsync(translationEngine, normalizedSentence, toLang,
+                    fromLangCode, toLangCode, result, cancellationToken).ConfigureAwait(false);
+            }
+
             if (result.IsSuccess && !string.IsNullOrEmpty(result.Text))
             {
                 lock (_cacheSync)
@@ -192,6 +198,74 @@ namespace Translation
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Falls back to the other engines when the selected one fails.
+        ///
+        /// Without this a dead engine simply reported "Translation failed" for the
+        /// rest of the session, and the only way out was to pick another engine by
+        /// hand mid-conversation.
+        ///
+        /// Engines are tried best-quality first, and only those that offer the
+        /// target language. A missing API key is skipped silently rather than
+        /// counted as a failure - it means the user never set that engine up.
+        /// </summary>
+        private async Task<TranslationResult> TryFallbackProvidersAsync(
+            TranslationEngine selectedEngine,
+            string sentence,
+            TranslatorLanguage toLang,
+            string fromLangCode,
+            string toLangCode,
+            TranslationResult originalFailure,
+            CancellationToken cancellationToken)
+        {
+            var engines = _translationEngines;
+            if (engines == null || engines.Count == 0)
+            {
+                return originalFailure;
+            }
+
+            foreach (var candidate in engines.OrderByDescending(x => x.Quality))
+            {
+                if (candidate.EngineName == selectedEngine.EngineName)
+                {
+                    continue;
+                }
+
+                if (!SupportsLanguage(candidate, toLang))
+                {
+                    continue;
+                }
+
+                var result = await InvokeSelectedProviderAsync(candidate.EngineName, sentence, fromLangCode,
+                    toLangCode, cancellationToken).ConfigureAwait(false);
+
+                if (result.IsSuccess && !string.IsNullOrEmpty(result.Text))
+                {
+                    _Logger?.LogInformation("{Message}",
+                        "[FALLBACK] " + selectedEngine.EngineName + " -> " + candidate.EngineName);
+                    return result;
+                }
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    break;
+                }
+            }
+
+            return originalFailure;
+        }
+
+        private static bool SupportsLanguage(TranslationEngine engine, TranslatorLanguage language)
+        {
+            if (engine?.SupportedLanguages == null || language == null)
+            {
+                return false;
+            }
+
+            return engine.SupportedLanguages.Any(x =>
+                string.Equals(x.LanguageCode, language.LanguageCode, StringComparison.OrdinalIgnoreCase));
         }
 
         private async Task<TranslationResult> InvokeSelectedProviderAsync(

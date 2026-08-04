@@ -41,6 +41,15 @@ namespace FFXIVTataruHelper.Services.UI
         public async Task InitializeAsync(TataruModel tataruModel, MainWindow mainWindow, TataruUIModel uiModel,
             TataruViewModel viewModel)
         {
+            _ffMemoryReader.IsRealtimeTranslationEnabled = uiModel.IsRealtimeTranslation;
+            uiModel.PropertyChanged += (_, e) =>
+            {
+                if (e.PropertyName == nameof(TataruUIModel.IsRealtimeTranslation))
+                {
+                    _ffMemoryReader.IsRealtimeTranslationEnabled = uiModel.IsRealtimeTranslation;
+                }
+            };
+
             // LoadLanguages and FFMemoryReader.Start are independent; do them in parallel.
             var loadLanguagesTask = Task.Run(() => tataruModel.WebTranslator.LoadLanguages());
             var startReaderTask = Task.Run(() => _ffMemoryReader.Start());
