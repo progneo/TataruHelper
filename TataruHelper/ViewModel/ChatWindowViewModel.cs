@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Drawing;
-using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Data;
@@ -933,7 +932,7 @@ namespace FFXIVTataruHelper.ViewModel
         ///
         /// The lists are alphabetical and "Auto" is stripped from the target list,
         /// so a new chat window used to default to translating into Afrikaans.
-        /// The interface language is the best guess at what the player reads.
+        /// Source defaults to Auto and target to English.
         /// </summary>
         private static void MoveToDefaultLanguage(CollectionView collection)
         {
@@ -954,7 +953,6 @@ namespace FFXIVTataruHelper.ViewModel
             var preferred = languages.FirstOrDefault(x =>
                                 string.Equals((x.SystemName ?? string.Empty).Trim(), "Auto",
                                     StringComparison.OrdinalIgnoreCase))
-                            ?? FindByCode(languages, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)
                             ?? FindByCode(languages, "en");
 
             if (preferred != null)
