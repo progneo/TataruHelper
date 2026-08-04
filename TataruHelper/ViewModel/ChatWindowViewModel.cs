@@ -949,7 +949,12 @@ namespace FFXIVTataruHelper.ViewModel
                 return;
             }
 
-            var preferred = FindByCode(languages, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)
+            // "Auto" is only present in the source list - it is stripped from the
+            // target one - so it doubles as the marker for which list this is.
+            var preferred = languages.FirstOrDefault(x =>
+                                string.Equals((x.SystemName ?? string.Empty).Trim(), "Auto",
+                                    StringComparison.OrdinalIgnoreCase))
+                            ?? FindByCode(languages, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)
                             ?? FindByCode(languages, "en");
 
             if (preferred != null)
