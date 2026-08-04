@@ -61,6 +61,23 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private const int InlineDiscoveryScanBytes = 0x600;
 
+        private const int MaxCachedAddonNames = 512;
+
+        private readonly Dictionary<IntPtr, string> _addonNameCache = new Dictionary<IntPtr, string>();
+
+        private static bool IsWantedAddonName(string addonName)
+        {
+            if (string.IsNullOrEmpty(addonName))
+            {
+                return false;
+            }
+
+            return string.Equals(addonName, TalkAddonName, StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(addonName, TalkSubtitleAddonName, StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(addonName, MiniTalkAddonName, StringComparison.OrdinalIgnoreCase)
+                   || string.Equals(addonName, AlternateMiniTalkAddonName, StringComparison.OrdinalIgnoreCase);
+        }
+
         private TalkAddonRealtimeDialogSnapshot _lastSelectedSnapshot;
 
         private bool _hasLastSelectedSnapshot;
@@ -202,27 +219,73 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
             var loadedAddons = new List<LoadedAddon>();
             var safeCount = Math.Min((int)loadedUnitsCount, MaxAtkUnitListEntries);
-            for (var i = 0; i < safeCount; i++)
+
+            // One read for the whole pointer array instead of one per entry.
+            var entryBytes = _memoryHandler.GetByteArray(entriesAddress, safeCount * IntPtr.Size);
+            if (entryBytes == null || entryBytes.Length < IntPtr.Size)
             {
-                var entryOffset = (long)i * IntPtr.Size;
-                var addonAddress = _memoryHandler.ReadPointer(entriesAddress, entryOffset);
+                return false;
+            }
+
+            var diagnosticNames = Logger.RawDialogLogEnabled ? new List<string>() : null;
+
+            var readable = entryBytes.Length / IntPtr.Size;
+            for (var i = 0; i < Math.Min(safeCount, readable); i++)
+            {
+                var addonAddress = new IntPtr(BitConverter.ToInt64(entryBytes, i * IntPtr.Size));
                 if (addonAddress == IntPtr.Zero)
                 {
                     continue;
                 }
 
-                if (!TryReadAddonName(addonAddress, out var addonName))
+                // Addon objects sit at stable addresses for as long as they live, so
+                // their names are cached: re-reading all ~120 of them thirty times a
+                // second was the bulk of this reader's cost. Names that matter are
+                // re-read below before being acted on, in case an address was freed
+                // and handed to a different addon.
+                if (!_addonNameCache.TryGetValue(addonAddress, out var addonName))
+                {
+                    if (!TryReadAddonName(addonAddress, out addonName))
+                    {
+                        continue;
+                    }
+
+                    if (_addonNameCache.Count >= MaxCachedAddonNames)
+                    {
+                        _addonNameCache.Clear();
+                    }
+
+                    _addonNameCache[addonAddress] = addonName;
+                }
+
+                // The full roster is what makes it possible to spot a renamed addon
+                // after a patch, so it is still gathered when raw logging is on.
+                diagnosticNames?.Add(addonName);
+
+                if (!IsWantedAddonName(addonName))
                 {
                     continue;
+                }
+
+                if (!TryReadAddonName(addonAddress, out var verifiedName) || verifiedName != addonName)
+                {
+                    _addonNameCache.Remove(addonAddress);
+                    if (string.IsNullOrEmpty(verifiedName) || !IsWantedAddonName(verifiedName))
+                    {
+                        continue;
+                    }
+
+                    _addonNameCache[addonAddress] = verifiedName;
+                    addonName = verifiedName;
                 }
 
                 loadedAddons.Add(new LoadedAddon(addonAddress, addonName));
             }
 
-            if (Logger.RawDialogLogEnabled)
+            if (diagnosticNames != null)
             {
                 WriteDistinctRawDialogLog(ref _lastLoggedLoadedAddons,
-                    "LoadedAddons=" + string.Join(",", loadedAddons.Select(addon => addon.AddonName).OrderBy(n => n)));
+                    "LoadedAddons=" + string.Join(",", diagnosticNames.OrderBy(n => n)));
             }
 
             var matchedEmptySource = false;
