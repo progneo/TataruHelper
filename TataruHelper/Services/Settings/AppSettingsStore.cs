@@ -70,8 +70,44 @@ namespace FFXIVTataruHelper.Services.Settings
             if (loaded == null)
                 return false;
 
+            RestoreMissingLocalePaths(loaded);
+
             AppSettings = loaded;
             return true;
+        }
+
+        // Every earlier run wrote AppSysSettings.json, so it pins whichever
+        // catalog layout shipped back then. After a layout change the stored
+        // path points at a file that is no longer there and the interface
+        // quietly falls back to English, with nothing in the UI to explain it.
+        // Any locale path that does not resolve is therefore reset to the
+        // current default.
+        private void RestoreMissingLocalePaths(AppSettings loaded)
+        {
+            var defaults = new AppSettings();
+
+            foreach (var property in typeof(AppSettings).GetProperties())
+            {
+                if (!property.Name.EndsWith("LanguaguePath", StringComparison.Ordinal))
+                    continue;
+
+                var current = property.GetValue(loaded) as string;
+                if (!string.IsNullOrEmpty(current) && File.Exists(ResolveLocalePath(loaded, current)))
+                    continue;
+
+                var fallback = (string)property.GetValue(defaults);
+                if (string.Equals(current, fallback, StringComparison.Ordinal))
+                    continue;
+
+                property.SetValue(loaded, fallback);
+                Logger.WriteLog($"Locale catalog '{current}' not found, falling back to '{fallback}'.");
+            }
+        }
+
+        private string ResolveLocalePath(AppSettings settings, string catalogPath)
+        {
+            return ResolveBaseDirectoryPath(
+                Path.Combine(settings.LocalisationDirPath ?? string.Empty, catalogPath));
         }
 
         public void SaveGlobalSettings(string fileName)

@@ -10,29 +10,32 @@ namespace FFXIVTataruHelper
 
         public string LocalisationDirPath { get; set; } = @"Locale\";
 
-        public string ru_RU_LanguaguePath { get; set; } = @"ru\ru_RU.mo";
+        // Catalog layout mirrors Crowdin's %locale% exactly - folder and file
+        // alike - so a downloaded translation lands where the app already looks
+        // and no placeholder mapping is needed on either side.
+        public string ru_RU_LanguaguePath { get; set; } = @"ru-RU\ru-RU.mo";
 
-        public string en_US_LanguaguePath { get; set; } = @"en\en_US.mo";
+        public string en_US_LanguaguePath { get; set; } = @"en-US\en-US.mo";
 
-        public string es_ES_LanguaguePath { get; set; } = @"es-ES\es_ES.mo";
+        public string es_ES_LanguaguePath { get; set; } = @"es-ES\es-ES.mo";
 
-        public string pl_PL_LanguaguePath { get; set; } = @"pl\pl_PL.mo";
+        public string pl_PL_LanguaguePath { get; set; } = @"pl-PL\pl-PL.mo";
 
-        public string ko_KR_LanguaguePath { get; set; } = @"ko\ko_KR.mo";
+        public string ko_KR_LanguaguePath { get; set; } = @"ko-KR\ko-KR.mo";
 
-        public string pt_BR_LanguaguePath { get; set; } = @"pt-BR\pt_BR.mo";
+        public string pt_BR_LanguaguePath { get; set; } = @"pt-BR\pt-BR.mo";
 
-        public string ca_Es_LanguaguePath { get; set; } = @"ca\ca_ES.mo";
+        public string ca_Es_LanguaguePath { get; set; } = @"ca-ES\ca-ES.mo";
 
-        public string it_IT_LanguaguePath { get; set; } = @"it\it_IT.mo";
+        public string it_IT_LanguaguePath { get; set; } = @"it-IT\it-IT.mo";
 
-        public string uk_UA_LanguaguePath { get; set; } = @"uk\uk_UA.mo";
+        public string uk_UA_LanguaguePath { get; set; } = @"uk-UA\uk-UA.mo";
 
-        public string zh_CN_LanguaguePath { get; set; } = @"zh-CN\zh_CN.mo";
+        public string zh_CN_LanguaguePath { get; set; } = @"zh-CN\zh-CN.mo";
 
-        public string zh_TR_LanguaguePath { get; set; } = @"zh-TW\zh_TW.mo";
+        public string zh_TR_LanguaguePath { get; set; } = @"zh-TW\zh-TW.mo";
 
-        public string ja_LanguaguePath { get; set; } = @"ja\ja_JP.mo";
+        public string ja_LanguaguePath { get; set; } = @"ja-JP\ja-JP.mo";
 
         public int SpiWaitTimeOutMS { get; set; } = 500;
 
