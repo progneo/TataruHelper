@@ -174,7 +174,6 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ShortcutCaptureLabel"] = catalog.GetString("Shortcut capture");
             _SettingsWindow.Resources["OverlayBehaviorLabel"] = catalog.GetString("Overlay behavior");
             _SettingsWindow.Resources["ApplicationFlagsLabel"] = catalog.GetString("Application flags");
-            _SettingsWindow.Resources["ForkRepositoryLabel"] = catalog.GetString("Fork repository:");
             _SettingsWindow.Resources["OriginalRepositoryLabel"] = catalog.GetString("Original repository:");
             _SettingsWindow.Resources["CommunityDiscordLabel"] = catalog.GetString("Community Discord:");
 

@@ -47,19 +47,6 @@
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0"
-                                           Text="{DynamicResource ForkRepositoryLabel}"
-                                           Foreground="{DynamicResource Brush.TextSecondary}"
-                                           VerticalAlignment="Center" />
-                                <ui:HyperlinkButton Grid.Column="1"
-                                                    Content="github.com/progneo/TataruHelper"
-                                                    NavigateUri="https://github.com/progneo/TataruHelper" />
-                            </Grid>
-                            <Grid Margin="0,0,0,8">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="160" />
-                                    <ColumnDefinition Width="*" />
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0"
                                            Text="{DynamicResource OriginalRepositoryLabel}"
                                            Foreground="{DynamicResource Brush.TextSecondary}"
                                            VerticalAlignment="Center" />

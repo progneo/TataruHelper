@@ -57,7 +57,6 @@
     <system:String x:Key="ShortcutCaptureLabel">Shortcut capture</system:String>
     <system:String x:Key="OverlayBehaviorLabel">Overlay behavior</system:String>
     <system:String x:Key="ApplicationFlagsLabel">Application flags</system:String>
-    <system:String x:Key="ForkRepositoryLabel">Fork repository:</system:String>
     <system:String x:Key="OriginalRepositoryLabel">Original repository:</system:String>
     <system:String x:Key="CommunityDiscordLabel">Community Discord:</system:String>
     <system:String x:Key="ChatAppearance">Chat Appearance</system:String>
