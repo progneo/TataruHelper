@@ -206,6 +206,25 @@ namespace FFXIVTataruHelper
                 if (result.IsSuccess)
                 {
                     text = result.Text;
+
+                    // The selected engine failed and another one answered instead.
+                    // Adopt it so the picker reflects what is actually translating.
+                    if (_ChatWindowViewModel.SelectedEngine != null &&
+                        result.Engine != _ChatWindowViewModel.SelectedEngine.EngineName)
+                    {
+                        var previousEngineName = _ChatWindowViewModel.SelectedEngine.Name;
+                        var substitute = _ChatWindowViewModel.AvailableEngines
+                            .FirstOrDefault(engine => engine.EngineName == result.Engine);
+
+                        if (substitute != null)
+                        {
+                            _UiDispatcher.Invoke(() =>
+                            {
+                                _ChatWindowViewModel.SelectedEngine = substitute;
+                                ShowEngineSwitchNotice(previousEngineName, substitute.Name, textColor);
+                            });
+                        }
+                    }
                 }
                 else
                 {
@@ -476,6 +495,23 @@ namespace FFXIVTataruHelper
             {
                 ChatRtb.Document.Blocks.Remove(ChatRtb.Document.Blocks.FirstBlock);
             }
+        }
+
+        void ShowEngineSwitchNotice(string failedEngineName, string newEngineName, Color textColor)
+        {
+            var template = (string)Application.Current.Resources["TranslationEngineSwitched"];
+            var text = string.Format(template ?? "Switched translation engine: {0} → {1}",
+                failedEngineName, newEngineName);
+
+            ShowWindow();
+
+            if (_ChatWindowViewModel.IsHiddenByUser == false)
+                _TextArrivedTime = DateTime.UtcNow;
+
+            ShowTranslatedText(text, textColor);
+
+            if (_ChatWindowViewModel.IsHiddenByUser == false)
+                _TextArrivedTime = DateTime.UtcNow;
         }
 
         void ShowFailureNotice(string engineName, Color textColor)

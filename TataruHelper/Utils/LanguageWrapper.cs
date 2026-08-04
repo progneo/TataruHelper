@@ -247,6 +247,8 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ResetChatPosition"] = catalog.GetString("Reset Chat Position");
 
             _SettingsWindow.Resources["TranslationEngineError"] = catalog.GetString("Translation failed:");
+            _SettingsWindow.Resources["TranslationEngineSwitched"] =
+                catalog.GetString("Switched translation engine: {0} → {1}");
 
             _SettingsWindow.Resources["FFStatusLable"] = catalog.GetString("FF Status:");
 
