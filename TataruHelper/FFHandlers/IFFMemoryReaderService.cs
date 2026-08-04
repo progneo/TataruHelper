@@ -17,6 +17,18 @@ namespace FFXIVTataruHelper.FFHandlers
 
         bool IsGameWindowForeground { get; }
 
+        /// <summary>
+        /// Whether the game process is attached right now.
+        ///
+        /// FFWindowStateChanged only fires on transitions, and the reader starts
+        /// before the settings window exists, so a UI created afterwards has no way
+        /// to learn the state from the event alone.
+        /// </summary>
+        bool IsGameRunning { get; }
+
+        /// <summary>Process name and PID of the attached game, empty when detached.</summary>
+        string GameProcessDescription { get; }
+
         void Start();
 
         void Stop();

@@ -63,6 +63,36 @@ namespace FFXIVTataruHelper.FFHandlers
             }
         }
 
+        public bool IsGameRunning
+        {
+            get;
+            private set
+            {
+                if (field == value)
+                {
+                    return;
+                }
+
+                field = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string GameProcessDescription
+        {
+            get;
+            private set
+            {
+                if (field == value)
+                {
+                    return;
+                }
+
+                field = value;
+                OnPropertyChanged();
+            }
+        } = string.Empty;
+
         public bool IsGameWindowForeground
         {
             get;
@@ -342,6 +372,8 @@ namespace FFXIVTataruHelper.FFHandlers
                         _keepReading = false;
 
                         isRunningPrev = false;
+                        IsGameRunning = false;
+                        GameProcessDescription = string.Empty;
 
                         FFWindowState = WindowState.Minimized;
                         IsGameWindowForeground = false;
@@ -370,6 +402,9 @@ namespace FFXIVTataruHelper.FFHandlers
                         }
 
                         isRunningPrev = true;
+                        IsGameRunning = true;
+                        GameProcessDescription = processes[0].ProcessName + ".exe" + "  PID: " +
+                                                 processes[0].Id.ToString();
                     }
                 }
                 catch (OperationCanceledException)

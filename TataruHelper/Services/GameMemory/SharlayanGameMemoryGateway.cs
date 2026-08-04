@@ -42,6 +42,15 @@ namespace FFXIVTataruHelper.Services.GameMemory
         /// </summary>
         private bool _realtimeDialogPrimed = true;
 
+        private const int MaxRememberedRealtimeLines = 64;
+
+        private readonly HashSet<string> _recentRealtimeLines = new HashSet<string>(StringComparer.Ordinal);
+
+        private readonly Queue<string> _recentRealtimeLineOrder = new Queue<string>();
+
+        /// <summary>Bare text of the last realtime line, without the speaker prefix.</summary>
+        private string _lastEmittedRealtimeText = string.Empty;
+
         public SharlayanGameMemoryGateway(IDirectDialogReader directDialogReader, IAppLogger logger)
             : this(directDialogReader, logger, null, null)
         {
@@ -89,6 +98,9 @@ namespace FFXIVTataruHelper.Services.GameMemory
             _lastChatLogResult = new ChatLogResult();
             _lastRealtimeDialogSignature = string.Empty;
             _realtimeDialogPrimed = false;
+            _lastEmittedRealtimeText = string.Empty;
+            _recentRealtimeLines.Clear();
+            _recentRealtimeLineOrder.Clear();
         }
 
         public void UnsetProcess()
@@ -104,7 +116,68 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             _lastChatLogResult = _reader.GetChatLog(previousArrayIndex, previousOffset) ?? new ChatLogResult();
+            DropLinesAlreadySeenLive(_lastChatLogResult);
             return _lastChatLogResult;
+        }
+
+        /// <summary>
+        /// Removes dialogue the realtime reader already reported.
+        ///
+        /// An NPC line reaches us twice: once from the Talk addon while the bubble
+        /// is on screen, and again from the chat log once the player clicks through.
+        /// Both codes are enabled by default, so every line was translated and shown
+        /// twice.
+        /// </summary>
+        private void DropLinesAlreadySeenLive(ChatLogResult chatLogResult)
+        {
+            if (_recentRealtimeLines.Count == 0 || chatLogResult?.ChatLogItems == null)
+            {
+                return;
+            }
+
+            var kept = chatLogResult.ChatLogItems
+                .Where(item => !IsDuplicateOfRealtimeLine(item))
+                .ToArray();
+
+            if (kept.Length == chatLogResult.ChatLogItems.Count)
+            {
+                return;
+            }
+
+            chatLogResult.ChatLogItems.Clear();
+            foreach (var item in kept)
+            {
+                chatLogResult.ChatLogItems.Enqueue(item);
+            }
+        }
+
+        private bool IsDuplicateOfRealtimeLine(ChatLogItem item)
+        {
+            if (!IsSpecificCode(item, DirectDialogCode) && !IsSpecificCode(item, CutsceneDialogCode))
+            {
+                return false;
+            }
+
+            return _recentRealtimeLines.Contains(NormalizeDialogToken(item?.Line));
+        }
+
+        private void RememberRealtimeLine(string line)
+        {
+            var normalized = NormalizeDialogToken(line);
+            if (normalized.Length == 0)
+            {
+                return;
+            }
+
+            if (_recentRealtimeLines.Add(normalized))
+            {
+                _recentRealtimeLineOrder.Enqueue(normalized);
+            }
+
+            while (_recentRealtimeLineOrder.Count > MaxRememberedRealtimeLines)
+            {
+                _recentRealtimeLines.Remove(_recentRealtimeLineOrder.Dequeue());
+            }
         }
 
         public ChatLogResult GetDirectDialog()
@@ -113,7 +186,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 _directDialogReader.ExtractDirectDialog(_lastChatLogResult) ?? new ChatLogResult();
             var realtimeSnapshot = _realtimeDialogSnapshotOverride != null
                 ? _realtimeDialogSnapshotOverride()
-                : (_talkAddonRealtimeReader?.TryReadSnapshot() ?? TalkAddonRealtimeDialogSnapshot.Unavailable());
+                : (_talkAddonRealtimeReader?.TryReadSnapshot(_lastEmittedRealtimeText)
+                   ?? TalkAddonRealtimeDialogSnapshot.Unavailable());
 
             if (!realtimeSnapshot.SourceAvailable)
             {
@@ -141,6 +215,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
             {
                 var wasPrimed = _realtimeDialogPrimed;
                 _lastRealtimeDialogSignature = signature;
+                _lastEmittedRealtimeText = talkText;
                 _realtimeDialogPrimed = true;
 
                 var line = wasPrimed ? BuildRealtimeDialogLine(speakerName, talkText) : string.Empty;
@@ -158,6 +233,10 @@ namespace FFXIVTataruHelper.Services.GameMemory
                         Code = chatCode, Line = line, TimeStamp = _timestampProvider()
                     });
                 }
+
+                // Remembered even when priming swallowed the line, so the chat-log
+                // copy of an already-seen conversation is dropped too.
+                RememberRealtimeLine(line.Length > 0 ? line : BuildRealtimeDialogLine(speakerName, talkText));
             }
 
             if (fallbackDirectDialog.ChatLogItems == null || fallbackDirectDialog.ChatLogItems.Count == 0)

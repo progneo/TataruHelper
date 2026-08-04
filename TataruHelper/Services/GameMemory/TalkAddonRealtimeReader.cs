@@ -45,6 +45,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
         private string _lastLoggedLastTalk = string.Empty;
         private string _lastLoggedAddonNodes = string.Empty;
 
+        private string _lastLoggedLoadedAddons = string.Empty;
+
         public TalkAddonRealtimeReader(MemoryHandler memoryHandler)
         {
             _memoryHandler = memoryHandler;
@@ -66,7 +68,12 @@ namespace FFXIVTataruHelper.Services.GameMemory
             Logger.WriteRawDialogLog(payload);
         }
 
-        public TalkAddonRealtimeDialogSnapshot TryReadSnapshot()
+        /// <param name="lastEmittedText">
+        /// Text the gateway reported last. The Talk addon holds its line long after
+        /// the box is gone, so without this a stale Talk line wins over a cutscene
+        /// subtitle that is actually on screen and subtitles never surface.
+        /// </param>
+        public TalkAddonRealtimeDialogSnapshot TryReadSnapshot(string lastEmittedText = null)
         {
             if (_memoryHandler == null)
             {
@@ -114,7 +121,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
                     Array.Empty<TalkAddonRealtimeDialogSnapshot>());
             }
 
-            if (!TryReadLoadedAddonSnapshot(atkUnitManagerAddress, lastTalkName, lastTalkText, out var snapshot))
+            if (!TryReadLoadedAddonSnapshot(atkUnitManagerAddress, lastTalkName, lastTalkText, lastEmittedText,
+                    out var snapshot))
             {
                 return SelectRealtimeSnapshot(lastTalkName, lastTalkText,
                     Array.Empty<TalkAddonRealtimeDialogSnapshot>());
@@ -148,6 +156,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
             IntPtr atkUnitManagerAddress,
             string speakerName,
             string lastTalkText,
+            string lastEmittedText,
             out TalkAddonRealtimeDialogSnapshot snapshot)
         {
             snapshot = TalkAddonRealtimeDialogSnapshot.Unavailable();
@@ -192,7 +201,17 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 loadedAddons.Add(new LoadedAddon(addonAddress, addonName));
             }
 
+            if (Logger.RawDialogLogEnabled)
+            {
+                WriteDistinctRawDialogLog(ref _lastLoggedLoadedAddons,
+                    "LoadedAddons=" + string.Join(",", loadedAddons.Select(addon => addon.AddonName).OrderBy(n => n)));
+            }
+
             var matchedEmptySource = false;
+            var matchedStaleSource = false;
+            var staleSnapshot = TalkAddonRealtimeDialogSnapshot.Unavailable();
+            var normalizedLastEmitted = SharlayanGameMemoryGateway.NormalizeDialogToken(lastEmittedText);
+
             foreach (var addonSpec in _uiDirectDialogOffsets.Value.AddonSpecs)
             {
                 // A cutscene keeps several TalkSubtitle addons loaded at once and
@@ -224,7 +243,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
                     }
 
                     var addonSnapshot = BuildAddonSnapshot(addonSpec, nodeTexts, speakerName, lastTalkText);
-                    if (SharlayanGameMemoryGateway.NormalizeDialogToken(addonSnapshot.TalkText).Length == 0)
+                    var addonText = SharlayanGameMemoryGateway.NormalizeDialogToken(addonSnapshot.TalkText);
+                    if (addonText.Length == 0)
                     {
                         if (!matchedEmptySource)
                         {
@@ -235,9 +255,27 @@ namespace FFXIVTataruHelper.Services.GameMemory
                         continue;
                     }
 
-                    snapshot = addonSnapshot;
-                    return true;
+                    // A line we have not reported yet wins outright. Otherwise keep
+                    // it as a fallback and carry on looking, so a Talk addon still
+                    // holding a finished conversation cannot mask a live subtitle.
+                    if (!string.Equals(addonText, normalizedLastEmitted, StringComparison.Ordinal))
+                    {
+                        snapshot = addonSnapshot;
+                        return true;
+                    }
+
+                    if (!matchedStaleSource)
+                    {
+                        staleSnapshot = addonSnapshot;
+                        matchedStaleSource = true;
+                    }
                 }
+            }
+
+            if (matchedStaleSource)
+            {
+                snapshot = staleSnapshot;
+                return true;
             }
 
             return matchedEmptySource;

@@ -25,7 +25,26 @@ namespace Translation.Models
     {
         public string Name
         {
-            get { return EngineName.ToString(); }
+            get { return GetDisplayName(EngineName); }
+        }
+
+        /// <summary>
+        /// Name shown in the engine picker. The enum member names cannot be used
+        /// directly: "Yandex" is the credentialed Yandex Cloud service while
+        /// "YandexFree" is the keyless one, and showing them that way led users
+        /// straight to the engine that fails without an API key.
+        /// </summary>
+        public static string GetDisplayName(TranslationEngineName engineName)
+        {
+            switch (engineName)
+            {
+                case TranslationEngineName.YandexFree:
+                    return "Yandex";
+                case TranslationEngineName.Yandex:
+                    return "Yandex Cloud";
+                default:
+                    return engineName.ToString();
+            }
         }
 
         public ReadOnlyCollection<TranslatorLanguage> SupportedLanguages

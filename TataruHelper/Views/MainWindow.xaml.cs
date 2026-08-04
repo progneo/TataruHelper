@@ -158,7 +158,14 @@ public partial class MainWindow : FluentWindow
                 _translationCredentials);
 
             _settingsShellViewModel.PropertyChanged += OnSettingsShellPropertyChanged;
-            _settingsShellViewModel.FfStatusText = (string)Resources["FFStatusText"];
+
+            // The reader starts before this window exists, so the "process found"
+            // transition has usually already happened by now and its event is gone.
+            // Seed from the reader's current state instead of waiting for the next
+            // transition, which may never come.
+            ApplyFfStatus(
+                _tataruModel.FFMemoryReader.IsGameRunning,
+                _tataruModel.FFMemoryReader.GameProcessDescription);
 
             DataContext = _settingsShellViewModel;
 
@@ -388,11 +395,21 @@ public partial class MainWindow : FluentWindow
                 return;
             }
 
-            _settingsShellViewModel.FfStatusActive = ea.IsRunningNew;
-            _settingsShellViewModel.FfStatusText = ea.IsRunningNew
-                ? ((string)Resources["FFStatusTextFound"]) + " " + ea.Text
-                : (string)Resources["FFStatusText"];
+            ApplyFfStatus(ea.IsRunningNew, ea.Text);
         });
+    }
+
+    private void ApplyFfStatus(bool isRunning, string processDescription)
+    {
+        if (_settingsShellViewModel == null)
+        {
+            return;
+        }
+
+        _settingsShellViewModel.FfStatusActive = isRunning;
+        _settingsShellViewModel.FfStatusText = isRunning
+            ? ((string)Resources["FFStatusTextFound"]) + " " + (processDescription ?? string.Empty)
+            : (string)Resources["FFStatusText"];
     }
 
     private async Task OnShowFirstInstance(BooleanChangeEventArgs ea)

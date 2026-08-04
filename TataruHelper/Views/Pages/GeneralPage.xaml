@@ -272,7 +272,7 @@
                             <DockPanel>
                                 <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
                                                  IsChecked="{Binding Shell.TranslationCredentials.IsYandexEnabled, Mode=TwoWay}" />
-                                <TextBlock Text="Yandex" VerticalAlignment="Center" />
+                                <TextBlock Text="Yandex Cloud" VerticalAlignment="Center" />
                             </DockPanel>
                             <StackPanel Margin="0,8,0,0"
                                         Visibility="{Binding Shell.TranslationCredentials.ShowYandexSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">

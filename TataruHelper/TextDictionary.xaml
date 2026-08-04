@@ -219,8 +219,8 @@
     <system:String x:Key="AzureRegionLabel">Azure region</system:String>
     <system:String x:Key="GoogleCloudKeyLabel">Google Cloud key</system:String>
     <system:String x:Key="DeepLApiKeyLabel">DeepL API key</system:String>
-    <system:String x:Key="YandexApiKeyLabel">Yandex API key</system:String>
-    <system:String x:Key="YandexFolderIdLabel">Yandex folder ID</system:String>
+    <system:String x:Key="YandexApiKeyLabel">Yandex Cloud API key</system:String>
+    <system:String x:Key="YandexFolderIdLabel">Yandex Cloud folder ID</system:String>
     <system:String x:Key="OpenAIKeyLabel">OpenAI key</system:String>
     <system:String x:Key="OpenAIModelLabel">OpenAI model (optional)</system:String>
     <system:String x:Key="DeepSeekKeyLabel">DeepSeek key</system:String>
