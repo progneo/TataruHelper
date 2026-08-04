@@ -40,10 +40,42 @@ namespace FFXIVTataruHelper
             if (separatorIndex <= 0)
                 return false;
 
+            if (!LooksLikeSpeakerName(textToTranslate.Substring(0, separatorIndex)))
+                return false;
+
             separatorIndex++;
             nickName = textToTranslate.Substring(0, separatorIndex);
             textToTranslate = textToTranslate.Remove(0, separatorIndex);
             return true;
+        }
+
+        /// <summary>
+        /// Guards the speaker split against colons that belong to the sentence.
+        ///
+        /// Cutscene subtitles carry no speaker at all, so a line such as
+        /// "For the sake of all, I beseech thee: deliver us from this fate!" had
+        /// everything before the colon treated as a name and left untranslated.
+        /// A character name is short and carries no sentence punctuation.
+        /// </summary>
+        internal static bool LooksLikeSpeakerName(string candidate)
+        {
+            if (string.IsNullOrWhiteSpace(candidate))
+                return false;
+
+            candidate = candidate.Trim();
+
+            const int maxSpeakerNameLength = 40;
+            if (candidate.Length > maxSpeakerNameLength)
+                return false;
+
+            foreach (var c in candidate)
+            {
+                if (c == ',' || c == '.' || c == '!' || c == '?' || c == ';')
+                    return false;
+            }
+
+            const int maxSpeakerNameWords = 5;
+            return candidate.Split(' ').Length <= maxSpeakerNameWords;
         }
 
         public static string NormalizeBlackListEntry(string text)

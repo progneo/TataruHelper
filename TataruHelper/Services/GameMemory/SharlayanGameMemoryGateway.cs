@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 using FFXIVTataruHelper.Services.Logging;
 
@@ -158,12 +159,53 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 return false;
             }
 
-            return _recentRealtimeLines.Contains(NormalizeDialogToken(item?.Line));
+            return _recentRealtimeLines.Contains(BuildDuplicateKey(item?.Line));
+        }
+
+        /// <summary>
+        /// Reduces a dialogue line to just its spoken text so the live copy and the
+        /// chat-log copy compare equal. The two render the speaker differently, so
+        /// matching whole lines let every NPC line through twice.
+        /// </summary>
+        internal static string BuildDuplicateKey(string line)
+        {
+            var normalized = NormalizeDialogToken(line);
+            if (normalized.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            var separatorIndex = normalized.IndexOf(':');
+            if (separatorIndex > 0 && separatorIndex < normalized.Length - 1)
+            {
+                normalized = normalized.Substring(separatorIndex + 1);
+            }
+
+            var builder = new StringBuilder(normalized.Length);
+            var lastWasSpace = false;
+            foreach (var c in normalized)
+            {
+                if (char.IsWhiteSpace(c))
+                {
+                    lastWasSpace = true;
+                    continue;
+                }
+
+                if (lastWasSpace && builder.Length > 0)
+                {
+                    builder.Append(' ');
+                }
+
+                lastWasSpace = false;
+                builder.Append(char.ToLowerInvariant(c));
+            }
+
+            return builder.ToString();
         }
 
         private void RememberRealtimeLine(string line)
         {
-            var normalized = NormalizeDialogToken(line);
+            var normalized = BuildDuplicateKey(line);
             if (normalized.Length == 0)
             {
                 return;

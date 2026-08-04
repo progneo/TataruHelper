@@ -290,8 +290,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
         /// about twenty times a second. When nothing changed the previous choice is
         /// kept, so the signature stays put and nothing is re-emitted.
         /// </summary>
-        private bool TrySelectActiveCandidate(
-            List<(string Key, TalkAddonRealtimeDialogSnapshot Snapshot, string Text)> candidates,
+        internal bool TrySelectActiveCandidate(
+            IReadOnlyList<(string Key, TalkAddonRealtimeDialogSnapshot Snapshot, string Text)> candidates,
             out TalkAddonRealtimeDialogSnapshot snapshot)
         {
             snapshot = TalkAddonRealtimeDialogSnapshot.Unavailable();
@@ -382,19 +382,35 @@ namespace FFXIVTataruHelper.Services.GameMemory
             string lastTalkText,
             bool allowNodeSpeaker)
         {
-            var normalizedNodeTexts = (nodeTexts ?? Array.Empty<string>())
+            var slots = (nodeTexts ?? Array.Empty<string>())
                 .Select(SharlayanGameMemoryGateway.NormalizeDialogToken)
-                .Where(text => text.Length > 0)
                 .ToArray();
-            var talkText = SharlayanGameMemoryGateway.SelectBestTalkText(normalizedNodeTexts);
+
+            var normalizedNodeTexts = slots.Where(text => text.Length > 0).ToArray();
+
+            var talkText = string.Empty;
             var speakerName = string.Empty;
 
-            if (allowNodeSpeaker)
+            // AddonTalk keeps the speaker in its first text node and the line in the
+            // second. Picking the longest text instead used to swap them whenever the
+            // name happened to be as long as the line - "Short-tempered Thaumaturge"
+            // and "Is this our dark stranger?" are both 26 characters.
+            if (allowNodeSpeaker && slots.Length >= 2 && slots[1].Length > 0)
             {
-                speakerName = normalizedNodeTexts
-                    .FirstOrDefault(text =>
-                        !string.Equals(text, talkText, StringComparison.Ordinal)
-                    ) ?? string.Empty;
+                speakerName = slots[0];
+                talkText = slots[1];
+            }
+            else
+            {
+                talkText = SharlayanGameMemoryGateway.SelectBestTalkText(normalizedNodeTexts);
+
+                if (allowNodeSpeaker)
+                {
+                    speakerName = normalizedNodeTexts
+                        .FirstOrDefault(text =>
+                            !string.Equals(text, talkText, StringComparison.Ordinal)
+                        ) ?? string.Empty;
+                }
             }
 
             if (speakerName.Length == 0 && DialogTextMatches(lastTalkText, talkText))
@@ -529,25 +545,26 @@ namespace FFXIVTataruHelper.Services.GameMemory
         {
             var textCandidates = new List<string>();
 
+            // Slots stay aligned with textNodeOffsets, empties included: for
+            // AddonTalk the first offset is the speaker node and the second the
+            // dialogue node, and dropping blanks here would shift that mapping.
             foreach (var textNodeOffset in textNodeOffsets)
             {
                 var textNodeAddress = _memoryHandler.ReadPointer(addonAddress, textNodeOffset);
                 if (textNodeAddress == IntPtr.Zero)
                 {
+                    textCandidates.Add(string.Empty);
                     continue;
                 }
 
                 if (!TryReadUtf8String(textNodeAddress, _uiDirectDialogOffsets.Value.AtkTextNodeNodeTextOffset,
                         out var candidate))
                 {
+                    textCandidates.Add(string.Empty);
                     continue;
                 }
 
-                var normalized = SharlayanGameMemoryGateway.NormalizeDialogToken(candidate);
-                if (normalized.Length > 0)
-                {
-                    textCandidates.Add(normalized);
-                }
+                textCandidates.Add(SharlayanGameMemoryGateway.NormalizeDialogToken(candidate));
             }
 
             nodeTexts = textCandidates.ToArray();
