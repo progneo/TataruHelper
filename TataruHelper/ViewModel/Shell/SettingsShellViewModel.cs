@@ -24,6 +24,8 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     private SettingsSectionItem _selectedSection;
     private LanguageOption _selectedLanguageOption;
     private string _ffStatusText;
+
+    private bool _ffStatusActive;
     private readonly string _appVersion;
 
     public TranslationCredentialsViewModel TranslationCredentials { get; }
@@ -188,18 +190,30 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
             _ffStatusText = value;
             OnPropertyChanged();
-            OnPropertyChanged(nameof(FfStatusActive));
         }
     }
 
+    /// <summary>
+    /// Whether the game process is currently attached.
+    ///
+    /// This used to be inferred by matching the status text against the
+    /// "Process found:" resource, but the text is built from the window's
+    /// localized dictionary while the comparison read the application's English
+    /// defaults — so on any non-English UI the indicator stayed red even though
+    /// the process was attached and translation was working.
+    /// </summary>
     public bool FfStatusActive
     {
-        get
+        get => _ffStatusActive;
+        set
         {
-            var foundPrefix = Application.Current?.Resources?["FFStatusTextFound"] as string;
-            return !string.IsNullOrEmpty(_ffStatusText)
-                   && !string.IsNullOrEmpty(foundPrefix)
-                   && _ffStatusText.StartsWith(foundPrefix, StringComparison.Ordinal);
+            if (_ffStatusActive == value)
+            {
+                return;
+            }
+
+            _ffStatusActive = value;
+            OnPropertyChanged();
         }
     }
 

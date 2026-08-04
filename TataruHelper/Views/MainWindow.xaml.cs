@@ -388,6 +388,7 @@ public partial class MainWindow : FluentWindow
                 return;
             }
 
+            _settingsShellViewModel.FfStatusActive = ea.IsRunningNew;
             _settingsShellViewModel.FfStatusText = ea.IsRunningNew
                 ? ((string)Resources["FFStatusTextFound"]) + " " + ea.Text
                 : (string)Resources["FFStatusText"];
