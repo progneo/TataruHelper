@@ -52,9 +52,6 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private string _stickyCandidateKey;
 
-        /// <summary>Offset found by searching, once the baked-in one stopped working.</summary>
-        private long _discoveredInlineTextOffset = -1;
-
         private DateTime _lastInlineDiscovery = DateTime.MinValue;
 
         private static readonly TimeSpan InlineDiscoveryInterval = TimeSpan.FromSeconds(2);
@@ -596,22 +593,22 @@ namespace FFXIVTataruHelper.Services.GameMemory
         {
             if (addonSpec.InlineTextOffset >= 0)
             {
-                var offset = _discoveredInlineTextOffset >= 0
-                    ? _discoveredInlineTextOffset
-                    : addonSpec.InlineTextOffset;
-
-                if (TryReadUtf8String(addonAddress, offset, out var inlineText) && inlineText.Length > 0)
+                // The known offset always wins. A discovered one is never latched
+                // onto: a single false positive would otherwise keep feeding
+                // whatever it landed on for the rest of the session, in place of
+                // the subtitles it was supposed to rescue.
+                if (TryReadUtf8String(addonAddress, addonSpec.InlineTextOffset, out var inlineText) &&
+                    inlineText.Length > 0)
                 {
                     nodeTexts = new[] { inlineText };
                     return true;
                 }
 
-                // Nothing there. Either no subtitle is showing, or a game patch
-                // moved the field - the latter is worth checking for, since this
-                // offset is the one thing here FFXIVClientStructs cannot supply.
-                if (TryDiscoverInlineTextOffset(addonAddress, out var discovered, out var discoveredText))
+                // Nothing there. Usually that just means no subtitle is showing, but
+                // it is also what a patch moving the field looks like - and this is
+                // the one offset FFXIVClientStructs cannot supply.
+                if (TryDiscoverInlineTextOffset(addonAddress, out _, out var discoveredText))
                 {
-                    _discoveredInlineTextOffset = discovered;
                     nodeTexts = new[] { discoveredText };
                     return true;
                 }
@@ -865,17 +862,33 @@ namespace FFXIVTataruHelper.Services.GameMemory
         }
 
         /// <summary>
-        /// True when the bytes read like a line of dialogue rather than binary that
-        /// happens to decode. Guards the offset search against false positives.
+        /// True when the bytes read like a spoken line rather than something else
+        /// that happens to decode.
+        ///
+        /// An addon is full of readable strings that are not dialogue - animation
+        /// and layout identifiers such as "cbbp_a_deact", short labels such as
+        /// "ПЭ 2" - and a loose test let those reach the translator as if they were
+        /// subtitles. A line of dialogue is long, has several words, and does not
+        /// look like a code identifier.
         /// </summary>
         internal static bool LooksLikeDialogueText(string value)
         {
-            if (string.IsNullOrWhiteSpace(value) || value.Length < 4)
+            const int minDialogueLength = 12;
+
+            if (string.IsNullOrWhiteSpace(value) || value.Length < minDialogueLength)
+            {
+                return false;
+            }
+
+            if (value.IndexOf('_') >= 0)
             {
                 return false;
             }
 
             var letters = 0;
+            var visible = 0;
+            var words = 1;
+
             foreach (var c in value)
             {
                 if (char.IsControl(c) && c != '\n' && c != '\r' && c != '\t')
@@ -883,13 +896,26 @@ namespace FFXIVTataruHelper.Services.GameMemory
                     return false;
                 }
 
+                if (char.IsWhiteSpace(c))
+                {
+                    words++;
+                    continue;
+                }
+
+                visible++;
+
                 if (char.IsLetter(c))
                 {
                     letters++;
                 }
             }
 
-            return letters * 2 >= value.Length;
+            if (words < 3 || visible == 0)
+            {
+                return false;
+            }
+
+            return letters * 10 >= visible * 7;
         }
 
         private bool TryReadUtf8String(IntPtr baseAddress, long structOffset, out string value)

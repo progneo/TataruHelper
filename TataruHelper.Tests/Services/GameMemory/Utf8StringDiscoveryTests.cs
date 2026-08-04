@@ -103,9 +103,10 @@ namespace TataruHelper.Tests.Services.GameMemory
             Assert.That(TalkAddonRealtimeReader.TryParseUtf8StringHeader(buffer, 0, out _, out _, out _), Is.False);
         }
 
-        [TestCase("Crystal bearer...")]
         [TestCase("I am Hydaelyn. All made one.")]
-        [TestCase("Добро пожаловать")]
+        [TestCase("Crystal bearer, hear me now.")]
+        [TestCase("For the sake of all, I beseech thee: deliver us from this fate!")]
+        [TestCase("Добро пожаловать в Карлайн Каноли")]
         public void DialogueText_IsAccepted(string text)
         {
             Assert.That(TalkAddonRealtimeReader.LooksLikeDialogueText(text), Is.True);
@@ -115,8 +116,15 @@ namespace TataruHelper.Tests.Services.GameMemory
         [TestCase("   ")]
         [TestCase("ab")]
         [TestCase("")]
+        // Everything below was seen reaching the translator as if it were a
+        // subtitle, because the first version of this rule only asked for letters.
+        [TestCase("cbbp_a_deact")]
+        [TestCase("ПЭ 2")]
+        [TestCase("atr_parts_a")]
+        [TestCase("Talk")]
+        [TestCase("Crystal bearer...")]
         [TestCase("0x40 0x00 0x12 0x99")]
-        public void BinaryOrTooShort_IsRejected(string text)
+        public void NonDialogue_IsRejected(string text)
         {
             Assert.That(TalkAddonRealtimeReader.LooksLikeDialogueText(text), Is.False);
         }
