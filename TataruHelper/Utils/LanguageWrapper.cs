@@ -386,8 +386,8 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["AzureRegionLabel"] = catalog.GetString("Azure region");
             _SettingsWindow.Resources["GoogleCloudKeyLabel"] = catalog.GetString("Google Cloud key");
             _SettingsWindow.Resources["DeepLApiKeyLabel"] = catalog.GetString("DeepL API key");
-            _SettingsWindow.Resources["YandexApiKeyLabel"] = catalog.GetString("Yandex API key");
-            _SettingsWindow.Resources["YandexFolderIdLabel"] = catalog.GetString("Yandex folder ID");
+            _SettingsWindow.Resources["YandexApiKeyLabel"] = catalog.GetString("Yandex Cloud API key");
+            _SettingsWindow.Resources["YandexFolderIdLabel"] = catalog.GetString("Yandex Cloud folder ID");
             _SettingsWindow.Resources["OpenAIKeyLabel"] = catalog.GetString("OpenAI key");
             _SettingsWindow.Resources["OpenAIModelLabel"] = catalog.GetString("OpenAI model (optional)");
             _SettingsWindow.Resources["GeminiKeyLabel"] = catalog.GetString("Gemini API key");

@@ -844,3 +844,38 @@ msgstr "Timeout in seconds."
 #~ msgstr ""
 #~ "We express our great appreciation to the people who support our project "
 #~ "and motivate us for new achievements."
+
+# Added for the realtime switch, engine fallback and Gemini engine.
+
+msgid "English"
+msgstr "English"
+
+msgid "Russian"
+msgstr "Russian"
+
+msgid "Per Window Settings"
+msgstr "Per Window Settings"
+
+msgid "Application"
+msgstr "Application"
+
+msgid "Real-Time Translation"
+msgstr "Real-Time Translation"
+
+msgid "[{0} → {1}]"
+msgstr "[{0} → {1}]"
+
+msgid "Translate NPC dialogue and cutscene subtitles as they appear, without waiting for the chat log. The chat-log copies of those lines are skipped so nothing is shown twice."
+msgstr "Translate NPC dialogue and cutscene subtitles as they appear, without waiting for the chat log. The chat-log copies of those lines are skipped so nothing is shown twice."
+
+msgid "Yandex Cloud API key"
+msgstr "Yandex Cloud API key"
+
+msgid "Yandex Cloud folder ID"
+msgstr "Yandex Cloud folder ID"
+
+msgid "Gemini API key"
+msgstr "Gemini API key"
+
+msgid "Gemini model (optional, e.g. gemini-2.5-flash)"
+msgstr "Gemini model (optional, e.g. gemini-2.5-flash)"

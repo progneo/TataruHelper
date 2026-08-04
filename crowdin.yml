@@ -1,0 +1,33 @@
+# Crowdin sync for the settings-window and overlay strings.
+#
+# The English catalog is the source; every other language is downloaded from
+# Crowdin rather than edited here. Russian is kept in the repository as well so
+# the language the project is developed against does not depend on a round trip
+# through Crowdin.
+#
+#   crowdin upload sources      - push newly added strings for translation
+#   crowdin download            - pull finished translations back
+#
+# Needs CROWDIN_PROJECT_ID and CROWDIN_PERSONAL_TOKEN in the environment.
+
+"project_id_env": "CROWDIN_PROJECT_ID"
+"api_token_env": "CROWDIN_PERSONAL_TOKEN"
+
+"preserve_hierarchy": true
+
+files:
+  - source: /TataruHelper/Locale/en/en_US.po
+    translation: /TataruHelper/Locale/%locale%/%locale_with_underscores%.po
+    languages_mapping:
+      locale:
+        ca: ca
+        es-ES: es-ES
+        it: it
+        ja: ja
+        ko: ko
+        pl: pl
+        pt-BR: pt-BR
+        ru: ru
+        uk: uk
+        zh-CN: zh-CN
+        zh-TW: zh-TW
