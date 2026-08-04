@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Windows.Data;
@@ -917,14 +918,58 @@ namespace FFXIVTataruHelper.ViewModel
         private void TrySetLanguage(CollectionView collection, TranslatorLanguage language)
         {
             if (language == null)
-                collection.MoveCurrentToFirst();
+                MoveToDefaultLanguage(collection);
             else
             {
                 if (collection.Contains(language))
                     collection.MoveCurrentTo(language);
                 else
-                    collection.MoveCurrentToFirst();
+                    MoveToDefaultLanguage(collection);
             }
+        }
+
+        /// <summary>
+        /// Picks a starting language instead of taking whatever sorts first.
+        ///
+        /// The lists are alphabetical and "Auto" is stripped from the target list,
+        /// so a new chat window used to default to translating into Afrikaans.
+        /// The interface language is the best guess at what the player reads.
+        /// </summary>
+        private static void MoveToDefaultLanguage(CollectionView collection)
+        {
+            if (collection == null)
+            {
+                return;
+            }
+
+            var languages = collection.SourceCollection?.OfType<TranslatorLanguage>().ToList();
+            if (languages == null || languages.Count == 0)
+            {
+                collection.MoveCurrentToFirst();
+                return;
+            }
+
+            var preferred = FindByCode(languages, CultureInfo.CurrentUICulture.TwoLetterISOLanguageName)
+                            ?? FindByCode(languages, "en");
+
+            if (preferred != null)
+            {
+                collection.MoveCurrentTo(preferred);
+                return;
+            }
+
+            collection.MoveCurrentToFirst();
+        }
+
+        private static TranslatorLanguage FindByCode(List<TranslatorLanguage> languages, string code)
+        {
+            if (string.IsNullOrEmpty(code))
+            {
+                return null;
+            }
+
+            return languages.FirstOrDefault(x =>
+                string.Equals(x.LanguageCode, code, StringComparison.OrdinalIgnoreCase));
         }
 
         private void ShowChatWindow()

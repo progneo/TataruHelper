@@ -446,7 +446,8 @@ namespace FFXIVTataruHelper
 
             BackGroundColor = Color.FromArgb(0x4B, 0, 0, 0);
 
-            TranslationEngineName = TranslationEngineName.GoogleTranslate;
+            // Keyless, and the fastest of the engines that need no setup.
+            TranslationEngineName = TranslationEngineName.YandexFree;
             FromLanguague = null;
             ToLanguague = null;
 
@@ -490,7 +491,8 @@ namespace FFXIVTataruHelper
 
             BackGroundColor = Color.FromArgb(0x4B, 0, 0, 0);
 
-            TranslationEngineName = TranslationEngineName.GoogleTranslate;
+            // Keyless, and the fastest of the engines that need no setup.
+            TranslationEngineName = TranslationEngineName.YandexFree;
             FromLanguague = null;
             ToLanguague = null;
 

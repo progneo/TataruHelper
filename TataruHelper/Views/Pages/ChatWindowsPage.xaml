@@ -80,7 +80,7 @@
                     </Grid.ColumnDefinitions>
                     <ui:TextBox Grid.Column="0"
                                 VerticalAlignment="Center"
-                                Text="{Binding Name, Mode=TwoWay}"
+                                Text="{Binding Name, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                 PlaceholderText="{DynamicResource WindowNameLabel}" />
                     <ui:Button Grid.Column="1"
                                Margin="8,0,0,0"
