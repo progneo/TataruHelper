@@ -52,6 +52,15 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private string _stickyCandidateKey;
 
+        /// <summary>Offset found by searching, once the baked-in one stopped working.</summary>
+        private long _discoveredInlineTextOffset = -1;
+
+        private DateTime _lastInlineDiscovery = DateTime.MinValue;
+
+        private static readonly TimeSpan InlineDiscoveryInterval = TimeSpan.FromSeconds(2);
+
+        private const int InlineDiscoveryScanBytes = 0x600;
+
         private TalkAddonRealtimeDialogSnapshot _lastSelectedSnapshot;
 
         private bool _hasLastSelectedSnapshot;
@@ -524,9 +533,27 @@ namespace FFXIVTataruHelper.Services.GameMemory
         {
             if (addonSpec.InlineTextOffset >= 0)
             {
-                nodeTexts = TryReadUtf8String(addonAddress, addonSpec.InlineTextOffset, out var inlineText)
-                    ? new[] { inlineText }
-                    : Array.Empty<string>();
+                var offset = _discoveredInlineTextOffset >= 0
+                    ? _discoveredInlineTextOffset
+                    : addonSpec.InlineTextOffset;
+
+                if (TryReadUtf8String(addonAddress, offset, out var inlineText) && inlineText.Length > 0)
+                {
+                    nodeTexts = new[] { inlineText };
+                    return true;
+                }
+
+                // Nothing there. Either no subtitle is showing, or a game patch
+                // moved the field - the latter is worth checking for, since this
+                // offset is the one thing here FFXIVClientStructs cannot supply.
+                if (TryDiscoverInlineTextOffset(addonAddress, out var discovered, out var discoveredText))
+                {
+                    _discoveredInlineTextOffset = discovered;
+                    nodeTexts = new[] { discoveredText };
+                    return true;
+                }
+
+                nodeTexts = Array.Empty<string>();
                 return true;
             }
 
@@ -623,6 +650,183 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
             nodeTexts = textCandidates.ToArray();
             return true;
+        }
+
+        /// <summary>
+        /// Looks through the addon for a Utf8String holding readable text, so a
+        /// patch that moves the subtitle field is recovered from automatically
+        /// instead of silently ending cutscene translation.
+        ///
+        /// Throttled, because while no subtitle is on screen there is genuinely
+        /// nothing to find and the search would otherwise run every poll.
+        /// </summary>
+        private bool TryDiscoverInlineTextOffset(IntPtr addonAddress, out long offset, out string text)
+        {
+            offset = -1;
+            text = string.Empty;
+
+            var now = DateTime.UtcNow;
+            if (now - _lastInlineDiscovery < InlineDiscoveryInterval)
+            {
+                return false;
+            }
+
+            _lastInlineDiscovery = now;
+
+            byte[] block;
+            try
+            {
+                block = _memoryHandler.GetByteArray(addonAddress, InlineDiscoveryScanBytes);
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+
+            if (block == null || block.Length < (int)Utf8StringInlineBufferOffset)
+            {
+                return false;
+            }
+
+            var bestLength = 0;
+
+            for (var candidate = 0; candidate + (int)Utf8StringInlineBufferOffset <= block.Length; candidate += 8)
+            {
+                if (!TryParseUtf8StringHeader(block, candidate, out var byteCount, out var isInline,
+                        out var dataPointer))
+                {
+                    continue;
+                }
+
+                string value;
+                if (isInline)
+                {
+                    var start = candidate + (int)Utf8StringInlineBufferOffset;
+                    var available = Math.Min((int)byteCount, block.Length - start);
+                    if (available <= 0)
+                    {
+                        continue;
+                    }
+
+                    value = DecodeUtf8(block, start, available);
+                }
+                else
+                {
+                    var data = _memoryHandler.GetByteArray(new IntPtr(dataPointer), (int)byteCount);
+                    if (data == null || data.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    value = DecodeUtf8(data, 0, data.Length);
+                }
+
+                if (!LooksLikeDialogueText(value) || value.Length <= bestLength)
+                {
+                    continue;
+                }
+
+                bestLength = value.Length;
+                offset = candidate;
+                text = value;
+            }
+
+            if (offset < 0)
+            {
+                return false;
+            }
+
+            if (Logger.RawDialogLogEnabled)
+            {
+                Logger.WriteRawDialogLog($"Discovered subtitle Utf8String at +0x{offset:X}");
+            }
+
+            return true;
+        }
+
+        private static string DecodeUtf8(byte[] data, int start, int count)
+        {
+            var terminator = Array.IndexOf(data, (byte)0, start, count);
+            if (terminator >= 0)
+            {
+                count = terminator - start;
+            }
+
+            return count <= 0 ? string.Empty : Encoding.UTF8.GetString(data, start, count);
+        }
+
+        /// <summary>
+        /// Recognises a Utf8String header inside a block of addon memory.
+        ///
+        /// Used to rediscover where a string lives when the offset baked into the
+        /// code stops working - the layout is distinctive enough to find by shape:
+        /// a byte count, a matching capacity, an inline flag, and either an inline
+        /// buffer or a pointer.
+        /// </summary>
+        internal static bool TryParseUtf8StringHeader(byte[] buffer, int offset, out long byteCount,
+            out bool isInline, out long dataPointer)
+        {
+            byteCount = 0;
+            isInline = false;
+            dataPointer = 0;
+
+            if (buffer == null || offset < 0 || offset + (int)Utf8StringInlineBufferOffset > buffer.Length)
+            {
+                return false;
+            }
+
+            var bufUsed = BitConverter.ToInt64(buffer, offset + (int)Utf8StringBufUsedOffset);
+            var length = BitConverter.ToInt64(buffer, offset + (int)Utf8StringLengthOffset);
+
+            byteCount = bufUsed > 0 ? bufUsed : length;
+            if (byteCount <= 0 || byteCount > MaxUtf8StringByteLength)
+            {
+                return false;
+            }
+
+            // Capacity has to be able to hold what the length claims.
+            if (bufUsed > 0 && length > 0 && length < bufUsed - 1)
+            {
+                return false;
+            }
+
+            isInline = buffer[offset + (int)Utf8StringInlineFlagOffset] != 0;
+            dataPointer = BitConverter.ToInt64(buffer, offset + (int)Utf8StringPointerOffset);
+
+            if (!isInline && (dataPointer <= 0x10000 || dataPointer > 0x7FFFFFFFFFFF))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// True when the bytes read like a line of dialogue rather than binary that
+        /// happens to decode. Guards the offset search against false positives.
+        /// </summary>
+        internal static bool LooksLikeDialogueText(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value) || value.Length < 4)
+            {
+                return false;
+            }
+
+            var letters = 0;
+            foreach (var c in value)
+            {
+                if (char.IsControl(c) && c != '\n' && c != '\r' && c != '\t')
+                {
+                    return false;
+                }
+
+                if (char.IsLetter(c))
+                {
+                    letters++;
+                }
+            }
+
+            return letters * 2 >= value.Length;
         }
 
         private bool TryReadUtf8String(IntPtr baseAddress, long structOffset, out string value)
