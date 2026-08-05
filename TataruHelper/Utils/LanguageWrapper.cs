@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Windows;
 
@@ -236,6 +236,8 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["AlwaysOnTopCB"] = catalog.GetString("Always On Top");
             _SettingsWindow.Resources["HideToTrayCB"] = catalog.GetString("Hide to Tray");
             _SettingsWindow.Resources["RealtimeTranslationCB"] = catalog.GetString("Real-Time Translation");
+            _SettingsWindow.Resources["LiteraryTranslationCB"] = catalog.GetString("Literary translation");
+            _SettingsWindow.Resources["MarkMachineTranslationCB"] = catalog.GetString("Mark machine translation");
             _SettingsWindow.Resources["ShowTimestampsCb"] = catalog.GetString("Show Timestamps");
 
             _SettingsWindow.Resources["StreamerWindowCB"] = catalog.GetString("Streamer Window");
@@ -361,6 +363,12 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["RealtimeTranslationDescription"] =
                 catalog.GetString(
                     "Translate NPC dialogue and cutscene subtitles as they appear, without waiting for the chat log. The chat-log copies of those lines are skipped so nothing is shown twice.");
+            _SettingsWindow.Resources["LiteraryTranslationDescription"] =
+                catalog.GetString(
+                    "Show the hand-made translation of a line when the game's own text has one, and translate the rest as usual.");
+            _SettingsWindow.Resources["MarkMachineTranslationDescription"] =
+                catalog.GetString(
+                    "Put a dot in front of lines an engine translated, so the hand-made ones are the plain ones.");
             _SettingsWindow.Resources["LanguageGroupHint"] =
                 catalog.GetString("Interface language for the settings window and overlays.");
 

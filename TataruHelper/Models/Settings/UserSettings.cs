@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -28,6 +28,16 @@ namespace FFXIVTataruHelper
         public bool IsAutoHide { get; set; } = false;
 
         public bool IsDirecMemoryReading { get; set; } = true;
+
+
+        /// <summary>Use hand-made translations of the game's dialogue where they exist.</summary>
+
+        public bool IsLiteraryTranslation { get; set; } = true;
+
+
+        /// <summary>Mark lines an engine translated, so the hand-made ones stand out.</summary>
+
+        public bool IsMachineTranslationMarked { get; set; }
 
         public TimeSpan AutoHideTimeout { get; set; } = new TimeSpan(0, 5, 0);
 

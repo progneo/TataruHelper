@@ -42,11 +42,23 @@ namespace FFXIVTataruHelper.Services.UI
             TataruViewModel viewModel)
         {
             _ffMemoryReader.IsRealtimeTranslationEnabled = uiModel.IsRealtimeTranslation;
+            tataruModel.WebTranslator.UseReferenceTranslations = uiModel.IsLiteraryTranslation;
+            tataruModel.ChatProcessor.MarkMachineTranslation = uiModel.IsMachineTranslationMarked;
+            _ffMemoryReader.PlayerNameResolved = name => tataruModel.WebTranslator.PlayerName = name;
             uiModel.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(TataruUIModel.IsRealtimeTranslation))
                 {
                     _ffMemoryReader.IsRealtimeTranslationEnabled = uiModel.IsRealtimeTranslation;
+                }
+                else if (e.PropertyName == nameof(TataruUIModel.IsLiteraryTranslation))
+                {
+                    tataruModel.WebTranslator.UseReferenceTranslations = uiModel.IsLiteraryTranslation;
+                }
+
+                else if (e.PropertyName == nameof(TataruUIModel.IsMachineTranslationMarked))
+                {
+                    tataruModel.ChatProcessor.MarkMachineTranslation = uiModel.IsMachineTranslationMarked;
                 }
             };
 

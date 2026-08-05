@@ -183,6 +183,38 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// <summary>Use the hand-made translation of a line when there is one.</summary>
+    public bool IsLiteraryTranslation
+    {
+        get => _uiModel.IsLiteraryTranslation;
+        set
+        {
+            if (_uiModel.IsLiteraryTranslation == value)
+            {
+                return;
+            }
+
+            _uiModel.IsLiteraryTranslation = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>Mark lines an engine translated, leaving hand-made ones plain.</summary>
+    public bool IsMachineTranslationMarked
+    {
+        get => _uiModel.IsMachineTranslationMarked;
+        set
+        {
+            if (_uiModel.IsMachineTranslationMarked == value)
+            {
+                return;
+            }
+
+            _uiModel.IsMachineTranslationMarked = value;
+            OnPropertyChanged();
+        }
+    }
+
     public bool IsHideSettingsToTray
     {
         get => _uiModel.IsHideSettingsToTray;

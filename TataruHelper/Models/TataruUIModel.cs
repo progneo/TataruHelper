@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
@@ -97,6 +97,52 @@ namespace FFXIVTataruHelper
             }
         }
 
+        /// <summary>
+        /// Whether a line the game's own translators have already rendered by
+        /// hand is used in place of asking a translation service for it.
+        ///
+        /// Off, the application is a translator and nothing else. On, dialogue
+        /// that appears in the xivrus translation is shown as written there -
+        /// instantly, and closer to what the writers meant, since it is made
+        /// from the Japanese rather than the English adaptation.
+        /// </summary>
+        public bool IsLiteraryTranslation
+        {
+            get { return _IsLiteraryTranslation; }
+            set
+            {
+                _IsLiteraryTranslation = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        /// <summary>
+
+        /// Whether a line an engine translated carries a mark saying so. Off, there
+
+        /// is no telling the two apart by reading them.
+
+        /// </summary>
+
+        public bool IsMachineTranslationMarked
+
+        {
+
+            get { return _IsMachineTranslationMarked; }
+
+            set
+
+            {
+
+                _IsMachineTranslationMarked = value;
+
+                NotifyPropertyChanged();
+
+            }
+
+        }
+
+
         public PointD SettingsWindowSize
         {
             get { return _SettingsWindowSize; }
@@ -162,6 +208,13 @@ namespace FFXIVTataruHelper
 
         bool _IsRealtimeTranslation = true;
 
+
+        bool _IsLiteraryTranslation = true;
+
+
+
+        bool _IsMachineTranslationMarked;
+
         PointD _SettingsWindowSize = new PointD(0.0, 0.0);
 
         AsyncBindingList<ChatWindowViewModelSettings> _ChatWindows;
@@ -207,6 +260,10 @@ namespace FFXIVTataruHelper
 
             IsRealtimeTranslation = userSettings.IsDirecMemoryReading;
 
+            IsLiteraryTranslation = userSettings.IsLiteraryTranslation;
+
+            IsMachineTranslationMarked = userSettings.IsMachineTranslationMarked;
+
             SettingsWindowSize = userSettings.SettingsWindowSize;
 
             var tmpChatWindows = new List<ChatWindowViewModelSettings>(userSettings.ChatWindows);
@@ -231,6 +288,10 @@ namespace FFXIVTataruHelper
             userSettings.IsHideToTray = this.IsHideSettingsToTray;
 
             userSettings.IsDirecMemoryReading = this.IsRealtimeTranslation;
+
+            userSettings.IsLiteraryTranslation = this.IsLiteraryTranslation;
+
+            userSettings.IsMachineTranslationMarked = this.IsMachineTranslationMarked;
 
             userSettings.SettingsWindowSize = this.SettingsWindowSize;
 

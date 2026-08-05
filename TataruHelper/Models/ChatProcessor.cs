@@ -156,13 +156,33 @@ namespace FFXIVTataruHelper
                 toLang,
                 cancellationToken);
 
-            if (result.IsSuccess && nickName.Length > 0 && result.Text.Length > 0)
+            if (!result.IsSuccess || result.Text.Length == 0)
             {
-                return TranslationResult.Success(result.Engine, nickName + " " + result.Text);
+                return result;
             }
 
-            return result;
+            var line = nickName.Length > 0 ? nickName + " " + result.Text : result.Text;
+
+            // The marker goes on the machine translation rather than the
+            // hand-made one: in story dialogue the hand-made answer is the
+            // common case, and marking the common case is just clutter.
+            if (MarkMachineTranslation && !result.IsLiterary)
+            {
+                line = MachineTranslationMarker + line;
+            }
+
+            return result.WithText(line);
         }
+
+        /// <summary>Prefix shown on lines an engine translated, when asked for.</summary>
+        internal const string MachineTranslationMarker = "• ";
+
+        /// <summary>
+        /// Whether an engine's translation is marked as such. Nothing about the
+        /// text says where it came from, and being unable to tell was the whole
+        /// complaint.
+        /// </summary>
+        public bool MarkMachineTranslation { get; set; }
 
         private async Task<TranslationResult> QueueForBatchedTranslation(
             string sentenceToTranslate,
