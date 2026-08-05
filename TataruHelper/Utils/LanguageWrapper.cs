@@ -238,6 +238,7 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["RealtimeTranslationCB"] = catalog.GetString("Real-Time Translation");
             _SettingsWindow.Resources["LiteraryTranslationCB"] = catalog.GetString("Literary translation");
             _SettingsWindow.Resources["MarkMachineTranslationCB"] = catalog.GetString("Mark machine translation");
+            _SettingsWindow.Resources["TranslateSpeakerNamesCB"] = catalog.GetString("Translate speaker names");
             _SettingsWindow.Resources["ShowTimestampsCb"] = catalog.GetString("Show Timestamps");
 
             _SettingsWindow.Resources["StreamerWindowCB"] = catalog.GetString("Streamer Window");
@@ -369,6 +370,9 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["MarkMachineTranslationDescription"] =
                 catalog.GetString(
                     "Put a dot in front of lines an engine translated, so the hand-made ones are the plain ones.");
+            _SettingsWindow.Resources["TranslateSpeakerNamesDescription"] =
+                catalog.GetString(
+                    "Show who is speaking in the reading language, using the hand-made spelling where there is one.");
             _SettingsWindow.Resources["LanguageGroupHint"] =
                 catalog.GetString("Interface language for the settings window and overlays.");
 

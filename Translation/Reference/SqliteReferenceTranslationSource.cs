@@ -28,6 +28,14 @@ namespace Translation.Reference
 
         private Dictionary<string, string> _addressedToPlayer;
 
+        private bool? _playerIsFeminine;
+
+        private Dictionary<string, string> _genderedLines;
+
+        private SqliteCommand _speakerLookup;
+
+        private SqliteParameter _speakerParameter;
+
         private SqliteConnection _connection;
         private SqliteCommand _lookup;
         private SqliteParameter _sentenceParameter;
@@ -96,6 +104,80 @@ namespace Translation.Reference
             }
         }
 
+        /// <summary>
+        /// Setting this picks the wording the Russian agrees with, for the five
+        /// thousand lines that have one. English usually needs no such choice -
+        /// "adventurer" has no gender - so these are lines the index would
+        /// otherwise have had to leave to an engine.
+        /// </summary>
+        public bool? PlayerIsFeminine
+        {
+            get => _playerIsFeminine;
+            set
+            {
+                lock (_sync)
+                {
+                    if (_playerIsFeminine == value)
+                    {
+                        return;
+                    }
+
+                    _playerIsFeminine = value;
+                    _genderedLines = value.HasValue ? BuildGenderedLines(value.Value) : null;
+                }
+            }
+        }
+
+        public bool TryGetSpeakerName(string speaker, out string translated)
+        {
+            translated = string.Empty;
+
+            var key = FoldApostrophes(Normalize(speaker));
+            if (key.Length == 0 || _connection == null)
+            {
+                return false;
+            }
+
+            lock (_sync)
+            {
+                if (_speakerLookup == null)
+                {
+                    return false;
+                }
+
+                try
+                {
+                    _speakerParameter.Value = key;
+                    var found = _speakerLookup.ExecuteScalar() as string;
+                    if (string.IsNullOrEmpty(found))
+                    {
+                        return false;
+                    }
+
+                    translated = found;
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    _logger?.LogInformation("{Message}", Convert.ToString(ex));
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// The game writes a typographic apostrophe in names - Y’shtola - and a
+        /// plain one elsewhere for the same character, so the two have to look
+        /// alike before anything is compared.
+        /// </summary>
+        internal static string FoldApostrophes(string text)
+        {
+            return text
+                .Replace('’', '\'')
+                .Replace('ʼ', '\'')
+                .Replace('‘', '\'');
+        }
+
         public bool TryGetTranslation(string sentence, out string translation)
         {
             translation = string.Empty;
@@ -118,6 +200,14 @@ namespace Translation.Reference
                     !CarriesUnresolvedMarkup(addressed))
                 {
                     translation = addressed;
+                    return true;
+                }
+
+                if (_genderedLines != null &&
+                    _genderedLines.TryGetValue(key, out var gendered) &&
+                    !CarriesUnresolvedMarkup(gendered))
+                {
+                    translation = gendered;
                     return true;
                 }
 
@@ -225,6 +315,55 @@ namespace Translation.Reference
         }
 
         /// <summary>
+        /// Reads the lines the Russian phrases differently for a man and a
+        /// woman, keeping the wording that fits this character.
+        /// </summary>
+        private Dictionary<string, string> BuildGenderedLines(bool isFeminine)
+        {
+            var lines = new Dictionary<string, string>(StringComparer.Ordinal);
+            if (_connection == null)
+            {
+                return lines;
+            }
+
+            try
+            {
+                using (var command = _connection.CreateCommand())
+                {
+                    // Both the line and its translation are kept per gender:
+                    // English says "this woman" against "this man" as readily
+                    // as Russian declines around it, so even the key differs.
+                    command.CommandText = "SELECT source, translated FROM gendered WHERE feminine = $feminine";
+                    var feminine = command.CreateParameter();
+                    feminine.ParameterName = "$feminine";
+                    feminine.Value = isFeminine ? 1 : 0;
+                    command.Parameters.Add(feminine);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var source = Normalize(reader.GetString(0));
+                            if (source.Length > 0)
+                            {
+                                lines[source] = reader.GetString(1);
+                            }
+                        }
+                    }
+                }
+
+                _logger?.LogInformation("Lines phrased for a {Gender} character: {Count}.",
+                    isFeminine ? "female" : "male", lines.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogInformation("{Message}", Convert.ToString(ex));
+            }
+
+            return lines;
+        }
+
+        /// <summary>
         /// Reads the patterns and writes the name into each, giving the lines
         /// as this particular character hears them.
         /// </summary>
@@ -297,6 +436,25 @@ namespace Translation.Reference
             _lookup.Parameters.Add(_sentenceParameter);
             _lookup.Prepare();
 
+
+            // An index built before names were collected has no such table, and
+            // that has to cost only the names rather than the whole index.
+            try
+            {
+                _speakerLookup = _connection.CreateCommand();
+                _speakerLookup.CommandText = "SELECT translated FROM speaker WHERE source = $speaker";
+                _speakerParameter = _speakerLookup.CreateParameter();
+                _speakerParameter.ParameterName = "$speaker";
+                _speakerLookup.Parameters.Add(_speakerParameter);
+                _speakerLookup.Prepare();
+            }
+            catch (SqliteException)
+            {
+                _speakerLookup?.Dispose();
+                _speakerLookup = null;
+                _logger?.LogInformation("This index carries no speaker names.");
+            }
+
             using (var count = _connection.CreateCommand())
             {
                 count.CommandText = "SELECT value FROM meta WHERE key = 'lines'";
@@ -309,6 +467,8 @@ namespace Translation.Reference
         {
             lock (_sync)
             {
+                _speakerLookup?.Dispose();
+                _speakerLookup = null;
                 _lookup?.Dispose();
                 _lookup = null;
                 _connection?.Dispose();

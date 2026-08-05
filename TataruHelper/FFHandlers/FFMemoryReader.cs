@@ -131,7 +131,7 @@ namespace FFXIVTataruHelper.FFHandlers
         /// to them carry it, and a hand-made translation of such a line cannot
         /// be recognised until the name can be written into it.
         /// </summary>
-        public Action<string> PlayerNameResolved { get; set; }
+        public Action<string, bool?> PlayerNameResolved { get; set; }
 
         private bool _playerNameResolved;
 
@@ -149,9 +149,11 @@ namespace FFXIVTataruHelper.FFHandlers
                 return;
             }
 
+            var isFeminine = _gameMemoryGateway.GetPlayerIsFeminine();
+
             _playerNameResolved = true;
-            _logger.WriteLog("Player name resolved: " + name);
-            PlayerNameResolved(name);
+            _logger.WriteLog("Player resolved: " + name + ", feminine: " + isFeminine);
+            PlayerNameResolved(name, isFeminine);
         }
 
         private readonly ConcurrentDictionary<string, DateTime> _recentEmittedMessages;

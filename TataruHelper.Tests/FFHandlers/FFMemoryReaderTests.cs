@@ -168,6 +168,10 @@ namespace TataruHelper.Tests
             public string GetPlayerName() => string.Empty;
 
 
+
+            public bool? GetPlayerIsFeminine() => null;
+
+
             public bool CheckChatEquality(ChatLogItem item1, ChatLogItem item2)
             {
                 return false;

@@ -20,6 +20,15 @@ namespace Translation.Reference
         /// </summary>
         string PlayerName { get; set; }
 
+        /// <summary>
+        /// The character's gender, which the Russian agrees with. Null until
+        /// known, and those lines are left to a translator until it is.
+        /// </summary>
+        bool? PlayerIsFeminine { get; set; }
+
         bool TryGetTranslation(string sentence, out string translation);
+
+        /// <summary>A character's name as the translators render it.</summary>
+        bool TryGetSpeakerName(string speaker, out string translated);
     }
 }

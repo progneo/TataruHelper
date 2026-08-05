@@ -121,6 +121,39 @@ namespace Translation
             }
         }
 
+        /// <summary>The character's gender, which the Russian agrees with.</summary>
+        public bool? PlayerIsFeminine
+        {
+            get => _referenceTranslations?.PlayerIsFeminine;
+            set
+            {
+                if (_referenceTranslations != null)
+                {
+                    _referenceTranslations.PlayerIsFeminine = value;
+                }
+            }
+        }
+
+        /// <summary>A character's name as the translators render it.</summary>
+        public bool TryGetReferenceSpeakerName(string speaker, TranslatorLanguage toLang, out string translated)
+        {
+            translated = string.Empty;
+
+            if (!UseReferenceTranslations || _referenceTranslations == null)
+            {
+                return false;
+            }
+
+            var indexed = _referenceTranslations.LanguageCode;
+            if (string.IsNullOrEmpty(indexed) ||
+                !string.Equals(indexed, toLang?.LanguageCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return _referenceTranslations.TryGetSpeakerName(speaker, out translated);
+        }
+
         public void LoadLanguages()
         {
             LoadLanguages(

@@ -71,7 +71,31 @@ PLAYER_PLACEHOLDER = '\x01'
 # "(-Ixali Occultists-)O mournful voice of creation!". We read the speaker from
 # its own node and the line from another, so the line alone is what has to
 # match - with the wrapper left on, none of these were ever found.
-SPEAKER_PREFIX = re.compile(r'^\(-[^)]{0,60}-\)')
+SPEAKER_PREFIX = re.compile(r'^\(-([^)]{0,60})-\)')
+
+# The game's own list of who everyone is, stored as "Name<tab>Title".
+NPC_SHEET = 'ENpcResident'
+
+# The game writes a typographic apostrophe in names - Y’shtola - and a plain
+# one elsewhere for the same character. Matching has to see them as one.
+APOSTROPHES = str.maketrans({'’': "'", 'ʼ': "'", '‘': "'"})
+
+
+def fold_apostrophes(text):
+    return text.translate(APOSTROPHES)
+
+
+# Agreement with the player's gender: <var 08 E905 ((feminine)) ((masculine))>,
+# feminine first. English rarely needs it - "adventurer" has no gender - so
+# these are lines where only the Russian is conditional, and the character's
+# gender is readable from the game, so both renderings are kept.
+#
+# E905 alone. The other condition codes ask about things that cannot be
+# answered here - E4EB02EB03 distinguishes a joystick from a mini-joystick -
+# and guessing at them would put the wrong words on screen.
+GENDERED = re.compile(r'<var 08 E905 \(\((.*?)\)\) \(\((.*?)\)\) /var>')
+
+FEMININE, MASCULINE = 'f', 'm'
 
 # Quest text is stored with its internal key ahead of a <tab>. The key also
 # names the speaker - TEXT_MANFST005_00445_200250_HYDAELYN - which is worth
@@ -107,6 +131,12 @@ def normalize(text):
     return ' '.join(text.replace(KEY_SEPARATOR, ' ').split())
 
 
+def strip_key(text):
+    """Drops the internal key quest text carries ahead of a <tab>."""
+    separator = text.find(KEY_SEPARATOR)
+    return text[separator + len(KEY_SEPARATOR):] if separator >= 0 else text
+
+
 def parse_units(raw):
     return {m.group(1): unescape(m.group(3)) for m in UNIT.finditer(raw)}
 
@@ -115,8 +145,37 @@ class Index:
     def __init__(self):
         self.pairs = {}
         self.patterns = {}
+        self.speakers = {}
+        self.gendered = {}
         self.conflicts = 0
         self.skipped_dynamic = 0
+
+    def add_speaker(self, english, translated):
+        """A character's name as the translators render it.
+
+        Two sources agree on the shape and not always on the wording: the
+        game's own roster, and the wrapper that battle and cutscene lines put
+        around the speaker. The roster is read first and the wrapper second, so
+        a name that appears in dialogue wins - that is the one being read out
+        loud beside the line.
+        """
+        english = fold_apostrophes(' '.join(english.split()))
+        translated = ' '.join(translated.split())
+
+        if not english or not translated or english == translated:
+            return
+        if DYNAMIC.search(english) or DYNAMIC.search(translated):
+            return
+
+        # "???" is the game keeping someone's identity back, and the Russian
+        # wrapper gives it away - it named a stranger on a boat "Дружелюбный
+        # пассажир" while the English still read "???". A label with no letters
+        # in it is a placeholder, not a name, and translating it spoils the
+        # scene it was hiding.
+        if not any(character.isalpha() for character in english):
+            return
+
+        self.speakers[english] = translated
 
     def add(self, english, translated):
         english, translated = normalize(english), normalize(translated)
@@ -137,6 +196,23 @@ class Index:
             target = self.patterns
         else:
             target = self.pairs
+
+        # Gender agreement, and nothing else left to substitute once it is
+        # resolved: keep the line both ways and choose when the character is
+        # known. Both sides can carry it - English says "this woman" against
+        # "this man" as readily as Russian declines around it - so the line is
+        # stored under the English each character would actually hear.
+        if GENDERED.search(english) or GENDERED.search(translated):
+            feminine_english = GENDERED.sub(lambda m: m.group(1), english)
+            masculine_english = GENDERED.sub(lambda m: m.group(2), english)
+            feminine = GENDERED.sub(lambda m: m.group(1), translated)
+            masculine = GENDERED.sub(lambda m: m.group(2), translated)
+
+            if not (DYNAMIC.search(feminine_english) or DYNAMIC.search(masculine_english)
+                    or DYNAMIC.search(feminine) or DYNAMIC.search(masculine)):
+                self.gendered[(feminine_english, FEMININE)] = feminine
+                self.gendered[(masculine_english, MASCULINE)] = masculine
+                return
 
         if DYNAMIC.search(english) or DYNAMIC.search(translated):
             self.skipped_dynamic += 1
@@ -169,13 +245,13 @@ def iter_sheets(members, language):
             if counterpart is None:
                 pending_english[folder] = parse_units(read())
             else:
-                yield parse_units(read()), counterpart
+                yield folder, parse_units(read()), counterpart
         elif filename == f'{language}.xlf':
             counterpart = pending_english.pop(folder, None)
             if counterpart is None:
                 pending_translated[folder] = read()
             else:
-                yield counterpart, read()
+                yield folder, counterpart, read()
 
 
 def stream_archive(source):
@@ -206,17 +282,32 @@ def build(source, language, output):
     index = Index()
     sheets = 0
 
-    for english, translated in iter_sheets(stream_archive(source), language):
+    for folder, english, translated in iter_sheets(stream_archive(source), language):
         sheets += 1
         if isinstance(translated, str):
             translated = parse_units(translated)
         if isinstance(english, str):
             english = parse_units(english)
 
+        is_roster = folder.rsplit('/', 1)[-1] == NPC_SHEET
+
         for unit_id, translated_text in translated.items():
             english_text = english.get(unit_id)
-            if english_text is not None:
-                index.add(english_text, translated_text)
+            if english_text is None:
+                continue
+
+            if is_roster:
+                # "Name<tab>Title" - only the name is ever spoken.
+                index.add_speaker(english_text.split(KEY_SEPARATOR)[0],
+                                  translated_text.split(KEY_SEPARATOR)[0])
+                continue
+
+            english_speaker = SPEAKER_PREFIX.match(strip_key(english_text))
+            translated_speaker = SPEAKER_PREFIX.match(strip_key(translated_text))
+            if english_speaker and translated_speaker:
+                index.add_speaker(english_speaker.group(1), translated_speaker.group(1))
+
+            index.add(english_text, translated_text)
 
         if sheets % 500 == 0:
             print(f'  {sheets} sheets, {len(index.pairs)} lines', flush=True)
@@ -224,6 +315,8 @@ def build(source, language, output):
     print(f'sheets read      : {sheets}')
     print(f'lines indexed    : {len(index.pairs)}')
     print(f'name patterns    : {len(index.patterns)}')
+    print(f'speaker names    : {len(index.speakers)}')
+    print(f'gendered lines   : {len(index.gendered) // 2}')
     print(f'skipped (markup) : {index.skipped_dynamic}')
     print(f'conflicting      : {index.conflicts}')
 
@@ -240,14 +333,24 @@ def build(source, language, output):
     # Lines addressed to the player, with the name punched out. Read whole and
     # filled in once the character is known, so no index is wanted here.
     db.execute('CREATE TABLE pattern (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID')
+    # Who is speaking, as the translators render them.
+    db.execute('CREATE TABLE speaker (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID')
+    # Lines whose Russian agrees with the player's gender, kept both ways.
+    db.execute('CREATE TABLE gendered (source TEXT NOT NULL, feminine INTEGER NOT NULL, translated TEXT NOT NULL, PRIMARY KEY (feminine, source)) WITHOUT ROWID')
     db.execute('CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL)')
     db.executemany('INSERT INTO line VALUES (?, ?)', index.pairs.items())
     db.executemany('INSERT INTO pattern VALUES (?, ?)', index.patterns.items())
+    db.executemany('INSERT INTO speaker VALUES (?, ?)', index.speakers.items())
+    db.executemany('INSERT OR IGNORE INTO gendered VALUES (?, ?, ?)',
+                   [(source, 1 if sex == FEMININE else 0, translated)
+                    for (source, sex), translated in index.gendered.items()])
     db.executemany('INSERT INTO meta VALUES (?, ?)', [
         ('language', language),
         ('source', ARCHIVE_URL if source == 'github' else str(source)),
         ('lines', str(len(index.pairs))),
         ('patterns', str(len(index.patterns))),
+        ('speakers', str(len(index.speakers))),
+        ('gendered', str(len(index.gendered))),
         ('playerPlaceholder', PLAYER_PLACEHOLDER),
     ])
     db.commit()

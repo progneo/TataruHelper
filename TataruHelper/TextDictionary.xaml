@@ -201,6 +201,8 @@
     <system:String x:Key="LiteraryTranslationDescription">Show the hand-made translation of a line when the game's own text has one, and translate the rest as usual.</system:String>
     <system:String x:Key="MarkMachineTranslationCB">Mark machine translation</system:String>
     <system:String x:Key="MarkMachineTranslationDescription">Put a dot in front of lines an engine translated, so the hand-made ones are the plain ones.</system:String>
+    <system:String x:Key="TranslateSpeakerNamesCB">Translate speaker names</system:String>
+    <system:String x:Key="TranslateSpeakerNamesDescription">Show who is speaking in the reading language, using the hand-made spelling where there is one.</system:String>
 
     <system:String x:Key="UpdatesGroupTitle">Updates</system:String>
     <system:String x:Key="UpdatesGroupHint">Check whether a newer release of Tataru Helper is available.</system:String>

@@ -32,6 +32,14 @@ namespace Translation.Tests.Reference
                     create.CommandText =
                         "CREATE TABLE line (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID;" +
                         "CREATE TABLE pattern (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID;" +
+                        "CREATE TABLE speaker (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID;" +
+                        "CREATE TABLE gendered (source TEXT NOT NULL, feminine INTEGER NOT NULL, translated TEXT NOT NULL, PRIMARY KEY (feminine, source)) WITHOUT ROWID;" +
+                        "INSERT INTO speaker VALUES ('Mother Miounne', 'Матушка Миунна'), ('Y''shtola', 'Я''штола');" +
+                        "INSERT INTO gendered VALUES " +
+                        "('This position is yours, adventurer.', 1, 'Искательница приключений, на позицию.')," +
+                        "('This position is yours, adventurer.', 0, 'Искатель приключений, на позицию.')," +
+                        "('Hydaelyn would speak to this woman...', 1, 'Хайделин говорила с этой женщиной...')," +
+                        "('Hydaelyn would speak to this man...', 0, 'Хайделин говорила с этим мужчиной...');" +
                         "CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);" +
                         "INSERT INTO meta VALUES ('language', 'ru');" +
                         "INSERT INTO line VALUES " +
@@ -150,6 +158,106 @@ namespace Translation.Tests.Reference
                 Assert.That(source.TryGetTranslation(
                         "The fate of Gridania hangs in the balance. Go swiftly, D'ark.", out _),
                     Is.False);
+            }
+        }
+
+        // English rarely needs to know the player's gender - "adventurer" has
+        // none - but Russian does, so these lines are kept both ways and chosen
+        // between once the character is known.
+        [TestCase(true, "Искательница приключений, на позицию.")]
+        [TestCase(false, "Искатель приключений, на позицию.")]
+        public void GenderedLine_IsPhrasedForTheCharacter(bool isFeminine, string expected)
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                source.PlayerIsFeminine = isFeminine;
+
+                Assert.That(source.TryGetTranslation("This position is yours, adventurer.", out var translation),
+                    Is.True);
+                Assert.That(translation, Is.EqualTo(expected));
+            }
+        }
+
+        // English can carry the agreement too - "this woman" against "this man"
+        // - so the line reaching us differs by character, not just its
+        // translation. Only the wording that character actually hears is kept.
+        [TestCase(true, "Hydaelyn would speak to this woman...", "Хайделин говорила с этой женщиной...")]
+        [TestCase(false, "Hydaelyn would speak to this man...", "Хайделин говорила с этим мужчиной...")]
+        public void GenderedLine_IsFoundUnderTheEnglishThatCharacterHears(
+            bool isFeminine, string spoken, string expected)
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                source.PlayerIsFeminine = isFeminine;
+
+                Assert.That(source.TryGetTranslation(spoken, out var translation), Is.True);
+                Assert.That(translation, Is.EqualTo(expected));
+            }
+        }
+
+        [Test]
+        public void GenderedLine_ForTheOtherCharacter_IsNotUsed()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                source.PlayerIsFeminine = false;
+
+                Assert.That(source.TryGetTranslation("Hydaelyn would speak to this woman...", out _), Is.False);
+            }
+        }
+
+        [Test]
+        public void GenderedLine_IsLeftAloneUntilTheCharacterIsKnown()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.TryGetTranslation("This position is yours, adventurer.", out _), Is.False);
+            }
+        }
+
+        [Test]
+        public void SpeakerName_IsFound()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.TryGetSpeakerName("Mother Miounne", out var translated), Is.True);
+                Assert.That(translated, Is.EqualTo("Матушка Миунна"));
+            }
+        }
+
+        // The game writes a typographic apostrophe in some places and a plain
+        // one in others for the same character.
+        [TestCase("Y'shtola")]
+        [TestCase("Y’shtola")]
+        public void SpeakerName_IsFoundWhicheverApostropheIsUsed(string speaker)
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.TryGetSpeakerName(speaker, out var translated), Is.True);
+                Assert.That(translated, Is.EqualTo("Я'штола"));
+            }
+        }
+
+        // The game hides who is speaking behind "???" on purpose. The Russian
+        // wrapper gave the game away - it named a stranger on a boat while the
+        // English still read "???" - so a label with no letters in it never
+        // reaches the index, and asking about one finds nothing.
+        [Test]
+        public void HiddenSpeaker_IsNotGivenAway()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.TryGetSpeakerName("???", out var translated), Is.False);
+                Assert.That(translated, Is.Empty);
+            }
+        }
+
+        [Test]
+        public void SpeakerName_UnknownIsNotAnswered()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.TryGetSpeakerName("Somebody Nobody Named", out _), Is.False);
             }
         }
 

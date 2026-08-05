@@ -215,6 +215,22 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// <summary>Show the speaker's name in the reading language too.</summary>
+    public bool IsSpeakerNameTranslated
+    {
+        get => _uiModel.IsSpeakerNameTranslated;
+        set
+        {
+            if (_uiModel.IsSpeakerNameTranslated == value)
+            {
+                return;
+            }
+
+            _uiModel.IsSpeakerNameTranslated = value;
+            OnPropertyChanged();
+        }
+    }
+
     public bool IsHideSettingsToTray
     {
         get => _uiModel.IsHideSettingsToTray;

@@ -187,6 +187,21 @@
                         <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
                                          IsChecked="{Binding Shell.IsMachineTranslationMarked, Mode=TwoWay}" />
                     </Grid>
+
+                    <Grid Margin="0,12,0,0">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Grid.Column="0">
+                            <TextBlock Text="{DynamicResource TranslateSpeakerNamesCB}" FontWeight="SemiBold" />
+                            <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                       Text="{DynamicResource TranslateSpeakerNamesDescription}"
+                                       TextWrapping="Wrap" />
+                        </StackPanel>
+                        <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                         IsChecked="{Binding Shell.IsSpeakerNameTranslated, Mode=TwoWay}" />
+                    </Grid>
                 </StackPanel>
             </ui:Card>
 

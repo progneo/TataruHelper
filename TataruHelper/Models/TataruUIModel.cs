@@ -143,6 +143,46 @@ namespace FFXIVTataruHelper
         }
 
 
+        /// <summary>
+
+
+        /// Whether the speaker's name is translated as well as the line, so a
+
+
+        /// message does not change alphabet halfway through.
+
+
+        /// </summary>
+
+
+        public bool IsSpeakerNameTranslated
+
+
+        {
+
+
+            get { return _IsSpeakerNameTranslated; }
+
+
+            set
+
+
+            {
+
+
+                _IsSpeakerNameTranslated = value;
+
+
+                NotifyPropertyChanged();
+
+
+            }
+
+
+        }
+
+
+
         public PointD SettingsWindowSize
         {
             get { return _SettingsWindowSize; }
@@ -215,6 +255,11 @@ namespace FFXIVTataruHelper
 
         bool _IsMachineTranslationMarked;
 
+
+
+
+        bool _IsSpeakerNameTranslated;
+
         PointD _SettingsWindowSize = new PointD(0.0, 0.0);
 
         AsyncBindingList<ChatWindowViewModelSettings> _ChatWindows;
@@ -264,6 +309,8 @@ namespace FFXIVTataruHelper
 
             IsMachineTranslationMarked = userSettings.IsMachineTranslationMarked;
 
+            IsSpeakerNameTranslated = userSettings.IsSpeakerNameTranslated;
+
             SettingsWindowSize = userSettings.SettingsWindowSize;
 
             var tmpChatWindows = new List<ChatWindowViewModelSettings>(userSettings.ChatWindows);
@@ -292,6 +339,8 @@ namespace FFXIVTataruHelper
             userSettings.IsLiteraryTranslation = this.IsLiteraryTranslation;
 
             userSettings.IsMachineTranslationMarked = this.IsMachineTranslationMarked;
+
+            userSettings.IsSpeakerNameTranslated = this.IsSpeakerNameTranslated;
 
             userSettings.SettingsWindowSize = this.SettingsWindowSize;
 

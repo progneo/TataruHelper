@@ -34,5 +34,14 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
 
         string GetPlayerName();
+
+
+
+
+        /// <summary>The character's gender, which the Russian agrees with. Null until known.</summary>
+
+
+
+        bool? GetPlayerIsFeminine();
     }
 }

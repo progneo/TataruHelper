@@ -161,6 +161,11 @@ namespace FFXIVTataruHelper
                 return result;
             }
 
+            if (TranslateSpeakerNames && nickName.Length > 0)
+            {
+                nickName = await ResolveSpeakerName(nickName, translationEngine, fromLang, toLang, cancellationToken);
+            }
+
             var line = nickName.Length > 0 ? nickName + " " + result.Text : result.Text;
 
             // The marker goes on the machine translation rather than the
@@ -173,6 +178,52 @@ namespace FFXIVTataruHelper
 
             return result.WithText(line);
         }
+
+        /// <summary>
+        /// Renders the speaker's name in the reading language.
+        ///
+        /// The translators have named most of the cast, and their spelling is
+        /// the one a reader will recognise. Failing that the engine is asked,
+        /// which at least keeps the name in the same alphabet as the line - and
+        /// its answer is cached, so a character costs one request however much
+        /// they talk.
+        /// </summary>
+        private async Task<string> ResolveSpeakerName(
+            string nickName,
+            TranslationEngine translationEngine,
+            TranslatorLanguage fromLang,
+            TranslatorLanguage toLang,
+            CancellationToken cancellationToken)
+        {
+            // The speaker arrives punctuated the way it will be shown - "Cid:" -
+            // and only the name itself is looked up.
+            var trailing = nickName.TrimStart().StartsWith("(") ? string.Empty : ":";
+            var name = nickName.Trim().TrimEnd(':').Trim();
+            if (name.Length == 0)
+            {
+                return nickName;
+            }
+
+            if (_WebTranslator.TryGetReferenceSpeakerName(name, toLang, out var known))
+            {
+                return known + trailing;
+            }
+
+            var translated = await _WebTranslator
+                .TranslateAsync(name, translationEngine, fromLang, toLang, cancellationToken)
+                .ConfigureAwait(false);
+
+            return translated.IsSuccess && translated.Text.Length > 0
+                ? translated.Text.Trim() + trailing
+                : nickName;
+        }
+
+        /// <summary>
+        /// Whether the speaker's name is shown in the reading language too. A
+        /// line that reads "Матушка Миунна: ..." beats one that switches
+        /// alphabet halfway through.
+        /// </summary>
+        public bool TranslateSpeakerNames { get; set; }
 
         /// <summary>Prefix shown on lines an engine translated, when asked for.</summary>
         internal const string MachineTranslationMarker = "• ";

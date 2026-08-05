@@ -44,7 +44,12 @@ namespace FFXIVTataruHelper.Services.UI
             _ffMemoryReader.IsRealtimeTranslationEnabled = uiModel.IsRealtimeTranslation;
             tataruModel.WebTranslator.UseReferenceTranslations = uiModel.IsLiteraryTranslation;
             tataruModel.ChatProcessor.MarkMachineTranslation = uiModel.IsMachineTranslationMarked;
-            _ffMemoryReader.PlayerNameResolved = name => tataruModel.WebTranslator.PlayerName = name;
+            tataruModel.ChatProcessor.TranslateSpeakerNames = uiModel.IsSpeakerNameTranslated;
+            _ffMemoryReader.PlayerNameResolved = (name, isFeminine) =>
+            {
+                tataruModel.WebTranslator.PlayerName = name;
+                tataruModel.WebTranslator.PlayerIsFeminine = isFeminine;
+            };
             uiModel.PropertyChanged += (_, e) =>
             {
                 if (e.PropertyName == nameof(TataruUIModel.IsRealtimeTranslation))
@@ -59,6 +64,12 @@ namespace FFXIVTataruHelper.Services.UI
                 else if (e.PropertyName == nameof(TataruUIModel.IsMachineTranslationMarked))
                 {
                     tataruModel.ChatProcessor.MarkMachineTranslation = uiModel.IsMachineTranslationMarked;
+                }
+
+
+                else if (e.PropertyName == nameof(TataruUIModel.IsSpeakerNameTranslated))
+                {
+                    tataruModel.ChatProcessor.TranslateSpeakerNames = uiModel.IsSpeakerNameTranslated;
                 }
             };
 

@@ -39,6 +39,11 @@ namespace FFXIVTataruHelper
 
         public bool IsMachineTranslationMarked { get; set; }
 
+
+        /// <summary>Show the speaker's name in the reading language too.</summary>
+
+        public bool IsSpeakerNameTranslated { get; set; }
+
         public TimeSpan AutoHideTimeout { get; set; } = new TimeSpan(0, 5, 0);
 
         public int FontSize { get; set; } = 14;
