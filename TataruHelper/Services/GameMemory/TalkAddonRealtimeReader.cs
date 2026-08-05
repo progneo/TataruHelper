@@ -66,6 +66,11 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private const int InlineDiscoveryScanBytes = 0x600;
 
+        // SeString wraps its formatting payloads in these.
+        private const byte SeStringPayloadStart = 0x02;
+
+        private const byte SeStringPayloadEnd = 0x03;
+
         private const int MaxCachedAddonNames = 512;
 
         private readonly Dictionary<IntPtr, string> _addonNameCache = new Dictionary<IntPtr, string>();
@@ -848,7 +853,53 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 count = terminator - start;
             }
 
-            return count <= 0 ? string.Empty : Encoding.UTF8.GetString(data, start, count);
+            return DecodeGameString(data, start, count);
+        }
+
+        /// <summary>
+        /// Decodes dialogue text, dropping the formatting payloads the game
+        /// embeds in it - italics, highlights, auto-translate - which are
+        /// delimited by 0x02 and 0x03.
+        ///
+        /// They have to go before the text is decoded rather than after: a
+        /// payload carries raw bytes that are not valid UTF-8, and decoding
+        /// first replaces them with U+FFFD, which can no longer be told apart
+        /// from a replacement character in the dialogue itself. Left in, the
+        /// payload's own kind byte is printable and reaches the translator as a
+        /// stray letter - an emphasised line arrived as "H&#65533;#O mournful voice of
+        /// creation!...H".
+        /// </summary>
+        internal static string DecodeGameString(byte[] data, int start, int count)
+        {
+            if (data == null || count <= 0 || start < 0 || start >= data.Length)
+            {
+                return string.Empty;
+            }
+
+            var end = Math.Min(start + count, data.Length);
+            var cleaned = new byte[end - start];
+            var written = 0;
+
+            for (int i = start; i < end; i++)
+            {
+                if (data[i] != SeStringPayloadStart)
+                {
+                    cleaned[written++] = data[i];
+                    continue;
+                }
+
+                // A payload that never closes is malformed; nothing after it can
+                // be trusted to be text, so the line ends here.
+                var payloadEnd = Array.IndexOf(data, SeStringPayloadEnd, i, end - i);
+                if (payloadEnd < 0)
+                {
+                    break;
+                }
+
+                i = payloadEnd;
+            }
+
+            return written == 0 ? string.Empty : Encoding.UTF8.GetString(cleaned, 0, written);
         }
 
         /// <summary>
@@ -1005,7 +1056,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 return true;
             }
 
-            value = Encoding.UTF8.GetString(data, 0, effectiveByteCount);
+            value = DecodeGameString(data, 0, effectiveByteCount);
             return true;
         }
 
