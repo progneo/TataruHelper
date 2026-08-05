@@ -47,8 +47,14 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private string _lastLoggedLoadedAddons = string.Empty;
 
-        private Dictionary<string, string> _lastAddonText =
-            new Dictionary<string, string>(StringComparer.Ordinal);
+        // What each addon was showing on the previous sweep, as name-and-text
+        // pairs rather than keyed by the candidate key: that key carries the
+        // addon's address, and the game destroys and recreates Talk for every
+        // line of a conversation. Keyed by address, a buffer that has not
+        // changed at all - a subtitle still holding the last line of a finished
+        // cutscene - comes back under a new key, reads as fresh dialogue, and is
+        // announced again between every single line.
+        private HashSet<string> _lastAddonText = new HashSet<string>(StringComparer.Ordinal);
 
         private string _stickyCandidateKey;
 
@@ -359,6 +365,24 @@ namespace FFXIVTataruHelper.Services.GameMemory
         /// about twenty times a second. When nothing changed the previous choice is
         /// kept, so the signature stays put and nothing is re-emitted.
         /// </summary>
+        /// <summary>
+        /// Identifies "this addon is showing this text" without the address the
+        /// candidate key carries, so a recreated addon holding unchanged text is
+        /// recognised as the same thing. Two bubbles showing different lines
+        /// still count separately, which is what the address was there for.
+        /// </summary>
+        private static string AddonTextIdentity(string candidateKey, string text)
+        {
+            var name = candidateKey ?? string.Empty;
+            var separator = name.IndexOf('@');
+            if (separator >= 0)
+            {
+                name = name.Substring(0, separator);
+            }
+
+            return name + " " + text;
+        }
+
         internal bool TrySelectActiveCandidate(
             IReadOnlyList<(string Key, TalkAddonRealtimeDialogSnapshot Snapshot, string Text)> candidates,
             out TalkAddonRealtimeDialogSnapshot snapshot)
@@ -388,14 +412,14 @@ namespace FFXIVTataruHelper.Services.GameMemory
             // Rebuilt from this sweep so entries for addons the game unloaded do not
             // pile up. Trimming by size instead would make every addon look new
             // again the moment the cap was hit, replaying finished dialogue.
-            var seenNow = new Dictionary<string, string>(candidates.Count, StringComparer.Ordinal);
+            var seenNow = new HashSet<string>(StringComparer.Ordinal);
 
             foreach (var candidate in candidates)
             {
-                var isNew = !_lastAddonText.TryGetValue(candidate.Key, out var previous)
-                            || !string.Equals(previous, candidate.Text, StringComparison.Ordinal);
+                var identity = AddonTextIdentity(candidate.Key, candidate.Text);
+                var isNew = !_lastAddonText.Contains(identity);
 
-                seenNow[candidate.Key] = candidate.Text;
+                seenNow.Add(identity);
 
                 if (isNew && changedKey == null)
                 {

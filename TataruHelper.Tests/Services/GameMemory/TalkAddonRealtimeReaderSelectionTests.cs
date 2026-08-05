@@ -148,5 +148,72 @@ namespace TataruHelper.Tests.Services.GameMemory
 
             Assert.That(snapshot.TalkText, Is.EqualTo("Some say she is overbearing."));
         }
+
+        // The game destroys and recreates Talk for every line of a conversation,
+        // so it comes back at a different address each time. A subtitle still
+        // holding the last line of a finished cutscene must not read as fresh
+        // dialogue just because the key around it changed - that announced the
+        // same stale subtitle between every single line of the conversation.
+        [Test]
+        public void RecreatedAddon_HoldingUnchangedText_IsNotReportedAgain()
+        {
+            var reader = CreateReader();
+            var stale = "A Light there once was that shone throughout this realm.";
+
+            reader.TrySelectActiveCandidate(
+                new List<(string, TalkAddonRealtimeDialogSnapshot, string)>
+                {
+                    Candidate("TalkSubtitle@2000", "0044", string.Empty, stale),
+                },
+                out _);
+
+            for (int line = 0; line < 3; line++)
+            {
+                // Each line of the conversation reallocates both addons.
+                var address = 0x3000 + (line * 0x100);
+                var spoken = "Line " + line;
+
+                Assert.That(
+                    reader.TrySelectActiveCandidate(
+                        // Subtitle first: the addon list is walked in whatever
+                        // order the game holds it, so the stale one gets to be
+                        // the first "new" candidate.
+                        new List<(string, TalkAddonRealtimeDialogSnapshot, string)>
+                        {
+                            Candidate("TalkSubtitle@" + (address + 8).ToString("X"), "0044", string.Empty, stale),
+                            Candidate("Talk@" + address.ToString("X"), "003D", "Cid", spoken),
+                        },
+                        out var snapshot),
+                    Is.True);
+
+                Assert.That(snapshot.TalkText, Is.EqualTo(spoken),
+                    "the stale subtitle came back under a new address and was announced again");
+            }
+        }
+
+        [Test]
+        public void TwoBubbles_WithDifferentText_AreBothStillReported()
+        {
+            var reader = CreateReader();
+
+            reader.TrySelectActiveCandidate(
+                new List<(string, TalkAddonRealtimeDialogSnapshot, string)>
+                {
+                    Candidate("_MiniTalk@4000", "003D", "Yda", "Who goes there?"),
+                },
+                out _);
+
+            Assert.That(
+                reader.TrySelectActiveCandidate(
+                    new List<(string, TalkAddonRealtimeDialogSnapshot, string)>
+                    {
+                        Candidate("_MiniTalk@4000", "003D", "Yda", "Who goes there?"),
+                        Candidate("_MiniTalk@5000", "003D", "Cid", "Hold."),
+                    },
+                    out var snapshot),
+                Is.True);
+
+            Assert.That(snapshot.TalkText, Is.EqualTo("Hold."));
+        }
     }
 }
