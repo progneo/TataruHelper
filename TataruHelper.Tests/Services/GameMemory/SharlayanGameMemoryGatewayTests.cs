@@ -306,25 +306,31 @@ namespace TataruHelper.Tests
             Assert.That(line, Is.EqualTo("LiveNpc:LiveText"));
         }
 
+        // The first line after attaching used to be swallowed, because the Talk
+        // addon holds what was said before the app started and announcing that
+        // read as a conversation happening now. The reader skips addons the game
+        // is not drawing, so a line that gets this far is one on screen - and
+        // holding it back only meant walking up to an NPC right after launch and
+        // getting nothing.
         [Test]
-        public void Gateway_SuppressesFirstRealtimeSnapshot_AfterAttaching()
+        public void Gateway_EmitsTheFirstRealtimeSnapshot_AfterAttaching()
         {
             var directDialogReader = new FakeDirectDialogReader();
-            var snapshot = TalkAddonRealtimeDialogSnapshot.Available("003D", "OldNpc", "Line from a past conversation");
+            var snapshot = TalkAddonRealtimeDialogSnapshot.Available("003D", "Npc", "The first thing anyone says");
             var gateway = CreateGateway(directDialogReader, () => snapshot);
 
-            // Attaching arms the priming: the Talk addon still holds whatever was
-            // said before the app started, and that must not be announced.
             gateway.ResetRealtimeDialogState();
 
-            Assert.That(gateway.GetDirectDialog().ChatLogItems, Is.Empty);
+            var item = gateway.GetDirectDialog().ChatLogItems.Single();
+
+            Assert.That(item.Line, Is.EqualTo("Npc:The first thing anyone says"));
         }
 
         [Test]
-        public void Gateway_EmitsRealtimeSnapshot_AfterPrimingSnapshotChanges()
+        public void Gateway_EmitsRealtimeSnapshot_WhenTheLineChanges()
         {
             var directDialogReader = new FakeDirectDialogReader();
-            var current = TalkAddonRealtimeDialogSnapshot.Available("003D", "OldNpc", "Stale line");
+            var current = TalkAddonRealtimeDialogSnapshot.Available("003D", "OldNpc", "First line");
             var gateway = CreateGateway(directDialogReader, () => current);
 
             gateway.ResetRealtimeDialogState();
@@ -335,6 +341,29 @@ namespace TataruHelper.Tests
             var item = gateway.GetDirectDialog().ChatLogItems.Single();
 
             Assert.That(item.Line, Is.EqualTo("NewNpc:Fresh line"));
+        }
+
+        // Nothing on screen must clear what was last said, or the same words
+        // said again - an NPC repeating a bubble as you walk past - match the
+        // signature still held and are taken for an echo.
+        [Test]
+        public void Gateway_EmitsTheSameLineAgain_AfterTheScreenClears()
+        {
+            var directDialogReader = new FakeDirectDialogReader();
+            var current = TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, "The wood... It's watching!");
+            var gateway = CreateGateway(directDialogReader, () => current);
+
+            gateway.ResetRealtimeDialogState();
+            Assert.That(gateway.GetDirectDialog().ChatLogItems.Single().Line,
+                Is.EqualTo("The wood... It's watching!"));
+
+            current = TalkAddonRealtimeDialogSnapshot.Unavailable();
+            gateway.GetDirectDialog();
+
+            current = TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, "The wood... It's watching!");
+
+            Assert.That(gateway.GetDirectDialog().ChatLogItems.Single().Line,
+                Is.EqualTo("The wood... It's watching!"));
         }
 
         private static SharlayanGameMemoryGateway CreateGateway(

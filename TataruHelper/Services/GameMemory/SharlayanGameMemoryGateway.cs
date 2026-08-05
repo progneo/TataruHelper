@@ -32,17 +32,6 @@ namespace FFXIVTataruHelper.Services.GameMemory
         private ChatLogResult _lastChatLogResult = new ChatLogResult();
         private string _lastRealtimeDialogSignature = string.Empty;
 
-        /// <summary>
-        /// The Talk addon keeps its last line long after the dialogue box is
-        /// dismissed. Without this, attaching to an already-running game reported
-        /// whatever conversation the player had before as if it had just happened.
-        /// The first snapshot after attaching is therefore recorded, not emitted.
-        ///
-        /// Only attaching arms it, so a caller feeding snapshots directly still
-        /// gets every one of them.
-        /// </summary>
-        private bool _realtimeDialogPrimed = true;
-
         private const int MaxRememberedRealtimeLines = 64;
 
         private readonly HashSet<string> _recentRealtimeLines = new HashSet<string>(StringComparer.Ordinal);
@@ -90,15 +79,13 @@ namespace FFXIVTataruHelper.Services.GameMemory
         }
 
         /// <summary>
-        /// Arms the priming that swallows the line the Talk addon was already
-        /// holding when we attached. Separate from <see cref="SetProcess"/> so it
-        /// can be exercised without a live game process.
+        /// Forgets what the previous game process was saying. Separate from
+        /// <see cref="SetProcess"/> so it can be exercised without a live game.
         /// </summary>
         internal void ResetRealtimeDialogState()
         {
             _lastChatLogResult = new ChatLogResult();
             _lastRealtimeDialogSignature = string.Empty;
-            _realtimeDialogPrimed = false;
             _lastEmittedRealtimeText = string.Empty;
             _recentRealtimeLines.Clear();
             _recentRealtimeLineOrder.Clear();
@@ -261,12 +248,15 @@ namespace FFXIVTataruHelper.Services.GameMemory
             var signature = BuildRealtimeSignature(chatCode, speakerName, talkText);
             if (!string.Equals(_lastRealtimeDialogSignature, signature, StringComparison.Ordinal))
             {
-                var wasPrimed = _realtimeDialogPrimed;
                 _lastRealtimeDialogSignature = signature;
                 _lastEmittedRealtimeText = talkText;
-                _realtimeDialogPrimed = true;
 
-                var line = wasPrimed ? BuildRealtimeDialogLine(speakerName, talkText) : string.Empty;
+                // Every line counts, including the first after attaching. Holding
+                // that one back used to be how an already-running game avoided
+                // reporting the conversation the player had before as though it
+                // had just happened; the reader now skips addons the game is not
+                // drawing, so a line that reaches here is one that is on screen.
+                var line = BuildRealtimeDialogLine(speakerName, talkText);
 
                 if (Logger.RawDialogLogEnabled)
                 {
@@ -330,7 +320,6 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 _talkAddonRealtimeReader = null;
                 _lastChatLogResult = new ChatLogResult();
                 _lastRealtimeDialogSignature = string.Empty;
-                _realtimeDialogPrimed = true;
             }
         }
 
