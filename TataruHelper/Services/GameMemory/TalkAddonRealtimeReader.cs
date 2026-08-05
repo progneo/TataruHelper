@@ -47,6 +47,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private string _lastLoggedLoadedAddons = string.Empty;
 
+        private string _lastLoggedNodeList = string.Empty;
+
         // What each addon was showing on the previous sweep, as name-and-text
         // pairs rather than keyed by the candidate key: that key carries the
         // addon's address, and the game destroys and recreates Talk for every
@@ -67,6 +69,18 @@ namespace FFXIVTataruHelper.Services.GameMemory
         private static readonly TimeSpan InlineDiscoveryInterval = TimeSpan.FromSeconds(2);
 
         private const int InlineDiscoveryScanBytes = 0x600;
+
+        // AtkResNode.Type for a text node, and the NodeFlags bit that says it is
+        // actually on screen.
+        private const int TextNodeType = 3;
+
+        private const int VisibleNodeFlag = 0x10;
+
+        private const int MaxNodeListEntries = 512;
+
+        // The subtitle's text lives in node 2; 3 and 4 are the alternates the
+        // layout uses, which is how Echoglossian addresses the same addon.
+        private static readonly uint[] SubtitleTextNodeIds = { 2, 3, 4 };
 
         // SeString wraps its formatting payloads in these.
         private const byte SeStringPayloadStart = 0x02;
@@ -335,6 +349,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
                             (nodeTexts ?? Array.Empty<string>()).Select(text => $"[{text}]"));
                         WriteDistinctRawDialogLog(ref _lastLoggedAddonNodes,
                             $"Addon=[{addonSpec.AddonName}] code=[{addonSpec.ChatCode}] nodes={{ {joinedNodes} }}");
+                        LogNodeList(addonSpec.AddonName, loadedAddon.AddonAddress);
                     }
 
                     var addonSnapshot = BuildAddonSnapshot(addonSpec, nodeTexts, speakerName, lastTalkText);
@@ -626,6 +641,19 @@ namespace FFXIVTataruHelper.Services.GameMemory
         {
             if (addonSpec.InlineTextOffset >= 0)
             {
+                // Preferred: ask the addon which node holds its text. Everything
+                // below is the older path, kept as the fallback for a client whose
+                // node list cannot be walked.
+                foreach (var nodeId in SubtitleTextNodeIds)
+                {
+                    if (TryReadTextNodeById(addonAddress, nodeId, out var nodeText))
+                    {
+                        _knownInlineOffsetHasWorked = true;
+                        nodeTexts = new[] { nodeText };
+                        return true;
+                    }
+                }
+
                 // The known offset always wins. A discovered one is never latched
                 // onto: a single false positive would otherwise keep feeding
                 // whatever it landed on for the rest of the session, in place of
@@ -853,6 +881,132 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Reads a text node out of an addon by its node id, walking the addon's
+        /// own node list rather than reaching a fixed offset into the addon.
+        ///
+        /// Node ids belong to the UI layout and survive the patches that shift
+        /// struct fields about - and it is exactly such a fixed offset, the one
+        /// for the subtitle, that this project has had to re-derive by hand and
+        /// then guard with a scan that produced nothing but false positives.
+        ///
+        /// A hidden node is skipped, which the offset could never tell us: a
+        /// finished cutscene leaves its last subtitle in memory, and reading it
+        /// as though it were on screen is what announced one line over and over.
+        /// </summary>
+        private bool TryReadTextNodeById(IntPtr addonAddress, uint nodeId, out string text)
+        {
+            text = string.Empty;
+
+            var offsets = _uiDirectDialogOffsets.Value;
+            var walk = offsets.NodeWalk;
+            if (!walk.IsValid || addonAddress == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            var uldManagerAddress = AddAddress(addonAddress, walk.UldManagerOffset);
+            if (uldManagerAddress == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            var nodeCount = _memoryHandler.GetUInt16(uldManagerAddress, walk.NodeListCountOffset);
+            if (nodeCount <= 0 || nodeCount > MaxNodeListEntries)
+            {
+                return false;
+            }
+
+            var nodeListAddress = _memoryHandler.ReadPointer(uldManagerAddress, walk.NodeListOffset);
+            if (nodeListAddress == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            for (int index = 0; index < nodeCount; index++)
+            {
+                var nodeAddress = _memoryHandler.ReadPointer(nodeListAddress, index * IntPtr.Size);
+                if (nodeAddress == IntPtr.Zero)
+                {
+                    continue;
+                }
+
+                if ((_memoryHandler.GetInt64(nodeAddress, walk.NodeIdOffset) & 0xFFFFFFFF) != nodeId)
+                {
+                    continue;
+                }
+
+                if (_memoryHandler.GetUInt16(nodeAddress, walk.NodeTypeOffset) != TextNodeType)
+                {
+                    continue;
+                }
+
+                if ((_memoryHandler.GetUInt16(nodeAddress, walk.NodeFlagsOffset) & VisibleNodeFlag) == 0)
+                {
+                    return false;
+                }
+
+                return TryReadUtf8String(nodeAddress, offsets.AtkTextNodeNodeTextOffset, out text)
+                       && text.Length > 0;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Dumps an addon's node list so the walk can be checked against the
+        /// running client: what ids it has, which are text, which are on screen.
+        /// </summary>
+        private void LogNodeList(string addonName, IntPtr addonAddress)
+        {
+            var offsets = _uiDirectDialogOffsets.Value;
+            var walk = offsets.NodeWalk;
+            if (!Logger.RawDialogLogEnabled || !walk.IsValid || addonAddress == IntPtr.Zero)
+            {
+                return;
+            }
+
+            var uldManagerAddress = AddAddress(addonAddress, walk.UldManagerOffset);
+            if (uldManagerAddress == IntPtr.Zero)
+            {
+                return;
+            }
+
+            var nodeCount = _memoryHandler.GetUInt16(uldManagerAddress, walk.NodeListCountOffset);
+            var nodeListAddress = _memoryHandler.ReadPointer(uldManagerAddress, walk.NodeListOffset);
+            if (nodeCount <= 0 || nodeCount > MaxNodeListEntries || nodeListAddress == IntPtr.Zero)
+            {
+                WriteDistinctRawDialogLog(ref _lastLoggedNodeList,
+                    $"NodeList addon=[{addonName}] unusable count={nodeCount}");
+                return;
+            }
+
+            var described = new List<string>(nodeCount);
+            for (int index = 0; index < nodeCount; index++)
+            {
+                var nodeAddress = _memoryHandler.ReadPointer(nodeListAddress, index * IntPtr.Size);
+                if (nodeAddress == IntPtr.Zero)
+                {
+                    continue;
+                }
+
+                var id = _memoryHandler.GetInt64(nodeAddress, walk.NodeIdOffset) & 0xFFFFFFFF;
+                var type = _memoryHandler.GetUInt16(nodeAddress, walk.NodeTypeOffset);
+                var visible = (_memoryHandler.GetUInt16(nodeAddress, walk.NodeFlagsOffset) & VisibleNodeFlag) != 0;
+
+                if (type != TextNodeType)
+                {
+                    continue;
+                }
+
+                TryReadUtf8String(nodeAddress, offsets.AtkTextNodeNodeTextOffset, out var nodeText);
+                described.Add($"id={id} vis={(visible ? 1 : 0)} [{nodeText}]");
+            }
+
+            WriteDistinctRawDialogLog(ref _lastLoggedNodeList,
+                $"NodeList addon=[{addonName}] count={nodeCount} text={{ {string.Join(" | ", described)} }}");
         }
 
         private static string DecodeUtf8(byte[] data, int start, int count)
@@ -1149,7 +1303,27 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 atkUnitBaseNameOffset,
                 atkUnitBaseNameLength,
                 atkTextNodeNodeTextOffset,
+                ResolveNodeWalkOffsets(atkUnitBaseType),
                 addonSpecs);
+        }
+
+        private static AtkNodeWalkOffsets ResolveNodeWalkOffsets(Type atkUnitBaseType)
+        {
+            var uldManagerType = Type.GetType("FFXIVClientStructs.FFXIV.Component.GUI.AtkUldManager, Sharlayan");
+            var atkResNodeType = Type.GetType("FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode, Sharlayan");
+
+            if (uldManagerType == null || atkResNodeType == null)
+            {
+                return AtkNodeWalkOffsets.Empty;
+            }
+
+            return new AtkNodeWalkOffsets(
+                ResolveFieldOffset(atkUnitBaseType, "UldManager"),
+                ResolveFieldOffset(uldManagerType, "NodeList"),
+                ResolveFieldOffset(uldManagerType, "NodeListCount"),
+                ResolveFieldOffset(atkResNodeType, "NodeId"),
+                ResolveFieldOffset(atkResNodeType, "Type"),
+                ResolveFieldOffset(atkResNodeType, "NodeFlags"));
         }
 
         private static long ResolveFieldOffset(Type type, string fieldName)
@@ -1285,11 +1459,54 @@ namespace FFXIVTataruHelper.Services.GameMemory
             public string AddonName { get; }
         }
 
+        /// <summary>
+        /// Everything needed to walk an addon's own node list and pick a node out
+        /// by its id, instead of reaching a hardcoded offset into the addon.
+        ///
+        /// Optional: when these cannot be resolved the reader falls back to the
+        /// offsets it used before, so a change here can never cost us dialogue.
+        /// </summary>
+        private readonly struct AtkNodeWalkOffsets
+        {
+            public static AtkNodeWalkOffsets Empty => new AtkNodeWalkOffsets(-1, -1, -1, -1, -1, -1);
+
+            public long UldManagerOffset { get; }
+            public long NodeListOffset { get; }
+            public long NodeListCountOffset { get; }
+            public long NodeIdOffset { get; }
+            public long NodeTypeOffset { get; }
+            public long NodeFlagsOffset { get; }
+
+            public bool IsValid =>
+                UldManagerOffset >= 0 &&
+                NodeListOffset >= 0 &&
+                NodeListCountOffset >= 0 &&
+                NodeIdOffset >= 0 &&
+                NodeTypeOffset >= 0 &&
+                NodeFlagsOffset >= 0;
+
+            public AtkNodeWalkOffsets(
+                long uldManagerOffset,
+                long nodeListOffset,
+                long nodeListCountOffset,
+                long nodeIdOffset,
+                long nodeTypeOffset,
+                long nodeFlagsOffset)
+            {
+                UldManagerOffset = uldManagerOffset;
+                NodeListOffset = nodeListOffset;
+                NodeListCountOffset = nodeListCountOffset;
+                NodeIdOffset = nodeIdOffset;
+                NodeTypeOffset = nodeTypeOffset;
+                NodeFlagsOffset = nodeFlagsOffset;
+            }
+        }
+
         private readonly struct UiDirectDialogOffsets
         {
             public static UiDirectDialogOffsets Empty =>
                 new UiDirectDialogOffsets(-1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1,
-                    Array.Empty<AddonRealtimeTextSpec>());
+                    AtkNodeWalkOffsets.Empty, Array.Empty<AddonRealtimeTextSpec>());
 
             public long RaptureLogModuleOffset { get; }
             public long RaptureAtkModuleOffset { get; }
@@ -1302,6 +1519,10 @@ namespace FFXIVTataruHelper.Services.GameMemory
             public long AtkUnitBaseNameOffset { get; }
             public int AtkUnitBaseNameLength { get; }
             public long AtkTextNodeNodeTextOffset { get; }
+
+            // Not part of IsValid: the reader works without it, just less well.
+            public AtkNodeWalkOffsets NodeWalk { get; }
+
             public AddonRealtimeTextSpec[] AddonSpecs { get; }
 
             public bool IsValid =>
@@ -1331,8 +1552,10 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 long atkUnitBaseNameOffset,
                 int atkUnitBaseNameLength,
                 long atkTextNodeNodeTextOffset,
+                AtkNodeWalkOffsets nodeWalk,
                 AddonRealtimeTextSpec[] addonSpecs)
             {
+                NodeWalk = nodeWalk;
                 RaptureLogModuleOffset = raptureLogModuleOffset;
                 RaptureAtkModuleOffset = raptureAtkModuleOffset;
                 LastTalkNameOffset = lastTalkNameOffset;
