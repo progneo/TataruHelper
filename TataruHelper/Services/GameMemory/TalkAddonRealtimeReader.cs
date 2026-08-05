@@ -60,6 +60,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private DateTime _lastInlineDiscovery = DateTime.MinValue;
 
+        private string _lastDiscoveredInlineText = string.Empty;
+
         private static readonly TimeSpan InlineDiscoveryInterval = TimeSpan.FromSeconds(2);
 
         private const int InlineDiscoveryScanBytes = 0x600;
@@ -633,8 +635,18 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 // the one offset FFXIVClientStructs cannot supply.
                 if (TryDiscoverInlineTextOffset(addonAddress, out _, out var discoveredText))
                 {
-                    nodeTexts = new[] { discoveredText };
-                    return true;
+                    // The scan cannot tell a field a patch moved from a scratch
+                    // buffer still holding the last line of a finished cutscene,
+                    // and it re-runs every couple of seconds for as long as the
+                    // known offset stays empty. A find that has not changed since
+                    // the last one is the buffer: announcing it repeated a single
+                    // subtitle after every line of the conversation that followed.
+                    if (!string.Equals(discoveredText, _lastDiscoveredInlineText, StringComparison.Ordinal))
+                    {
+                        _lastDiscoveredInlineText = discoveredText;
+                        nodeTexts = new[] { discoveredText };
+                        return true;
+                    }
                 }
 
                 nodeTexts = Array.Empty<string>();
