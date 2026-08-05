@@ -49,6 +49,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private string _lastLoggedNodeList = string.Empty;
 
+        private string _lastLoggedBubbleFlags = string.Empty;
+
         // What each addon was showing on the previous sweep, as name-and-text
         // pairs rather than keyed by the candidate key: that key carries the
         // addon's address, and the game destroys and recreates Talk for every
@@ -347,6 +349,11 @@ namespace FFXIVTataruHelper.Services.GameMemory
                         continue;
                     }
 
+                    if (IsAddonOffScreen(loadedAddon.AddonAddress))
+                    {
+                        continue;
+                    }
+
                     if (!TryReadAddonNodeTexts(loadedAddon.AddonAddress, addonSpec, out var nodeTexts))
                     {
                         continue;
@@ -413,7 +420,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 name = name.Substring(0, separator);
             }
 
-            return name + " " + text;
+            return name + "" + text;
         }
 
         internal bool TrySelectActiveCandidate(
@@ -426,16 +433,14 @@ namespace FFXIVTataruHelper.Services.GameMemory
             {
                 _stickyCandidateKey = null;
                 _lastAddonText.Clear();
+                _hasLastSelectedSnapshot = false;
 
-                // Nothing on screen. Holding the previous line keeps the signature
-                // stable rather than letting the UIModule fallback re-announce the
-                // conversation that just ended.
-                if (_hasLastSelectedSnapshot)
-                {
-                    snapshot = _lastSelectedSnapshot;
-                    return true;
-                }
-
+                // Nothing on screen, and with the addons' own visibility to go by
+                // that is now the truth rather than a guess. Holding the previous
+                // line here used to keep the signature from changing, which meant
+                // an NPC saying the same thing again - a bubble as you walk past -
+                // read as an echo of itself and was dropped. It only got through
+                // when somebody else had spoken in between.
                 return false;
             }
 
@@ -794,6 +799,42 @@ namespace FFXIVTataruHelper.Services.GameMemory
                     continue;
                 }
 
+                if (Logger.RawDialogLogEnabled && candidate.Length > 0)
+                {
+                    var walk = _uiDirectDialogOffsets.Value.NodeWalk;
+                    if (walk.IsValid)
+                    {
+                        var resNodeAddress = addonSpec.TalkBubbleResNodeOffset >= 0
+                            ? _memoryHandler.ReadPointer(talkBubbleAddress, addonSpec.TalkBubbleResNodeOffset)
+                            : IntPtr.Zero;
+
+                        var textFlags = _memoryHandler.GetUInt16(textNodeAddress, walk.NodeFlagsOffset);
+                        var resFlags = resNodeAddress != IntPtr.Zero
+                            ? _memoryHandler.GetUInt16(resNodeAddress, walk.NodeFlagsOffset)
+                            : (ushort)0;
+
+                        var addonVisibility = _uiDirectDialogOffsets.Value.AtkUnitBaseVisibilityFlagsOffset >= 0
+                            ? _memoryHandler.GetUInt16(addonAddress,
+                                _uiDirectDialogOffsets.Value.AtkUnitBaseVisibilityFlagsOffset)
+                            : (ushort)0xFFFF;
+
+                        var rootNodeAddress = _uiDirectDialogOffsets.Value.AtkUnitBaseRootNodeOffset >= 0
+                            ? _memoryHandler.ReadPointer(addonAddress,
+                                _uiDirectDialogOffsets.Value.AtkUnitBaseRootNodeOffset)
+                            : IntPtr.Zero;
+
+                        var rootFlags = rootNodeAddress != IntPtr.Zero
+                            ? _memoryHandler.GetUInt16(rootNodeAddress, walk.NodeFlagsOffset)
+                            : (ushort)0;
+
+                        WriteDistinctRawDialogLog(ref _lastLoggedBubbleFlags,
+                            $"Bubble[{i}] textVis={(textFlags & VisibleNodeFlag) != 0} " +
+                            $"resVis={(resFlags & VisibleNodeFlag) != 0} " +
+                            $"addonVisFlags=0x{addonVisibility:X} rootFlags=0x{rootFlags:X} " +
+                            $"rootVis={(rootFlags & VisibleNodeFlag) != 0} [{candidate}]");
+                    }
+                }
+
                 var normalized = SharlayanGameMemoryGateway.NormalizeDialogToken(candidate);
                 if (normalized.Length > 0)
                 {
@@ -967,6 +1008,45 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Whether the addon is not being drawn, judged by its root node.
+        ///
+        /// The text buffers keep their contents long after the game has finished
+        /// with them - a subtitle holds the last line of a cutscene, a speech
+        /// bubble holds what an NPC said as you walked past - and reading those
+        /// as though they were on screen is behind every repeated line this
+        /// reader has produced. The bubble's own nodes are no help: they go on
+        /// claiming to be visible. The addon's root node is the one that stops.
+        ///
+        /// Applied from the first sweep. Waiting for an addon to be seen visible
+        /// once before trusting the flag sounds safer and is not: until then the
+        /// buffer flows through unfiltered, so its contents are already the text
+        /// on record, and when the line is genuinely said it reads as unchanged
+        /// and is never announced. That is what let one bubble through out of
+        /// five walks past the same NPC.
+        ///
+        /// Should the flag ever read differently on another client, the failure
+        /// is dialogue going missing - loud, and reported - rather than lines
+        /// silently repeating, which took all day to track down.
+        /// </summary>
+        private bool IsAddonOffScreen(IntPtr addonAddress)
+        {
+            var offsets = _uiDirectDialogOffsets.Value;
+            if (!offsets.NodeWalk.IsValid || offsets.AtkUnitBaseRootNodeOffset < 0)
+            {
+                return false;
+            }
+
+            var rootNodeAddress = _memoryHandler.ReadPointer(addonAddress, offsets.AtkUnitBaseRootNodeOffset);
+            if (rootNodeAddress == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            return (_memoryHandler.GetUInt16(rootNodeAddress, offsets.NodeWalk.NodeFlagsOffset)
+                    & VisibleNodeFlag) == 0;
         }
 
         /// <summary>
@@ -1370,6 +1450,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 atkUnitBaseNameOffset,
                 atkUnitBaseNameLength,
                 atkTextNodeNodeTextOffset,
+                ResolveFieldOffset(atkUnitBaseType, "VisibilityFlags"),
+                ResolveFieldOffset(atkUnitBaseType, "RootNode"),
                 ResolveNodeWalkOffsets(atkUnitBaseType),
                 addonSpecs);
         }
@@ -1495,7 +1577,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 talkBubbleEntriesOffset,
                 talkBubbleEntrySize,
                 talkBubbleTextNodeOffset,
-                talkBubbleEntryCount);
+                talkBubbleEntryCount,
+                ResolveFieldOffset(talkBubbleEntryType, "BubbleResNode"));
         }
 
         private static long[] ResolveAddonTalkTextNodeOffsets(Type addonTalkType)
@@ -1574,7 +1657,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
         private readonly struct UiDirectDialogOffsets
         {
             public static UiDirectDialogOffsets Empty =>
-                new UiDirectDialogOffsets(-1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1,
+                new UiDirectDialogOffsets(-1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1,
                     AtkNodeWalkOffsets.Empty, Array.Empty<AddonRealtimeTextSpec>());
 
             public long RaptureLogModuleOffset { get; }
@@ -1587,7 +1670,12 @@ namespace FFXIVTataruHelper.Services.GameMemory
             public long AtkUnitListCountOffset { get; }
             public long AtkUnitBaseNameOffset { get; }
             public int AtkUnitBaseNameLength { get; }
+
             public long AtkTextNodeNodeTextOffset { get; }
+
+            public long AtkUnitBaseVisibilityFlagsOffset { get; }
+
+            public long AtkUnitBaseRootNodeOffset { get; }
 
             // Not part of IsValid: the reader works without it, just less well.
             public AtkNodeWalkOffsets NodeWalk { get; }
@@ -1621,6 +1709,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 long atkUnitBaseNameOffset,
                 int atkUnitBaseNameLength,
                 long atkTextNodeNodeTextOffset,
+                long atkUnitBaseVisibilityFlagsOffset,
+                long atkUnitBaseRootNodeOffset,
                 AtkNodeWalkOffsets nodeWalk,
                 AddonRealtimeTextSpec[] addonSpecs)
             {
@@ -1636,6 +1726,9 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 AtkUnitBaseNameOffset = atkUnitBaseNameOffset;
                 AtkUnitBaseNameLength = atkUnitBaseNameLength;
                 AtkTextNodeNodeTextOffset = atkTextNodeNodeTextOffset;
+                AtkUnitBaseVisibilityFlagsOffset = atkUnitBaseVisibilityFlagsOffset;
+                AtkUnitBaseRootNodeOffset = atkUnitBaseRootNodeOffset;
+
                 AddonSpecs = addonSpecs ?? Array.Empty<AddonRealtimeTextSpec>();
             }
         }
@@ -1653,8 +1746,10 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 int talkBubbleEntryCount,
                 long inlineTextOffset,
                 int speakerNodeId,
-                int textNodeId)
+                int textNodeId,
+                long talkBubbleResNodeOffset = -1)
             {
+                TalkBubbleResNodeOffset = talkBubbleResNodeOffset;
                 SpeakerNodeId = speakerNodeId;
                 TextNodeId = textNodeId;
                 AddonName = addonName;
@@ -1676,6 +1771,9 @@ namespace FFXIVTataruHelper.Services.GameMemory
             public int TalkBubbleEntrySize { get; }
             public long TalkBubbleTextNodeOffset { get; }
             public int TalkBubbleEntryCount { get; }
+
+            /// <summary>The bubble's own node, which carries whether it is on screen.</summary>
+            public long TalkBubbleResNodeOffset { get; }
 
             /// <summary>Offset of a Utf8String stored in the addon itself, or -1.</summary>
             public long InlineTextOffset { get; }
@@ -1722,7 +1820,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 long talkBubbleEntriesOffset,
                 int talkBubbleEntrySize,
                 long talkBubbleTextNodeOffset,
-                int talkBubbleEntryCount)
+                int talkBubbleEntryCount,
+                long talkBubbleResNodeOffset)
             {
                 return new AddonRealtimeTextSpec(
                     addonName,
@@ -1735,7 +1834,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
                     talkBubbleEntryCount,
                     -1,
                     -1,
-                    -1);
+                    -1,
+                    talkBubbleResNodeOffset);
             }
         }
     }

@@ -233,6 +233,12 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
             if (!realtimeSnapshot.SourceAvailable)
             {
+                // Nothing is being said. Forgetting the last line matters: without
+                // it, the same words said again - an NPC repeating a bubble as you
+                // walk past - match the signature still held from last time and are
+                // taken for an echo, so they only ever get through when somebody
+                // else has spoken in between.
+                _lastRealtimeDialogSignature = string.Empty;
                 return fallbackDirectDialog;
             }
 

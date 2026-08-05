@@ -191,6 +191,47 @@ namespace TataruHelper.Tests.Services.GameMemory
             }
         }
 
+        // An NPC repeating a bubble as you walk past says the same words again,
+        // and that is a new utterance, not an echo. It only got through when
+        // somebody else had spoken in between, because an empty screen kept
+        // reporting the previous line and so kept the signature unchanged.
+        [Test]
+        public void SameLineAfterTheScreenClears_IsReportedAgain()
+        {
+            var reader = CreateReader();
+            var bubble = Candidate("_MiniTalk@4000", "0044", string.Empty, "The wood... It's watching, you know!");
+
+            Assert.That(reader.TrySelectActiveCandidate(
+                new List<(string, TalkAddonRealtimeDialogSnapshot, string)> { bubble }, out var first), Is.True);
+            Assert.That(first.TalkText, Is.EqualTo("The wood... It's watching, you know!"));
+
+            // The bubble goes away: nothing is on screen at all.
+            Assert.That(reader.TrySelectActiveCandidate(
+                new List<(string, TalkAddonRealtimeDialogSnapshot, string)>(), out _), Is.False);
+
+            Assert.That(reader.TrySelectActiveCandidate(
+                new List<(string, TalkAddonRealtimeDialogSnapshot, string)> { bubble }, out var again), Is.True);
+            Assert.That(again.TalkText, Is.EqualTo("The wood... It's watching, you know!"));
+        }
+
+        [Test]
+        public void EmptyScreen_ReportsNothingRatherThanTheLastLine()
+        {
+            var reader = CreateReader();
+
+            reader.TrySelectActiveCandidate(
+                new List<(string, TalkAddonRealtimeDialogSnapshot, string)>
+                {
+                    Candidate(TalkKey, "003D", "Cid", "The hells you will!"),
+                },
+                out _);
+
+            Assert.That(reader.TrySelectActiveCandidate(
+                    new List<(string, TalkAddonRealtimeDialogSnapshot, string)>(), out _),
+                Is.False,
+                "a finished conversation is not something still being said");
+        }
+
         [Test]
         public void TwoBubbles_WithDifferentText_AreBothStillReported()
         {
