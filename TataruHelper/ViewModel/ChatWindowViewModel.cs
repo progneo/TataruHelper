@@ -769,9 +769,16 @@ namespace FFXIVTataruHelper.ViewModel
                 }
             }
 
-            if (_selectedEngine != null && !AvailableEngines.Contains(_selectedEngine))
+            // Recovery has to cover having no selection at all, not only a
+            // selection that disappeared. The window is built before the
+            // credential store has answered which engines are enabled, so the
+            // list starts empty and nothing can be selected; when the engines
+            // do arrive, a check for a non-null selection would skip right
+            // past, leaving the engine and both language pickers blank until
+            // the application is restarted.
+            if (!AvailableEngines.Contains(_selectedEngine))
             {
-                SelectedEngine = AvailableEngines.FirstOrDefault();
+                SelectedEngine = SavedEngine() ?? AvailableEngines.FirstOrDefault();
                 return;
             }
 
@@ -780,6 +787,21 @@ namespace FFXIVTataruHelper.ViewModel
                 TrySetLanguage(_TranslateFromLanguages, prevFrom);
                 TrySetLanguage(_TranslateToLanguages, prevTo);
             }
+        }
+
+        // The engine the window was last saved with, when it is available.
+        // Kept in step with SelectedEngine, so once the user has switched away
+        // this is the engine they switched to - which is what makes it the
+        // right thing to restore rather than a stale preference.
+        private TranslationEngine SavedEngine()
+        {
+            if (_BoundSettings == null || _allTranslationEngines == null)
+                return null;
+
+            var saved = _allTranslationEngines
+                .FirstOrDefault(x => x.EngineName == _BoundSettings.TranslationEngineName);
+
+            return AvailableEngines.Contains(saved) ? saved : null;
         }
 
         private void OnEngineAvailabilityChanged(object sender, EventArgs e)
@@ -916,6 +938,11 @@ namespace FFXIVTataruHelper.ViewModel
 
         private void TrySetLanguage(CollectionView collection, TranslatorLanguage language)
         {
+            // There are no language lists while no engine is selected: they are
+            // built from the engine's supported languages.
+            if (collection == null)
+                return;
+
             if (language == null)
                 MoveToDefaultLanguage(collection);
             else
