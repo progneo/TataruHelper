@@ -66,6 +66,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private bool _knownInlineOffsetHasWorked;
 
+        private readonly HashSet<string> _provenNodeIdAddons = new HashSet<string>(StringComparer.Ordinal);
+
         private static readonly TimeSpan InlineDiscoveryInterval = TimeSpan.FromSeconds(2);
 
         private const int InlineDiscoveryScanBytes = 0x600;
@@ -81,6 +83,13 @@ namespace FFXIVTataruHelper.Services.GameMemory
         // The subtitle's text lives in node 2; 3 and 4 are the alternates the
         // layout uses, which is how Echoglossian addresses the same addon.
         private static readonly uint[] SubtitleTextNodeIds = { 2, 3, 4 };
+
+        // Read off the running client: Talk keeps the speaker in node 2 and the
+        // line in node 3. Naming them beats inferring them from the order the
+        // text node fields are declared in.
+        private const int TalkSpeakerNodeId = 2;
+
+        private const int TalkTextNodeId = 3;
 
         // SeString wraps its formatting payloads in these.
         private const byte SeStringPayloadStart = 0x02;
@@ -698,6 +707,11 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
             if (addonSpec.TextNodeOffsets != null && addonSpec.TextNodeOffsets.Length > 0)
             {
+                if (TryReadNamedNodeTexts(addonAddress, addonSpec, out nodeTexts))
+                {
+                    return true;
+                }
+
                 return TryReadDirectTextNodeTexts(addonAddress, addonSpec.TextNodeOffsets, out nodeTexts);
             }
 
@@ -953,6 +967,59 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Fills the speaker and line slots from the addon's named nodes.
+        ///
+        /// The slots themselves are unchanged - everything downstream still reads
+        /// slot 0 as the speaker and slot 1 as the line - but which node goes in
+        /// which slot is now stated by the layout instead of inferred from the
+        /// order the text node fields happen to be declared in. That inference is
+        /// what put "Is this our dark stranger?" in the speaker slot: it and
+        /// "Short-tempered Thaumaturge" are both 26 characters long.
+        ///
+        /// Falls back until the ids have proved themselves once. Until then an
+        /// empty read might mean the ids are wrong on this client rather than
+        /// that nobody is speaking, and the difference matters: trusting it too
+        /// early would silently swallow every line.
+        /// </summary>
+        private bool TryReadNamedNodeTexts(IntPtr addonAddress, AddonRealtimeTextSpec addonSpec, out string[] nodeTexts)
+        {
+            nodeTexts = Array.Empty<string>();
+
+            if (addonSpec.TextNodeId <= 0 || !_uiDirectDialogOffsets.Value.NodeWalk.IsValid)
+            {
+                return false;
+            }
+
+            TryReadTextNodeById(addonAddress, (uint)addonSpec.TextNodeId, out var talkText);
+
+            if (talkText.Length == 0)
+            {
+                if (!_provenNodeIdAddons.Contains(addonSpec.AddonName))
+                {
+                    return false;
+                }
+
+                // The ids are known good here, so nothing on the node means
+                // nothing is being said - which the offsets could not tell us,
+                // and reading a line the game had finished with is what repeated
+                // dialogue that had already gone by.
+                nodeTexts = Array.Empty<string>();
+                return true;
+            }
+
+            _provenNodeIdAddons.Add(addonSpec.AddonName);
+
+            var speakerName = string.Empty;
+            if (addonSpec.SpeakerNodeId > 0)
+            {
+                TryReadTextNodeById(addonAddress, (uint)addonSpec.SpeakerNodeId, out speakerName);
+            }
+
+            nodeTexts = new[] { speakerName, talkText };
+            return true;
         }
 
         /// <summary>
@@ -1375,7 +1442,9 @@ namespace FFXIVTataruHelper.Services.GameMemory
                     TalkAddonName,
                     DirectDialogCode,
                     addonTalkTextNodeOffsets,
-                    true));
+                    true,
+                    TalkSpeakerNodeId,
+                    TalkTextNodeId));
             }
 
             var miniTalkSpec = ResolveMiniTalkAddonSpec(MiniTalkAddonName);
@@ -1582,8 +1651,12 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 int talkBubbleEntrySize,
                 long talkBubbleTextNodeOffset,
                 int talkBubbleEntryCount,
-                long inlineTextOffset)
+                long inlineTextOffset,
+                int speakerNodeId,
+                int textNodeId)
             {
+                SpeakerNodeId = speakerNodeId;
+                TextNodeId = textNodeId;
                 AddonName = addonName;
                 ChatCode = chatCode;
                 TextNodeOffsets = textNodeOffsets ?? Array.Empty<long>();
@@ -1607,14 +1680,27 @@ namespace FFXIVTataruHelper.Services.GameMemory
             /// <summary>Offset of a Utf8String stored in the addon itself, or -1.</summary>
             public long InlineTextOffset { get; }
 
+            /// <summary>
+            /// Node ids holding the speaker and the line, or -1 when the addon is
+            /// only addressable by offset. Ids belong to the UI layout, so unlike
+            /// the offsets they survive a patch shifting the struct around - and
+            /// they say which node is which instead of leaving it to be guessed
+            /// from the order the fields happen to be declared in.
+            /// </summary>
+            public int SpeakerNodeId { get; }
+
+            public int TextNodeId { get; }
+
             public static AddonRealtimeTextSpec Direct(
                 string addonName,
                 string chatCode,
                 long[] textNodeOffsets,
-                bool allowNodeSpeaker)
+                bool allowNodeSpeaker,
+                int speakerNodeId = -1,
+                int textNodeId = -1)
             {
                 return new AddonRealtimeTextSpec(addonName, chatCode, textNodeOffsets, allowNodeSpeaker, -1, 0, -1, 0,
-                    -1);
+                    -1, speakerNodeId, textNodeId);
             }
 
             /// <summary>
@@ -1627,7 +1713,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 long inlineTextOffset)
             {
                 return new AddonRealtimeTextSpec(addonName, chatCode, Array.Empty<long>(), false, -1, 0, -1, 0,
-                    inlineTextOffset);
+                    inlineTextOffset, -1, -1);
             }
 
             public static AddonRealtimeTextSpec TalkBubbles(
@@ -1647,6 +1733,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
                     talkBubbleEntrySize,
                     talkBubbleTextNodeOffset,
                     talkBubbleEntryCount,
+                    -1,
+                    -1,
                     -1);
             }
         }
