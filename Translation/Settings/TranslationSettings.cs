@@ -22,6 +22,19 @@ namespace Translation.Settings
 
         public bool UseGoogleHtmlFallbackEndpoint { get; set; } = true;
 
+        /// <summary>
+
+        /// Index of translations made by hand, built by
+
+        /// scripts/build_reference_translations.py. Consulted before a translator
+
+        /// when the literary translation option is on.
+
+        /// </summary>
+
+        public string ReferenceTranslationsPath { get; set; } = "Resources/ReferenceTranslations.db";
+
+
         public string NTextCatLanguageModelsPath { get; set; } = "TranslationResources/Core14.profile.xml";
 
         public string PapagoEncoderPath { get; set; } = "TranslationResources/PapagoEncoder";

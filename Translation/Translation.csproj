@@ -13,6 +13,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" />
     <PackageReference Include="NTextCat"/>
     <PackageReference Include="Jurassic" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
     <PackageReference Include="Newtonsoft.Json" />
   </ItemGroup>
 

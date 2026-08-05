@@ -1,0 +1,187 @@
+using System;
+using System.IO;
+
+using Microsoft.Data.Sqlite;
+
+using NUnit.Framework;
+
+using Translation.Reference;
+
+namespace Translation.Tests.Reference
+{
+    // The index holds translations somebody made by hand for the game's own
+    // dialogue. What matters is that a line read off the screen finds its entry
+    // despite the game having wrapped it across lines, and that a line nobody
+    // has translated says so rather than answering with something.
+    [TestFixture]
+    public class SqliteReferenceTranslationSourceTests
+    {
+        private string _databasePath;
+
+        [SetUp]
+        public void SetUp()
+        {
+            _databasePath = Path.Combine(Path.GetTempPath(), "TataruReference_" + Guid.NewGuid().ToString("N") + ".db");
+
+            using (var connection = new SqliteConnection($"Data Source={_databasePath}"))
+            {
+                connection.Open();
+
+                using (var create = connection.CreateCommand())
+                {
+                    create.CommandText =
+                        "CREATE TABLE line (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID;" +
+                        "CREATE TABLE pattern (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID;" +
+                        "CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);" +
+                        "INSERT INTO meta VALUES ('language', 'ru');" +
+                        "INSERT INTO line VALUES " +
+                        "('The wood... It''s watching, you know!', 'Лес... Он бдит, знаешь ли!')," +
+                        "('I am Hydaelyn. All made one.', 'Я — Хайделин. Множество в Одном.')," +
+                        "('When you clashed with him', " +
+                        "'когда ты с ним <var 08 E905 ((схлестнулась)) ((схлестнулся)) /var>')," +
+                        "('<sigh> Here we go again.', '<sigh> Эх... Опять двадцать пять.');" +
+                        "INSERT INTO pattern VALUES " +
+                        "('The fate of Gridania hangs in the balance. Go swiftly, ' || char(1) || '.', " +
+                        "'Судьба Гридании висит на волоске. Поторопись, ' || char(1) || '.');";
+                    create.ExecuteNonQuery();
+                }
+            }
+
+            SqliteConnection.ClearAllPools();
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            SqliteConnection.ClearAllPools();
+            try
+            {
+                File.Delete(_databasePath);
+            }
+            catch (IOException)
+            {
+            }
+        }
+
+        [Test]
+        public void KnownLine_IsFound()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.TryGetTranslation("I am Hydaelyn. All made one.", out var translation), Is.True);
+                Assert.That(translation, Is.EqualTo("Я — Хайделин. Множество в Одном."));
+            }
+        }
+
+        // The game wraps dialogue where it likes and the reader hands it back
+        // joined, so the stored line and the read one differ in whitespace alone.
+        [Test]
+        public void WrappedLine_IsFoundAllTheSame()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.TryGetTranslation("The wood...\n It's watching,   you know!  ", out var translation),
+                    Is.True);
+                Assert.That(translation, Is.EqualTo("Лес... Он бдит, знаешь ли!"));
+            }
+        }
+
+        [Test]
+        public void UnknownLine_IsNotAnswered()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.TryGetTranslation("Something nobody has written down", out var translation),
+                    Is.False);
+                Assert.That(translation, Is.Empty);
+            }
+        }
+
+        // The game fills gender agreement in as it draws. A stored line that
+        // still carries it has to be passed over: it reached the chat window
+        // reading "когда ты с ним <var 08 E905 ((схлестнулась)) ((схлестнулся))
+        // /var>", which is worse than paying a translator for the line.
+        [Test]
+        public void LineStillCarryingMarkup_IsPassedOver()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.TryGetTranslation("When you clashed with him", out var translation), Is.False);
+                Assert.That(translation, Is.Empty);
+            }
+        }
+
+        // Sound cues look like markup and are not: the game draws them as the
+        // text they appear to be, so the line reads "<sigh> Here we go again."
+        // on screen and has to keep them.
+        [Test]
+        public void SoundCue_IsNotMistakenForMarkup()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.TryGetTranslation("<sigh> Here we go again.", out var translation), Is.True);
+                Assert.That(translation, Is.EqualTo("<sigh> Эх... Опять двадцать пять."));
+            }
+        }
+
+        // Lines the game addresses to the player carry their name, and which
+        // part of it varies by line. Trying the full name alone sent every one
+        // of them to a translator, because what was on screen read "Go swiftly,
+        // D'ark." while the name is "D'ark One".
+        [TestCase("D'ark One", "The fate of Gridania hangs in the balance. Go swiftly, D'ark One.")]
+        [TestCase("D'ark One", "The fate of Gridania hangs in the balance. Go swiftly, D'ark.")]
+        [TestCase("D'ark One", "The fate of Gridania hangs in the balance. Go swiftly, One.")]
+        public void LineAddressedToThePlayer_IsFoundByAnyFormOfTheName(string playerName, string spoken)
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                source.PlayerName = playerName;
+
+                Assert.That(source.TryGetTranslation(spoken, out var translation), Is.True);
+                Assert.That(translation, Does.StartWith("Судьба Гридании висит на волоске. Поторопись, "));
+            }
+        }
+
+        [Test]
+        public void LineAddressedToThePlayer_IsNotFoundBeforeTheNameIsKnown()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.TryGetTranslation(
+                        "The fate of Gridania hangs in the balance. Go swiftly, D'ark.", out _),
+                    Is.False);
+            }
+        }
+
+        [Test]
+        public void LanguageOfTheIndex_IsReported()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.LanguageCode, Is.EqualTo("ru"));
+            }
+        }
+
+        // Not having the index is the ordinary state for anyone who has not built
+        // it, and has to mean "translate everything" rather than a crash.
+        [Test]
+        public void MissingIndex_IsNotAnError()
+        {
+            using (var source = new SqliteReferenceTranslationSource(
+                       Path.Combine(Path.GetTempPath(), "no-such-index.db"), null))
+            {
+                Assert.That(source.IsAvailable, Is.False);
+                Assert.That(source.LanguageCode, Is.Empty);
+                Assert.That(source.TryGetTranslation("Anything at all", out _), Is.False);
+            }
+        }
+
+        [Test]
+        public void Normalize_CollapsesWhitespaceTheWayTheIndexWasBuilt()
+        {
+            Assert.That(SqliteReferenceTranslationSource.Normalize("  a\r\n b\t\tc  "), Is.EqualTo("a b c"));
+            Assert.That(SqliteReferenceTranslationSource.Normalize("   "), Is.Empty);
+            Assert.That(SqliteReferenceTranslationSource.Normalize(null), Is.Empty);
+        }
+    }
+}

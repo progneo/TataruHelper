@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using Translation.Credentials;
 using Translation.Exceptions;
 using Translation.Http;
+using Translation.Reference;
 using Translation.Models;
 using Translation.Providers;
 using Translation.Settings;
@@ -60,7 +61,8 @@ namespace Translation
             IEnumerable<ITranslationProvider> translationProviders,
             TranslationSettings settings,
             Func<string, string> detectLanguage = null,
-            ITranslationCredentialStore credentials = null)
+            ITranslationCredentialStore credentials = null,
+            IReferenceTranslationSource referenceTranslations = null)
         {
             _Logger = logger;
 
@@ -89,6 +91,34 @@ namespace Translation
             _LanguageDetector = new LanguageDetector(_settings.MaxSameLanguagePercent,
                 _settings.NTextCatLanguageModelsPath, _Logger);
             _detectLanguage = detectLanguage ?? _LanguageDetector.TryDetectLanguage;
+
+            _referenceTranslations = referenceTranslations
+                                     ?? new SqliteReferenceTranslationSource(
+                                         _settings.ReferenceTranslationsPath, _Logger);
+        }
+
+        private readonly IReferenceTranslationSource _referenceTranslations;
+
+        /// <summary>
+        /// Whether a line the game's translators have already rendered by hand
+        /// should be used in place of asking a service to render it again.
+        /// </summary>
+        public bool UseReferenceTranslations { get; set; }
+
+        /// <summary>
+        /// The character's name, so lines the game addresses to them can be
+        /// recognised: what is stored has the name punched out.
+        /// </summary>
+        public string PlayerName
+        {
+            get => _referenceTranslations?.PlayerName ?? string.Empty;
+            set
+            {
+                if (_referenceTranslations != null)
+                {
+                    _referenceTranslations.PlayerName = value;
+                }
+            }
         }
 
         public void LoadLanguages()
@@ -124,6 +154,31 @@ namespace Translation
             return TranslateCoreAsync(inSentence, translationEngine, fromLang, toLang, cancellationToken);
         }
 
+        /// <summary>
+        /// Matched on the sentence as it came off the screen rather than after
+        /// preprocessing: the index holds the game's own text, which is what we
+        /// read, and preprocessing exists to help a machine translator rather
+        /// than to help find an exact line.
+        /// </summary>
+        private bool TryTranslateFromReference(string sentence, TranslatorLanguage toLang, out string translation)
+        {
+            translation = string.Empty;
+
+            if (!UseReferenceTranslations || _referenceTranslations == null)
+            {
+                return false;
+            }
+
+            var indexed = _referenceTranslations.LanguageCode;
+            if (string.IsNullOrEmpty(indexed) ||
+                !string.Equals(indexed, toLang?.LanguageCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            return _referenceTranslations.TryGetTranslation(sentence, out translation);
+        }
+
         private async Task<TranslationResult> TranslateCoreAsync(string inSentence,
             TranslationEngine translationEngine, TranslatorLanguage fromLang, TranslatorLanguage toLang,
             CancellationToken cancellationToken)
@@ -154,6 +209,14 @@ namespace Translation
                     if (_LanguageDetector.HasJapanese(inSentence))
                         return TranslationResult.Success(translationEngine.EngineName, inSentence);
                     break;
+            }
+
+            // Somebody has already translated most of the game's dialogue by
+            // hand. Asking a service to have another go at a line that is in
+            // there is slower, costs a request, and reads worse.
+            if (TryTranslateFromReference(inSentence, toLang, out var referenceText))
+            {
+                return TranslationResult.Literary(translationEngine.EngineName, referenceText);
             }
 
             var normalizedSentence = PreprocessSentence(inSentence);

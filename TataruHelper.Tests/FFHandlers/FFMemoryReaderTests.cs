@@ -165,6 +165,9 @@ namespace TataruHelper.Tests
                 return DirectDialogResult;
             }
 
+            public string GetPlayerName() => string.Empty;
+
+
             public bool CheckChatEquality(ChatLogItem item1, ChatLogItem item2)
             {
                 return false;

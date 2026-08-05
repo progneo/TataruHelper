@@ -54,6 +54,12 @@
     <None Update="Resources\IgnoreNickNameChatCodes.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <!-- Hand-made translations of the game's own dialogue, built by
+         scripts/build_reference_translations.py. Sizeable, so copied only when
+         it changes - which is when the index is rebuilt from xivrus. -->
+    <None Update="Resources\ReferenceTranslations.db">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -125,6 +125,34 @@ namespace FFXIVTataruHelper.FFHandlers
         /// the chat log. Off falls back to chat-log-only behaviour.
         /// </summary>
         public bool IsRealtimeTranslationEnabled { get; set; } = true;
+
+        /// <summary>
+        /// Called once the character's name is known. Lines the game addresses
+        /// to them carry it, and a hand-made translation of such a line cannot
+        /// be recognised until the name can be written into it.
+        /// </summary>
+        public Action<string> PlayerNameResolved { get; set; }
+
+        private bool _playerNameResolved;
+
+        private void ResolvePlayerNameOnce()
+        {
+            if (_playerNameResolved || PlayerNameResolved == null)
+            {
+                return;
+            }
+
+            var name = _gameMemoryGateway.GetPlayerName();
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                // Not logged in yet; ask again next sweep.
+                return;
+            }
+
+            _playerNameResolved = true;
+            _logger.WriteLog("Player name resolved: " + name);
+            PlayerNameResolved(name);
+        }
 
         private readonly ConcurrentDictionary<string, DateTime> _recentEmittedMessages;
         private static readonly TimeSpan DuplicateSuppressionWindow = TimeSpan.FromSeconds(2);
@@ -476,6 +504,8 @@ namespace FFXIVTataruHelper.FFHandlers
             {
                 return;
             }
+
+            ResolvePlayerNameOnce();
 
             var directDialog = _gameMemoryGateway.GetDirectDialog();
             if (directDialog?.ChatLogItems == null || directDialog.ChatLogItems.Count == 0)

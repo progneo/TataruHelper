@@ -35,6 +35,9 @@ namespace FFXIVTataruHelper.FFHandlers
         /// </summary>
         bool IsRealtimeTranslationEnabled { get; set; }
 
+        /// <summary>Called once, when the character's name becomes readable.</summary>
+        Action<string> PlayerNameResolved { get; set; }
+
         void Start();
 
         void Stop();

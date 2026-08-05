@@ -96,6 +96,19 @@ namespace FFXIVTataruHelper.Services.GameMemory
             UnsetProcessCore();
         }
 
+        public string GetPlayerName()
+        {
+            try
+            {
+                return _reader?.GetCurrentPlayer()?.Entity?.Name ?? string.Empty;
+            }
+            catch (Exception ex)
+            {
+                _logger.WriteLog(ex);
+                return string.Empty;
+            }
+        }
+
         public ChatLogResult GetChatLog(int previousArrayIndex, int previousOffset)
         {
             if (_reader == null)
