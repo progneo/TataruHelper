@@ -48,13 +48,48 @@ namespace TataruHelper.Tests.Services.Settings
             }
         }
 
+        // A first run used to open on an empty window list with no overlay,
+        // because only the legacy-settings migration ever created one.
         [Test]
-        public void LoadUserSettings_NoSettingsFiles_ReturnsDefaults()
+        public void LoadUserSettings_NoSettingsFiles_CreatesTheDefaultChatWindow()
         {
             var userSettings = _service.LoadUserSettings("sys.json", NoChatCodes(), NoEngines());
 
             Assert.That(userSettings, Is.Not.Null);
-            Assert.That(userSettings.ChatWindows, Is.Empty);
+            Assert.That(userSettings.ChatWindows, Has.Count.EqualTo(1));
+
+            var window = userSettings.ChatWindows[0];
+            Assert.That(window.Name, Is.EqualTo("1"));
+            Assert.That(window.WinId, Is.EqualTo(0));
+            Assert.That(window.TranslationEngineName, Is.EqualTo(TranslationEngineName.YandexFree));
+        }
+
+        [Test]
+        public void LoadUserSettings_NoSettingsFiles_DefaultWindowGetsTheChatCodes()
+        {
+            var allChatCodes = new List<ChatMsgType>
+            {
+                new ChatMsgType("003D", MsgType.Translate, "NPCD", Colors.Green),
+                new ChatMsgType("0044", MsgType.Translate, "NPCA", Colors.Blue),
+            };
+
+            var userSettings = _service.LoadUserSettings("sys.json", allChatCodes, NoEngines());
+
+            Assert.That(userSettings.ChatWindows[0].ChatCodes.Select(x => x.Code),
+                Is.EqualTo(new[] { "003D", "0044" }));
+        }
+
+        [Test]
+        public void LoadUserSettings_WindowsAlreadyConfigured_AddsNoExtraWindow()
+        {
+            var settingsOnDisk = new UserSettings();
+            settingsOnDisk.ChatWindows.Add(new ChatWindowViewModelSettings("Mine", 0));
+            Helper.SaveJson(settingsOnDisk, _settingsStore.SettingsPath);
+
+            var userSettings = _service.LoadUserSettings("sys.json", NoChatCodes(), NoEngines());
+
+            Assert.That(userSettings.ChatWindows, Has.Count.EqualTo(1));
+            Assert.That(userSettings.ChatWindows[0].Name, Is.EqualTo("Mine"));
         }
 
         [Test]

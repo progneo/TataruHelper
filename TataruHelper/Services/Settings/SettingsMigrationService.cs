@@ -40,6 +40,17 @@ namespace FFXIVTataruHelper.Services.Settings
                 _logger.WriteLog("userSettings == null");
             }
 
+            // Nothing creates a chat window on a first run: the migration below
+            // seeds one only when there are legacy settings to convert. Without
+            // this a new installation opens on an empty window list with no
+            // overlay at all, and nothing in the interface suggests that Add is
+            // what you are missing.
+            if (userSettings.ChatWindows.Count == 0)
+            {
+                userSettings.ChatWindows.Add(new ChatWindowViewModelSettings("1", 0));
+                _logger.WriteLog("No chat windows configured, creating the default one.");
+            }
+
             LoadMissingChatCodes(userSettings, allChatCodes);
 
             for (int i = 0; i < userSettings.ChatWindows.Count; i++)

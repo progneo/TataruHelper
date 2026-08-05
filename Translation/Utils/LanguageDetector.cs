@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 using System.Linq;
 
 using NTextCat;
@@ -23,7 +24,20 @@ namespace Translation.Utils
             _Logger = logger;
             _MaxSameLanguagePercent = maxSameLanguagePercent;
 
-            _NTextCatLanguageModelsPath = nTextCatLanguageModelsPath;
+            // Same as the language catalogs: the profile ships next to the
+            // executable, so it is resolved against that rather than against
+            // the working directory, which is not the executable's folder when
+            // the process is elevated or started from a shortcut. Failing to
+            // load it switches detection off for the rest of the session.
+            _NTextCatLanguageModelsPath = ResolvePath(nTextCatLanguageModelsPath);
+        }
+
+        private static string ResolvePath(string path)
+        {
+            if (string.IsNullOrEmpty(path) || Path.IsPathRooted(path))
+                return path;
+
+            return Path.Combine(AppContext.BaseDirectory, path);
         }
 
         public string TryDetectLanguage(string text)
