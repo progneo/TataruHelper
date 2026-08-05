@@ -62,6 +62,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private string _lastDiscoveredInlineText = string.Empty;
 
+        private bool _knownInlineOffsetHasWorked;
+
         private static readonly TimeSpan InlineDiscoveryInterval = TimeSpan.FromSeconds(2);
 
         private const int InlineDiscoveryScanBytes = 0x600;
@@ -631,14 +633,22 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 if (TryReadUtf8String(addonAddress, addonSpec.InlineTextOffset, out var inlineText) &&
                     inlineText.Length > 0)
                 {
+                    _knownInlineOffsetHasWorked = true;
                     nodeTexts = new[] { inlineText };
                     return true;
                 }
 
-                // Nothing there. Usually that just means no subtitle is showing, but
-                // it is also what a patch moving the field looks like - and this is
-                // the one offset FFXIVClientStructs cannot supply.
-                if (TryDiscoverInlineTextOffset(addonAddress, out _, out var discoveredText))
+                // Nothing there. Usually that just means no subtitle is showing - by
+                // far the common case - but it is also what a patch moving the field
+                // looks like, and this is the one offset FFXIVClientStructs cannot
+                // supply. Telling the two apart is only possible in hindsight: once
+                // the offset has produced a subtitle it is demonstrably still right,
+                // and scanning from then on can only turn up scratch buffers. A whole
+                // cutscene read 1943 lines through the known offset and every scan in
+                // that session fired after it ended, on emptiness, and found a stale
+                // copy of the last line.
+                if (!_knownInlineOffsetHasWorked &&
+                    TryDiscoverInlineTextOffset(addonAddress, out _, out var discoveredText))
                 {
                     // The scan cannot tell a field a patch moved from a scratch
                     // buffer still holding the last line of a finished cutscene,
