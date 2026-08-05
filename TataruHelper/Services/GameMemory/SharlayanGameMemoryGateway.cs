@@ -109,6 +109,27 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
         }
 
+        public bool? GetPlayerIsFeminine()
+        {
+            try
+            {
+                var entity = _reader?.GetCurrentPlayer()?.Entity;
+                if (entity == null)
+                {
+                    return null;
+                }
+
+                // Sharlayan reports it as an enum; the Russian only ever needs
+                // to know which of two wordings to use.
+                return string.Equals(entity.Sex.ToString(), "Female", StringComparison.OrdinalIgnoreCase);
+            }
+            catch (Exception ex)
+            {
+                _logger.WriteLog(ex);
+                return null;
+            }
+        }
+
         public ChatLogResult GetChatLog(int previousArrayIndex, int previousOffset)
         {
             if (_reader == null)
@@ -129,7 +150,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
         /// Both codes are enabled by default, so every line was translated and shown
         /// twice.
         /// </summary>
-        private void DropLinesAlreadySeenLive(ChatLogResult chatLogResult)
+        internal void DropLinesAlreadySeenLive(ChatLogResult chatLogResult)
         {
             if (_recentRealtimeLines.Count == 0 || chatLogResult?.ChatLogItems == null)
             {
@@ -152,14 +173,28 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
         }
 
+        /// <summary>
+        /// Whether the chat log is repeating something already read off the
+        /// screen and shown.
+        ///
+        /// Judged on the words alone. It used to also require the line to carry
+        /// a dialogue code, which quietly assumed we knew every code dialogue
+        /// can arrive under - and cutscene narration arrives under 0039, so
+        /// every line of it appeared twice, once live and once from the log.
+        /// The words are evidence enough: they are the whole of a line we
+        /// showed moments ago, and only the last sixty-four are remembered.
+        /// </summary>
         private bool IsDuplicateOfRealtimeLine(ChatLogItem item)
         {
-            if (!IsSpecificCode(item, DirectDialogCode) && !IsSpecificCode(item, CutsceneDialogCode))
+            var key = BuildDuplicateKey(item?.Line);
+            var seenLive = _recentRealtimeLines.Contains(key);
+
+            if (Logger.RawDialogLogEnabled)
             {
-                return false;
+                Logger.WriteRawDialogLog($"ChatLog code=[{item?.Code}] seenLive={seenLive} key=[{key}]");
             }
 
-            return _recentRealtimeLines.Contains(BuildDuplicateKey(item?.Line));
+            return seenLive;
         }
 
         /// <summary>
@@ -258,7 +293,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
             chatCode = MapRealtimeChatCode(chatCode);
 
             var speakerName = NormalizeDialogToken(realtimeSnapshot.SpeakerName);
-            var signature = BuildRealtimeSignature(chatCode, speakerName, talkText);
+            var signature = BuildRealtimeSignature(speakerName, talkText);
             if (!string.Equals(_lastRealtimeDialogSignature, signature, StringComparison.Ordinal))
             {
                 _lastRealtimeDialogSignature = signature;
@@ -341,11 +376,19 @@ namespace FFXIVTataruHelper.Services.GameMemory
             return NormalizeDialogToken(dialogLine);
         }
 
-        internal static string BuildRealtimeSignature(string chatCode, string speakerName, string talkText)
+        /// <summary>
+        /// What makes one utterance different from another: who said it and
+        /// what they said.
+        ///
+        /// Deliberately not which addon showed it. A cutscene can put the same
+        /// words in the dialogue box and in the subtitle at once, and with the
+        /// chat code in here that read as two different lines - they arrived in
+        /// the window one after the other, in the two different colours the
+        /// codes are drawn in.
+        /// </summary>
+        internal static string BuildRealtimeSignature(string speakerName, string talkText)
         {
             return string.Concat(
-                NormalizeDialogToken(chatCode),
-                "|",
                 NormalizeDialogToken(speakerName),
                 "|",
                 NormalizeDialogToken(talkText));

@@ -126,8 +126,12 @@ namespace TataruHelper.Tests
             Assert.That(item.Line, Is.EqualTo("CutsceneNpc:LiveText"));
         }
 
+        // A cutscene can put the same words in the dialogue box and in the
+        // subtitle at once. With the chat code deciding what counted as a new
+        // line, those arrived one after the other in the window, in the two
+        // different colours the codes are drawn in - the same sentence twice.
         [Test]
-        public void Gateway_DoesNotSuppressSameRealtimeTextAcrossDifferentCodes()
+        public void Gateway_SuppressesTheSameLineShownByTwoAddonsAtOnce()
         {
             var directDialogReader = new FakeDirectDialogReader();
             var queue = new Queue<TalkAddonRealtimeDialogSnapshot>();
@@ -141,8 +145,59 @@ namespace TataruHelper.Tests
 
             Assert.That(firstTick.Length, Is.EqualTo(1));
             Assert.That(firstTick[0].Code, Is.EqualTo("F03D"));
-            Assert.That(secondTick.Length, Is.EqualTo(1));
-            Assert.That(secondTick[0].Code, Is.EqualTo("F044"));
+            Assert.That(secondTick, Is.Empty);
+        }
+
+        // Cutscene narration reaches the chat log under 0039, not the codes
+        // dialogue usually carries. Requiring one of those meant every line of
+        // it was shown twice - once read off the screen, once from the log.
+        [Test]
+        public void Gateway_DropsTheChatLogCopy_WhateverCodeItArrivesUnder()
+        {
+            var narration = "...The crackling warmth of Alphinaud's campfire.";
+            var directDialogReader = new FakeDirectDialogReader();
+            var gateway = CreateGateway(
+                directDialogReader,
+                () => TalkAddonRealtimeDialogSnapshot.Available("003D", string.Empty, narration));
+
+            Assert.That(gateway.GetDirectDialog().ChatLogItems.Single().Line, Is.EqualTo(narration));
+
+            var fromChatLog = BuildResult(new ChatLogItem { Code = "0039", Line = narration });
+            gateway.DropLinesAlreadySeenLive(fromChatLog);
+
+            Assert.That(fromChatLog.ChatLogItems, Is.Empty);
+        }
+
+        [Test]
+        public void Gateway_KeepsAChatLogLineNobodySaidOnScreen()
+        {
+            var directDialogReader = new FakeDirectDialogReader();
+            var gateway = CreateGateway(
+                directDialogReader,
+                () => TalkAddonRealtimeDialogSnapshot.Available("003D", string.Empty, "Something said aloud"));
+
+            gateway.GetDirectDialog();
+
+            var fromChatLog = BuildResult(new ChatLogItem { Code = "0039", Line = "Something nobody said aloud" });
+            gateway.DropLinesAlreadySeenLive(fromChatLog);
+
+            Assert.That(fromChatLog.ChatLogItems, Has.Count.EqualTo(1));
+        }
+
+        // Two characters can say the same short thing - "Understood." - and
+        // both deserve to be shown.
+        [Test]
+        public void Gateway_ReportsTheSameWordsFromADifferentSpeaker()
+        {
+            var directDialogReader = new FakeDirectDialogReader();
+            var queue = new Queue<TalkAddonRealtimeDialogSnapshot>();
+            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("003D", "Cid", "Understood."));
+            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("003D", "Yda", "Understood."));
+
+            var gateway = CreateGateway(directDialogReader, () => queue.Dequeue());
+
+            Assert.That(gateway.GetDirectDialog().ChatLogItems.Single().Line, Is.EqualTo("Cid:Understood."));
+            Assert.That(gateway.GetDirectDialog().ChatLogItems.Single().Line, Is.EqualTo("Yda:Understood."));
         }
 
         [Test]
@@ -262,11 +317,13 @@ namespace TataruHelper.Tests
             Assert.That(signature, Is.EqualTo("Npc:Line"));
         }
 
+        // What tells one utterance from another is who said it and what they
+        // said - not which addon put it on screen.
         [Test]
-        public void BuildRealtimeSignature_IncludesChatCodeAndSpeaker()
+        public void BuildRealtimeSignature_IsSpeakerAndText()
         {
-            var signature = SharlayanGameMemoryGateway.BuildRealtimeSignature(" 0044 ", " Npc ", " Line ");
-            Assert.That(signature, Is.EqualTo("0044|Npc|Line"));
+            Assert.That(SharlayanGameMemoryGateway.BuildRealtimeSignature(" Npc ", " Line "),
+                Is.EqualTo("Npc|Line"));
         }
 
         [Test]
