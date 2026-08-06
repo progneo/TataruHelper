@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -37,6 +38,19 @@ namespace FFXIVTataruHelper.Services.Update
                 ? Path.GetFullPath(command.OutputPath)
                 : SqliteReferenceTranslationSource.Resolve(settings.ReferenceTranslationsPath);
 
+            // Asked before anything is fetched. A running application holds the
+            // index open, and the finished file cannot be moved over it - which
+            // was found out at the end, after several hundred megabytes and a
+            // wait, by a message about a file being in use by another process.
+            var running = OtherInstance();
+            if (running != 0)
+            {
+                Console.Error.WriteLine(
+                    "TataruHelper is already running (process " + running + ") and is holding the index open. " +
+                    "Close it and run this again.");
+                return 1;
+            }
+
             Console.WriteLine("Building the reference index");
             Console.WriteLine("  source   : " +
                               (command.BuildsFromFolder ? command.SourceFolder : "github (xivrus/xiv_ru_weblate)"));
@@ -73,6 +87,29 @@ namespace FFXIVTataruHelper.Services.Update
                 output,
                 new FileInfo(output).Length / (1024d * 1024d),
                 result.Detail.Length > 0 ? ", revision " + result.Detail : ", from a folder, so no revision"));
+
+            return 0;
+        }
+
+        /// <summary>
+        /// The id of another copy of the application, or zero. This process is
+        /// one of them - it is the same executable, asked to build rather than
+        /// to run - so it does not count itself.
+        /// </summary>
+        private static int OtherInstance()
+        {
+            var self = Environment.ProcessId;
+
+            foreach (var process in Process.GetProcessesByName("TataruHelper"))
+            {
+                using (process)
+                {
+                    if (process.Id != self)
+                    {
+                        return process.Id;
+                    }
+                }
+            }
 
             return 0;
         }
