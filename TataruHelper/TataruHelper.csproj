@@ -54,9 +54,15 @@
     <None Update="Resources\IgnoreNickNameChatCodes.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <!-- Hand-made translations of the game's own dialogue, built by
-         scripts/build_reference_translations.py. Sizeable, so copied only when
-         it changes - which is when the index is rebuilt from xivrus. -->
+    <!-- Hand-made translations of the game's own dialogue. Not in the
+         repository - eighty megabytes that change every week - so this only
+         does anything when one has been built here:
+
+           TataruHelper.exe -build-reference-index
+
+         (XML comments cannot carry a double dash; the switch takes either.)
+         A release gets its copy the same way, from Velopack_release.ps1.
+         Without one the application runs and translates by engine alone. -->
     <None Update="Resources\ReferenceTranslations.db">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

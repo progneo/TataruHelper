@@ -351,3 +351,9 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+
+# The index of hand-made translations: eighty megabytes rebuilt from xivrus
+# every week, so it is built rather than carried.
+#   TataruHelper.exe --build-reference-index
+TataruHelper/Resources/ReferenceTranslations.db
+TataruHelper/Resources/ReferenceTranslations.db.new
