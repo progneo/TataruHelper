@@ -366,13 +366,13 @@ namespace FFXIVTataruHelper
                     "Translate NPC dialogue and cutscene subtitles as they appear, without waiting for the chat log. The chat-log copies of those lines are skipped so nothing is shown twice.");
             _SettingsWindow.Resources["LiteraryTranslationDescription"] =
                 catalog.GetString(
-                    "Show the hand-made translation of a line when the game's own text has one, and translate the rest as usual.");
+                    "Show the XIV Rus Translation of a line when there is one, and translate the rest as usual.");
             _SettingsWindow.Resources["MarkMachineTranslationDescription"] =
                 catalog.GetString(
-                    "Put a dot in front of lines an engine translated, so the hand-made ones are the plain ones.");
+                    "Put a dot in front of lines an engine translated, so the ones from XIV Rus Translation are the plain ones.");
             _SettingsWindow.Resources["TranslateSpeakerNamesDescription"] =
                 catalog.GetString(
-                    "Show who is speaking in the reading language, using the hand-made spelling where there is one.");
+                    "Show who is speaking in the reading language, using the XIV Rus Translation spelling where there is one.");
             _SettingsWindow.Resources["LanguageGroupHint"] =
                 catalog.GetString("Interface language for the settings window and overlays.");
 
@@ -380,7 +380,7 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ReferenceIndexTitle"] = catalog.GetString("XIV Rus Translation");
             _SettingsWindow.Resources["ReferenceIndexHint"] =
                 catalog.GetString(
-                    "The translation project gains lines every week. Rebuilding fetches its current work; around a gigabyte is read as it downloads and only the index is kept.");
+                    "XIV Rus Translation gains lines every week. Rebuilding fetches its current work; around a gigabyte is read as it downloads and only the index is kept.");
             _SettingsWindow.Resources["ReferenceIndexUpdateButton"] = catalog.GetString("Update");
             _SettingsWindow.Resources["ReferenceIndexCancelButton"] = catalog.GetString("Cancel");
             _SettingsWindow.Resources["ReferenceIndexInstalled"] =

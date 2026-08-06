@@ -198,14 +198,14 @@
     <system:String x:Key="HideToTrayDescription">Hide the settings window to the system tray when minimized.</system:String>
     <system:String x:Key="RealtimeTranslationDescription">Translate NPC dialogue and cutscene subtitles as they appear, without waiting for the chat log. The chat-log copies of those lines are skipped so nothing is shown twice.</system:String>
     <system:String x:Key="LiteraryTranslationCB">Literary translation</system:String>
-    <system:String x:Key="LiteraryTranslationDescription">Show the hand-made translation of a line when the game's own text has one, and translate the rest as usual.</system:String>
+    <system:String x:Key="LiteraryTranslationDescription">Show the XIV Rus Translation of a line when there is one, and translate the rest as usual.</system:String>
     <system:String x:Key="MarkMachineTranslationCB">Mark machine translation</system:String>
-    <system:String x:Key="MarkMachineTranslationDescription">Put a dot in front of lines an engine translated, so the hand-made ones are the plain ones.</system:String>
+    <system:String x:Key="MarkMachineTranslationDescription">Put a dot in front of lines an engine translated, so the ones from XIV Rus Translation are the plain ones.</system:String>
     <system:String x:Key="TranslateSpeakerNamesCB">Translate speaker names</system:String>
-    <system:String x:Key="TranslateSpeakerNamesDescription">Show who is speaking in the reading language, using the hand-made spelling where there is one.</system:String>
+    <system:String x:Key="TranslateSpeakerNamesDescription">Show who is speaking in the reading language, using the XIV Rus Translation spelling where there is one.</system:String>
 
     <system:String x:Key="ReferenceIndexTitle">XIV Rus Translation</system:String>
-    <system:String x:Key="ReferenceIndexHint">The translation project gains lines every week. Rebuilding fetches its current work; around a gigabyte is read as it downloads and only the index is kept.</system:String>
+    <system:String x:Key="ReferenceIndexHint">XIV Rus Translation gains lines every week. Rebuilding fetches its current work; around a gigabyte is read as it downloads and only the index is kept.</system:String>
     <system:String x:Key="ReferenceIndexUpdateButton">Update</system:String>
     <system:String x:Key="ReferenceIndexCancelButton">Cancel</system:String>
     <system:String x:Key="ReferenceIndexInstalled">{0} lines of {1}, revision {2}</system:String>
