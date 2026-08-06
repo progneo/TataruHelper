@@ -11,17 +11,7 @@
     [string]$RepoToken = "",
     [switch]$SkipPublish,
     [switch]$SkipDownloadLatest,
-    [switch]$InstallerOnly,
-
-    # Ship whatever index is already in the publish folder instead of building
-    # one. The build fetches the translation project in full, which is minutes
-    # and a few hundred megabytes.
-    [switch]$SkipReferenceIndex,
-
-    # A folder holding an unpacked xivrus export, when there is one at hand and
-    # the download is not wanted. An index built this way carries no revision,
-    # so the first update after install will rebuild it.
-    [string]$ReferenceIndexSource = ""
+    [switch]$InstallerOnly
 )
 
 $ErrorActionPreference = "Stop"
@@ -137,47 +127,6 @@ if (-not (Test-Path (Join-Path $PublishDir $MainExe))) {
 }
 
 New-Item -ItemType Directory -Force -Path $OutputDir | Out-Null
-
-# The index of hand-made translations is not in the repository - eighty
-# megabytes that the translation project adds to every week - so a release
-# builds its own. Built by the published exe rather than by a script of its
-# own: two copies of the parsing rules had already drifted apart once.
-#
-# The exe asks for administrator rights, so an unelevated console would hand
-# the work to a process it cannot see the result of. Run the release from an
-# elevated console, or pass -SkipReferenceIndex and put an index in place
-# yourself.
-if (-not $SkipReferenceIndex) {
-    Write-Host "[Velopack] Building the reference translation index..."
-
-    $indexPath = Join-Path $PublishDir "Resources/ReferenceTranslations.db"
-    $indexArgs = @("--build-reference-index", "--output", $indexPath)
-    if ($ReferenceIndexSource) {
-        $indexArgs += @("--source", $ReferenceIndexSource)
-    }
-
-    # Started rather than called: the application is a windowed program, so
-    # PowerShell would not wait for it and $LASTEXITCODE would stay empty.
-    # Redirected for the same reason - there is no console of its own to write
-    # to, and the log is worth keeping when a build fails.
-    $indexLog = Join-Path $OutputDir "reference-index.log"
-    $indexErrorLog = Join-Path $OutputDir "reference-index.err.log"
-
-    $indexProcess = Start-Process -FilePath (Join-Path $PublishDir $MainExe) `
-        -ArgumentList $indexArgs -Wait -PassThru -NoNewWindow `
-        -RedirectStandardOutput $indexLog -RedirectStandardError $indexErrorLog
-
-    Get-Content $indexLog -ErrorAction SilentlyContinue | Write-Host
-
-    if ($indexProcess.ExitCode -ne 0) {
-        Get-Content $indexErrorLog -ErrorAction SilentlyContinue | Write-Warning
-        throw "Building the reference index failed with exit code $($indexProcess.ExitCode). See '$indexLog'."
-    }
-
-    if (-not (Test-Path $indexPath)) {
-        throw "The reference index was reported as built but '$indexPath' is not there."
-    }
-}
 
 if ($InstallerOnly) {
     Write-Warning "-InstallerOnly switch is currently compatibility-only and does not change packaging outputs."

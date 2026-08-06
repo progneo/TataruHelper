@@ -101,7 +101,10 @@ namespace Translation
                 // Kept so the index can be rebuilt into the same file it is read
                 // from. A supplied source has no file behind it, and then there
                 // is nothing to update.
-                _referenceIndexPath = SqliteReferenceTranslationSource.Resolve(_settings.ReferenceTranslationsPath);
+                _referenceIndexPath = ReferenceIndexLocation.Prepare(
+                    _settings.ReferenceTranslationsPath,
+                    _settings.LegacyReferenceTranslationsPath,
+                    _Logger);
                 _referenceTranslations = new SqliteReferenceTranslationSource(_referenceIndexPath, _Logger);
             }
         }

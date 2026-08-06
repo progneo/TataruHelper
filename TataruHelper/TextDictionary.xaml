@@ -204,13 +204,13 @@
     <system:String x:Key="TranslateSpeakerNamesCB">Translate speaker names</system:String>
     <system:String x:Key="TranslateSpeakerNamesDescription">Show who is speaking in the reading language, using the hand-made spelling where there is one.</system:String>
 
-    <system:String x:Key="ReferenceIndexTitle">Hand-made translations</system:String>
+    <system:String x:Key="ReferenceIndexTitle">XIV Rus Translation</system:String>
     <system:String x:Key="ReferenceIndexHint">The translation project gains lines every week. Rebuilding fetches its current work; around a gigabyte is read as it downloads and only the index is kept.</system:String>
     <system:String x:Key="ReferenceIndexUpdateButton">Update</system:String>
     <system:String x:Key="ReferenceIndexCancelButton">Cancel</system:String>
     <system:String x:Key="ReferenceIndexInstalled">{0} lines of {1}, revision {2}</system:String>
     <system:String x:Key="ReferenceIndexInstalledUnknownRevision">{0} lines of {1}, from an unnamed revision</system:String>
-    <system:String x:Key="ReferenceIndexMissing">No translations are installed.</system:String>
+    <system:String x:Key="ReferenceIndexMissing">No translations yet. Press Update to fetch them; until then every line is translated by engine.</system:String>
     <system:String x:Key="ReferenceIndexChecking">Asking what the translation project is at…</system:String>
     <system:String x:Key="ReferenceIndexDownloading">Downloading… {0} MB</system:String>
     <system:String x:Key="ReferenceIndexDownloadingWithLines">Downloading… {0} MB, {1} lines so far</system:String>

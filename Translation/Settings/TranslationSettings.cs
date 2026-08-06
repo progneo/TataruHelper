@@ -24,10 +24,25 @@ namespace Translation.Settings
 
         /// <summary>
         /// Index of translations made by hand. Consulted before a translator
-        /// when the literary translation option is on, and rebuilt in place by
-        /// the update button on the General page.
+        /// when the literary translation option is on, and fetched by the
+        /// update button on the General page.
+        ///
+        /// Kept with the user's settings rather than with the application: the
+        /// application is replaced wholesale when it updates, and an index
+        /// beside it would go with it. Nothing ships one - it is several
+        /// hundred megabytes that the translation project adds to weekly - so
+        /// until the button has been pressed there is none, and every line is
+        /// translated by engine.
         /// </summary>
-        public string ReferenceTranslationsPath { get; set; } = "Resources/ReferenceTranslations.db";
+        public string ReferenceTranslationsPath { get; set; } =
+            "%APPDATA%/TataruHelper/ReferenceTranslations.db";
+
+        /// <summary>
+        /// Where earlier versions kept it, beside the application. Moved to
+        /// <see cref="ReferenceTranslationsPath"/> once, so an installation
+        /// that already has an index does not fetch it all over again.
+        /// </summary>
+        public string LegacyReferenceTranslationsPath { get; set; } = "Resources/ReferenceTranslations.db";
 
         /// <summary>
         /// The language to rebuild the index in, as the translation project

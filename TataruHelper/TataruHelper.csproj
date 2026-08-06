@@ -54,18 +54,14 @@
     <None Update="Resources\IgnoreNickNameChatCodes.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <!-- Hand-made translations of the game's own dialogue. Not in the
-         repository - eighty megabytes that change every week - so this only
-         does anything when one has been built here:
+    <!-- Nothing here carries the hand-made translations any more. They are
+         hundreds of megabytes that the translation project adds to every
+         week, so the application fetches them into the user's own folder
+         instead: the update button on the General page, or
 
            TataruHelper.exe -build-reference-index
 
-         (XML comments cannot carry a double dash; the switch takes either.)
-         A release gets its copy the same way, from Velopack_release.ps1.
-         Without one the application runs and translates by engine alone. -->
-    <None Update="Resources\ReferenceTranslations.db">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+         (XML comments cannot carry a double dash; the switch takes either.) -->
   </ItemGroup>
 
   <ItemGroup>

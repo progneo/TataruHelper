@@ -377,7 +377,7 @@ namespace FFXIVTataruHelper
                 catalog.GetString("Interface language for the settings window and overlays.");
 
             // Hand-made translations (General page)
-            _SettingsWindow.Resources["ReferenceIndexTitle"] = catalog.GetString("Hand-made translations");
+            _SettingsWindow.Resources["ReferenceIndexTitle"] = catalog.GetString("XIV Rus Translation");
             _SettingsWindow.Resources["ReferenceIndexHint"] =
                 catalog.GetString(
                     "The translation project gains lines every week. Rebuilding fetches its current work; around a gigabyte is read as it downloads and only the index is kept.");
@@ -388,7 +388,8 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ReferenceIndexInstalledUnknownRevision"] =
                 catalog.GetString("{0} lines of {1}, from an unnamed revision");
             _SettingsWindow.Resources["ReferenceIndexMissing"] =
-                catalog.GetString("No translations are installed.");
+                catalog.GetString(
+                    "No translations yet. Press Update to fetch them; until then every line is translated by engine.");
             _SettingsWindow.Resources["ReferenceIndexChecking"] =
                 catalog.GetString("Asking what the translation project is at…");
             _SettingsWindow.Resources["ReferenceIndexDownloading"] = catalog.GetString("Downloading… {0} MB");

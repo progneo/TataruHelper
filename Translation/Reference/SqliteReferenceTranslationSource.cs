@@ -88,7 +88,13 @@ namespace Translation.Reference
 
         public bool IsAvailable => _lookup != null;
 
-        /// <summary>A path from settings, made absolute against the application folder.</summary>
+        /// <summary>
+        /// A path from settings, made absolute.
+        ///
+        /// Environment variables are expanded first, so the settings can name
+        /// the user's own folder - which is where the index lives - without
+        /// this project having to know what that folder is called.
+        /// </summary>
         public static string Resolve(string databasePath)
         {
             if (string.IsNullOrWhiteSpace(databasePath))
@@ -96,9 +102,11 @@ namespace Translation.Reference
                 return string.Empty;
             }
 
-            return Path.IsPathRooted(databasePath)
-                ? databasePath
-                : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, databasePath));
+            var expanded = Environment.ExpandEnvironmentVariables(databasePath);
+
+            return Path.IsPathRooted(expanded)
+                ? Path.GetFullPath(expanded)
+                : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, expanded));
         }
 
         /// <summary>
@@ -487,8 +495,10 @@ namespace Translation.Reference
                 _logger?.LogInformation("This index carries no speaker names.");
             }
 
-            _logger?.LogInformation("Reference translations loaded: {Lines} lines of {Language}.",
-                LineCount, LanguageCode);
+            // The path is part of the message on purpose: which file answered a
+            // line is otherwise a guess, and guessing has been expensive here.
+            _logger?.LogInformation("Reference translations loaded: {Lines} lines of {Language} from {Path}.",
+                LineCount, LanguageCode, resolvedPath);
         }
 
         private string ReadMeta(string key)
