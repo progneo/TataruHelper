@@ -157,7 +157,7 @@ namespace Translation.Reference
 
                 progress?.Report(new ReferenceUpdateProgress(ReferenceUpdateStage.Writing, 0, 0, 0));
 
-                WriteAndInstall(databasePath, builder, language, latest, releaseIndex);
+                WriteAndInstall(databasePath, builder, language, latest, ArchiveUrl, releaseIndex);
 
                 return new ReferenceUpdateResult(ReferenceUpdateOutcome.Updated, latest, builder.Lines.Count);
             }
@@ -170,6 +170,86 @@ namespace Translation.Reference
                 _logger?.LogInformation("{Message}", Convert.ToString(ex));
                 return new ReferenceUpdateResult(ReferenceUpdateOutcome.Failed, ex.Message, 0);
             }
+        }
+
+        /// <summary>
+        /// Builds the index from an export already unpacked on disk, and puts it
+        /// where the application reads it.
+        ///
+        /// The download is the ordinary way in. This is for working against a
+        /// copy of the export by hand - trying a change to the parsing rules
+        /// without fetching a gigabyte for each attempt.
+        /// </summary>
+        /// <remarks>
+        /// The result carries no revision: a folder cannot say which commit it
+        /// was taken at, so an index built this way is one the application will
+        /// always offer to update.
+        /// </remarks>
+        public ReferenceUpdateResult BuildFromFolder(
+            string databasePath,
+            string language,
+            string exportRoot,
+            IProgress<ReferenceUpdateProgress> progress)
+        {
+            try
+            {
+                var builder = ReadExportFolder(exportRoot, language, progress);
+
+                if (builder.Lines.Count == 0)
+                {
+                    return new ReferenceUpdateResult(ReferenceUpdateOutcome.Failed,
+                        "The export yielded nothing; check the folder holds an 'exd' directory.", 0);
+                }
+
+                progress?.Report(new ReferenceUpdateProgress(ReferenceUpdateStage.Writing, 0, 0, 0));
+                WriteAndInstall(databasePath, builder, language, string.Empty, exportRoot, null);
+
+                return new ReferenceUpdateResult(ReferenceUpdateOutcome.Updated, string.Empty, builder.Lines.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogInformation("{Message}", Convert.ToString(ex));
+                return new ReferenceUpdateResult(ReferenceUpdateOutcome.Failed, ex.Message, 0);
+            }
+        }
+
+        /// <summary>
+        /// Reads every sheet of an unpacked export, pairing each translated file
+        /// with the English one beside it.
+        /// </summary>
+        public static ReferenceIndexBuilder ReadExportFolder(
+            string exportRoot,
+            string language,
+            IProgress<ReferenceUpdateProgress> progress)
+        {
+            var builder = new ReferenceIndexBuilder();
+
+            foreach (var translated in Directory.EnumerateFiles(Path.Combine(exportRoot, "exd"),
+                         language + ".xlf", SearchOption.AllDirectories))
+            {
+                var folder = Path.GetDirectoryName(translated);
+                var english = Path.Combine(folder, "en.xlf");
+
+                // A sheet nobody has started on has no English beside it, and
+                // the row ids alone say nothing.
+                if (!File.Exists(english))
+                {
+                    continue;
+                }
+
+                builder.AddSheet(
+                    folder.Replace('\\', '/'),
+                    File.ReadAllText(english),
+                    File.ReadAllText(translated));
+
+                if (builder.Sheets % 25 == 0)
+                {
+                    progress?.Report(new ReferenceUpdateProgress(
+                        ReferenceUpdateStage.Downloading, 0, builder.Sheets, builder.Lines.Count));
+                }
+            }
+
+            return builder;
         }
 
         private async Task<ReferenceIndexBuilder> DownloadAndBuildAsync(
@@ -265,6 +345,7 @@ namespace Translation.Reference
             ReferenceIndexBuilder builder,
             string language,
             string revision,
+            string source,
             Action releaseIndex)
         {
             var directory = Path.GetDirectoryName(databasePath);
@@ -279,7 +360,7 @@ namespace Translation.Reference
 
             try
             {
-                Write(temporaryPath, builder, language, revision);
+                Write(temporaryPath, builder, language, revision, source);
 
                 releaseIndex?.Invoke();
                 Install(temporaryPath, databasePath);
@@ -340,7 +421,8 @@ namespace Translation.Reference
             }
         }
 
-        private static void Write(string path, ReferenceIndexBuilder builder, string language, string revision)
+        private static void Write(string path, ReferenceIndexBuilder builder, string language, string revision,
+            string origin)
         {
             if (File.Exists(path))
             {
@@ -407,7 +489,9 @@ namespace Translation.Reference
             InsertPairs(connection, transaction, "meta", new Dictionary<string, string>
             {
                 ["language"] = language,
-                ["source"] = ArchiveUrl,
+                // Where it came from, which is not always the project: an
+                // index built from a folder says which folder.
+                ["source"] = origin ?? string.Empty,
                 ["revision"] = revision ?? string.Empty,
                 ["lines"] = builder.Lines.Count.ToString(),
                 ["patterns"] = builder.Patterns.Count.ToString(),

@@ -30,27 +30,11 @@ namespace Translation.Tests.Reference
                 Assert.Ignore("XIVRUS_EXPORT is not set to an export folder.");
             }
 
-            var builder = new ReferenceIndexBuilder();
-            var sheets = 0;
+            // The same read the command line does, so what is measured here is
+            // what a release is built from.
+            var builder = ReferenceIndexUpdater.ReadExportFolder(root, "ru", null);
 
-            foreach (var translated in Directory.EnumerateFiles(Path.Combine(root, "exd"), "ru.xlf",
-                         SearchOption.AllDirectories))
-            {
-                var folder = Path.GetDirectoryName(translated);
-                var english = Path.Combine(folder!, "en.xlf");
-                if (!File.Exists(english))
-                {
-                    continue;
-                }
-
-                builder.AddSheet(
-                    folder.Replace('\\', '/'),
-                    File.ReadAllText(english),
-                    File.ReadAllText(translated));
-                sheets++;
-            }
-
-            TestContext.Out.WriteLine($"sheets   : {sheets}");
+            TestContext.Out.WriteLine($"sheets   : {builder.Sheets}");
             TestContext.Out.WriteLine($"lines    : {builder.Lines.Count}");
             TestContext.Out.WriteLine($"patterns : {builder.Patterns.Count}");
             TestContext.Out.WriteLine($"speakers : {builder.Speakers.Count}");
@@ -69,7 +53,7 @@ namespace Translation.Tests.Reference
             // pattern per gender, which is a thing to do, not a thing done.
             Assert.Multiple(() =>
             {
-                Assert.That(sheets, Is.EqualTo(2681), "sheets");
+                Assert.That(builder.Sheets, Is.EqualTo(2681), "sheets");
                 Assert.That(builder.Lines.Count, Is.EqualTo(201837), "lines");
                 Assert.That(builder.Patterns.Count, Is.EqualTo(2951), "patterns");
                 Assert.That(builder.Speakers.Count, Is.EqualTo(4249), "speakers");

@@ -7,6 +7,7 @@ using System.Windows;
 using System.Windows.Threading;
 
 using FFXIVTataruHelper.Services.Logging;
+using FFXIVTataruHelper.Services.Update;
 using FFXIVTataruHelper.Theme;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -39,6 +40,15 @@ namespace FFXIVTataruHelper
             if (ShouldElevateAfterVelopackInstall() && !TryRelaunchAsAdministrator(e))
             {
                 Shutdown();
+                return;
+            }
+
+            // Asked to build the index rather than to run: do it and leave,
+            // before any of the interface is put together.
+            var buildIndex = ReferenceIndexCommand.Parse(e.Args);
+            if (buildIndex != null)
+            {
+                Shutdown(ReferenceIndexCommandRunner.Run(buildIndex));
                 return;
             }
 

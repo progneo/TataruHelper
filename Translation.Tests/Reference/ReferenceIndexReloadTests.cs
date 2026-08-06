@@ -124,7 +124,7 @@ namespace Translation.Tests.Reference
                 Sheet("Go swiftly, " + playerName + "."),
                 Sheet("Поторопись, " + playerName + "."));
 
-            ReferenceIndexUpdater.WriteAndInstall(_databasePath, builder, "ru", revision,
+            ReferenceIndexUpdater.WriteAndInstall(_databasePath, builder, "ru", revision, "test",
                 translator.CloseReferenceIndex);
 
             translator.ReopenReferenceIndex();
