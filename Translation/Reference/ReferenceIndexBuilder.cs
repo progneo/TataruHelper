@@ -91,6 +91,9 @@ namespace Translation.Reference
 
         public int SkippedForMarkup { get; private set; }
 
+        /// <summary>Sheets that had an English side to pair with, so were read.</summary>
+        public int Sheets { get; private set; }
+
         public int Conflicts { get; private set; }
 
         /// <summary>
@@ -104,6 +107,8 @@ namespace Translation.Reference
             {
                 return;
             }
+
+            Sheets++;
 
             var isRoster = FolderName(folder) == NpcSheet;
 

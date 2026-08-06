@@ -10,7 +10,7 @@ using Microsoft.Extensions.Logging;
 namespace Translation.Reference
 {
     /// <summary>
-    /// Looks lines up in the index built by scripts/build_reference_translations.py.
+    /// Looks lines up in the index built by <see cref="ReferenceIndexUpdater"/>.
     ///
     /// Held open read-only for the life of the app: the file is around sixty
     /// megabytes and every NPC line asks it a question, so opening per lookup
@@ -44,15 +44,15 @@ namespace Translation.Reference
         {
             _logger = logger;
             LanguageCode = string.Empty;
+            Revision = string.Empty;
 
             if (string.IsNullOrWhiteSpace(databasePath))
             {
                 return;
             }
 
-            var resolvedPath = Path.IsPathRooted(databasePath)
-                ? databasePath
-                : Path.Combine(AppContext.BaseDirectory, databasePath);
+            var resolvedPath = Resolve(databasePath);
+            DatabasePath = resolvedPath;
 
             if (!File.Exists(resolvedPath))
             {
@@ -75,7 +75,31 @@ namespace Translation.Reference
 
         public string LanguageCode { get; private set; }
 
+        public string Revision { get; private set; }
+
+        public int LineCount { get; private set; }
+
+        /// <summary>
+        /// Where the index was looked for, whether or not one was found. The
+        /// path is settled here rather than by the caller, and rebuilding the
+        /// index has to write to the same file this reads.
+        /// </summary>
+        public string DatabasePath { get; private set; } = string.Empty;
+
         public bool IsAvailable => _lookup != null;
+
+        /// <summary>A path from settings, made absolute against the application folder.</summary>
+        public static string Resolve(string databasePath)
+        {
+            if (string.IsNullOrWhiteSpace(databasePath))
+            {
+                return string.Empty;
+            }
+
+            return Path.IsPathRooted(databasePath)
+                ? databasePath
+                : Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, databasePath));
+        }
 
         /// <summary>
         /// Setting this fills the name into every stored pattern at once.
@@ -417,17 +441,25 @@ namespace Translation.Reference
             {
                 DataSource = resolvedPath,
                 Mode = SqliteOpenMode.ReadOnly,
-                Cache = SqliteCacheMode.Shared
+                Cache = SqliteCacheMode.Shared,
+
+                // A pooled connection keeps the file open after it is closed,
+                // and rebuilding the index has to move a new file over this
+                // one. Nothing is gained by pooling here anyway: this is one
+                // connection held open for as long as the application runs.
+                Pooling = false
             }.ToString();
 
             _connection = new SqliteConnection(connectionString);
             _connection.Open();
 
-            using (var meta = _connection.CreateCommand())
-            {
-                meta.CommandText = "SELECT value FROM meta WHERE key = 'language'";
-                LanguageCode = meta.ExecuteScalar() as string ?? string.Empty;
-            }
+            LanguageCode = ReadMeta("language");
+
+            // Written only by an index this application built. One built from a
+            // folder cannot say which commit it holds, and then every update
+            // downloads rather than trusting a revision nobody recorded.
+            Revision = ReadMeta("revision");
+            LineCount = int.TryParse(ReadMeta("lines"), out var lines) ? lines : 0;
 
             _lookup = _connection.CreateCommand();
             _lookup.CommandText = "SELECT translated FROM line WHERE source = $sentence";
@@ -455,11 +487,25 @@ namespace Translation.Reference
                 _logger?.LogInformation("This index carries no speaker names.");
             }
 
-            using (var count = _connection.CreateCommand())
+            _logger?.LogInformation("Reference translations loaded: {Lines} lines of {Language}.",
+                LineCount, LanguageCode);
+        }
+
+        private string ReadMeta(string key)
+        {
+            try
             {
-                count.CommandText = "SELECT value FROM meta WHERE key = 'lines'";
-                _logger?.LogInformation("Reference translations loaded: {Lines} lines of {Language}.",
-                    count.ExecuteScalar() as string ?? "?", LanguageCode);
+                using var meta = _connection.CreateCommand();
+                meta.CommandText = "SELECT value FROM meta WHERE key = $key";
+                var parameter = meta.CreateParameter();
+                parameter.ParameterName = "$key";
+                parameter.Value = key;
+                meta.Parameters.Add(parameter);
+                return meta.ExecuteScalar() as string ?? string.Empty;
+            }
+            catch (SqliteException)
+            {
+                return string.Empty;
             }
         }
 

@@ -1,14 +1,21 @@
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 
 using FFXIVTataruHelper.Services.HotKeys;
+using FFXIVTataruHelper.Services.Update;
 using FFXIVTataruHelper.Theme;
+using FFXIVTataruHelper.Utils;
+
+using Translation.Reference;
 
 using Wpf.Ui.Controls;
 
@@ -20,6 +27,21 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     private readonly TataruUIModel _uiModel;
     private readonly IHotkeyCaptureService _hotkeyCaptureService;
     private readonly Action _checkUpdatesAction;
+    private readonly IReferenceIndexUpdateService _referenceIndexUpdateService;
+
+    /// <summary>
+    /// Reads an interface string as the window has it.
+    ///
+    /// Not from the application's own resources: the translated strings are put
+    /// on the settings window, and the application keeps the English defaults.
+    /// Reading the wrong one is how the game-attached indicator stayed red on
+    /// every non-English interface.
+    /// </summary>
+    private readonly Func<string, string> _localize;
+
+    private CancellationTokenSource _referenceIndexUpdateCancellation;
+    private string _referenceIndexStatus;
+    private string _referenceIndexProgress;
     private bool _disposed;
     private SettingsSectionItem _selectedSection;
     private LanguageOption _selectedLanguageOption;
@@ -35,7 +57,9 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         TataruUIModel uiModel,
         IHotkeyCaptureService hotkeyCaptureService,
         Action checkUpdatesAction,
-        TranslationCredentialsViewModel translationCredentials)
+        TranslationCredentialsViewModel translationCredentials,
+        IReferenceIndexUpdateService referenceIndexUpdateService,
+        Func<string, string> localize)
     {
         _settingsViewModel = settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
         _uiModel = uiModel ?? throw new ArgumentNullException(nameof(uiModel));
@@ -43,6 +67,9 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         _checkUpdatesAction = checkUpdatesAction ?? throw new ArgumentNullException(nameof(checkUpdatesAction));
         TranslationCredentials =
             translationCredentials ?? throw new ArgumentNullException(nameof(translationCredentials));
+        _referenceIndexUpdateService = referenceIndexUpdateService
+                                       ?? throw new ArgumentNullException(nameof(referenceIndexUpdateService));
+        _localize = localize ?? (key => key);
 
         Sections = new ObservableCollection<SettingsSectionItem>
         {
@@ -85,6 +112,8 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
         SwitchLanguageCommand = new TataruUICommand(ExecuteSwitchLanguage);
         CheckUpdatesCommand = new TataruUICommand(() => _checkUpdatesAction());
+        UpdateReferenceIndexCommand = new TataruUICommand(StartReferenceIndexUpdate);
+        CancelReferenceIndexUpdateCommand = new TataruUICommand(CancelReferenceIndexUpdate);
         SelectChatWindowCommand = new TataruUICommand(SelectChatWindowByParameter);
         AddWindowCommand = new TataruUICommand(() => _settingsViewModel.AddNewChatWindowCommand.Execute(null));
         DeleteWindowCommand = new TataruUICommand(() => _settingsViewModel.DeleteChatWindowCommand.Execute(null));
@@ -94,9 +123,11 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         _selectedSection = Sections.First(x => x.Section == SettingsSection.ChatWindows);
         _selectedLanguageOption = ResolveLanguageOption(_uiModel.UiLanguage);
         _ffStatusText = string.Empty;
+        _referenceIndexProgress = string.Empty;
         _appVersion = "v" + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "unknown");
 
         RefreshSectionTitles();
+        RefreshReferenceIndexStatus();
 
         _settingsViewModel.PropertyChanged += OnSettingsViewModelPropertyChanged;
         _uiModel.PropertyChanged += OnUiModelPropertyChanged;
@@ -231,6 +262,49 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// <summary>What the installed index holds, in a line the user can read.</summary>
+    public string ReferenceIndexStatus
+    {
+        get => _referenceIndexStatus;
+        private set
+        {
+            if (string.Equals(_referenceIndexStatus, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _referenceIndexStatus = value;
+            OnPropertyChanged();
+        }
+    }
+
+    /// <summary>
+    /// How the update is getting on, and what became of it afterwards. Empty
+    /// until the button is pressed for the first time.
+    /// </summary>
+    public string ReferenceIndexProgress
+    {
+        get => _referenceIndexProgress;
+        private set
+        {
+            if (string.Equals(_referenceIndexProgress, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _referenceIndexProgress = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasReferenceIndexProgress));
+        }
+    }
+
+    public bool HasReferenceIndexProgress => !string.IsNullOrEmpty(_referenceIndexProgress);
+
+    public bool IsReferenceIndexUpdating => _referenceIndexUpdateCancellation != null;
+
+    public bool CanUpdateReferenceIndex =>
+        _referenceIndexUpdateService.IsSupported && !IsReferenceIndexUpdating;
+
     public bool IsHideSettingsToTray
     {
         get => _uiModel.IsHideSettingsToTray;
@@ -318,6 +392,10 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
     public TataruUICommand CheckUpdatesCommand { get; }
 
+    public TataruUICommand UpdateReferenceIndexCommand { get; }
+
+    public TataruUICommand CancelReferenceIndexUpdateCommand { get; }
+
     public TataruUICommand SelectChatWindowCommand { get; }
 
     public TataruUICommand AddWindowCommand { get; }
@@ -336,6 +414,72 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     public void RegisterHotKeyUp(TatruHotkeyType type, KeyEventArgs args)
     {
         _hotkeyCaptureService.RegisterHotKeyUp(CurrentChatWindow, type, args);
+    }
+
+    private void StartReferenceIndexUpdate()
+    {
+        if (IsReferenceIndexUpdating || !_referenceIndexUpdateService.IsSupported)
+        {
+            return;
+        }
+
+        _referenceIndexUpdateCancellation = new CancellationTokenSource();
+        OnPropertyChanged(nameof(IsReferenceIndexUpdating));
+        OnPropertyChanged(nameof(CanUpdateReferenceIndex));
+
+        RunReferenceIndexUpdateAsync(_referenceIndexUpdateCancellation.Token).Forget();
+    }
+
+    private void CancelReferenceIndexUpdate()
+    {
+        // The archive is hundreds of megabytes; somebody who started this by
+        // accident should not have to sit through it or kill the application.
+        _referenceIndexUpdateCancellation?.Cancel();
+    }
+
+    private async Task RunReferenceIndexUpdateAsync(CancellationToken cancellationToken)
+    {
+        // Constructed here, on the interface thread, so its callbacks arrive
+        // there too and the progress line can be set without marshalling.
+        var progress = new Progress<ReferenceUpdateProgress>(
+            report => ReferenceIndexProgress = ReferenceIndexTextMapper.Describe(report, _localize));
+
+        try
+        {
+            ReferenceIndexProgress = _localize("ReferenceIndexChecking");
+
+            var result = await _referenceIndexUpdateService
+                .UpdateAsync(progress, cancellationToken)
+                .ConfigureAwait(true);
+
+            ReferenceIndexProgress = ReferenceIndexTextMapper.Describe(result, _localize);
+        }
+        catch (OperationCanceledException)
+        {
+            ReferenceIndexProgress = _localize("ReferenceIndexCancelled");
+        }
+        catch (Exception ex)
+        {
+            ReferenceIndexProgress = string.Format(CultureInfo.CurrentCulture,
+                _localize("ReferenceIndexFailed"), ex.Message);
+        }
+        finally
+        {
+            _referenceIndexUpdateCancellation?.Dispose();
+            _referenceIndexUpdateCancellation = null;
+            OnPropertyChanged(nameof(IsReferenceIndexUpdating));
+            OnPropertyChanged(nameof(CanUpdateReferenceIndex));
+
+            // Whatever happened, the index the application is now reading is
+            // the one to describe: a failed swap leaves the old one in place.
+            RefreshReferenceIndexStatus();
+        }
+    }
+
+    private void RefreshReferenceIndexStatus()
+    {
+        ReferenceIndexStatus =
+            ReferenceIndexTextMapper.Describe(_referenceIndexUpdateService.ReadState(), _localize);
     }
 
     private void ExecuteSwitchLanguage(object parameter)
@@ -423,6 +567,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
             _selectedLanguageOption = ResolveLanguageOption(_uiModel.UiLanguage);
             OnPropertyChanged(nameof(SelectedLanguageOption));
             RefreshSectionTitles();
+            RefreshReferenceIndexStatus();
         }
     }
 
@@ -482,6 +627,11 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
         _settingsViewModel.PropertyChanged -= OnSettingsViewModelPropertyChanged;
         _uiModel.PropertyChanged -= OnUiModelPropertyChanged;
+
+        // An update outlives this window otherwise, and it ends by moving a
+        // file over the index the application is still reading as it shuts down.
+        _referenceIndexUpdateCancellation?.Cancel();
+
         _disposed = true;
     }
 }

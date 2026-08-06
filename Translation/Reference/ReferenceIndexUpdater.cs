@@ -22,6 +22,43 @@ namespace Translation.Reference
         Failed
     }
 
+    public enum ReferenceUpdateStage
+    {
+        /// <summary>
+        /// The archive is coming down and being read at the same time, so one
+        /// stage carries both how much has arrived and how much has been made
+        /// of it. Reported as two stages, it read as though the application had
+        /// begun installing an index it had not finished downloading.
+        /// </summary>
+        Downloading,
+
+        /// <summary>The index is being written and put in place.</summary>
+        Writing
+    }
+
+    /// <summary>
+    /// Where an update has got to.
+    ///
+    /// Kept as numbers and a stage rather than a sentence: the sentence is
+    /// shown to the user, and the user reads it in their own language, which
+    /// this project knows nothing about.
+    /// </summary>
+    public readonly struct ReferenceUpdateProgress
+    {
+        public ReferenceUpdateProgress(ReferenceUpdateStage stage, long bytes, int sheets, int lines)
+        {
+            Stage = stage;
+            Bytes = bytes;
+            Sheets = sheets;
+            Lines = lines;
+        }
+
+        public ReferenceUpdateStage Stage { get; }
+        public long Bytes { get; }
+        public int Sheets { get; }
+        public int Lines { get; }
+    }
+
     public readonly struct ReferenceUpdateResult
     {
         public ReferenceUpdateResult(ReferenceUpdateOutcome outcome, string detail, int lines)
@@ -84,12 +121,20 @@ namespace Translation.Reference
         /// <summary>
         /// Rebuilds the index unless it already holds the current revision.
         /// </summary>
-        /// <param name="progress">Bytes downloaded, and a line about the stage.</param>
+        /// <param name="progress">How far along, for the caller to phrase.</param>
+        /// <param name="releaseIndex">
+        /// Called once the new index is written and only the last step is left:
+        /// the application holds the old file open, and Windows will not move
+        /// anything over an open file. Left this late so the application is
+        /// without its translations for the length of a rename rather than for
+        /// the length of a download.
+        /// </param>
         public async Task<ReferenceUpdateResult> UpdateAsync(
             string databasePath,
             string language,
             string currentRevision,
-            IProgress<(long Bytes, string Stage)> progress,
+            IProgress<ReferenceUpdateProgress> progress,
+            Action releaseIndex,
             CancellationToken cancellationToken)
         {
             var latest = await GetLatestRevisionAsync(cancellationToken).ConfigureAwait(false);
@@ -110,13 +155,9 @@ namespace Translation.Reference
                         "The export yielded nothing; its layout has probably changed.", 0);
                 }
 
-                progress?.Report((0, "Writing the index"));
+                progress?.Report(new ReferenceUpdateProgress(ReferenceUpdateStage.Writing, 0, 0, 0));
 
-                // Written beside the index and moved into place, so a download
-                // that fails partway leaves the working index untouched.
-                var temporaryPath = databasePath + ".new";
-                Write(temporaryPath, builder, language, latest);
-                File.Move(temporaryPath, databasePath, true);
+                WriteAndInstall(databasePath, builder, language, latest, releaseIndex);
 
                 return new ReferenceUpdateResult(ReferenceUpdateOutcome.Updated, latest, builder.Lines.Count);
             }
@@ -133,7 +174,7 @@ namespace Translation.Reference
 
         private async Task<ReferenceIndexBuilder> DownloadAndBuildAsync(
             string language,
-            IProgress<(long Bytes, string Stage)> progress,
+            IProgress<ReferenceUpdateProgress> progress,
             CancellationToken cancellationToken)
         {
             var builder = new ReferenceIndexBuilder();
@@ -148,11 +189,10 @@ namespace Translation.Reference
             response.EnsureSuccessStatusCode();
 
             await using var network = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
-            await using var counting = new CountingStream(network, progress);
+            await using var counting = new CountingStream(network);
             await using var decompressed = new GZipStream(counting, CompressionMode.Decompress);
             await using var archive = new TarReader(decompressed);
 
-            var sheets = 0;
             while (await archive.GetNextEntryAsync(false, cancellationToken).ConfigureAwait(false)
                    is { } entry)
             {
@@ -180,7 +220,6 @@ namespace Translation.Reference
                     if (translatedByFolder.Remove(folder, out var waitingTranslation))
                     {
                         builder.AddSheet(folder, content, waitingTranslation);
-                        sheets++;
                     }
                     else
                     {
@@ -192,7 +231,6 @@ namespace Translation.Reference
                     if (englishByFolder.Remove(folder, out var waitingEnglish))
                     {
                         builder.AddSheet(folder, waitingEnglish, content);
-                        sheets++;
                     }
                     else
                     {
@@ -200,16 +238,106 @@ namespace Translation.Reference
                     }
                 }
 
-                if (sheets % 200 == 0 && sheets > 0)
+                if (builder.Sheets % 25 == 0 && builder.Sheets > 0)
                 {
-                    progress?.Report((0, $"Read {sheets} sheets, {builder.Lines.Count} lines"));
+                    progress?.Report(new ReferenceUpdateProgress(
+                        ReferenceUpdateStage.Downloading, counting.Position, builder.Sheets, builder.Lines.Count));
                 }
             }
 
             _logger?.LogInformation("Reference index rebuilt: {Sheets} sheets, {Lines} lines.",
-                sheets, builder.Lines.Count);
+                builder.Sheets, builder.Lines.Count);
 
             return builder;
+        }
+
+        /// <summary>
+        /// The whole tail of an update: write the index beside the one in use,
+        /// let go of that one, and swap them.
+        ///
+        /// Kept together, and reachable from a test, because everything that can
+        /// go wrong here goes wrong after the download has already been paid
+        /// for. The first version of this lost a finished eighty-megabyte index
+        /// to a file handle it had left open itself.
+        /// </summary>
+        internal static void WriteAndInstall(
+            string databasePath,
+            ReferenceIndexBuilder builder,
+            string language,
+            string revision,
+            Action releaseIndex)
+        {
+            var directory = Path.GetDirectoryName(databasePath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            // Written beside the index and moved into place, so a download that
+            // fails partway leaves the working index untouched.
+            var temporaryPath = databasePath + ".new";
+
+            try
+            {
+                Write(temporaryPath, builder, language, revision);
+
+                releaseIndex?.Invoke();
+                Install(temporaryPath, databasePath);
+            }
+            catch
+            {
+                // Eighty megabytes of a half-finished index are no use to
+                // anybody, and leaving them there makes the next attempt start
+                // by failing to delete them.
+                Discard(temporaryPath);
+                throw;
+            }
+        }
+
+        private static void Discard(string path)
+        {
+            try
+            {
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+
+        /// <summary>
+        /// Puts the finished index where the application reads it.
+        ///
+        /// Retried, because the file has just been closed and something else on
+        /// the machine may still be looking at eighty megabytes that appeared a
+        /// moment ago - a virus scanner, an indexer. Losing a download that took
+        /// several minutes to a handle that would have gone away by itself is
+        /// not a trade worth making.
+        /// </summary>
+        private static void Install(string temporaryPath, string databasePath)
+        {
+            for (var attempt = 1; ; attempt++)
+            {
+                try
+                {
+                    File.Move(temporaryPath, databasePath, true);
+                    return;
+                }
+                catch (IOException) when (attempt < 10)
+                {
+                    Thread.Sleep(500);
+                }
+                catch (UnauthorizedAccessException) when (attempt < 10)
+                {
+                    Thread.Sleep(500);
+                }
+            }
         }
 
         private static void Write(string path, ReferenceIndexBuilder builder, string language, string revision)
@@ -222,7 +350,14 @@ namespace Translation.Reference
             using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
             {
                 DataSource = path,
-                Mode = SqliteOpenMode.ReadWriteCreate
+                Mode = SqliteOpenMode.ReadWriteCreate,
+
+                // The finished file is moved into place the moment this closes,
+                // and a pooled connection goes on holding it open after it is
+                // closed. Windows then refuses to move it - not the file being
+                // replaced, the one just written - and a download of several
+                // minutes is thrown away one step from the end.
+                Pooling = false
             }.ToString());
 
             connection.Open();
@@ -327,24 +462,26 @@ namespace Translation.Reference
             return client;
         }
 
-        /// <summary>Reports how much has come down, since the archive has no declared length.</summary>
+        /// <summary>
+        /// Counts how much has come down, since the archive has no declared
+        /// length and there is no percentage to show. Only counts: what is
+        /// reported, and when, is decided where the sheets are read, so that
+        /// one line can say both at once.
+        /// </summary>
         private sealed class CountingStream : Stream
         {
             private readonly Stream _inner;
-            private readonly IProgress<(long Bytes, string Stage)> _progress;
             private long _total;
-            private long _lastReported;
 
-            public CountingStream(Stream inner, IProgress<(long Bytes, string Stage)> progress)
+            public CountingStream(Stream inner)
             {
                 _inner = inner;
-                _progress = progress;
             }
 
             public override int Read(byte[] buffer, int offset, int count)
             {
                 var read = _inner.Read(buffer, offset, count);
-                Advance(read);
+                _total += read;
                 return read;
             }
 
@@ -352,20 +489,8 @@ namespace Translation.Reference
                 Memory<byte> buffer, CancellationToken cancellationToken = default)
             {
                 var read = await _inner.ReadAsync(buffer, cancellationToken).ConfigureAwait(false);
-                Advance(read);
-                return read;
-            }
-
-            private void Advance(int read)
-            {
                 _total += read;
-                if (_total - _lastReported < 4 * 1024 * 1024)
-                {
-                    return;
-                }
-
-                _lastReported = _total;
-                _progress?.Report((_total, "Downloading"));
+                return read;
             }
 
             public override bool CanRead => true;

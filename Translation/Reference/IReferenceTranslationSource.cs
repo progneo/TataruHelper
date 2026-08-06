@@ -14,6 +14,17 @@ namespace Translation.Reference
         string LanguageCode { get; }
 
         /// <summary>
+        /// The commit of the translation project this was built from, or empty
+        /// when it was built from a folder and there is nothing to compare
+        /// against. Asked before an update, so an index that is already current
+        /// costs one request rather than a download.
+        /// </summary>
+        string Revision { get; }
+
+        /// <summary>How many lines are indexed, for telling the user what they have.</summary>
+        int LineCount { get; }
+
+        /// <summary>
         /// The character's name, which the game writes into lines addressed to
         /// them. Until it is known those lines cannot be recognised, since what
         /// is stored has the name punched out and what is read has it filled in.

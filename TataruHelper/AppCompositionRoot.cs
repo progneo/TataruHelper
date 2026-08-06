@@ -55,6 +55,7 @@ namespace FFXIVTataruHelper
                 provider.GetRequiredService<ILogger>(),
                 provider.GetRequiredService<ITranslationCredentialStore>()));
             services.AddSingleton<IFFMemoryReaderService, FFMemoryReader>();
+            services.AddSingleton<IReferenceIndexUpdateService, ReferenceIndexUpdateService>();
 
             services.AddSingleton<IHotKeyBindingService, HotKeyBindingService>();
             services.AddSingleton<IHotkeyCaptureService, HotkeyCaptureService>();

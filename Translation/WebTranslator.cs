@@ -92,12 +92,87 @@ namespace Translation
                 _settings.NTextCatLanguageModelsPath, _Logger);
             _detectLanguage = detectLanguage ?? _LanguageDetector.TryDetectLanguage;
 
-            _referenceTranslations = referenceTranslations
-                                     ?? new SqliteReferenceTranslationSource(
-                                         _settings.ReferenceTranslationsPath, _Logger);
+            if (referenceTranslations != null)
+            {
+                _referenceTranslations = referenceTranslations;
+            }
+            else
+            {
+                // Kept so the index can be rebuilt into the same file it is read
+                // from. A supplied source has no file behind it, and then there
+                // is nothing to update.
+                _referenceIndexPath = SqliteReferenceTranslationSource.Resolve(_settings.ReferenceTranslationsPath);
+                _referenceTranslations = new SqliteReferenceTranslationSource(_referenceIndexPath, _Logger);
+            }
         }
 
-        private readonly IReferenceTranslationSource _referenceTranslations;
+        private IReferenceTranslationSource _referenceTranslations;
+
+        private readonly string _referenceIndexPath = string.Empty;
+
+        /// <summary>The file the hand-made translations are read from, empty when there is none.</summary>
+        public string ReferenceIndexPath => _referenceIndexPath;
+
+        /// <summary>The language the index was built in, empty when no index is loaded.</summary>
+        public string ReferenceIndexLanguage => _referenceTranslations?.LanguageCode ?? string.Empty;
+
+        /// <summary>The commit of the translation project the index was built from.</summary>
+        public string ReferenceIndexRevision => _referenceTranslations?.Revision ?? string.Empty;
+
+        /// <summary>
+        /// The language a rebuilt index should be built in: the one the current
+        /// index is in, since rebuilding it in another would quietly replace the
+        /// translation the user has been reading.
+        /// </summary>
+        public string ReferenceIndexTargetLanguage
+        {
+            get
+            {
+                var current = ReferenceIndexLanguage;
+                return current.Length > 0 ? current : _settings.ReferenceTranslationsLanguage;
+            }
+        }
+
+        /// <summary>How many lines the index holds.</summary>
+        public int ReferenceIndexLines => _referenceTranslations?.LineCount ?? 0;
+
+        /// <summary>
+        /// Lets go of the index file so a rebuilt one can be moved over it.
+        ///
+        /// A lookup already under way answers from the old source, which by then
+        /// says it knows nothing, and the line goes to an engine as it would
+        /// have before the index existed. That is the whole cost of a swap, and
+        /// it lasts as long as a rename.
+        /// </summary>
+        public void CloseReferenceIndex()
+        {
+            (_referenceTranslations as IDisposable)?.Dispose();
+        }
+
+        /// <summary>
+        /// Opens the index again, as this character: the name and gender were
+        /// read from the game once and nothing will announce them a second time.
+        /// </summary>
+        public void ReopenReferenceIndex()
+        {
+            if (_referenceIndexPath.Length == 0)
+            {
+                return;
+            }
+
+            var playerName = _referenceTranslations?.PlayerName ?? string.Empty;
+            var playerIsFeminine = _referenceTranslations?.PlayerIsFeminine;
+
+            var reopened = new SqliteReferenceTranslationSource(_referenceIndexPath, _Logger)
+            {
+                PlayerName = playerName,
+                PlayerIsFeminine = playerIsFeminine
+            };
+
+            var previous = _referenceTranslations;
+            _referenceTranslations = reopened;
+            (previous as IDisposable)?.Dispose();
+        }
 
         /// <summary>
         /// Whether a line the game's translators have already rendered by hand
@@ -139,19 +214,23 @@ namespace Translation
         {
             translated = string.Empty;
 
-            if (!UseReferenceTranslations || _referenceTranslations == null)
+            // Taken once: the index is swapped out from under this when it is
+            // rebuilt, and asking twice could ask two different sources.
+            var reference = _referenceTranslations;
+
+            if (!UseReferenceTranslations || reference == null)
             {
                 return false;
             }
 
-            var indexed = _referenceTranslations.LanguageCode;
+            var indexed = reference.LanguageCode;
             if (string.IsNullOrEmpty(indexed) ||
                 !string.Equals(indexed, toLang?.LanguageCode, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            return _referenceTranslations.TryGetSpeakerName(speaker, out translated);
+            return reference.TryGetSpeakerName(speaker, out translated);
         }
 
         public void LoadLanguages()
@@ -197,19 +276,21 @@ namespace Translation
         {
             translation = string.Empty;
 
-            if (!UseReferenceTranslations || _referenceTranslations == null)
+            var reference = _referenceTranslations;
+
+            if (!UseReferenceTranslations || reference == null)
             {
                 return false;
             }
 
-            var indexed = _referenceTranslations.LanguageCode;
+            var indexed = reference.LanguageCode;
             if (string.IsNullOrEmpty(indexed) ||
                 !string.Equals(indexed, toLang?.LanguageCode, StringComparison.OrdinalIgnoreCase))
             {
                 return false;
             }
 
-            return _referenceTranslations.TryGetTranslation(sentence, out translation);
+            return reference.TryGetTranslation(sentence, out translation);
         }
 
         private async Task<TranslationResult> TranslateCoreAsync(string inSentence,

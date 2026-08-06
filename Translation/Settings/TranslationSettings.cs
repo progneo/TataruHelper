@@ -23,17 +23,19 @@ namespace Translation.Settings
         public bool UseGoogleHtmlFallbackEndpoint { get; set; } = true;
 
         /// <summary>
-
-        /// Index of translations made by hand, built by
-
-        /// scripts/build_reference_translations.py. Consulted before a translator
-
-        /// when the literary translation option is on.
-
+        /// Index of translations made by hand. Consulted before a translator
+        /// when the literary translation option is on, and rebuilt in place by
+        /// the update button on the General page.
         /// </summary>
-
         public string ReferenceTranslationsPath { get; set; } = "Resources/ReferenceTranslations.db";
 
+        /// <summary>
+        /// The language to rebuild the index in, as the translation project
+        /// names its files. Only Russian has a translation worth reading for
+        /// now; an index already built says its own language, and this is what
+        /// is used when there is no index yet to ask.
+        /// </summary>
+        public string ReferenceTranslationsLanguage { get; set; } = "ru";
 
         public string NTextCatLanguageModelsPath { get; set; } = "TranslationResources/Core14.profile.xml";
 

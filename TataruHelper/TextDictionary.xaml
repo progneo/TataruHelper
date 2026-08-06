@@ -204,6 +204,22 @@
     <system:String x:Key="TranslateSpeakerNamesCB">Translate speaker names</system:String>
     <system:String x:Key="TranslateSpeakerNamesDescription">Show who is speaking in the reading language, using the hand-made spelling where there is one.</system:String>
 
+    <system:String x:Key="ReferenceIndexTitle">Hand-made translations</system:String>
+    <system:String x:Key="ReferenceIndexHint">The translation project gains lines every week. Rebuilding fetches its current work; around a gigabyte is read as it downloads and only the index is kept.</system:String>
+    <system:String x:Key="ReferenceIndexUpdateButton">Update</system:String>
+    <system:String x:Key="ReferenceIndexCancelButton">Cancel</system:String>
+    <system:String x:Key="ReferenceIndexInstalled">{0} lines of {1}, revision {2}</system:String>
+    <system:String x:Key="ReferenceIndexInstalledUnknownRevision">{0} lines of {1}, from an unnamed revision</system:String>
+    <system:String x:Key="ReferenceIndexMissing">No translations are installed.</system:String>
+    <system:String x:Key="ReferenceIndexChecking">Asking what the translation project is at…</system:String>
+    <system:String x:Key="ReferenceIndexDownloading">Downloading… {0} MB</system:String>
+    <system:String x:Key="ReferenceIndexDownloadingWithLines">Downloading… {0} MB, {1} lines so far</system:String>
+    <system:String x:Key="ReferenceIndexWriting">Writing the index…</system:String>
+    <system:String x:Key="ReferenceIndexUpToDate">Already up to date.</system:String>
+    <system:String x:Key="ReferenceIndexUpdated">Updated: {0} lines, in use now.</system:String>
+    <system:String x:Key="ReferenceIndexCancelled">Update cancelled; the previous translations are still in use.</system:String>
+    <system:String x:Key="ReferenceIndexFailed">Update failed: {0}</system:String>
+
     <system:String x:Key="UpdatesGroupTitle">Updates</system:String>
     <system:String x:Key="UpdatesGroupHint">Check whether a newer release of Tataru Helper is available.</system:String>
     <system:String x:Key="LanguageGroupHint">Interface language for the settings window and overlays.</system:String>

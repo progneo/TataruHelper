@@ -376,6 +376,32 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["LanguageGroupHint"] =
                 catalog.GetString("Interface language for the settings window and overlays.");
 
+            // Hand-made translations (General page)
+            _SettingsWindow.Resources["ReferenceIndexTitle"] = catalog.GetString("Hand-made translations");
+            _SettingsWindow.Resources["ReferenceIndexHint"] =
+                catalog.GetString(
+                    "The translation project gains lines every week. Rebuilding fetches its current work; around a gigabyte is read as it downloads and only the index is kept.");
+            _SettingsWindow.Resources["ReferenceIndexUpdateButton"] = catalog.GetString("Update");
+            _SettingsWindow.Resources["ReferenceIndexCancelButton"] = catalog.GetString("Cancel");
+            _SettingsWindow.Resources["ReferenceIndexInstalled"] =
+                catalog.GetString("{0} lines of {1}, revision {2}");
+            _SettingsWindow.Resources["ReferenceIndexInstalledUnknownRevision"] =
+                catalog.GetString("{0} lines of {1}, from an unnamed revision");
+            _SettingsWindow.Resources["ReferenceIndexMissing"] =
+                catalog.GetString("No translations are installed.");
+            _SettingsWindow.Resources["ReferenceIndexChecking"] =
+                catalog.GetString("Asking what the translation project is at…");
+            _SettingsWindow.Resources["ReferenceIndexDownloading"] = catalog.GetString("Downloading… {0} MB");
+            _SettingsWindow.Resources["ReferenceIndexDownloadingWithLines"] =
+                catalog.GetString("Downloading… {0} MB, {1} lines so far");
+            _SettingsWindow.Resources["ReferenceIndexWriting"] = catalog.GetString("Writing the index…");
+            _SettingsWindow.Resources["ReferenceIndexUpToDate"] = catalog.GetString("Already up to date.");
+            _SettingsWindow.Resources["ReferenceIndexUpdated"] =
+                catalog.GetString("Updated: {0} lines, in use now.");
+            _SettingsWindow.Resources["ReferenceIndexCancelled"] =
+                catalog.GetString("Update cancelled; the previous translations are still in use.");
+            _SettingsWindow.Resources["ReferenceIndexFailed"] = catalog.GetString("Update failed: {0}");
+
             // Updates group
             _SettingsWindow.Resources["UpdatesGroupTitle"] = catalog.GetString("Updates");
             _SettingsWindow.Resources["UpdatesGroupHint"] =

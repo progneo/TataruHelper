@@ -173,6 +173,52 @@
                                          IsChecked="{Binding Shell.IsLiteraryTranslation, Mode=TwoWay}" />
                     </Grid>
 
+                    <!-- Where those hand-made translations come from, and how to
+                         fetch what the project has written since this release. -->
+                    <Border Margin="0,10,0,0" Padding="12,10" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                <TextBlock Text="{DynamicResource ReferenceIndexTitle}" FontWeight="SemiBold" />
+                                <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                           Text="{DynamicResource ReferenceIndexHint}"
+                                           TextWrapping="Wrap" />
+                                <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                           Margin="0,6,0,0"
+                                           Text="{Binding Shell.ReferenceIndexStatus}"
+                                           TextWrapping="Wrap" />
+                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0"
+                                            Visibility="{Binding Shell.HasReferenceIndexProgress, Converter={utils:BooleanToVisibilityConverterCollapse}}">
+                                    <ui:ProgressRing Width="16" Height="16" Margin="0,0,8,0"
+                                                     IsIndeterminate="True"
+                                                     VerticalAlignment="Center"
+                                                     Visibility="{Binding Shell.IsReferenceIndexUpdating, Converter={utils:BooleanToVisibilityConverterCollapse}}" />
+                                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                               VerticalAlignment="Center"
+                                               Text="{Binding Shell.ReferenceIndexProgress}"
+                                               TextWrapping="Wrap" />
+                                </StackPanel>
+                            </StackPanel>
+                            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                                <ui:Button Appearance="Secondary"
+                                           Icon="{ui:SymbolIcon Symbol=ArrowDownload24}"
+                                           Content="{DynamicResource ReferenceIndexUpdateButton}"
+                                           Command="{Binding Shell.UpdateReferenceIndexCommand}"
+                                           IsEnabled="{Binding Shell.CanUpdateReferenceIndex}"
+                                           HorizontalAlignment="Stretch" />
+                                <ui:Button Margin="0,6,0,0"
+                                           Content="{DynamicResource ReferenceIndexCancelButton}"
+                                           Command="{Binding Shell.CancelReferenceIndexUpdateCommand}"
+                                           Visibility="{Binding Shell.IsReferenceIndexUpdating, Converter={utils:BooleanToVisibilityConverterCollapse}}"
+                                           HorizontalAlignment="Stretch" />
+                            </StackPanel>
+                        </Grid>
+                    </Border>
+
                     <Grid Margin="0,12,0,0">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />

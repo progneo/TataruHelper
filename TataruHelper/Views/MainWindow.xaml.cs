@@ -45,6 +45,7 @@ public partial class MainWindow : FluentWindow
     private readonly IUiDispatcher _uiDispatcher;
     private readonly IHotkeyCaptureService _hotkeyCaptureService;
     private readonly TranslationCredentialsViewModel _translationCredentials;
+    private readonly IReferenceIndexUpdateService _referenceIndexUpdateService;
 
     private readonly LogWriter _logWriter;
     private TataruModel _tataruModel;
@@ -73,6 +74,7 @@ public partial class MainWindow : FluentWindow
         IUiDispatcher uiDispatcher,
         IHotkeyCaptureService hotkeyCaptureService,
         TranslationCredentialsViewModel translationCredentials,
+        IReferenceIndexUpdateService referenceIndexUpdateService,
         ISettingsStore settingsStore,
         LogWriter logWriter,
         LanguageWrapper languageWrapper,
@@ -86,6 +88,7 @@ public partial class MainWindow : FluentWindow
         _uiDispatcher = uiDispatcher;
         _hotkeyCaptureService = hotkeyCaptureService;
         _translationCredentials = translationCredentials;
+        _referenceIndexUpdateService = referenceIndexUpdateService;
         _settingsStore = settingsStore;
         _languageWrapper = languageWrapper;
         _optimizeFootprint = optimizeFootprint;
@@ -155,7 +158,11 @@ public partial class MainWindow : FluentWindow
                 _tataruUiModel,
                 _hotkeyCaptureService,
                 CheckUpdates,
-                _translationCredentials);
+                _translationCredentials,
+                _referenceIndexUpdateService,
+                // The window carries the translated strings; the application
+                // only ever has the English defaults.
+                key => TryFindResource(key) as string ?? key);
 
             _settingsShellViewModel.PropertyChanged += OnSettingsShellPropertyChanged;
 
