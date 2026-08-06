@@ -101,11 +101,8 @@ namespace Translation
                 // Kept so the index can be rebuilt into the same file it is read
                 // from. A supplied source has no file behind it, and then there
                 // is nothing to update.
-                _referenceIndexPath = ReferenceIndexLocation.Prepare(
-                    _settings.ReferenceTranslationsPath,
-                    _settings.LegacyReferenceTranslationsPath,
-                    _Logger);
-                _referenceTranslations = new SqliteReferenceTranslationSource(_referenceIndexPath, _Logger);
+                _referenceIndexPath = SqliteReferenceTranslationSource.Resolve(_settings.ReferenceTranslationsPath);
+                _referenceTranslations = new SqliteReferenceTranslationSource(ChooseReferenceIndex(), _Logger);
             }
         }
 
@@ -113,8 +110,19 @@ namespace Translation
 
         private readonly string _referenceIndexPath = string.Empty;
 
-        /// <summary>The file the hand-made translations are read from, empty when there is none.</summary>
+        /// <summary>
+        /// Where an update writes the index. Not always the file being read:
+        /// the application ships one too, and that one is left alone.
+        /// </summary>
         public string ReferenceIndexPath => _referenceIndexPath;
+
+        private string ChooseReferenceIndex()
+        {
+            return ReferenceIndexLocation.Choose(
+                _settings.ReferenceTranslationsPath,
+                _settings.ShippedReferenceTranslationsPath,
+                _Logger);
+        }
 
         /// <summary>The language the index was built in, empty when no index is loaded.</summary>
         public string ReferenceIndexLanguage => _referenceTranslations?.LanguageCode ?? string.Empty;
@@ -166,7 +174,7 @@ namespace Translation
             var playerName = _referenceTranslations?.PlayerName ?? string.Empty;
             var playerIsFeminine = _referenceTranslations?.PlayerIsFeminine;
 
-            var reopened = new SqliteReferenceTranslationSource(_referenceIndexPath, _Logger)
+            var reopened = new SqliteReferenceTranslationSource(ChooseReferenceIndex(), _Logger)
             {
                 PlayerName = playerName,
                 PlayerIsFeminine = playerIsFeminine

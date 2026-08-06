@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Formats.Tar;
+using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Net.Http;
@@ -493,6 +494,12 @@ namespace Translation.Reference
                 // index built from a folder says which folder.
                 ["source"] = origin ?? string.Empty,
                 ["revision"] = revision ?? string.Empty,
+
+                // Which of two indexes is the newer one. The revision cannot
+                // answer that - two commit shas have no order between them -
+                // and one of the two may have been built from a folder and
+                // carry no revision at all.
+                ["built"] = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture),
                 ["lines"] = builder.Lines.Count.ToString(),
                 ["patterns"] = builder.Patterns.Count.ToString(),
                 ["speakers"] = builder.Speakers.Count.ToString(),

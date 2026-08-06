@@ -27,22 +27,20 @@ namespace Translation.Settings
         /// when the literary translation option is on, and fetched by the
         /// update button on the General page.
         ///
-        /// Kept with the user's settings rather than with the application: the
-        /// application is replaced wholesale when it updates, and an index
-        /// beside it would go with it. Nothing ships one - it is several
-        /// hundred megabytes that the translation project adds to weekly - so
-        /// until the button has been pressed there is none, and every line is
-        /// translated by engine.
+        /// Where an update writes. Kept with the user's settings rather than
+        /// with the application, which is replaced wholesale when it updates -
+        /// an index beside it would go with it, and a fetch would be undone by
+        /// the next release without a word about it.
         /// </summary>
         public string ReferenceTranslationsPath { get; set; } =
             "%APPDATA%/TataruHelper/ReferenceTranslations.db";
 
         /// <summary>
-        /// Where earlier versions kept it, beside the application. Moved to
-        /// <see cref="ReferenceTranslationsPath"/> once, so an installation
-        /// that already has an index does not fetch it all over again.
+        /// The index the application was installed with, beside the executable.
+        /// Read but never written to: an update replaces that folder, and it is
+        /// also the only copy left if the translation project ever goes away.
         /// </summary>
-        public string LegacyReferenceTranslationsPath { get; set; } = "Resources/ReferenceTranslations.db";
+        public string ShippedReferenceTranslationsPath { get; set; } = "Resources/ReferenceTranslations.db";
 
         /// <summary>
         /// The language to rebuild the index in, as the translation project

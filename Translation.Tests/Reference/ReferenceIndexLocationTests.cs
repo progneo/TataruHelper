@@ -1,5 +1,8 @@
 using System;
+using System.Globalization;
 using System.IO;
+
+using Microsoft.Data.Sqlite;
 
 using NUnit.Framework;
 
@@ -7,28 +10,29 @@ using Translation.Reference;
 
 namespace Translation.Tests.Reference
 {
-    // The index lives with the user's settings, not with the application, so
-    // that updating the application does not take back translations the user
-    // fetched. Installations made before that decision have one beside the
-    // application, and they are not to be made to download it again.
+    // There are two indexes: the one the application was installed with, and the
+    // one the user fetched. The installed one is never written to - an update
+    // replaces the folder it sits in - so updates go beside the user's settings,
+    // and something has to say which of the two is read.
     [TestFixture]
     public class ReferenceIndexLocationTests
     {
         private string _root;
         private string _userPath;
-        private string _legacyPath;
+        private string _shippedPath;
 
         [SetUp]
         public void SetUp()
         {
-            _root = Path.Combine(Path.GetTempPath(), "TataruWhere_" + Guid.NewGuid().ToString("N"));
+            _root = Path.Combine(Path.GetTempPath(), "TataruWhich_" + Guid.NewGuid().ToString("N"));
             _userPath = Path.Combine(_root, "user", "ReferenceTranslations.db");
-            _legacyPath = Path.Combine(_root, "app", "Resources", "ReferenceTranslations.db");
+            _shippedPath = Path.Combine(_root, "app", "Resources", "ReferenceTranslations.db");
         }
 
         [TearDown]
         public void TearDown()
         {
+            SqliteConnection.ClearAllPools();
             try
             {
                 Directory.Delete(_root, true);
@@ -39,52 +43,72 @@ namespace Translation.Tests.Reference
         }
 
         [Test]
-        public void AnIndexBesideTheApplication_MovesToTheUserFolder()
+        public void NothingFetched_ReadsTheOneInstalledWithTheApplication()
         {
-            Write(_legacyPath, "an index");
+            // A fresh install translates from the first line, without waiting
+            // for anything to be downloaded.
+            WriteIndex(_shippedPath, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
 
-            var chosen = ReferenceIndexLocation.Prepare(_userPath, _legacyPath, null);
-
-            Assert.That(chosen, Is.EqualTo(Path.GetFullPath(_userPath)));
-            Assert.That(File.ReadAllText(_userPath), Is.EqualTo("an index"));
-
-            // Moved, not copied: two copies of eighty megabytes, one of which
-            // silently shadows the other, is the arrangement this avoids.
-            Assert.That(File.Exists(_legacyPath), Is.False);
+            Assert.That(Choose(), Is.EqualTo(Path.GetFullPath(_shippedPath)));
         }
 
         [Test]
-        public void AnIndexAlreadyInTheUserFolder_IsLeftAlone()
+        public void AFetchedIndex_WinsOverTheInstalledOne()
         {
-            Write(_userPath, "the one in use");
-            Write(_legacyPath, "an older one left behind");
+            WriteIndex(_shippedPath, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+            WriteIndex(_userPath, new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc));
 
-            var chosen = ReferenceIndexLocation.Prepare(_userPath, _legacyPath, null);
-
-            Assert.That(chosen, Is.EqualTo(Path.GetFullPath(_userPath)));
-            Assert.That(File.ReadAllText(_userPath), Is.EqualTo("the one in use"));
+            Assert.That(Choose(), Is.EqualTo(Path.GetFullPath(_userPath)));
         }
 
         [Test]
-        public void NoIndexAnywhere_NamesWhereOneWouldGo()
+        public void ANewerRelease_WinsOverAnOlderFetch()
         {
-            // A fresh install: nothing is downloaded until the button is
-            // pressed, and the path still has to be the one an update writes.
-            var chosen = ReferenceIndexLocation.Prepare(_userPath, _legacyPath, null);
+            // Fetched in January, installed a release built in June. Preferring
+            // the fetched one on principle would leave five months of
+            // translations unread, and nothing on screen would say why.
+            WriteIndex(_userPath, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+            WriteIndex(_shippedPath, new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc));
 
-            Assert.That(chosen, Is.EqualTo(Path.GetFullPath(_userPath)));
-            Assert.That(File.Exists(chosen), Is.False);
+            Assert.That(Choose(), Is.EqualTo(Path.GetFullPath(_shippedPath)));
         }
 
         [Test]
-        public void TheSamePathTwice_IsNotMovedOntoItself()
+        public void AnIndexFromBeforeThisWasRecorded_CountsAsTheOlderOne()
         {
-            Write(_userPath, "an index");
+            // Every index built before the build date was written down, which
+            // is every index anybody has today.
+            WriteIndex(_userPath, null);
+            WriteIndex(_shippedPath, new DateTime(2026, 6, 1, 0, 0, 0, DateTimeKind.Utc));
 
-            var chosen = ReferenceIndexLocation.Prepare(_userPath, _userPath, null);
+            Assert.That(Choose(), Is.EqualTo(Path.GetFullPath(_shippedPath)));
+        }
 
-            Assert.That(chosen, Is.EqualTo(Path.GetFullPath(_userPath)));
-            Assert.That(File.ReadAllText(_userPath), Is.EqualTo("an index"));
+        [Test]
+        public void TwoUndatedIndexes_LeaveTheFetchedOneInPlace()
+        {
+            // Neither can be shown to be newer, and the fetched one is the one
+            // somebody asked for.
+            WriteIndex(_userPath, null);
+            WriteIndex(_shippedPath, null);
+
+            Assert.That(Choose(), Is.EqualTo(Path.GetFullPath(_userPath)));
+        }
+
+        [Test]
+        public void AnUnreadableFile_DoesNotWinAnything()
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(_userPath));
+            File.WriteAllText(_userPath, "not a database");
+            WriteIndex(_shippedPath, new DateTime(2026, 1, 1, 0, 0, 0, DateTimeKind.Utc));
+
+            Assert.That(Choose(), Is.EqualTo(Path.GetFullPath(_shippedPath)));
+        }
+
+        [Test]
+        public void NoIndexAtAll_StillNamesWhereAFetchWouldGo()
+        {
+            Assert.That(Choose(), Is.EqualTo(Path.GetFullPath(_userPath)));
         }
 
         [Test]
@@ -100,10 +124,41 @@ namespace Translation.Tests.Reference
             Assert.That(resolved, Does.EndWith("ReferenceTranslations.db"));
         }
 
-        private static void Write(string path, string content)
+        private string Choose()
+        {
+            return ReferenceIndexLocation.Choose(_userPath, _shippedPath, null);
+        }
+
+        private static void WriteIndex(string path, DateTime? built)
         {
             Directory.CreateDirectory(Path.GetDirectoryName(path));
-            File.WriteAllText(path, content);
+
+            using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
+            {
+                DataSource = path,
+                Mode = SqliteOpenMode.ReadWriteCreate,
+                Pooling = false
+            }.ToString());
+
+            connection.Open();
+
+            using var create = connection.CreateCommand();
+            create.CommandText = "CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);" +
+                                 "INSERT INTO meta VALUES ('language', 'ru');";
+            create.ExecuteNonQuery();
+
+            if (!built.HasValue)
+            {
+                return;
+            }
+
+            using var stamp = connection.CreateCommand();
+            stamp.CommandText = "INSERT INTO meta VALUES ('built', $built)";
+            var parameter = stamp.CreateParameter();
+            parameter.ParameterName = "$built";
+            parameter.Value = built.Value.ToString("O", CultureInfo.InvariantCulture);
+            stamp.Parameters.Add(parameter);
+            stamp.ExecuteNonQuery();
         }
     }
 }

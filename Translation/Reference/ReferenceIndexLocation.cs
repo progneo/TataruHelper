@@ -1,66 +1,96 @@
 using System;
+using System.Globalization;
 using System.IO;
+
+using Microsoft.Data.Sqlite;
 
 using Microsoft.Extensions.Logging;
 
 namespace Translation.Reference
 {
     /// <summary>
-    /// Settles where the index of hand-made translations lives.
+    /// Settles which index of hand-made translations is read.
     ///
-    /// It lives with the user's settings rather than with the application. The
-    /// application is replaced wholesale when it updates, and an index that sat
-    /// beside it went with it - so an update quietly took back translations the
-    /// user had fetched, and said nothing about it.
+    /// There are two: the one the application ships with, and the one the user
+    /// fetched. The shipped one is never written to - it belongs to the
+    /// installation, and an update replaces the folder it sits in - so updates
+    /// go beside the user's settings, where nothing but the user disturbs them.
     /// </summary>
     public static class ReferenceIndexLocation
     {
         /// <summary>
-        /// The file to read, having moved one left beside the application into
-        /// place first.
+        /// The file to read: whichever of the two was built later.
         ///
-        /// Earlier versions shipped the index inside the application and wrote
-        /// updates there. Those installations would otherwise come up empty
-        /// after this change and fetch several hundred megabytes they already
-        /// have. Moved rather than copied: one index, in one place, and the
-        /// question does not arise again.
+        /// Not simply "the user's if there is one". Somebody who fetched an
+        /// index in March and installed a release built in June would go on
+        /// reading March, and would have no way of telling: both say the same
+        /// thing on the General page except for a revision nobody memorises.
+        /// An index from before this was recorded counts as the older one,
+        /// which it almost certainly is.
         /// </summary>
-        public static string Prepare(string userPath, string legacyPath, ILogger logger)
+        public static string Choose(string userPath, string shippedPath, ILogger logger)
         {
-            var resolved = SqliteReferenceTranslationSource.Resolve(userPath);
+            var user = SqliteReferenceTranslationSource.Resolve(userPath);
+            var shipped = SqliteReferenceTranslationSource.Resolve(shippedPath);
 
-            if (resolved.Length == 0 || File.Exists(resolved))
+            var hasUser = user.Length > 0 && File.Exists(user);
+            var hasShipped = shipped.Length > 0 && File.Exists(shipped) &&
+                             !string.Equals(user, shipped, StringComparison.OrdinalIgnoreCase);
+
+            if (!hasUser)
             {
-                return resolved;
+                return hasShipped ? shipped : user;
             }
 
-            var legacy = SqliteReferenceTranslationSource.Resolve(legacyPath);
-            if (legacy.Length == 0 ||
-                string.Equals(legacy, resolved, StringComparison.OrdinalIgnoreCase) ||
-                !File.Exists(legacy))
+            if (!hasShipped)
             {
-                return resolved;
+                return user;
             }
 
+            var userBuilt = BuiltAt(user);
+            var shippedBuilt = BuiltAt(shipped);
+
+            if (shippedBuilt <= userBuilt)
+            {
+                return user;
+            }
+
+            logger?.LogInformation(
+                "The installed translations ({Shipped:u}) are newer than the fetched ones ({User:u}); using those.",
+                shippedBuilt, userBuilt);
+            return shipped;
+        }
+
+        /// <summary>
+        /// When an index was built, or the beginning of time when it does not
+        /// say - which is what every index built before this was recorded says.
+        /// </summary>
+        private static DateTime BuiltAt(string path)
+        {
             try
             {
-                var directory = Path.GetDirectoryName(resolved);
-                if (!string.IsNullOrEmpty(directory))
+                using var connection = new SqliteConnection(new SqliteConnectionStringBuilder
                 {
-                    Directory.CreateDirectory(directory);
-                }
+                    DataSource = path,
+                    Mode = SqliteOpenMode.ReadOnly,
+                    Pooling = false
+                }.ToString());
 
-                File.Move(legacy, resolved);
-                logger?.LogInformation("Reference translations moved from {Legacy} to {Path}.", legacy, resolved);
-                return resolved;
+                connection.Open();
+
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT value FROM meta WHERE key = 'built'";
+
+                return DateTime.TryParse(command.ExecuteScalar() as string, CultureInfo.InvariantCulture,
+                    DateTimeStyles.AdjustToUniversal | DateTimeStyles.AssumeUniversal, out var built)
+                    ? built
+                    : DateTime.MinValue;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
-                // Reading what is there beats reading nothing. An update will
-                // write to the settled path, and that is what the next start
-                // will find.
-                logger?.LogInformation("{Message}", Convert.ToString(ex));
-                return legacy;
+                // Unreadable counts as oldest: the other one is at least known
+                // to open, and choosing a file that cannot be read helps nobody.
+                return DateTime.MinValue;
             }
         }
     }
