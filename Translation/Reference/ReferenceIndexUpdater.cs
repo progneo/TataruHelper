@@ -593,6 +593,10 @@ namespace Translation.Reference
                 // and one of the two may have been built from a folder and
                 // carry no revision at all.
                 ["built"] = DateTime.UtcNow.ToString("O", CultureInfo.InvariantCulture),
+
+                // Which rules read the export. An index built by older ones is
+                // out of date even when the translation has not moved.
+                ["rules"] = ReferenceIndexBuilder.RulesVersion.ToString(CultureInfo.InvariantCulture),
                 ["lines"] = builder.Lines.Count.ToString(),
                 ["patterns"] = builder.Patterns.Count.ToString(),
                 ["speakers"] = builder.Speakers.Count.ToString(),

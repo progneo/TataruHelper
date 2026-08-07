@@ -40,7 +40,7 @@ namespace FFXIVTataruHelper.Services.Update
         {
             if (_webTranslator == null)
             {
-                return new ReferenceIndexState(false, string.Empty, string.Empty, string.Empty, 0);
+                return new ReferenceIndexState(false, string.Empty, string.Empty, string.Empty, 0, 0);
             }
 
             return new ReferenceIndexState(
@@ -48,7 +48,8 @@ namespace FFXIVTataruHelper.Services.Update
                 _webTranslator.ReferenceIndexSourceLanguage,
                 _webTranslator.ReferenceIndexLanguage,
                 _webTranslator.ReferenceIndexRevision,
-                _webTranslator.ReferenceIndexLines);
+                _webTranslator.ReferenceIndexLines,
+                _webTranslator.ReferenceIndexRulesVersion);
         }
 
         /// <summary>
@@ -101,20 +102,18 @@ namespace FFXIVTataruHelper.Services.Update
             {
                 var (game, reading) = ResolveLanguages(gameLanguage, readingLanguage);
 
-                // Rebuilding for a different pair than the index holds is a
-                // rebuild from nothing, so the revision it is at means nothing
-                // either and the whole export has to be read again.
-                var sameIndex =
-                    string.Equals(game, _webTranslator.ReferenceIndexSourceLanguage,
-                        StringComparison.OrdinalIgnoreCase) &&
-                    string.Equals(reading, _webTranslator.ReferenceIndexLanguage,
-                        StringComparison.OrdinalIgnoreCase);
+                // The revision is only worth comparing when the index would
+                // otherwise be the same one: built for the same pair, and by
+                // the same rules. Offered otherwise, it answers "already up to
+                // date" and leaves the user with an index this build knows to
+                // be wrong.
+                var keepRevision = ReferenceIndexRebuild.CanKeepRevision(ReadState(), game, reading);
 
                 return await updater.UpdateAsync(
                     _webTranslator.ReferenceIndexPath,
                     game,
                     reading,
-                    sameIndex ? _webTranslator.ReferenceIndexRevision : string.Empty,
+                    keepRevision ? _webTranslator.ReferenceIndexRevision : string.Empty,
                     progress,
                     () =>
                     {

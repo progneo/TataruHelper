@@ -92,6 +92,21 @@ namespace Translation.Reference
         private static readonly Regex SpeakerPrefix = new Regex(
             "^\\(-([^)]{0,60})-\\)", RegexOptions.Compiled);
 
+        /// <summary>
+        /// Which set of parsing rules built an index.
+        ///
+        /// The revision says whether the translation has moved; it says nothing
+        /// about whether the rules that read it have. They have moved four
+        /// times in one day - a name on either side of a pair, hyphenation
+        /// points, hard spaces, and a row that borrowed the next row's text -
+        /// and an index at the current revision would have been left with none
+        /// of it, "already up to date" and quietly wrong.
+        ///
+        /// Raise this whenever a change here would put something different in
+        /// the index for the same export.
+        /// </summary>
+        public const int RulesVersion = 1;
+
         private const string KeySeparator = "<tab>";
 
         /// <summary>Stands in for the name; a control character cannot collide.</summary>

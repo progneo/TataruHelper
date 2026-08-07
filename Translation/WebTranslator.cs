@@ -166,6 +166,9 @@ namespace Translation
         /// <summary>How many lines the index holds.</summary>
         public int ReferenceIndexLines => _referenceTranslations?.LineCount ?? 0;
 
+        /// <summary>The parsing rules the index was built by.</summary>
+        public int ReferenceIndexRulesVersion => _referenceTranslations?.RulesVersion ?? 0;
+
         /// <summary>
         /// Lets go of the index file so a rebuilt one can be moved over it.
         ///

@@ -2,6 +2,8 @@ using System;
 
 using FFXIVTataruHelper.Services.Update;
 
+using Translation.Reference;
+
 namespace FFXIVTataruHelper
 {
     /// <summary>
@@ -43,6 +45,18 @@ namespace FFXIVTataruHelper
                 localize("ReferenceIndexSwitchLanguages"),
                 state.SourceLanguage + " → " + state.Language,
                 gameLanguage + " → " + readingLanguage);
+        }
+
+        /// <summary>
+        /// Whether the revision the index is at is worth offering as "nothing
+        /// has changed": only when the next index would be the same one, built
+        /// for the same pair of languages and by the same rules.
+        /// </summary>
+        public static bool CanKeepRevision(
+            ReferenceIndexState state, string gameLanguage, string readingLanguage)
+        {
+            return !ChangesLanguages(state, gameLanguage, readingLanguage) &&
+                   state.RulesVersion == ReferenceIndexBuilder.RulesVersion;
         }
 
         private static bool Same(string left, string right)

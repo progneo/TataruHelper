@@ -10,9 +10,10 @@ namespace FFXIVTataruHelper.Services.Update
     public readonly struct ReferenceIndexState
     {
         public ReferenceIndexState(bool isInstalled, string sourceLanguage, string language, string revision,
-            int lines)
+            int lines, int rulesVersion)
         {
             IsInstalled = isInstalled;
+            RulesVersion = rulesVersion;
             SourceLanguage = sourceLanguage ?? string.Empty;
             Language = language ?? string.Empty;
             Revision = revision ?? string.Empty;
@@ -37,6 +38,13 @@ namespace FFXIVTataruHelper.Services.Update
         public string Revision { get; }
 
         public int Lines { get; }
+
+        /// <summary>
+        /// The parsing rules it was built by. An index built by older ones is
+        /// out of date even at the current revision, and saying "already up to
+        /// date" to somebody in that position leaves them with a known fault.
+        /// </summary>
+        public int RulesVersion { get; }
     }
 
     /// <summary>

@@ -32,6 +32,13 @@ namespace Translation.Reference
         int LineCount { get; }
 
         /// <summary>
+        /// The parsing rules the index was built by, or zero for one built
+        /// before they were written down. Older rules mean the index is out of
+        /// date however current the translation in it is.
+        /// </summary>
+        int RulesVersion { get; }
+
+        /// <summary>
         /// The character's name, which the game writes into lines addressed to
         /// them. Until it is known those lines cannot be recognised, since what
         /// is stored has the name punched out and what is read has it filled in.

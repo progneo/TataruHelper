@@ -82,6 +82,8 @@ namespace Translation.Reference
 
         public int LineCount { get; private set; }
 
+        public int RulesVersion { get; private set; }
+
         /// <summary>
         /// Where the index was looked for, whether or not one was found. The
         /// path is settled here rather than by the caller, and rebuilding the
@@ -508,6 +510,7 @@ namespace Translation.Reference
             // downloads rather than trusting a revision nobody recorded.
             Revision = ReadMeta("revision");
             LineCount = int.TryParse(ReadMeta("lines"), out var lines) ? lines : 0;
+            RulesVersion = int.TryParse(ReadMeta("rules"), out var rules) ? rules : 0;
 
             _lookup = _connection.CreateCommand();
             _lookup.CommandText = "SELECT translated FROM line WHERE source = $sentence";
