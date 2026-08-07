@@ -313,6 +313,13 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     public bool CanUpdateReferenceIndex =>
         _referenceIndexUpdateService.IsSupported && !IsReferenceIndexUpdating;
 
+    /// <summary>
+    /// Whether a new chat window may be added yet. Not until the saved ones
+    /// have been read in: one added before that takes a number they are about
+    /// to use, and the saved window is dropped in its favour.
+    /// </summary>
+    public bool CanAddWindow => _uiModel.AreSettingsLoaded;
+
     public bool IsHideSettingsToTray
     {
         get => _uiModel.IsHideSettingsToTray;
@@ -590,6 +597,12 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         if (e.PropertyName == nameof(TataruUIModel.IsHideSettingsToTray))
         {
             OnPropertyChanged(nameof(IsHideSettingsToTray));
+            return;
+        }
+
+        if (e.PropertyName == nameof(TataruUIModel.AreSettingsLoaded))
+        {
+            OnPropertyChanged(nameof(CanAddWindow));
             return;
         }
 

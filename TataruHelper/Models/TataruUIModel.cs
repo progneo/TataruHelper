@@ -297,6 +297,22 @@ namespace FFXIVTataruHelper
             this.ChatWindows = new AsyncBindingList<ChatWindowViewModelSettings>(_logger);
         }
 
+        /// <summary>
+        /// Whether the saved settings have been read in. Nothing that invents a
+        /// window may run before this is true.
+        /// </summary>
+        public bool AreSettingsLoaded
+        {
+            get { return _AreSettingsLoaded; }
+            private set
+            {
+                _AreSettingsLoaded = value;
+                NotifyPropertyChanged();
+            }
+        }
+
+        bool _AreSettingsLoaded;
+
         public void SetSettings(UserSettings userSettings)
         {
             UiLanguage = userSettings.CurentUILanguague;
@@ -324,6 +340,14 @@ namespace FFXIVTataruHelper
             });
 
             IsFirstTime = userSettings.IsFirstTime;
+
+            // Last, and after the windows are in: until this is set, nothing
+            // may add a window of its own. Settings arrive on a background
+            // thread, and a window added before they land takes a number the
+            // settings are about to use - after which the real window is
+            // dropped as already present, and the impostor cannot be selected
+            // or deleted, because both searches find it first.
+            AreSettingsLoaded = true;
         }
 
         public UserSettings GetSettings()

@@ -28,7 +28,8 @@
                        Appearance="Primary"
                        Icon="{ui:SymbolIcon Symbol=Add24}"
                        Content="{DynamicResource AddButtonText}"
-                       Command="{Binding Shell.AddWindowCommand}" />
+                       Command="{Binding Shell.AddWindowCommand}"
+                       IsEnabled="{Binding Shell.CanAddWindow}" />
         </Grid>
 
         <ListBox Grid.Row="1"

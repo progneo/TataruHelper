@@ -261,9 +261,15 @@ namespace FFXIVTataruHelper.ViewModel
                 if (ChatWindows.Count >= 10)
                     return;
 
-                long winId = 0;
-                if (ChatWindows.Count > 0)
-                    winId = ChatWindows[ChatWindows.Count - 1].WinId + 1;
+                // Settings load on a background thread, and a window invented
+                // before they land takes the number one of them is about to
+                // use. The saved window is then dropped as already present,
+                // and the one standing in its place can be neither selected
+                // nor deleted - both go by number and stop at the first match.
+                if (!_TataruUIModel.AreSettingsLoaded)
+                    return;
+
+                var winId = ChatWindowIds.Next(ChatWindows.Select(x => x.WinId));
 
                 ChatWindowViewModelSettings cws = null;
                 ChatWindowViewModel cwm = null;
