@@ -127,6 +127,9 @@ namespace Translation
         /// <summary>The language the index was built in, empty when no index is loaded.</summary>
         public string ReferenceIndexLanguage => _referenceTranslations?.LanguageCode ?? string.Empty;
 
+        /// <summary>The language the index is keyed on: the one the game is played in.</summary>
+        public string ReferenceIndexSourceLanguage => _referenceTranslations?.SourceLanguageCode ?? string.Empty;
+
         /// <summary>The commit of the translation project the index was built from.</summary>
         public string ReferenceIndexRevision => _referenceTranslations?.Revision ?? string.Empty;
 
@@ -141,6 +144,22 @@ namespace Translation
             {
                 var current = ReferenceIndexLanguage;
                 return current.Length > 0 ? current : _settings.ReferenceTranslationsLanguage;
+            }
+        }
+
+        /// <summary>
+        /// The language a rebuilt index should be keyed on, when nobody says
+        /// otherwise: the one the current index uses.
+        /// </summary>
+        public string ReferenceIndexGameLanguage
+        {
+            get
+            {
+                return ReferenceIndexUpdater.ResolveGameLanguage(
+                    GameLanguage,
+                    ReferenceIndexSourceLanguage.Length > 0
+                        ? ReferenceIndexSourceLanguage
+                        : _settings.ReferenceTranslationsGameLanguage);
             }
         }
 
@@ -192,6 +211,17 @@ namespace Translation
         public bool UseReferenceTranslations { get; set; }
 
         /// <summary>
+        /// The language the game is being played in, as read from the game
+        /// itself. Empty until something has read it.
+        ///
+        /// This, and not the window's setting, is what the index has to agree
+        /// with: a window may be set to work the language out line by line, and
+        /// one line of German typed into chat says nothing about the language
+        /// the game is drawing its dialogue in.
+        /// </summary>
+        public string GameLanguage { get; set; } = string.Empty;
+
+        /// <summary>
         /// The character's name, so lines the game addresses to them can be
         /// recognised: what is stored has the name punched out.
         /// </summary>
@@ -221,7 +251,8 @@ namespace Translation
         }
 
         /// <summary>A character's name as the translators render it.</summary>
-        public bool TryGetReferenceSpeakerName(string speaker, TranslatorLanguage toLang, out string translated)
+        public bool TryGetReferenceSpeakerName(string speaker, TranslatorLanguage fromLang,
+            TranslatorLanguage toLang, out string translated)
         {
             translated = string.Empty;
 
@@ -229,14 +260,7 @@ namespace Translation
             // rebuilt, and asking twice could ask two different sources.
             var reference = _referenceTranslations;
 
-            if (!UseReferenceTranslations || reference == null)
-            {
-                return false;
-            }
-
-            var indexed = reference.LanguageCode;
-            if (string.IsNullOrEmpty(indexed) ||
-                !string.Equals(indexed, toLang?.LanguageCode, StringComparison.OrdinalIgnoreCase))
+            if (!UseReferenceTranslations || !Speaks(reference, fromLang, toLang))
             {
                 return false;
             }
@@ -283,13 +307,18 @@ namespace Translation
         /// read, and preprocessing exists to help a machine translator rather
         /// than to help find an exact line.
         /// </summary>
-        private bool TryTranslateFromReference(string sentence, TranslatorLanguage toLang, out string translation)
+        /// <summary>
+        /// Whether the index answers this pair of languages.
+        ///
+        /// Both halves have to match. A line is read off the screen in the
+        /// language the game is played in, so an index keyed on another finds
+        /// nothing - and one built for another reading language would answer in
+        /// a language nobody asked for.
+        /// </summary>
+        private bool Speaks(IReferenceTranslationSource reference,
+            TranslatorLanguage fromLang, TranslatorLanguage toLang)
         {
-            translation = string.Empty;
-
-            var reference = _referenceTranslations;
-
-            if (!UseReferenceTranslations || reference == null)
+            if (reference == null)
             {
                 return false;
             }
@@ -297,6 +326,41 @@ namespace Translation
             var indexed = reference.LanguageCode;
             if (string.IsNullOrEmpty(indexed) ||
                 !string.Equals(indexed, toLang?.LanguageCode, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            var keyedOn = reference.SourceLanguageCode;
+            if (string.IsNullOrEmpty(keyedOn))
+            {
+                return false;
+            }
+
+            // What the game itself says it is set to, and only failing that
+            // what the window was told.
+            //
+            // When neither knows, let the index try: the lookup is by the exact
+            // text, so a line in another language simply is not in there.
+            // Refusing here instead would take the translations away from
+            // everyone whose game could not be read, to guard against a match
+            // that cannot happen.
+            var declared = GameLanguage.Length > 0 ? GameLanguage : fromLang?.LanguageCode ?? string.Empty;
+            if (declared.Length == 0 || string.Equals(declared, "auto", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return string.Equals(keyedOn, declared, StringComparison.OrdinalIgnoreCase);
+        }
+
+        private bool TryTranslateFromReference(string sentence, TranslatorLanguage fromLang,
+            TranslatorLanguage toLang, out string translation)
+        {
+            translation = string.Empty;
+
+            var reference = _referenceTranslations;
+
+            if (!UseReferenceTranslations || !Speaks(reference, fromLang, toLang))
             {
                 return false;
             }
@@ -315,6 +379,13 @@ namespace Translation
                     TranslationFailureKind.ProviderUnavailable,
                     "Engine or language not specified.");
             }
+
+            // What the window says the game is in, before any guessing. The
+            // index is keyed on the language of the client, which is a setting
+            // and not a property of the line: guessing it per line means a
+            // German sentence typed into chat decides that the next line of
+            // dialogue is German too.
+            var declaredFrom = fromLang;
 
             fromLang = ResolveSourceLanguage(translationEngine, fromLang, inSentence);
 
@@ -339,7 +410,7 @@ namespace Translation
             // Somebody has already translated most of the game's dialogue by
             // hand. Asking a service to have another go at a line that is in
             // there is slower, costs a request, and reads worse.
-            if (TryTranslateFromReference(inSentence, toLang, out var referenceText))
+            if (TryTranslateFromReference(inSentence, declaredFrom, toLang, out var referenceText))
             {
                 return TranslationResult.Literary(translationEngine.EngineName, referenceText);
             }

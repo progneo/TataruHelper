@@ -55,9 +55,10 @@ namespace TataruHelper.Tests.Models
         [Test]
         public void AnInstalledIndex_NamesItsRevisionShort()
         {
-            var state = new ReferenceIndexState(true, "ru", "4f30bd6a1c2e5f8b9d0a3c4e5f6a7b8c9d0e1f2a", 201837);
+            var state = new ReferenceIndexState(true, "en", "ru", "4f30bd6a1c2e5f8b9d0a3c4e5f6a7b8c9d0e1f2a",
+                201837);
 
-            Assert.That(Describe(state), Is.EqualTo("201,837|ru|4f30bd6"));
+            Assert.That(Describe(state), Is.EqualTo("201,837|en → ru|4f30bd6"));
         }
 
         [Test]
@@ -65,15 +66,25 @@ namespace TataruHelper.Tests.Models
         {
             // Built from a folder by the release script, so no commit was
             // recorded and the first update cannot be skipped as unnecessary.
-            var state = new ReferenceIndexState(true, "ru", string.Empty, 201837);
+            var state = new ReferenceIndexState(true, "en", "ru", string.Empty, 201837);
 
-            Assert.That(Describe(state), Is.EqualTo("201,837|ru|unnamed"));
+            Assert.That(Describe(state), Is.EqualTo("201,837|en → ru|unnamed"));
+        }
+
+        [Test]
+        public void AnIndexForAGermanClient_SaysWhichLanguageItIsKeyedOn()
+        {
+            // The one thing that explains an index sitting there matching
+            // nothing: it answers German, and this window is reading English.
+            var state = new ReferenceIndexState(true, "de", "ru", "abc1234def", 600000);
+
+            Assert.That(Describe(state), Is.EqualTo("600,000|de → ru|abc1234"));
         }
 
         [Test]
         public void NoIndex_SaysSoRatherThanShowingZeroLines()
         {
-            var state = new ReferenceIndexState(false, string.Empty, string.Empty, 0);
+            var state = new ReferenceIndexState(false, string.Empty, string.Empty, string.Empty, 0);
 
             Assert.That(Describe(state), Is.EqualTo("none"));
         }

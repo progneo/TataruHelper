@@ -23,6 +23,12 @@ namespace FFXIVTataruHelper
 
         public string Language { get; private set; } = string.Empty;
 
+        /// <summary>
+        /// The language the game is played in, which the lines are keyed on.
+        /// Empty leaves it to the settings, or to the index already there.
+        /// </summary>
+        public string GameLanguage { get; private set; } = string.Empty;
+
         /// <summary>Where to write; empty means wherever the application reads its index.</summary>
         public string OutputPath { get; private set; } = string.Empty;
 
@@ -60,6 +66,11 @@ namespace FFXIVTataruHelper
                     case "language":
                         command ??= new ReferenceIndexCommand();
                         command.Language = ValueAt(args, i + 1);
+                        break;
+
+                    case "game-language":
+                        command ??= new ReferenceIndexCommand();
+                        command.GameLanguage = ValueAt(args, i + 1);
                         break;
 
                     case "output":

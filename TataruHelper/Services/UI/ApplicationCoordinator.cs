@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using FFXIVTataruHelper.FFHandlers;
+using FFXIVTataruHelper.Services.GameMemory;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.ViewModel;
@@ -43,6 +44,18 @@ namespace FFXIVTataruHelper.Services.UI
         {
             _ffMemoryReader.IsRealtimeTranslationEnabled = uiModel.IsRealtimeTranslation;
             tataruModel.WebTranslator.UseReferenceTranslations = uiModel.IsLiteraryTranslation;
+
+            // Read from the game rather than taken from a setting: the index is
+            // keyed on the language the client draws its dialogue in, and this
+            // application has no say in that.
+            tataruModel.WebTranslator.GameLanguage = GameClientLanguage.Detect(_logger);
+            _ffMemoryReader.GameLanguageResolved = language =>
+            {
+                if (!string.IsNullOrEmpty(language))
+                {
+                    tataruModel.WebTranslator.GameLanguage = language;
+                }
+            };
             tataruModel.ChatProcessor.MarkMachineTranslation = uiModel.IsMachineTranslationMarked;
             tataruModel.ChatProcessor.TranslateSpeakerNames = uiModel.IsSpeakerNameTranslated;
             _ffMemoryReader.PlayerNameResolved = (name, isFeminine) =>

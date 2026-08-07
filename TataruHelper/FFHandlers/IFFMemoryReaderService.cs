@@ -38,6 +38,13 @@ namespace FFXIVTataruHelper.FFHandlers
         /// <summary>Called once, when the character's name becomes readable.</summary>
         Action<string, bool?> PlayerNameResolved { get; set; }
 
+        /// <summary>
+        /// Told the language the game is set to, each time one is attached to.
+        /// The game may be restarted in another language while this keeps
+        /// running, and what was read at startup would then be wrong.
+        /// </summary>
+        Action<string> GameLanguageResolved { get; set; }
+
         void Start();
 
         void Stop();

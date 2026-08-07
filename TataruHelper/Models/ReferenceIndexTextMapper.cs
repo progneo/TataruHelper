@@ -25,14 +25,20 @@ namespace FFXIVTataruHelper
 
             var lines = Count(state.Lines);
 
-            // The index the application ships with was built from a folder and
-            // carries no revision, so there is nothing to name until an update
-            // has been through here.
+            // Both languages, not just the one it reads into. An index keyed on
+            // English is silent on a German client, and this line is the only
+            // place that would ever say why.
+            var languages = state.SourceLanguage.Length > 0
+                ? state.SourceLanguage + " → " + state.Language
+                : state.Language;
+
+            // An index built from a folder carries no revision, so there is
+            // nothing to name until an update has been through here.
             return state.Revision.Length > 0
                 ? string.Format(CultureInfo.CurrentCulture, localize("ReferenceIndexInstalled"),
-                    lines, state.Language, ShortRevision(state.Revision))
+                    lines, languages, ShortRevision(state.Revision))
                 : string.Format(CultureInfo.CurrentCulture, localize("ReferenceIndexInstalledUnknownRevision"),
-                    lines, state.Language);
+                    lines, languages);
         }
 
         public static string Describe(ReferenceUpdateProgress report, Func<string, string> localize)

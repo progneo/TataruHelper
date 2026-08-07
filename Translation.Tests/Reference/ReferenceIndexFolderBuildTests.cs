@@ -51,7 +51,7 @@ namespace Translation.Tests.Reference
         public void AnExportOnDisk_BecomesAnIndex()
         {
             var result = new ReferenceIndexUpdater(null)
-                .BuildFromFolder(_databasePath, "ru", _root, null);
+                .BuildFromFolder(_databasePath, "en", "ru", _root, null);
 
             Assert.That(result.Outcome, Is.EqualTo(ReferenceUpdateOutcome.Updated));
             Assert.That(result.Lines, Is.EqualTo(1));
@@ -76,7 +76,7 @@ namespace Translation.Tests.Reference
             Directory.CreateDirectory(Path.Combine(empty, "exd"));
 
             var result = new ReferenceIndexUpdater(null)
-                .BuildFromFolder(_databasePath, "ru", empty, null);
+                .BuildFromFolder(_databasePath, "en", "ru", empty, null);
 
             Assert.That(result.Outcome, Is.EqualTo(ReferenceUpdateOutcome.Failed));
 
@@ -89,7 +89,7 @@ namespace Translation.Tests.Reference
         public void AFolderThatIsNotThere_FailsWithoutThrowing()
         {
             var result = new ReferenceIndexUpdater(null)
-                .BuildFromFolder(_databasePath, "ru", Path.Combine(_root, "nowhere"), null);
+                .BuildFromFolder(_databasePath, "en", "ru", Path.Combine(_root, "nowhere"), null);
 
             Assert.That(result.Outcome, Is.EqualTo(ReferenceUpdateOutcome.Failed));
             Assert.That(result.Detail, Is.Not.Empty);

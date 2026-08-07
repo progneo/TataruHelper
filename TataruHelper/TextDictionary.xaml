@@ -208,8 +208,8 @@
     <system:String x:Key="ReferenceIndexHint">XIV Rus Translation gains lines every week. Rebuilding fetches its current work; around a gigabyte is read as it downloads and only the index is kept.</system:String>
     <system:String x:Key="ReferenceIndexUpdateButton">Update</system:String>
     <system:String x:Key="ReferenceIndexCancelButton">Cancel</system:String>
-    <system:String x:Key="ReferenceIndexInstalled">{0} lines of {1}, revision {2}</system:String>
-    <system:String x:Key="ReferenceIndexInstalledUnknownRevision">{0} lines of {1}, from an unnamed revision</system:String>
+    <system:String x:Key="ReferenceIndexInstalled">{0} lines, {1}, revision {2}</system:String>
+    <system:String x:Key="ReferenceIndexInstalledUnknownRevision">{0} lines, {1}, from an unnamed revision</system:String>
     <system:String x:Key="ReferenceIndexMissing">No translations yet. Press Update to fetch them; until then every line is translated by engine.</system:String>
     <system:String x:Key="ReferenceIndexChecking">Asking what the translation project is at…</system:String>
     <system:String x:Key="ReferenceIndexDownloading">Downloading… {0} MB</system:String>
@@ -219,6 +219,7 @@
     <system:String x:Key="ReferenceIndexUpdated">Updated: {0} lines, in use now.</system:String>
     <system:String x:Key="ReferenceIndexCancelled">Update cancelled; the previous translations are still in use.</system:String>
     <system:String x:Key="ReferenceIndexFailed">Update failed: {0}</system:String>
+    <system:String x:Key="ReferenceIndexSwitchLanguages">The translations installed are for {0}, and the game is now being played in another language. Fetching {1} replaces them, and downloads the whole export again. Go ahead?</system:String>
 
     <system:String x:Key="UpdatesGroupTitle">Updates</system:String>
     <system:String x:Key="UpdatesGroupHint">Check whether a newer release of Tataru Helper is available.</system:String>

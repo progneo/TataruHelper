@@ -14,6 +14,13 @@ namespace Translation.Reference
         string LanguageCode { get; }
 
         /// <summary>
+        /// The language the lines are keyed on, which is the one the game is
+        /// played in. A line is read off the screen in that language, so an
+        /// index keyed on another matches nothing at all.
+        /// </summary>
+        string SourceLanguageCode { get; }
+
+        /// <summary>
         /// The commit of the translation project this was built from, or empty
         /// when it was built from a folder and there is nothing to compare
         /// against. Asked before an update, so an index that is already current

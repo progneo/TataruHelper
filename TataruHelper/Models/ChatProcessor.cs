@@ -204,7 +204,7 @@ namespace FFXIVTataruHelper
                 return nickName;
             }
 
-            if (_WebTranslator.TryGetReferenceSpeakerName(name, toLang, out var known))
+            if (_WebTranslator.TryGetReferenceSpeakerName(name, fromLang, toLang, out var known))
             {
                 return known + trailing;
             }

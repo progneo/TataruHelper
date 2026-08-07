@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
+using FFXIVTataruHelper.Services.GameMemory;
 using FFXIVTataruHelper.Services.Logging;
 
 using Microsoft.Extensions.Logging;
@@ -39,17 +40,51 @@ namespace FFXIVTataruHelper.Services.Update
         {
             if (_webTranslator == null)
             {
-                return new ReferenceIndexState(false, string.Empty, string.Empty, 0);
+                return new ReferenceIndexState(false, string.Empty, string.Empty, string.Empty, 0);
             }
 
             return new ReferenceIndexState(
                 _webTranslator.ReferenceIndexLines > 0,
+                _webTranslator.ReferenceIndexSourceLanguage,
                 _webTranslator.ReferenceIndexLanguage,
                 _webTranslator.ReferenceIndexRevision,
                 _webTranslator.ReferenceIndexLines);
         }
 
+        /// <summary>
+        /// The pair an update would build for.
+        ///
+        /// The game's configuration is read again here rather than trusted from
+        /// startup. It is two kilobytes, and the alternative was found the hard
+        /// way: the game was restarted in another language, nothing told the
+        /// application, and a press of the button fetched an index for the
+        /// language it used to be in - over the top of the one that worked.
+        /// </summary>
+        public (string GameLanguage, string ReadingLanguage) ResolveLanguages(
+            string gameLanguage, string readingLanguage)
+        {
+            var detected = GameClientLanguage.Detect(_appLogger);
+            if (detected.Length > 0)
+            {
+                _webTranslator.GameLanguage = detected;
+            }
+
+            // "auto" arrives here when a window is set to work the language out
+            // for itself, and it is not a language.
+            var game = ReferenceIndexUpdater.ResolveGameLanguage(
+                gameLanguage?.Length > 0 ? gameLanguage : detected,
+                _webTranslator.ReferenceIndexGameLanguage);
+
+            var reading = readingLanguage?.Length > 0
+                ? readingLanguage
+                : _webTranslator.ReferenceIndexTargetLanguage;
+
+            return (game, reading);
+        }
+
         public async Task<ReferenceUpdateResult> UpdateAsync(
+            string gameLanguage,
+            string readingLanguage,
             IProgress<ReferenceUpdateProgress> progress,
             CancellationToken cancellationToken)
         {
@@ -64,10 +99,22 @@ namespace FFXIVTataruHelper.Services.Update
 
             try
             {
+                var (game, reading) = ResolveLanguages(gameLanguage, readingLanguage);
+
+                // Rebuilding for a different pair than the index holds is a
+                // rebuild from nothing, so the revision it is at means nothing
+                // either and the whole export has to be read again.
+                var sameIndex =
+                    string.Equals(game, _webTranslator.ReferenceIndexSourceLanguage,
+                        StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(reading, _webTranslator.ReferenceIndexLanguage,
+                        StringComparison.OrdinalIgnoreCase);
+
                 return await updater.UpdateAsync(
                     _webTranslator.ReferenceIndexPath,
-                    _webTranslator.ReferenceIndexTargetLanguage,
-                    _webTranslator.ReferenceIndexRevision,
+                    game,
+                    reading,
+                    sameIndex ? _webTranslator.ReferenceIndexRevision : string.Empty,
                     progress,
                     () =>
                     {

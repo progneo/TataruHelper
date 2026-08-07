@@ -34,27 +34,36 @@ namespace FFXIVTataruHelper.Services.Update
             var settings = TranslationSettingsStorage.Load("TranslationSysSettings.json") ?? new TranslationSettings();
 
             var language = command.Language.Length > 0 ? command.Language : settings.ReferenceTranslationsLanguage;
+            var gameLanguage = command.GameLanguage.Length > 0
+                ? command.GameLanguage
+                : settings.ReferenceTranslationsGameLanguage;
             var output = command.OutputPath.Length > 0
                 ? Path.GetFullPath(command.OutputPath)
                 : SqliteReferenceTranslationSource.Resolve(settings.ReferenceTranslationsPath);
 
-            // Asked before anything is fetched. A running application holds the
-            // index open, and the finished file cannot be moved over it - which
-            // was found out at the end, after several hundred megabytes and a
-            // wait, by a message about a file being in use by another process.
-            var running = OtherInstance();
-            if (running != 0)
+            // Asked before anything is fetched. The finished index cannot be
+            // moved over a file somebody has open, and a running application
+            // holds the one it reads - which was found out at the end, after
+            // several hundred megabytes and a wait, by a message about a file
+            // being in use by another process.
+            //
+            // The question is whether this particular file is held, not whether
+            // the application is running: building to somewhere else while it
+            // runs is perfectly reasonable.
+            if (IsHeldByAnother(output))
             {
-                Console.Error.WriteLine(
-                    "TataruHelper is already running (process " + running + ") and is holding the index open. " +
-                    "Close it and run this again.");
+                var running = OtherInstance();
+                Console.Error.WriteLine(running != 0
+                    ? "TataruHelper is running (process " + running + ") and is holding " + output +
+                      " open. Close it and run this again."
+                    : "Something else is holding " + output + " open. Close it and run this again.");
                 return 1;
             }
 
             Console.WriteLine("Building the reference index");
             Console.WriteLine("  source   : " +
                               (command.BuildsFromFolder ? command.SourceFolder : "github (xivrus/xiv_ru_weblate)"));
-            Console.WriteLine("  language : " + language);
+            Console.WriteLine("  language : " + gameLanguage + " -> " + language);
             Console.WriteLine("  output   : " + output);
             Console.WriteLine();
 
@@ -66,11 +75,12 @@ namespace FFXIVTataruHelper.Services.Update
             var progress = new ImmediateProgress(Report);
 
             var result = command.BuildsFromFolder
-                ? updater.BuildFromFolder(output, language, command.SourceFolder, progress)
+                ? updater.BuildFromFolder(output, gameLanguage, language, command.SourceFolder, progress)
 
                 // No current revision is offered, so this always rebuilds. The
                 // point of running it by hand is to get the index as it is now.
-                : updater.UpdateAsync(output, language, string.Empty, progress, null, CancellationToken.None)
+                : updater.UpdateAsync(output, gameLanguage, language, string.Empty, progress, null,
+                        CancellationToken.None)
                     .GetAwaiter().GetResult();
 
             Console.WriteLine();
@@ -89,6 +99,32 @@ namespace FFXIVTataruHelper.Services.Update
                 result.Detail.Length > 0 ? ", revision " + result.Detail : ", from a folder, so no revision"));
 
             return 0;
+        }
+
+        /// <summary>
+        /// Whether the file cannot be had to ourselves. A file that is not
+        /// there yet is not held: the index is written beside it and moved in.
+        /// </summary>
+        private static bool IsHeldByAnother(string path)
+        {
+            if (path.Length == 0 || !File.Exists(path))
+            {
+                return false;
+            }
+
+            try
+            {
+                using var _ = File.Open(path, FileMode.Open, FileAccess.Read, FileShare.None);
+                return false;
+            }
+            catch (IOException)
+            {
+                return true;
+            }
+            catch (UnauthorizedAccessException)
+            {
+                return true;
+            }
         }
 
         /// <summary>

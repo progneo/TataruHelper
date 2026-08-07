@@ -384,9 +384,9 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ReferenceIndexUpdateButton"] = catalog.GetString("Update");
             _SettingsWindow.Resources["ReferenceIndexCancelButton"] = catalog.GetString("Cancel");
             _SettingsWindow.Resources["ReferenceIndexInstalled"] =
-                catalog.GetString("{0} lines of {1}, revision {2}");
+                catalog.GetString("{0} lines, {1}, revision {2}");
             _SettingsWindow.Resources["ReferenceIndexInstalledUnknownRevision"] =
-                catalog.GetString("{0} lines of {1}, from an unnamed revision");
+                catalog.GetString("{0} lines, {1}, from an unnamed revision");
             _SettingsWindow.Resources["ReferenceIndexMissing"] =
                 catalog.GetString(
                     "No translations yet. Press Update to fetch them; until then every line is translated by engine.");
@@ -402,6 +402,9 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ReferenceIndexCancelled"] =
                 catalog.GetString("Update cancelled; the previous translations are still in use.");
             _SettingsWindow.Resources["ReferenceIndexFailed"] = catalog.GetString("Update failed: {0}");
+            _SettingsWindow.Resources["ReferenceIndexSwitchLanguages"] =
+                catalog.GetString(
+                    "The translations installed are for {0}, and the game is now being played in another language. Fetching {1} replaces them, and downloads the whole export again. Go ahead?");
 
             // Updates group
             _SettingsWindow.Resources["UpdatesGroupTitle"] = catalog.GetString("Updates");

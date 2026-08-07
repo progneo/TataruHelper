@@ -39,6 +39,12 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     /// </summary>
     private readonly Func<string, string> _localize;
 
+    /// <summary>
+    /// Puts a question to the user and waits for the answer. False means no,
+    /// and nothing is done.
+    /// </summary>
+    private readonly Func<string, bool> _confirm;
+
     private CancellationTokenSource _referenceIndexUpdateCancellation;
     private string _referenceIndexStatus;
     private string _referenceIndexProgress;
@@ -59,7 +65,8 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         Action checkUpdatesAction,
         TranslationCredentialsViewModel translationCredentials,
         IReferenceIndexUpdateService referenceIndexUpdateService,
-        Func<string, string> localize)
+        Func<string, string> localize,
+        Func<string, bool> confirm)
     {
         _settingsViewModel = settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
         _uiModel = uiModel ?? throw new ArgumentNullException(nameof(uiModel));
@@ -70,6 +77,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         _referenceIndexUpdateService = referenceIndexUpdateService
                                        ?? throw new ArgumentNullException(nameof(referenceIndexUpdateService));
         _localize = localize ?? (key => key);
+        _confirm = confirm ?? (_ => true);
 
         Sections = new ObservableCollection<SettingsSectionItem>
         {
@@ -423,6 +431,20 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
             return;
         }
 
+        // The game may have been restarted in another language since this
+        // started, so what would be built is worked out now - and if it is not
+        // what is installed, it is asked about rather than done. Saying nothing
+        // cost somebody a working index and a download to get it back.
+        var (game, reading) = _referenceIndexUpdateService.ResolveLanguages(
+            string.Empty, CurrentChatWindow?.CurrentTranslateToLanguage?.LanguageCode ?? string.Empty);
+
+        var state = _referenceIndexUpdateService.ReadState();
+        if (ReferenceIndexRebuild.ChangesLanguages(state, game, reading) &&
+            !_confirm(ReferenceIndexRebuild.Question(state, game, reading, _localize)))
+        {
+            return;
+        }
+
         _referenceIndexUpdateCancellation = new CancellationTokenSource();
         OnPropertyChanged(nameof(IsReferenceIndexUpdating));
         OnPropertyChanged(nameof(CanUpdateReferenceIndex));
@@ -448,8 +470,17 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         {
             ReferenceIndexProgress = _localize("ReferenceIndexChecking");
 
+            // The language to key on comes from the game, not from here; this
+            // window only says what to read it in. Left empty, the service asks
+            // the game and falls back to the index already in place.
+            var window = CurrentChatWindow;
+
             var result = await _referenceIndexUpdateService
-                .UpdateAsync(progress, cancellationToken)
+                .UpdateAsync(
+                    string.Empty,
+                    window?.CurrentTranslateToLanguage?.LanguageCode ?? string.Empty,
+                    progress,
+                    cancellationToken)
                 .ConfigureAwait(true);
 
             ReferenceIndexProgress = ReferenceIndexTextMapper.Describe(result, _localize);

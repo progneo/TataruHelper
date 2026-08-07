@@ -124,7 +124,7 @@ namespace Translation.Tests.Reference
                 Sheet("Go swiftly, " + playerName + "."),
                 Sheet("Поторопись, " + playerName + "."));
 
-            ReferenceIndexUpdater.WriteAndInstall(_databasePath, builder, "ru", revision, "test",
+            ReferenceIndexUpdater.WriteAndInstall(_databasePath, builder, "en", "ru", revision, "test",
                 translator.CloseReferenceIndex);
 
             translator.ReopenReferenceIndex();
@@ -147,7 +147,12 @@ namespace Translation.Tests.Reference
             };
         }
 
-        private static async Task<string> TranslateAsync(WebTranslator translator, string sentence)
+        private static Task<string> TranslateAsync(WebTranslator translator, string sentence)
+        {
+            return TranslateAsync(translator, sentence, "en");
+        }
+
+        private static async Task<string> TranslateAsync(WebTranslator translator, string sentence, string gameLanguage)
         {
             var result = await translator.TranslateAsync(
                 sentence,
@@ -155,10 +160,11 @@ namespace Translation.Tests.Reference
                     new List<TranslatorLanguage>
                     {
                         new TranslatorLanguage("English", "English", "en"),
+                        new TranslatorLanguage("German", "German", "de"),
                         new TranslatorLanguage("Russian", "Russian", "ru")
                     },
                     10),
-                new TranslatorLanguage("English", "English", "en"),
+                new TranslatorLanguage(gameLanguage, gameLanguage, gameLanguage),
                 new TranslatorLanguage("Russian", "Russian", "ru"));
 
             return result.Text;

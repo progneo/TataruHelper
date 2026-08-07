@@ -133,6 +133,8 @@ namespace FFXIVTataruHelper.FFHandlers
         /// </summary>
         public Action<string, bool?> PlayerNameResolved { get; set; }
 
+        public Action<string> GameLanguageResolved { get; set; }
+
         private bool _playerNameResolved;
 
         private void ResolvePlayerNameOnce()
@@ -266,8 +268,14 @@ namespace FFXIVTataruHelper.FFHandlers
                     {
                         try
                         {
-                            // supported: English, Chinese, Japanese, French, German, Korean
-                            const string gameLanguage = "English";
+                            // Read off the game rather than assumed. This was
+                            // "English" whatever the client was set to, which
+                            // is the wrong signatures and the wrong text for
+                            // everybody playing in one of the other three.
+                            // Supported: English, Chinese, Japanese, French,
+                            // German, Korean.
+                            var languageCode = GameClientLanguage.Detect(_logger);
+                            var gameLanguage = GameClientLanguage.ReaderName(languageCode);
                             // whether to always hit API on start to get the latest sigs based on patchVersion, or use the local json cache (if the file doesn't exist, API will be hit)
                             const bool useLocalCache = true;
                             const bool scanAllMemoryRegions = false;
@@ -288,6 +296,8 @@ namespace FFXIVTataruHelper.FFHandlers
 
                             processNotFound = false;
                             _keepReading = true;
+
+                            GameLanguageResolved?.Invoke(languageCode);
                         }
                         catch (OperationCanceledException)
                         {

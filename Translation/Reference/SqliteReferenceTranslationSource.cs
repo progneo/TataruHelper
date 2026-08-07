@@ -44,6 +44,7 @@ namespace Translation.Reference
         {
             _logger = logger;
             LanguageCode = string.Empty;
+            SourceLanguageCode = string.Empty;
             Revision = string.Empty;
 
             if (string.IsNullOrWhiteSpace(databasePath))
@@ -74,6 +75,8 @@ namespace Translation.Reference
         }
 
         public string LanguageCode { get; private set; }
+
+        public string SourceLanguageCode { get; private set; }
 
         public string Revision { get; private set; }
 
@@ -463,6 +466,11 @@ namespace Translation.Reference
 
             LanguageCode = ReadMeta("language");
 
+            // Every index built before the game's language could be anything
+            // else was built from the English column, and says nothing.
+            var source = ReadMeta("sourceLanguage");
+            SourceLanguageCode = source.Length > 0 ? source : "en";
+
             // Written only by an index this application built. One built from a
             // folder cannot say which commit it holds, and then every update
             // downloads rather than trusting a revision nobody recorded.
@@ -497,8 +505,9 @@ namespace Translation.Reference
 
             // The path is part of the message on purpose: which file answered a
             // line is otherwise a guess, and guessing has been expensive here.
-            _logger?.LogInformation("Reference translations loaded: {Lines} lines of {Language} from {Path}.",
-                LineCount, LanguageCode, resolvedPath);
+            _logger?.LogInformation(
+                "Reference translations loaded: {Lines} lines, {Source} to {Language}, from {Path}.",
+                LineCount, SourceLanguageCode, LanguageCode, resolvedPath);
         }
 
         private string ReadMeta(string key)

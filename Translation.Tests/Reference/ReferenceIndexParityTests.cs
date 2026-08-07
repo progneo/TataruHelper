@@ -32,7 +32,7 @@ namespace Translation.Tests.Reference
 
             // The same read the command line does, so what is measured here is
             // what a release is built from.
-            var builder = ReferenceIndexUpdater.ReadExportFolder(root, "ru", null);
+            var builder = ReferenceIndexUpdater.ReadExportFolder(root, "en", "ru", null);
 
             TestContext.Out.WriteLine($"sheets   : {builder.Sheets}");
             TestContext.Out.WriteLine($"lines    : {builder.Lines.Count}");

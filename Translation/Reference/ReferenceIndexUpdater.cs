@@ -91,11 +91,77 @@ namespace Translation.Reference
         private static readonly Regex RevisionSha = new Regex("\"sha\"\\s*:\\s*\"([0-9a-f]{7,40})\"",
             RegexOptions.Compiled);
 
+        /// <summary>
+        /// The languages FFXIV is published in, which are the only ones a line
+        /// can be read off the screen in, and the only columns the export
+        /// carries to key an index on.
+        /// </summary>
+        public static readonly string[] GameLanguages = { "en", "de", "fr", "ja" };
+
         private readonly ILogger _logger;
 
         public ReferenceIndexUpdater(ILogger logger)
         {
             _logger = logger;
+        }
+
+        public static bool IsGameLanguage(string code)
+        {
+            foreach (var known in GameLanguages)
+            {
+                if (string.Equals(known, code, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// The language to key an index on, given what was asked for.
+        ///
+        /// What is asked for may be "auto", which is not a language and has no
+        /// column in the export, so fall back to whatever the current index was
+        /// built for rather than to nothing.
+        /// </summary>
+        public static string ResolveGameLanguage(string declared, string fallback)
+        {
+            if (IsGameLanguage(declared))
+            {
+                return declared;
+            }
+
+            return IsGameLanguage(fallback) ? fallback : GameLanguages[0];
+        }
+
+        /// <summary>
+        /// What is wrong with a pair of languages, or null when nothing is.
+        ///
+        /// Asked before a download rather than after: an unusable pair finds no
+        /// sheets, and finding that out at the end costs several hundred
+        /// megabytes and some minutes before saying so.
+        /// </summary>
+        private static string Fault(string gameLanguage, string readingLanguage)
+        {
+            if (!IsGameLanguage(gameLanguage))
+            {
+                return "'" + gameLanguage + "' is not a language the game is published in; " +
+                       "it comes in " + string.Join(", ", GameLanguages) + ".";
+            }
+
+            if (string.IsNullOrWhiteSpace(readingLanguage))
+            {
+                return "No language to translate into was given.";
+            }
+
+            if (string.Equals(gameLanguage, readingLanguage, StringComparison.OrdinalIgnoreCase))
+            {
+                return "The game's language and the reading language are both '" + gameLanguage +
+                       "'; there would be nothing to look up.";
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -132,12 +198,19 @@ namespace Translation.Reference
         /// </param>
         public async Task<ReferenceUpdateResult> UpdateAsync(
             string databasePath,
-            string language,
+            string gameLanguage,
+            string readingLanguage,
             string currentRevision,
             IProgress<ReferenceUpdateProgress> progress,
             Action releaseIndex,
             CancellationToken cancellationToken)
         {
+            var fault = Fault(gameLanguage, readingLanguage);
+            if (fault != null)
+            {
+                return new ReferenceUpdateResult(ReferenceUpdateOutcome.Failed, fault, 0);
+            }
+
             var latest = await GetLatestRevisionAsync(cancellationToken).ConfigureAwait(false);
 
             if (latest.Length > 0 && string.Equals(latest, currentRevision, StringComparison.OrdinalIgnoreCase))
@@ -147,18 +220,20 @@ namespace Translation.Reference
 
             try
             {
-                var builder = await DownloadAndBuildAsync(language, progress, cancellationToken)
+                var builder = await DownloadAndBuildAsync(gameLanguage, readingLanguage, progress, cancellationToken)
                     .ConfigureAwait(false);
 
                 if (builder.Lines.Count == 0)
                 {
                     return new ReferenceUpdateResult(ReferenceUpdateOutcome.Failed,
-                        "The export yielded nothing; its layout has probably changed.", 0);
+                        "The export holds no sheets for " + gameLanguage + " to " + readingLanguage +
+                        "; either that pair is not translated, or the export's layout has changed.", 0);
                 }
 
                 progress?.Report(new ReferenceUpdateProgress(ReferenceUpdateStage.Writing, 0, 0, 0));
 
-                WriteAndInstall(databasePath, builder, language, latest, ArchiveUrl, releaseIndex);
+                WriteAndInstall(databasePath, builder, gameLanguage, readingLanguage, latest, ArchiveUrl,
+                    releaseIndex);
 
                 return new ReferenceUpdateResult(ReferenceUpdateOutcome.Updated, latest, builder.Lines.Count);
             }
@@ -188,22 +263,31 @@ namespace Translation.Reference
         /// </remarks>
         public ReferenceUpdateResult BuildFromFolder(
             string databasePath,
-            string language,
+            string gameLanguage,
+            string readingLanguage,
             string exportRoot,
             IProgress<ReferenceUpdateProgress> progress)
         {
+            var fault = Fault(gameLanguage, readingLanguage);
+            if (fault != null)
+            {
+                return new ReferenceUpdateResult(ReferenceUpdateOutcome.Failed, fault, 0);
+            }
+
             try
             {
-                var builder = ReadExportFolder(exportRoot, language, progress);
+                var builder = ReadExportFolder(exportRoot, gameLanguage, readingLanguage, progress);
 
                 if (builder.Lines.Count == 0)
                 {
                     return new ReferenceUpdateResult(ReferenceUpdateOutcome.Failed,
-                        "The export yielded nothing; check the folder holds an 'exd' directory.", 0);
+                        "The folder holds no sheets for " + gameLanguage + " to " + readingLanguage +
+                        "; check it is an export, with an 'exd' directory.", 0);
                 }
 
                 progress?.Report(new ReferenceUpdateProgress(ReferenceUpdateStage.Writing, 0, 0, 0));
-                WriteAndInstall(databasePath, builder, language, string.Empty, exportRoot, null);
+                WriteAndInstall(databasePath, builder, gameLanguage, readingLanguage, string.Empty, exportRoot,
+                    null);
 
                 return new ReferenceUpdateResult(ReferenceUpdateOutcome.Updated, string.Empty, builder.Lines.Count);
             }
@@ -216,31 +300,32 @@ namespace Translation.Reference
 
         /// <summary>
         /// Reads every sheet of an unpacked export, pairing each translated file
-        /// with the English one beside it.
+        /// with the one beside it in the language the game is played in.
         /// </summary>
         public static ReferenceIndexBuilder ReadExportFolder(
             string exportRoot,
-            string language,
+            string gameLanguage,
+            string readingLanguage,
             IProgress<ReferenceUpdateProgress> progress)
         {
             var builder = new ReferenceIndexBuilder();
 
             foreach (var translated in Directory.EnumerateFiles(Path.Combine(exportRoot, "exd"),
-                         language + ".xlf", SearchOption.AllDirectories))
+                         readingLanguage + ".xlf", SearchOption.AllDirectories))
             {
                 var folder = Path.GetDirectoryName(translated);
-                var english = Path.Combine(folder, "en.xlf");
+                var source = Path.Combine(folder, gameLanguage + ".xlf");
 
-                // A sheet nobody has started on has no English beside it, and
+                // A sheet nobody has started on has no source beside it, and
                 // the row ids alone say nothing.
-                if (!File.Exists(english))
+                if (!File.Exists(source))
                 {
                     continue;
                 }
 
                 builder.AddSheet(
                     folder.Replace('\\', '/'),
-                    File.ReadAllText(english),
+                    File.ReadAllText(source),
                     File.ReadAllText(translated));
 
                 if (builder.Sheets % 25 == 0)
@@ -254,14 +339,16 @@ namespace Translation.Reference
         }
 
         private async Task<ReferenceIndexBuilder> DownloadAndBuildAsync(
-            string language,
+            string gameLanguage,
+            string readingLanguage,
             IProgress<ReferenceUpdateProgress> progress,
             CancellationToken cancellationToken)
         {
             var builder = new ReferenceIndexBuilder();
-            var englishByFolder = new Dictionary<string, string>(StringComparer.Ordinal);
+            var sourceByFolder = new Dictionary<string, string>(StringComparer.Ordinal);
             var translatedByFolder = new Dictionary<string, string>(StringComparer.Ordinal);
-            var translatedName = language + ".xlf";
+            var sourceName = gameLanguage + ".xlf";
+            var translatedName = readingLanguage + ".xlf";
 
             using var client = CreateClient();
             using var response = await client
@@ -286,7 +373,7 @@ namespace Translation.Reference
 
                 var name = entry.Name.Replace('\\', '/');
                 var fileName = name.Substring(name.LastIndexOf('/') + 1);
-                if (fileName != "en.xlf" && fileName != translatedName)
+                if (fileName != sourceName && fileName != translatedName)
                 {
                     continue;
                 }
@@ -296,7 +383,7 @@ namespace Translation.Reference
 
                 // The two files of a sheet sit next to each other, so the one
                 // that arrives first waits only for its partner.
-                if (fileName == "en.xlf")
+                if (fileName == sourceName)
                 {
                     if (translatedByFolder.Remove(folder, out var waitingTranslation))
                     {
@@ -304,14 +391,14 @@ namespace Translation.Reference
                     }
                     else
                     {
-                        englishByFolder[folder] = content;
+                        sourceByFolder[folder] = content;
                     }
                 }
                 else
                 {
-                    if (englishByFolder.Remove(folder, out var waitingEnglish))
+                    if (sourceByFolder.Remove(folder, out var waitingSource))
                     {
-                        builder.AddSheet(folder, waitingEnglish, content);
+                        builder.AddSheet(folder, waitingSource, content);
                     }
                     else
                     {
@@ -344,7 +431,8 @@ namespace Translation.Reference
         internal static void WriteAndInstall(
             string databasePath,
             ReferenceIndexBuilder builder,
-            string language,
+            string gameLanguage,
+            string readingLanguage,
             string revision,
             string source,
             Action releaseIndex)
@@ -361,7 +449,7 @@ namespace Translation.Reference
 
             try
             {
-                Write(temporaryPath, builder, language, revision, source);
+                Write(temporaryPath, builder, gameLanguage, readingLanguage, revision, source);
 
                 releaseIndex?.Invoke();
                 Install(temporaryPath, databasePath);
@@ -422,8 +510,8 @@ namespace Translation.Reference
             }
         }
 
-        private static void Write(string path, ReferenceIndexBuilder builder, string language, string revision,
-            string origin)
+        private static void Write(string path, ReferenceIndexBuilder builder, string gameLanguage,
+            string readingLanguage, string revision, string origin)
         {
             if (File.Exists(path))
             {
@@ -489,7 +577,12 @@ namespace Translation.Reference
 
             InsertPairs(connection, transaction, "meta", new Dictionary<string, string>
             {
-                ["language"] = language,
+                ["language"] = readingLanguage,
+
+                // The language the lines are keyed on, which is whatever the
+                // game is played in. Absent from an index built before this
+                // could be anything but English, and read back as English.
+                ["sourceLanguage"] = gameLanguage,
                 // Where it came from, which is not always the project: an
                 // index built from a folder says which folder.
                 ["source"] = origin ?? string.Empty,

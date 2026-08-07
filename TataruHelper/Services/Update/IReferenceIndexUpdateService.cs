@@ -9,15 +9,24 @@ namespace FFXIVTataruHelper.Services.Update
     /// <summary>What the application currently holds of the hand-made translation.</summary>
     public readonly struct ReferenceIndexState
     {
-        public ReferenceIndexState(bool isInstalled, string language, string revision, int lines)
+        public ReferenceIndexState(bool isInstalled, string sourceLanguage, string language, string revision,
+            int lines)
         {
             IsInstalled = isInstalled;
+            SourceLanguage = sourceLanguage ?? string.Empty;
             Language = language ?? string.Empty;
             Revision = revision ?? string.Empty;
             Lines = lines;
         }
 
         public bool IsInstalled { get; }
+
+        /// <summary>
+        /// The language the lines are keyed on. Worth showing: an index keyed
+        /// on a language the game is not being played in matches nothing, and
+        /// nothing else on screen would explain why.
+        /// </summary>
+        public string SourceLanguage { get; }
 
         public string Language { get; }
 
@@ -41,7 +50,17 @@ namespace FFXIVTataruHelper.Services.Update
 
         ReferenceIndexState ReadState();
 
+        /// <summary>
+        /// The pair an update would build for, asked before starting one so the
+        /// user can be told it is not the pair they already have.
+        /// </summary>
+        (string GameLanguage, string ReadingLanguage) ResolveLanguages(string gameLanguage, string readingLanguage);
+
+        /// <param name="gameLanguage">What the game is played in, so lines are keyed on it.</param>
+        /// <param name="readingLanguage">What the user wants to read.</param>
         Task<ReferenceUpdateResult> UpdateAsync(
+            string gameLanguage,
+            string readingLanguage,
             IProgress<ReferenceUpdateProgress> progress,
             CancellationToken cancellationToken);
     }

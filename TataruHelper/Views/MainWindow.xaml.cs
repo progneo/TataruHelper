@@ -162,7 +162,8 @@ public partial class MainWindow : FluentWindow
                 _referenceIndexUpdateService,
                 // The window carries the translated strings; the application
                 // only ever has the English defaults.
-                key => TryFindResource(key) as string ?? key);
+                key => TryFindResource(key) as string ?? key,
+                AskUser);
 
             _settingsShellViewModel.PropertyChanged += OnSettingsShellPropertyChanged;
 
@@ -549,6 +550,19 @@ public partial class MainWindow : FluentWindow
     private void OnShutDownRequsted(object sender, EventArgs e)
     {
         ShutDown();
+    }
+
+    /// <summary>
+    /// Puts a yes-or-no question to the user, on the interface thread.
+    /// </summary>
+    private bool AskUser(string question)
+    {
+        // Named in full: the interface library brings its own MessageBox types
+        // and both are in scope here.
+        return System.Windows.MessageBox.Show(
+            this, question, TryFindResource("SettingsWindowName") as string ?? "Tataru Helper",
+            System.Windows.MessageBoxButton.YesNo,
+            System.Windows.MessageBoxImage.Question) == System.Windows.MessageBoxResult.Yes;
     }
 
     private void CheckUpdates()

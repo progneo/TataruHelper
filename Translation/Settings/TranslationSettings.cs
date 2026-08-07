@@ -50,6 +50,14 @@ namespace Translation.Settings
         /// </summary>
         public string ReferenceTranslationsLanguage { get; set; } = "ru";
 
+        /// <summary>
+        /// The language the index is keyed on when there is no index to ask and
+        /// no window to read it off: the one the game is played in. FFXIV ships
+        /// in English, German, French and Japanese, and the export carries all
+        /// four, so a line read off a German client is looked up in German.
+        /// </summary>
+        public string ReferenceTranslationsGameLanguage { get; set; } = "en";
+
         public string NTextCatLanguageModelsPath { get; set; } = "TranslationResources/Core14.profile.xml";
 
         public string PapagoEncoderPath { get; set; } = "TranslationResources/PapagoEncoder";
