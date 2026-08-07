@@ -181,6 +181,23 @@ namespace FFXIVTataruHelper
 
         }
 
+        /// <summary>
+        /// Whether new hand-made translations are fetched as they appear.
+        ///
+        /// The check for them happens either way, and costs a few kilobytes a
+        /// day. This says what to do with the answer: fetch around a gigabyte,
+        /// or say that there is something to fetch and leave it there.
+        /// </summary>
+        public bool IsReferenceIndexAutoInstall
+        {
+            get { return _IsReferenceIndexAutoInstall; }
+            set
+            {
+                _IsReferenceIndexAutoInstall = value;
+                NotifyPropertyChanged();
+            }
+        }
+
 
 
         public PointD SettingsWindowSize
@@ -260,6 +277,8 @@ namespace FFXIVTataruHelper
 
         bool _IsSpeakerNameTranslated;
 
+        bool _IsReferenceIndexAutoInstall;
+
         PointD _SettingsWindowSize = new PointD(0.0, 0.0);
 
         AsyncBindingList<ChatWindowViewModelSettings> _ChatWindows;
@@ -327,6 +346,8 @@ namespace FFXIVTataruHelper
 
             IsSpeakerNameTranslated = userSettings.IsSpeakerNameTranslated;
 
+            IsReferenceIndexAutoInstall = userSettings.IsReferenceIndexAutoInstall;
+
             SettingsWindowSize = userSettings.SettingsWindowSize;
 
             var tmpChatWindows = new List<ChatWindowViewModelSettings>(userSettings.ChatWindows);
@@ -365,6 +386,8 @@ namespace FFXIVTataruHelper
             userSettings.IsMachineTranslationMarked = this.IsMachineTranslationMarked;
 
             userSettings.IsSpeakerNameTranslated = this.IsSpeakerNameTranslated;
+
+            userSettings.IsReferenceIndexAutoInstall = this.IsReferenceIndexAutoInstall;
 
             userSettings.SettingsWindowSize = this.SettingsWindowSize;
 

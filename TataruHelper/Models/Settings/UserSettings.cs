@@ -44,6 +44,19 @@ namespace FFXIVTataruHelper
 
         public bool IsSpeakerNameTranslated { get; set; }
 
+
+        /// <summary>
+        /// Fetch new hand-made translations as they appear, rather than saying
+        /// they exist and waiting to be told to.
+        ///
+        /// Off by default: the export is around a gigabyte, and helping
+        /// yourself to somebody's connection for it is not a thing to do
+        /// without being asked. Whether the project has moved is checked
+        /// either way - that costs a few kilobytes once a day.
+        /// </summary>
+
+        public bool IsReferenceIndexAutoInstall { get; set; }
+
         public TimeSpan AutoHideTimeout { get; set; } = new TimeSpan(0, 5, 0);
 
         public int FontSize { get; set; } = 14;
@@ -199,6 +212,8 @@ namespace FFXIVTataruHelper
             IsMachineTranslationMarked = userSettings.IsMachineTranslationMarked;
 
             IsSpeakerNameTranslated = userSettings.IsSpeakerNameTranslated;
+
+            IsReferenceIndexAutoInstall = userSettings.IsReferenceIndexAutoInstall;
 
             AutoHideTimeout = userSettings.AutoHideTimeout;
 

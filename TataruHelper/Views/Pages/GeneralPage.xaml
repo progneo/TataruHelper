@@ -178,6 +178,7 @@
                          fetch what the project has written since this release. -->
                     <Border Margin="0,10,0,0" Padding="12,10" CornerRadius="6"
                             Background="{DynamicResource Brush.SurfaceSubtle}">
+                      <StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*" />
@@ -218,6 +219,25 @@
                                            HorizontalAlignment="Stretch" />
                             </StackPanel>
                         </Grid>
+
+                        <!-- Whether the daily check may act on what it finds.
+                             The checking is not optional; fetching a gigabyte
+                             is. -->
+                        <Grid Margin="0,12,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                                <TextBlock Text="{DynamicResource ReferenceIndexAutoInstallCB}" FontWeight="SemiBold" />
+                                <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                           Text="{DynamicResource ReferenceIndexAutoInstallDescription}"
+                                           TextWrapping="Wrap" />
+                            </StackPanel>
+                            <ui:ToggleSwitch Grid.Column="1" VerticalAlignment="Center"
+                                             IsChecked="{Binding Shell.IsReferenceIndexAutoInstall, Mode=TwoWay}" />
+                        </Grid>
+                      </StackPanel>
                     </Border>
 
                     <Grid Margin="0,12,0,0">

@@ -223,6 +223,8 @@
     <system:String x:Key="ReferenceIndexRulesChanged">These translations were read by older rules, and hold lines this build knows to be wrong. Press Update to rebuild them.</system:String>
     <system:String x:Key="ReferenceIndexRevisionUnrecorded">These translations do not record which revision they came from, so there is no telling whether the project has moved. Press Update to be sure.</system:String>
     <system:String x:Key="ReferenceIndexWrongLanguage">The translations installed are for {0}, and the game is being played in {1}. Press Update to fetch the pair in use.</system:String>
+    <system:String x:Key="ReferenceIndexAutoInstallCB">Install new translations by themselves</system:String>
+    <system:String x:Key="ReferenceIndexAutoInstallDescription">Tataru Helper asks once a day whether XIV Rus Translation has written anything new, and says so. Turn this on to have it fetch what it finds as well; that is around a gigabyte each time. A change of language pair is still asked about.</system:String>
     <system:String x:Key="ResetSettingsTitle">Reset settings</system:String>
     <system:String x:Key="ResetSettingsHint">Put every setting back to what a fresh installation has: chat windows, colours, fonts, hotkeys, languages and chat codes. Your API keys and the installed translations are kept.</system:String>
     <system:String x:Key="ResetSettingsButton">Reset</system:String>

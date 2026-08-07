@@ -280,6 +280,27 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         }
     }
 
+    /// <summary>
+    /// Whether the daily check may act on what it finds, or only report it.
+    ///
+    /// Off unless asked for: the export is around a gigabyte, and taking that
+    /// off somebody's connection unprompted is not a default.
+    /// </summary>
+    public bool IsReferenceIndexAutoInstall
+    {
+        get => _uiModel.IsReferenceIndexAutoInstall;
+        set
+        {
+            if (_uiModel.IsReferenceIndexAutoInstall == value)
+            {
+                return;
+            }
+
+            _uiModel.IsReferenceIndexAutoInstall = value;
+            OnPropertyChanged();
+        }
+    }
+
     /// <summary>What the installed index holds, in a line the user can read.</summary>
     public string ReferenceIndexStatus
     {
@@ -646,6 +667,16 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         if (e.PropertyName == nameof(TataruUIModel.AreSettingsLoaded))
         {
             OnPropertyChanged(nameof(CanAddWindow));
+            return;
+        }
+
+        // The saved settings arrive on a background thread, and may well
+        // arrive after this window has bound to them. Without this the switch
+        // shows off to somebody who turned it on, and turning it off again
+        // changes nothing, because it was already off in the model.
+        if (e.PropertyName == nameof(TataruUIModel.IsReferenceIndexAutoInstall))
+        {
+            OnPropertyChanged(nameof(IsReferenceIndexAutoInstall));
             return;
         }
 

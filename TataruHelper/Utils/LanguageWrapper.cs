@@ -414,6 +414,11 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ReferenceIndexWrongLanguage"] =
                 catalog.GetString(
                     "The translations installed are for {0}, and the game is being played in {1}. Press Update to fetch the pair in use.");
+            _SettingsWindow.Resources["ReferenceIndexAutoInstallCB"] =
+                catalog.GetString("Install new translations by themselves");
+            _SettingsWindow.Resources["ReferenceIndexAutoInstallDescription"] =
+                catalog.GetString(
+                    "Tataru Helper asks once a day whether XIV Rus Translation has written anything new, and says so. Turn this on to have it fetch what it finds as well; that is around a gigabyte each time. A change of language pair is still asked about.");
             _SettingsWindow.Resources["ResetSettingsTitle"] = catalog.GetString("Reset settings");
             _SettingsWindow.Resources["ResetSettingsHint"] =
                 catalog.GetString(
