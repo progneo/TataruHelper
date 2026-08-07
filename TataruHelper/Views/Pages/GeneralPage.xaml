@@ -17,6 +17,7 @@
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="Auto" />
+                <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" />
             </Grid.RowDefinitions>
 
@@ -252,6 +253,34 @@
             </ui:Card>
 
             <ui:Card Grid.Row="6" Padding="16" Margin="0,12,0,0">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0" Margin="0,0,12,0">
+                        <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                            <ui:SymbolIcon Symbol="ArrowReset24" FontSize="16"
+                                           Margin="0,0,8,0" VerticalAlignment="Center"
+                                           Foreground="{DynamicResource Brush.Accent}" />
+                            <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                       Margin="0"
+                                       Text="{DynamicResource ResetSettingsTitle}"
+                                       VerticalAlignment="Center" />
+                        </StackPanel>
+                        <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                   Text="{DynamicResource ResetSettingsHint}"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+                    <ui:Button Grid.Column="1"
+                               Icon="{ui:SymbolIcon Symbol=ArrowReset24}"
+                               Content="{DynamicResource ResetSettingsButton}"
+                               Command="{Binding Shell.ResetSettingsCommand}"
+                               VerticalAlignment="Center" />
+                </Grid>
+            </ui:Card>
+
+            <ui:Card Grid.Row="7" Padding="16" Margin="0,12,0,0">
                 <StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
                         <ui:SymbolIcon Symbol="Translate24" FontSize="16"

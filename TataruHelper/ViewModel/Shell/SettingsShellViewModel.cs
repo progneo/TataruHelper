@@ -11,6 +11,7 @@ using System.Windows;
 using System.Windows.Input;
 
 using FFXIVTataruHelper.Services.HotKeys;
+using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.Services.Update;
 using FFXIVTataruHelper.Theme;
 using FFXIVTataruHelper.Utils;
@@ -28,6 +29,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     private readonly IHotkeyCaptureService _hotkeyCaptureService;
     private readonly Action _checkUpdatesAction;
     private readonly IReferenceIndexUpdateService _referenceIndexUpdateService;
+    private readonly ISettingsResetService _settingsResetService;
 
     /// <summary>
     /// Reads an interface string as the window has it.
@@ -65,6 +67,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         Action checkUpdatesAction,
         TranslationCredentialsViewModel translationCredentials,
         IReferenceIndexUpdateService referenceIndexUpdateService,
+        ISettingsResetService settingsResetService,
         Func<string, string> localize,
         Func<string, bool> confirm)
     {
@@ -76,6 +79,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
             translationCredentials ?? throw new ArgumentNullException(nameof(translationCredentials));
         _referenceIndexUpdateService = referenceIndexUpdateService
                                        ?? throw new ArgumentNullException(nameof(referenceIndexUpdateService));
+        _settingsResetService = settingsResetService ?? throw new ArgumentNullException(nameof(settingsResetService));
         _localize = localize ?? (key => key);
         _confirm = confirm ?? (_ => true);
 
@@ -122,6 +126,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         CheckUpdatesCommand = new TataruUICommand(() => _checkUpdatesAction());
         UpdateReferenceIndexCommand = new TataruUICommand(StartReferenceIndexUpdate);
         CancelReferenceIndexUpdateCommand = new TataruUICommand(CancelReferenceIndexUpdate);
+        ResetSettingsCommand = new TataruUICommand(ResetSettings);
         SelectChatWindowCommand = new TataruUICommand(SelectChatWindowByParameter);
         AddWindowCommand = new TataruUICommand(() => _settingsViewModel.AddNewChatWindowCommand.Execute(null));
         DeleteWindowCommand = new TataruUICommand(() => _settingsViewModel.DeleteChatWindowCommand.Execute(null));
@@ -411,6 +416,8 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
     public TataruUICommand CancelReferenceIndexUpdateCommand { get; }
 
+    public TataruUICommand ResetSettingsCommand { get; }
+
     public TataruUICommand SelectChatWindowCommand { get; }
 
     public TataruUICommand AddWindowCommand { get; }
@@ -457,6 +464,31 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         OnPropertyChanged(nameof(CanUpdateReferenceIndex));
 
         RunReferenceIndexUpdateAsync(_referenceIndexUpdateCancellation.Token).Forget();
+    }
+
+    /// <summary>
+    /// Takes the saved settings away and closes, so the next start reads what
+    /// a fresh installation would.
+    ///
+    /// Closing is the point rather than a shortcut: chat windows, hotkeys and
+    /// overlays are all built from the settings as the application starts, and
+    /// putting them back in place while it runs is a great deal of surface for
+    /// something to be left behind on.
+    /// </summary>
+    private void ResetSettings()
+    {
+        if (!_confirm(_localize("ResetSettingsQuestion")))
+        {
+            return;
+        }
+
+        ResetSettingsAsync().Forget();
+    }
+
+    private async Task ResetSettingsAsync()
+    {
+        await _settingsResetService.ResetAsync().ConfigureAwait(true);
+        _settingsViewModel.ShutDownRequestedCommand.Execute(null);
     }
 
     private void CancelReferenceIndexUpdate()

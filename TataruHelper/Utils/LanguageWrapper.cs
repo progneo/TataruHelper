@@ -402,6 +402,14 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ReferenceIndexCancelled"] =
                 catalog.GetString("Update cancelled; the previous translations are still in use.");
             _SettingsWindow.Resources["ReferenceIndexFailed"] = catalog.GetString("Update failed: {0}");
+            _SettingsWindow.Resources["ResetSettingsTitle"] = catalog.GetString("Reset settings");
+            _SettingsWindow.Resources["ResetSettingsHint"] =
+                catalog.GetString(
+                    "Put every setting back to what a fresh installation has: chat windows, colours, fonts, hotkeys, languages and chat codes. Your API keys and the installed translations are kept.");
+            _SettingsWindow.Resources["ResetSettingsButton"] = catalog.GetString("Reset");
+            _SettingsWindow.Resources["ResetSettingsQuestion"] =
+                catalog.GetString(
+                    "Every setting goes back to what a fresh installation has - chat windows, colours, fonts, hotkeys, languages and chat codes. API keys and installed translations are kept. Tataru Helper closes; start it again to carry on. Go ahead?");
             _SettingsWindow.Resources["ReferenceIndexSwitchLanguages"] =
                 catalog.GetString(
                     "The translations installed are for {0}, and the game is now being played in another language. Fetching {1} replaces them, and downloads the whole export again. Go ahead?");

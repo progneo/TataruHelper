@@ -219,6 +219,10 @@
     <system:String x:Key="ReferenceIndexUpdated">Updated: {0} lines, in use now.</system:String>
     <system:String x:Key="ReferenceIndexCancelled">Update cancelled; the previous translations are still in use.</system:String>
     <system:String x:Key="ReferenceIndexFailed">Update failed: {0}</system:String>
+    <system:String x:Key="ResetSettingsTitle">Reset settings</system:String>
+    <system:String x:Key="ResetSettingsHint">Put every setting back to what a fresh installation has: chat windows, colours, fonts, hotkeys, languages and chat codes. Your API keys and the installed translations are kept.</system:String>
+    <system:String x:Key="ResetSettingsButton">Reset</system:String>
+    <system:String x:Key="ResetSettingsQuestion">Every setting goes back to what a fresh installation has - chat windows, colours, fonts, hotkeys, languages and chat codes. API keys and installed translations are kept. Tataru Helper closes; start it again to carry on. Go ahead?</system:String>
     <system:String x:Key="ReferenceIndexSwitchLanguages">The translations installed are for {0}, and the game is now being played in another language. Fetching {1} replaces them, and downloads the whole export again. Go ahead?</system:String>
 
     <system:String x:Key="UpdatesGroupTitle">Updates</system:String>

@@ -38,6 +38,7 @@ namespace FFXIVTataruHelper
             services.AddSingleton<ISettingsStore, AppSettingsStore>();
             services.AddSingleton<ISettingsSyncService, SettingsSyncService>();
             services.AddSingleton<ISettingsMigrationService, SettingsMigrationService>();
+            services.AddSingleton<ISettingsResetService, SettingsResetService>();
             services.AddSingleton<IUiDispatcher, WpfUiDispatcher>();
 
             services.AddSingleton<IDirectDialogReader, HeuristicDirectDialogReader>();

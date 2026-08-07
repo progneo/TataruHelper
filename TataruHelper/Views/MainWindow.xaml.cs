@@ -46,6 +46,7 @@ public partial class MainWindow : FluentWindow
     private readonly IHotkeyCaptureService _hotkeyCaptureService;
     private readonly TranslationCredentialsViewModel _translationCredentials;
     private readonly IReferenceIndexUpdateService _referenceIndexUpdateService;
+    private readonly ISettingsResetService _settingsResetService;
 
     private readonly LogWriter _logWriter;
     private TataruModel _tataruModel;
@@ -75,6 +76,7 @@ public partial class MainWindow : FluentWindow
         IHotkeyCaptureService hotkeyCaptureService,
         TranslationCredentialsViewModel translationCredentials,
         IReferenceIndexUpdateService referenceIndexUpdateService,
+        ISettingsResetService settingsResetService,
         ISettingsStore settingsStore,
         LogWriter logWriter,
         LanguageWrapper languageWrapper,
@@ -89,6 +91,7 @@ public partial class MainWindow : FluentWindow
         _hotkeyCaptureService = hotkeyCaptureService;
         _translationCredentials = translationCredentials;
         _referenceIndexUpdateService = referenceIndexUpdateService;
+        _settingsResetService = settingsResetService;
         _settingsStore = settingsStore;
         _languageWrapper = languageWrapper;
         _optimizeFootprint = optimizeFootprint;
@@ -160,6 +163,7 @@ public partial class MainWindow : FluentWindow
                 CheckUpdates,
                 _translationCredentials,
                 _referenceIndexUpdateService,
+                _settingsResetService,
                 // The window carries the translated strings; the application
                 // only ever has the English defaults.
                 key => TryFindResource(key) as string ?? key,
@@ -324,14 +328,20 @@ public partial class MainWindow : FluentWindow
             {
                 await _tataruModel.StopAsync().ConfigureAwait(false);
 
-                try
+                // Not after a reset: the settings on disk have been taken
+                // away on purpose, and saving what is still in memory would
+                // put every one of them back.
+                if (!_settingsResetService.WasReset)
                 {
-                    await _tataruModel.SaveSettings().ConfigureAwait(false);
-                }
-                catch (Exception ex)
-                {
-                    _logger.WriteLog("MainWindow shutdown save settings failed.");
-                    _logger.WriteLog(ex);
+                    try
+                    {
+                        await _tataruModel.SaveSettings().ConfigureAwait(false);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.WriteLog("MainWindow shutdown save settings failed.");
+                        _logger.WriteLog(ex);
+                    }
                 }
             }
 
