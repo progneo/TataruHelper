@@ -41,8 +41,23 @@ namespace Translation.Tests.Reference
             TestContext.Out.WriteLine($"gendered : {builder.Gendered.Count / 2}");
             TestContext.Out.WriteLine($"skipped  : {builder.SkippedForMarkup}");
 
-            // Counts from the export this was developed against. Lines,
-            // patterns and speakers match the earlier python builder exactly.
+            // Counts from the export this was developed against. Lines and
+            // speakers match the earlier python builder exactly.
+            //
+            // Patterns no longer do: that builder, like this one until the
+            // game's own language became the key, only took a line whose two
+            // sides both named the player. English and Russian come from the
+            // same source and name them in much the same places, so the loss
+            // looked small - 576 lines. On a German client it was 2 657, and on
+            // a Japanese one 3 697, because those languages address the player
+            // somewhere else. Whichever side carries the name, the other is a
+            // fixed string and the line can still be found, so both shapes are
+            // patterns now: 3 120 here rather than 2 951, and 169 fewer lines
+            // thrown away for markup.
+            //
+            // The hyphenation points and hard spaces the game writes into German
+            // move these barely at all - English has neither - but they are what
+            // was throwing away the Crystal Exarch on a German client.
             //
             // Gendered does not, and deliberately: python resolved the player's
             // name before asking about gender, so a line carrying both landed
@@ -54,10 +69,11 @@ namespace Translation.Tests.Reference
             Assert.Multiple(() =>
             {
                 Assert.That(builder.Sheets, Is.EqualTo(2681), "sheets");
-                Assert.That(builder.Lines.Count, Is.EqualTo(201837), "lines");
-                Assert.That(builder.Patterns.Count, Is.EqualTo(2951), "patterns");
+                Assert.That(builder.Lines.Count, Is.EqualTo(201838), "lines");
+                Assert.That(builder.Patterns.Count, Is.EqualTo(3120), "patterns");
                 Assert.That(builder.Speakers.Count, Is.EqualTo(4249), "speakers");
                 Assert.That(builder.Gendered.Count / 2, Is.EqualTo(6464), "gendered");
+                Assert.That(builder.SkippedForMarkup, Is.EqualTo(6763), "skipped for markup");
             });
 
             // Lines seen in game, each of which cost a round of investigation.

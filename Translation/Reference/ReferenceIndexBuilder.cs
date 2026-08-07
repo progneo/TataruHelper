@@ -44,6 +44,21 @@ namespace Translation.Reference
         private static readonly Regex LineBreak = new Regex("<nl>", RegexOptions.Compiled);
 
         /// <summary>
+        /// A place the game may break a long word, drawn as nothing until it
+        /// does. German is full of them - "Waffenfertigkeiten" is stored as
+        /// "Waf&lt;var 16 /var&gt;fen&lt;var 16 /var&gt;fer&lt;var 16 /var&gt;tig..." - and
+        /// counting them as substitutions threw the line away.
+        /// </summary>
+        private static readonly Regex SoftHyphen = new Regex("<var 16[^>]*>", RegexOptions.Compiled);
+
+        /// <summary>
+        /// A space the game will not break a line at: between a number and its
+        /// unit, or before the ellipsis that German and French set off with
+        /// one. Drawn as a space, so it is one.
+        /// </summary>
+        private static readonly Regex HardSpace = new Regex("<var 1D[^>]*>", RegexOptions.Compiled);
+
+        /// <summary>
         /// Anything the game substitutes as it draws. Recognised by being a
         /// &lt;var&gt;: sound cues like &lt;sigh&gt; are drawn as the text they
         /// look like and belong in the line.
@@ -169,12 +184,22 @@ namespace Translation.Reference
                 }
             }
 
-            // One placeholder each side and nothing else: usable as a pattern.
-            // More than one and the pieces between them stop pinning it down.
+            // At most one placeholder a side, and at least one somewhere:
+            // usable as a pattern. More than one and the pieces between them
+            // stop pinning the line down.
+            //
+            // The two sides need not agree about naming the character, and
+            // requiring that they did cost whole conversations. Languages
+            // address the player in different places: German says "Und er wird
+            // deine Hilfe benötigen", where the Russian for the same row says
+            // "Поторопись, <name>". Whichever side carries the name, the other
+            // is a fixed string - so the line can still be matched, and the
+            // name written into whichever side has room for it.
             var englishPlayer = Player.Replace(english, PlayerPlaceholder);
             var translatedPlayer = Player.Replace(translated, PlayerPlaceholder);
-            var isPattern = Count(englishPlayer, PlayerPlaceholder) == 1 &&
-                            Count(translatedPlayer, PlayerPlaceholder) == 1;
+            var sourceNames = Count(englishPlayer, PlayerPlaceholder);
+            var translatedNames = Count(translatedPlayer, PlayerPlaceholder);
+            var isPattern = sourceNames <= 1 && translatedNames <= 1 && sourceNames + translatedNames > 0;
 
             var target = _lines;
             if (isPattern)
@@ -237,6 +262,8 @@ namespace Translation.Reference
         {
             text = StripKey(text);
             text = Formatting.Replace(text, string.Empty);
+            text = SoftHyphen.Replace(text, string.Empty);
+            text = HardSpace.Replace(text, " ");
             text = LineBreak.Replace(text, " ");
             text = SpeakerPrefix.Replace(text.TrimStart(), string.Empty);
             return Collapse(text.Replace(KeySeparator, " "));

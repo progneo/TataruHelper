@@ -125,6 +125,82 @@ namespace Translation.Tests.Reference
             Assert.That(builder.Speakers["Mother Miounne"], Is.EqualTo("Матушка Миунна"));
         }
 
+        // Languages address the player in different places. Requiring that the
+        // two sides agreed about it threw away whole conversations: 2 657 lines
+        // for a German client, 3 697 for a Japanese one, and 576 even for
+        // English. Whichever side carries the name, the other is a fixed
+        // string, so the line can still be pinned down.
+        [Test]
+        public void NamedOnlyInTheOriginal_IsStillAPattern()
+        {
+            // The game says the name, the translators did not: the key needs
+            // the name written in, the translation is a fixed string.
+            var builder = Build("exd/Quest/001",
+                Sheet(("1", "Go swiftly, &lt;var 2C ((&lt;var 29 EB02 /var&gt;)) (( )) 02 /var&gt;.")),
+                Sheet(("1", "Поторопись.")));
+
+            Assert.That(builder.Patterns["Go swiftly, " + ReferenceIndexBuilder.PlayerPlaceholder + "."],
+                Is.EqualTo("Поторопись."));
+        }
+
+        [Test]
+        public void NamedOnlyInTheTranslation_IsStillAPattern()
+        {
+            // The German for this row does not name the player; the Russian
+            // does. Both of the lines the user first noticed missing were this.
+            var builder = Build("exd/Quest/004",
+                Sheet(("1", "Und er wird deine Hilfe benötigen. Viel Glück.")),
+                Sheet(("1", "Судьба Гридании висит на волоске. Поторопись, " +
+                            "&lt;var 2C ((&lt;var 29 EB02 /var&gt;)) (( )) 02 /var&gt;.")));
+
+            Assert.That(builder.Patterns["Und er wird deine Hilfe benötigen. Viel Glück."],
+                Is.EqualTo("Судьба Гридании висит на волоске. Поторопись, " +
+                           ReferenceIndexBuilder.PlayerPlaceholder + "."));
+        }
+
+        [Test]
+        public void TwoNamesInOneLine_IsStillNotAPattern()
+        {
+            // Two placeholders and the pieces between them stop pinning the
+            // line down, whichever side they are on.
+            const string name = "&lt;var 2C ((&lt;var 29 EB02 /var&gt;)) (( )) 02 /var&gt;";
+            var builder = Build("exd/Quest/001",
+                Sheet(("1", name + ", listen. " + name + ", please.")),
+                Sheet(("1", "Послушай.")));
+
+            Assert.That(builder.Patterns, Is.Empty);
+            Assert.That(builder.Lines, Is.Empty);
+        }
+
+        // German is hyphenated and spaced by the game, and both were being read
+        // as substitutions - which threw the line away. What the screen gives
+        // us settles what they are: the raw log shows "Kristallturms" whole and
+        // "in der Zukunft ..." with a space, so one is nothing and one is a
+        // space.
+        [Test]
+        public void APlaceToBreakALongWord_IsNotPartOfTheWord()
+        {
+            var builder = Build("exd/cut_scene/050",
+                Sheet(("1", "Deshalb machte ich mich zu einem Teil des Kris&lt;var 16 /var&gt;tallturms.")),
+                Sheet(("1", "Поэтому я стал частью Кристальной башни.")));
+
+            Assert.That(builder.Lines["Deshalb machte ich mich zu einem Teil des Kristallturms."],
+                Is.EqualTo("Поэтому я стал частью Кристальной башни."));
+        }
+
+        [Test]
+        public void ASpaceTheGameWillNotBreakAt_IsStillASpace()
+        {
+            // German sets the ellipsis off with one, and writes "10 %" the same
+            // way. It reaches the screen as a space, so it is one here.
+            var builder = Build("exd/cut_scene/050",
+                Sheet(("1", "Mein Schicksal erwartet mich in der Zukunft&lt;var 1D /var&gt;...")),
+                Sheet(("1", "Будущее, где притаилась моя судьба...")));
+
+            Assert.That(builder.Lines["Mein Schicksal erwartet mich in der Zukunft ..."],
+                Is.EqualTo("Будущее, где притаилась моя судьба..."));
+        }
+
         [Test]
         public void PlayerName_BecomesAPattern()
         {

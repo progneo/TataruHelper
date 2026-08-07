@@ -330,6 +330,19 @@ namespace Translation.Reference
         /// while only the full name was tried, because what the game had
         /// written was "Go swiftly, D'ark."
         /// </summary>
+        /// <summary>
+        /// The name as somebody speaking to the character would use it.
+        ///
+        /// The forename, on the evidence of what the game draws: a line stored
+        /// as "Go swiftly, &lt;name&gt;." reaches the screen as "Go swiftly,
+        /// D'ark." for a character called D'ark One.
+        /// </summary>
+        private static string AddressForm(string playerName)
+        {
+            var separator = playerName.IndexOf(' ');
+            return separator > 0 ? playerName.Substring(0, separator) : playerName;
+        }
+
         private static IEnumerable<string> NameForms(string playerName)
         {
             yield return playerName;
@@ -421,6 +434,25 @@ namespace Translation.Reference
                         {
                             var sourcePattern = reader.GetString(0);
                             var translatedPattern = reader.GetString(1);
+
+                            if (sourcePattern.IndexOf(PlayerPlaceholder, StringComparison.Ordinal) < 0)
+                            {
+                                // The line does not name the character but its
+                                // translation does - German rarely addresses
+                                // the player where the Russian for the same row
+                                // does. Nothing on screen says which form to
+                                // use, so use the one the game uses to address
+                                // somebody; trying each form here would only
+                                // give the same key three different endings.
+                                var fixedSource = Normalize(sourcePattern);
+                                if (fixedSource.Length > 0)
+                                {
+                                    lines[fixedSource] =
+                                        translatedPattern.Replace(PlayerPlaceholder, AddressForm(playerName));
+                                }
+
+                                continue;
+                            }
 
                             foreach (var form in NameForms(playerName))
                             {

@@ -50,7 +50,12 @@ namespace Translation.Tests.Reference
                         "('<sigh> Here we go again.', '<sigh> Эх... Опять двадцать пять.');" +
                         "INSERT INTO pattern VALUES " +
                         "('The fate of Gridania hangs in the balance. Go swiftly, ' || char(1) || '.', " +
-                        "'Судьба Гридании висит на волоске. Поторопись, ' || char(1) || '.');";
+                        "'Судьба Гридании висит на волоске. Поторопись, ' || char(1) || '.'), " +
+                        // Named on one side only, which is the common shape
+                        // once the game is played in something but English.
+                        "('Und er wird deine Hilfe benötigen.', " +
+                        "'Поторопись, ' || char(1) || '.'), " +
+                        "('Well met, ' || char(1) || '.', 'Приветствую.');";
                     create.ExecuteNonQuery();
                 }
             }
@@ -147,6 +152,43 @@ namespace Translation.Tests.Reference
 
                 Assert.That(source.TryGetTranslation(spoken, out var translation), Is.True);
                 Assert.That(translation, Does.StartWith("Судьба Гридании висит на волоске. Поторопись, "));
+            }
+        }
+
+        [Test]
+        public void ALineNamedOnlyInTheTranslation_IsFoundByItsPlainText()
+        {
+            // The screen shows a line with no name in it; the translation
+            // addresses the player. Both lines the user first noticed missing
+            // on a German client were this shape.
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                source.PlayerName = "D'ark One";
+
+                Assert.That(source.TryGetTranslation("Und er wird deine Hilfe benötigen.", out var translation),
+                    Is.True);
+
+                // The forename, as the game addresses somebody - not "D'ark
+                // One", and not whichever form happened to be tried last.
+                Assert.That(translation, Is.EqualTo("Поторопись, D'ark."));
+            }
+        }
+
+        [Test]
+        public void ALineNamedOnlyInTheOriginal_IsFoundByEveryFormOfTheName()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                source.PlayerName = "D'ark One";
+
+                Assert.Multiple(() =>
+                {
+                    Assert.That(source.TryGetTranslation("Well met, D'ark One.", out var full), Is.True);
+                    Assert.That(full, Is.EqualTo("Приветствую."));
+
+                    Assert.That(source.TryGetTranslation("Well met, D'ark.", out var forename), Is.True);
+                    Assert.That(forename, Is.EqualTo("Приветствую."));
+                });
             }
         }
 
