@@ -39,6 +39,7 @@ namespace Translation.Tests.Reference
             TestContext.Out.WriteLine($"patterns : {builder.Patterns.Count}");
             TestContext.Out.WriteLine($"speakers : {builder.Speakers.Count}");
             TestContext.Out.WriteLine($"gendered : {builder.Gendered.Count / 2}");
+            TestContext.Out.WriteLine($"gen.pat. : {builder.GenderedPatterns.Count / 2}");
             TestContext.Out.WriteLine($"skipped  : {builder.SkippedForMarkup}");
 
             // Counts from the export this was developed against. Lines and
@@ -78,7 +79,13 @@ namespace Translation.Tests.Reference
                 Assert.That(builder.Patterns.Count, Is.EqualTo(3117), "patterns");
                 Assert.That(builder.Speakers.Count, Is.EqualTo(4245), "speakers");
                 Assert.That(builder.Gendered.Count / 2, Is.EqualTo(6465), "gendered");
-                Assert.That(builder.SkippedForMarkup, Is.EqualTo(6674), "skipped for markup");
+
+                // Lines that name the character and agree with them at once.
+                // They reached neither store before: the gender branch gave up
+                // on the name, the pattern branch gave up on the gender, and
+                // 984 of the game's most personal lines went to an engine.
+                Assert.That(builder.GenderedPatterns.Count / 2, Is.EqualTo(957), "gendered patterns");
+                Assert.That(builder.SkippedForMarkup, Is.EqualTo(5690), "skipped for markup");
             });
 
             // Lines seen in game, each of which cost a round of investigation.

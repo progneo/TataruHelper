@@ -41,6 +41,11 @@ namespace Translation.Tests.Reference
                         "('This position is yours, adventurer.', 0, 'Искатель приключений, на позицию.')," +
                         "('Hydaelyn would speak to this woman...', 1, 'Хайделин говорила с этой женщиной...')," +
                         "('Hydaelyn would speak to this man...', 0, 'Хайделин говорила с этим мужчиной...');" +
+                        "CREATE TABLE gendered_pattern (source TEXT NOT NULL, feminine INTEGER NOT NULL, " +
+                        "translated TEXT NOT NULL, PRIMARY KEY (feminine, source)) WITHOUT ROWID;" +
+                        "INSERT INTO gendered_pattern VALUES " +
+                        "('Are you ready, ' || char(1) || '?', 1, char(1) || ', ты готова?')," +
+                        "('Are you ready, ' || char(1) || '?', 0, char(1) || ', ты готов?');" +
                         "CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);" +
                         "INSERT INTO meta VALUES ('language', 'ru');" +
                         "INSERT INTO line VALUES " +
@@ -88,6 +93,30 @@ namespace Translation.Tests.Reference
                 Assert.That(source.TryGetSpeakerName("Sahjattra Concern Representative", out var translated),
                     Is.True);
                 Assert.That(translated, Is.EqualTo("Представитель «Саджаттры»"));
+            }
+        }
+
+        [Test]
+        public void ALineNamingAndAgreeing_NeedsBothFactsAndThenAnswers()
+        {
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                // Neither fact known, then one, then the other: the line only
+                // becomes available when both are in.
+                Assert.That(source.TryGetTranslation("Are you ready, D'ark?", out _), Is.False);
+
+                source.PlayerName = "D'ark One";
+                Assert.That(source.TryGetTranslation("Are you ready, D'ark?", out _), Is.False,
+                    "the gender is still unknown");
+
+                source.PlayerIsFeminine = true;
+                Assert.That(source.TryGetTranslation("Are you ready, D'ark?", out var feminine), Is.True);
+                Assert.That(feminine, Is.EqualTo("D'ark, ты готова?"));
+
+                // And it follows the character, not the first answer given.
+                source.PlayerIsFeminine = false;
+                Assert.That(source.TryGetTranslation("Are you ready, D'ark One?", out var masculine), Is.True);
+                Assert.That(masculine, Is.EqualTo("D'ark One, ты готов?"));
             }
         }
 

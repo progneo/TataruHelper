@@ -542,6 +542,9 @@ namespace Translation.Reference
                     "CREATE TABLE speaker (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID;" +
                     "CREATE TABLE gendered (source TEXT NOT NULL, feminine INTEGER NOT NULL, " +
                     "translated TEXT NOT NULL, PRIMARY KEY (feminine, source)) WITHOUT ROWID;" +
+                    // Lines that both name the character and agree with them.
+                    "CREATE TABLE gendered_pattern (source TEXT NOT NULL, feminine INTEGER NOT NULL, " +
+                    "translated TEXT NOT NULL, PRIMARY KEY (feminine, source)) WITHOUT ROWID;" +
                     "CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT NOT NULL);";
                 schema.ExecuteNonQuery();
             }
@@ -552,28 +555,8 @@ namespace Translation.Reference
             InsertPairs(connection, transaction, "pattern", builder.Patterns);
             InsertPairs(connection, transaction, "speaker", builder.Speakers);
 
-            using (var gendered = connection.CreateCommand())
-            {
-                gendered.Transaction = transaction;
-                gendered.CommandText = "INSERT OR IGNORE INTO gendered VALUES ($source, $feminine, $translated)";
-                var source = gendered.CreateParameter();
-                source.ParameterName = "$source";
-                var feminine = gendered.CreateParameter();
-                feminine.ParameterName = "$feminine";
-                var translated = gendered.CreateParameter();
-                translated.ParameterName = "$translated";
-                gendered.Parameters.Add(source);
-                gendered.Parameters.Add(feminine);
-                gendered.Parameters.Add(translated);
-
-                foreach (var entry in builder.Gendered)
-                {
-                    source.Value = entry.Key.Source;
-                    feminine.Value = entry.Key.Feminine ? 1 : 0;
-                    translated.Value = entry.Value;
-                    gendered.ExecuteNonQuery();
-                }
-            }
+            InsertGendered(connection, transaction, "gendered", builder.Gendered);
+            InsertGendered(connection, transaction, "gendered_pattern", builder.GenderedPatterns);
 
             InsertPairs(connection, transaction, "meta", new Dictionary<string, string>
             {
@@ -601,6 +584,7 @@ namespace Translation.Reference
                 ["patterns"] = builder.Patterns.Count.ToString(),
                 ["speakers"] = builder.Speakers.Count.ToString(),
                 ["gendered"] = (builder.Gendered.Count / 2).ToString(),
+                ["genderedPatterns"] = (builder.GenderedPatterns.Count / 2).ToString(),
             });
 
             transaction.Commit();
@@ -608,6 +592,35 @@ namespace Translation.Reference
             using var vacuum = connection.CreateCommand();
             vacuum.CommandText = "VACUUM";
             vacuum.ExecuteNonQuery();
+        }
+
+        private static void InsertGendered(
+            SqliteConnection connection,
+            SqliteTransaction transaction,
+            string table,
+            IEnumerable<KeyValuePair<(string Source, bool Feminine), string>> rows)
+        {
+            using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+            command.CommandText = $"INSERT OR IGNORE INTO {table} VALUES ($source, $feminine, $translated)";
+
+            var source = command.CreateParameter();
+            source.ParameterName = "$source";
+            var feminine = command.CreateParameter();
+            feminine.ParameterName = "$feminine";
+            var translated = command.CreateParameter();
+            translated.ParameterName = "$translated";
+            command.Parameters.Add(source);
+            command.Parameters.Add(feminine);
+            command.Parameters.Add(translated);
+
+            foreach (var entry in rows)
+            {
+                source.Value = entry.Key.Source;
+                feminine.Value = entry.Key.Feminine ? 1 : 0;
+                translated.Value = entry.Value;
+                command.ExecuteNonQuery();
+            }
         }
 
         private static void InsertPairs(

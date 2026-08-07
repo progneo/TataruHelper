@@ -32,6 +32,12 @@ namespace Translation.Reference
 
         private Dictionary<string, string> _genderedLines;
 
+        /// <summary>
+        /// Lines that name the character and agree with them at once. Needs
+        /// both facts, so it waits for whichever arrives second.
+        /// </summary>
+        private Dictionary<string, string> _addressedAndGendered;
+
         private SqliteCommand _speakerLookup;
 
         private SqliteParameter _speakerParameter;
@@ -137,6 +143,7 @@ namespace Translation.Reference
 
                     _playerName = name;
                     _addressedToPlayer = name.Length > 0 ? BuildAddressedLines(name) : null;
+                    _addressedAndGendered = BuildAddressedGenderedLines();
                 }
             }
         }
@@ -161,6 +168,7 @@ namespace Translation.Reference
 
                     _playerIsFeminine = value;
                     _genderedLines = value.HasValue ? BuildGenderedLines(value.Value) : null;
+                    _addressedAndGendered = BuildAddressedGenderedLines();
                 }
             }
         }
@@ -230,6 +238,16 @@ namespace Translation.Reference
                 if (_lookup == null)
                 {
                     return false;
+                }
+
+                // The most particular first: a line that names this character
+                // and is worded for them.
+                if (_addressedAndGendered != null &&
+                    _addressedAndGendered.TryGetValue(key, out var both) &&
+                    !CarriesUnresolvedMarkup(both))
+                {
+                    translation = both;
+                    return true;
                 }
 
                 if (_addressedToPlayer != null &&
@@ -414,6 +432,96 @@ namespace Translation.Reference
         }
 
         /// <summary>
+        /// Reads the lines that both name the character and agree with them,
+        /// keeping this character's gender and writing this character's name in.
+        ///
+        /// Needs both facts, and they arrive separately - the name from the
+        /// character, the gender from the same read - so this runs again
+        /// whenever either changes and does nothing until both are known.
+        /// </summary>
+        private Dictionary<string, string> BuildAddressedGenderedLines()
+        {
+            if (_connection == null || _playerName.Length == 0 || !_playerIsFeminine.HasValue)
+            {
+                return null;
+            }
+
+            var lines = new Dictionary<string, string>(StringComparer.Ordinal);
+
+            try
+            {
+                using (var command = _connection.CreateCommand())
+                {
+                    command.CommandText =
+                        "SELECT source, translated FROM gendered_pattern WHERE feminine = $feminine";
+                    var feminine = command.CreateParameter();
+                    feminine.ParameterName = "$feminine";
+                    feminine.Value = _playerIsFeminine.Value ? 1 : 0;
+                    command.Parameters.Add(feminine);
+
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            FillName(lines, reader.GetString(0), reader.GetString(1), _playerName);
+                        }
+                    }
+                }
+
+                _logger?.LogInformation("Lines both naming and agreeing with {Player}: {Count}.",
+                    _playerName, lines.Count);
+            }
+            catch (SqliteException)
+            {
+                // An index built before these were collected has no such table,
+                // and that has to cost only these lines.
+                _logger?.LogInformation("This index carries no lines that both name and agree.");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogInformation("{Message}", Convert.ToString(ex));
+            }
+
+            return lines;
+        }
+
+        /// <summary>
+        /// Writes a character's name into one stored pattern, under every form
+        /// of the name the line might use.
+        /// </summary>
+        private static void FillName(
+            Dictionary<string, string> lines, string sourcePattern, string translatedPattern, string playerName)
+        {
+            if (sourcePattern.IndexOf(PlayerPlaceholder, StringComparison.Ordinal) < 0)
+            {
+                // The line does not name the character but its translation
+                // does - German rarely addresses the player where the Russian
+                // for the same row does. Nothing on screen says which form to
+                // use, so use the one the game uses to address somebody;
+                // trying each form here would only give the same key three
+                // different endings.
+                var fixedSource = Normalize(sourcePattern);
+                if (fixedSource.Length > 0)
+                {
+                    lines[fixedSource] = translatedPattern.Replace(PlayerPlaceholder, AddressForm(playerName));
+                }
+
+                return;
+            }
+
+            foreach (var form in NameForms(playerName))
+            {
+                var source = Normalize(sourcePattern.Replace(PlayerPlaceholder, form));
+                if (source.Length > 0)
+                {
+                    // Stored under each form the line might use, but the
+                    // translation reads the way the line did.
+                    lines[source] = translatedPattern.Replace(PlayerPlaceholder, form);
+                }
+            }
+        }
+
+        /// <summary>
         /// Reads the patterns and writes the name into each, giving the lines
         /// as this particular character hears them.
         /// </summary>
@@ -434,38 +542,7 @@ namespace Translation.Reference
                     {
                         while (reader.Read())
                         {
-                            var sourcePattern = reader.GetString(0);
-                            var translatedPattern = reader.GetString(1);
-
-                            if (sourcePattern.IndexOf(PlayerPlaceholder, StringComparison.Ordinal) < 0)
-                            {
-                                // The line does not name the character but its
-                                // translation does - German rarely addresses
-                                // the player where the Russian for the same row
-                                // does. Nothing on screen says which form to
-                                // use, so use the one the game uses to address
-                                // somebody; trying each form here would only
-                                // give the same key three different endings.
-                                var fixedSource = Normalize(sourcePattern);
-                                if (fixedSource.Length > 0)
-                                {
-                                    lines[fixedSource] =
-                                        translatedPattern.Replace(PlayerPlaceholder, AddressForm(playerName));
-                                }
-
-                                continue;
-                            }
-
-                            foreach (var form in NameForms(playerName))
-                            {
-                                var source = Normalize(sourcePattern.Replace(PlayerPlaceholder, form));
-                                if (source.Length > 0)
-                                {
-                                    // The line is stored under each form, but the
-                                    // translation reads the way the line did.
-                                    lines[source] = translatedPattern.Replace(PlayerPlaceholder, form);
-                                }
-                            }
+                            FillName(lines, reader.GetString(0), reader.GetString(1), playerName);
                         }
                     }
                 }

@@ -232,6 +232,34 @@ namespace Translation.Tests.Reference
         }
 
         [Test]
+        public void ALineWithBothAGenderAndAName_IsKeptForEachGender()
+        {
+            // These reached neither store: the gender branch gave up on the
+            // name, and the pattern branch gave up on the gender. They are the
+            // game's most personal lines - addressed to you and worded for you.
+            const string name = "&lt;var 2C ((&lt;var 29 EB02 /var&gt;)) (( )) 02 /var&gt;";
+            const string gender = "&lt;var 08 E905 ((готова)) ((готов)) /var&gt;";
+
+            var builder = Build("exd/Quest/001",
+                Sheet(("1", "Are you ready, " + name + "?")),
+                Sheet(("1", name + ", ты " + gender + "?")));
+
+            var key = "Are you ready, " + ReferenceIndexBuilder.PlayerPlaceholder + "?";
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(builder.GenderedPatterns[(key, true)],
+                    Is.EqualTo(ReferenceIndexBuilder.PlayerPlaceholder + ", ты готова?"));
+                Assert.That(builder.GenderedPatterns[(key, false)],
+                    Is.EqualTo(ReferenceIndexBuilder.PlayerPlaceholder + ", ты готов?"));
+
+                // And not among the plain gendered lines, where the name would
+                // still be a hole nothing on screen can match.
+                Assert.That(builder.Gendered, Is.Empty);
+            });
+        }
+
+        [Test]
         public void PlayerName_BecomesAPattern()
         {
             var builder = Build("exd/Quest/001",

@@ -105,7 +105,7 @@ namespace Translation.Reference
         /// Raise this whenever a change here would put something different in
         /// the index for the same export.
         /// </summary>
-        public const int RulesVersion = 1;
+        public const int RulesVersion = 2;
 
         private const string KeySeparator = "<tab>";
 
@@ -122,6 +122,9 @@ namespace Translation.Reference
         private readonly Dictionary<(string Source, bool Feminine), string> _gendered =
             new Dictionary<(string, bool), string>();
 
+        private readonly Dictionary<(string Source, bool Feminine), string> _genderedPatterns =
+            new Dictionary<(string, bool), string>();
+
         public IReadOnlyDictionary<string, string> Lines => _lines;
 
         public IReadOnlyDictionary<string, string> Patterns => _patterns;
@@ -129,6 +132,12 @@ namespace Translation.Reference
         public IReadOnlyDictionary<string, string> Speakers => _speakers;
 
         public IReadOnlyDictionary<(string Source, bool Feminine), string> Gendered => _gendered;
+
+        /// <summary>
+        /// Lines that both name the character and agree with them: the name is
+        /// punched out, and there is one of these per gender.
+        /// </summary>
+        public IReadOnlyDictionary<(string Source, bool Feminine), string> GenderedPatterns => _genderedPatterns;
 
         public int SkippedForMarkup { get; private set; }
 
@@ -208,6 +217,18 @@ namespace Translation.Reference
                     _gendered[(masculineEnglish, false)] = masculine;
                     return;
                 }
+
+                // What is left after the gender is settled may be the player's
+                // name, and that we can also write in. A line carrying both was
+                // reaching neither store: this branch gave up on account of the
+                // name, and the one below gave up on account of the gender, so
+                // the game's most personal lines - addressed to you, agreeing
+                // with you - were the ones nobody indexed.
+                if (AddGenderedPattern(feminineEnglish, feminine, true) &&
+                    AddGenderedPattern(masculineEnglish, masculine, false))
+                {
+                    return;
+                }
             }
 
             // At most one placeholder a side, and at least one somewhere:
@@ -251,6 +272,27 @@ namespace Translation.Reference
                 // Keeping the first is arbitrary but stable.
                 Conflicts++;
             }
+        }
+
+        /// <summary>
+        /// Stores one gender's wording of a line that also names the player,
+        /// with the name punched out. False when what is left still carries
+        /// something the game would substitute, and then the pair is no use.
+        /// </summary>
+        private bool AddGenderedPattern(string english, string translated, bool feminine)
+        {
+            var englishPattern = Player.Replace(english, PlayerPlaceholder);
+            var translatedPattern = Player.Replace(translated, PlayerPlaceholder);
+
+            if (Count(englishPattern, PlayerPlaceholder) > 1 ||
+                Count(translatedPattern, PlayerPlaceholder) > 1 ||
+                Dynamic.IsMatch(englishPattern) || Dynamic.IsMatch(translatedPattern))
+            {
+                return false;
+            }
+
+            _genderedPatterns[(englishPattern, feminine)] = translatedPattern;
+            return true;
         }
 
         private void AddSpeaker(string englishName, string translatedName)
