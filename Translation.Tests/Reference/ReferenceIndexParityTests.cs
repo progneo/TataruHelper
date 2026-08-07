@@ -41,6 +41,7 @@ namespace Translation.Tests.Reference
             TestContext.Out.WriteLine($"gendered : {builder.Gendered.Count / 2}");
             TestContext.Out.WriteLine($"gen.pat. : {builder.GenderedPatterns.Count / 2}");
             TestContext.Out.WriteLine($"skipped  : {builder.SkippedForMarkup}");
+            TestContext.Out.WriteLine($"conflicts: {builder.Conflicts}");
 
             // Counts from the export this was developed against. Lines and
             // speakers match the earlier python builder exactly.
@@ -65,6 +66,12 @@ namespace Translation.Tests.Reference
             // lines carrying the next row's text, and four of them were somebody
             // else's name.
             //
+            // Recognising the player's name in its bare form as well as its
+            // wrapped one stopped 138 more lines being thrown away as markup:
+            // patterns 3 117 to 3 200, gendered patterns 957 to 1 005. Lines
+            // do not move, and should not - a line carrying the name was never
+            // stored as a line, it was skipped.
+            //
             // Gendered does not, and deliberately: python resolved the player's
             // name before asking about gender, so a line carrying both landed
             // among the gendered ones with the name still punched out - roughly
@@ -76,7 +83,7 @@ namespace Translation.Tests.Reference
             {
                 Assert.That(builder.Sheets, Is.EqualTo(2681), "sheets");
                 Assert.That(builder.Lines.Count, Is.EqualTo(201924), "lines");
-                Assert.That(builder.Patterns.Count, Is.EqualTo(3117), "patterns");
+                Assert.That(builder.Patterns.Count, Is.EqualTo(3200), "patterns");
                 Assert.That(builder.Speakers.Count, Is.EqualTo(4245), "speakers");
                 Assert.That(builder.Gendered.Count / 2, Is.EqualTo(6465), "gendered");
 
@@ -84,8 +91,8 @@ namespace Translation.Tests.Reference
                 // They reached neither store before: the gender branch gave up
                 // on the name, the pattern branch gave up on the gender, and
                 // 984 of the game's most personal lines went to an engine.
-                Assert.That(builder.GenderedPatterns.Count / 2, Is.EqualTo(957), "gendered patterns");
-                Assert.That(builder.SkippedForMarkup, Is.EqualTo(5690), "skipped for markup");
+                Assert.That(builder.GenderedPatterns.Count / 2, Is.EqualTo(1005), "gendered patterns");
+                Assert.That(builder.SkippedForMarkup, Is.EqualTo(5552), "skipped for markup");
             });
 
             // Lines seen in game, each of which cost a round of investigation.
@@ -97,6 +104,20 @@ namespace Translation.Tests.Reference
                     Is.EqualTo("О, скорбный голос созидания! О, скорбный глас времён!"));
                 Assert.That(builder.Speakers["Mother Miounne"], Is.EqualTo("Матушка Миунна"));
                 Assert.That(builder.Speakers.ContainsKey("???"), Is.False);
+
+                // The line that showed the bare name was going unread. It is a
+                // pattern, not a line: the placeholder is where the game writes
+                // whoever is playing.
+                Assert.That(
+                    builder.Patterns["Now then, " + ReferenceIndexBuilder.PlayerPlaceholder +
+                                     ", I ask that you give unto us your oath of allegiance, " +
+                                     "in whatever fashion you see fit."],
+                    Is.EqualTo("А теперь, " + ReferenceIndexBuilder.PlayerPlaceholder +
+                               ", прошу тебя принести присягу верности — в вольной форме."));
+                // Stored as the sheet writes it. The game draws the name
+                // capitalised, which is why the reader looks it up NOCASE.
+                Assert.That(builder.Speakers["serpent personnel officer"],
+                    Is.EqualTo("Кадровый офицер Ордена"));
             });
         }
     }

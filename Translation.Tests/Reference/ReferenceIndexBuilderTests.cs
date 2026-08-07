@@ -270,6 +270,63 @@ namespace Translation.Tests.Reference
                 Is.EqualTo("Поторопись, " + ReferenceIndexBuilder.PlayerPlaceholder + "."));
         }
 
+        // The name arrives bare more often than wrapped - 14,515 lines against
+        // 14,086 in the export of 5 August - and only the wrapped form was
+        // known. Every bare one was thrown away as markup nothing could stand
+        // in for, which is how a Serpent Personnel Officer came to ask for an
+        // oath of allegiance in machine Russian.
+        [Test]
+        public void PlayerName_IsAlsoRecognisedWithoutItsWrapper()
+        {
+            const string name = "&lt;var 29 EB02 /var&gt;";
+
+            // Both sides exactly as exd/Quest/006/ManFst303_00683 has them.
+            var builder = Build("exd/Quest/006",
+                Sheet(("55", $"TEXT_MANFST303_00683_SERPENTPERSONNEL_000_8&lt;tab&gt;Now then, {name}, " +
+                             "I ask that you give unto us your oath of allegiance, in whatever fashion you see fit.")),
+                Sheet(("55", $"TEXT_MANFST303_00683_SERPENTPERSONNEL_000_8&lt;tab&gt;А теперь, {name}, " +
+                             "прошу тебя принести присягу верности — в вольной форме.")));
+
+            var placeholder = ReferenceIndexBuilder.PlayerPlaceholder;
+
+            Assert.That(
+                builder.Patterns["Now then, " + placeholder + ", I ask that you give unto us your oath of " +
+                                 "allegiance, in whatever fashion you see fit."],
+                Is.EqualTo("А теперь, " + placeholder + ", прошу тебя принести присягу верности — в вольной форме."));
+        }
+
+        [Test]
+        public void TheWrappedName_IsStillTakenWhole()
+        {
+            // The wrapper contains the bare tag. Matching the inner one first
+            // would punch out the name and leave "<var 2C (()) (( )) 02
+            // /var>" behind - still markup, so the line would still be thrown
+            // away, and the fix above would have quietly broken the case that
+            // already worked.
+            var builder = Build("exd/Quest/001",
+                Sheet(("1", "Go swiftly, &lt;var 2C ((&lt;var 29 EB02 /var&gt;)) (( )) 02 /var&gt;.")),
+                Sheet(("1", "Поторопись, &lt;var 2C ((&lt;var 29 EB02 /var&gt;)) (( )) 02 /var&gt;.")));
+
+            var placeholder = ReferenceIndexBuilder.PlayerPlaceholder;
+
+            Assert.That(builder.Patterns["Go swiftly, " + placeholder + "."],
+                Is.EqualTo("Поторопись, " + placeholder + "."));
+        }
+
+        [Test]
+        public void TheRestOfTheVar29Family_IsNotTheName()
+        {
+            // EB02 is the player. EA01 upwards are other things the game fills
+            // in, and writing somebody's name over a number would be worse than
+            // dropping the line - a wrong translation reads as a real one.
+            var builder = Build("exd/Quest/001",
+                Sheet(("1", "You have &lt;var 29 EA02 /var&gt; gil remaining.")),
+                Sheet(("1", "У вас осталось &lt;var 29 EA02 /var&gt; гилей.")));
+
+            Assert.That(builder.Patterns, Is.Empty);
+            Assert.That(builder.Lines, Is.Empty);
+        }
+
         // English can carry the agreement as readily as Russian, so the line
         // reaching us differs by character and is stored under each.
         [Test]

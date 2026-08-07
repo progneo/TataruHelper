@@ -76,9 +76,28 @@ namespace Translation.Reference
         /// </summary>
         private static readonly Regex Dynamic = new Regex("<var [^>]*>", RegexOptions.Compiled);
 
-        /// <summary>The player's own name, written in as the game draws.</summary>
+        /// <summary>
+        /// The player's own name, written in as the game draws.
+        ///
+        /// It comes two ways. Bare, as &lt;var 29 EB02 /var&gt;, and wrapped in a
+        /// &lt;var 2C&gt; that picks between spellings -
+        /// &lt;var 2C ((&lt;var 29 EB02 /var&gt;)) (( )) 02 /var&gt;. Only the wrapped
+        /// one was recognised, and the bare one is the commoner of the two:
+        /// 14,515 lines against 14,086 in the export of 5 August. Every line
+        /// carrying it was thrown away as unsubstitutable markup, including
+        /// whole quests' worth of the game addressing the player by name.
+        ///
+        /// The wrapper is listed first so it is taken whole. Matching the tag
+        /// inside it instead would leave the wrapper's own debris behind, and
+        /// that debris would throw the line away just the same.
+        ///
+        /// EB02 alone, not the whole &lt;var 29&gt; family: EA01 through EA09 and
+        /// the rest are other things the game fills in, and writing the
+        /// player's name over a number would be worse than dropping the line.
+        /// </summary>
         private static readonly Regex Player = new Regex(
-            "<var 2C .*?\\)\\) [0-9A-F]{2} /var>", RegexOptions.Singleline | RegexOptions.Compiled);
+            "<var 2C .*?\\)\\) [0-9A-F]{2} /var>|<var 29 EB02 /var>",
+            RegexOptions.Singleline | RegexOptions.Compiled);
 
         /// <summary>
         /// Agreement with the player's gender, feminine first. E905 alone: the
@@ -105,7 +124,7 @@ namespace Translation.Reference
         /// Raise this whenever a change here would put something different in
         /// the index for the same export.
         /// </summary>
-        public const int RulesVersion = 2;
+        public const int RulesVersion = 3;
 
         private const string KeySeparator = "<tab>";
 
