@@ -402,6 +402,18 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ReferenceIndexCancelled"] =
                 catalog.GetString("Update cancelled; the previous translations are still in use.");
             _SettingsWindow.Resources["ReferenceIndexFailed"] = catalog.GetString("Update failed: {0}");
+            _SettingsWindow.Resources["ReferenceIndexNewRevision"] =
+                catalog.GetString(
+                    "XIV Rus Translation has written new lines since these were built. Press Update to fetch them.");
+            _SettingsWindow.Resources["ReferenceIndexRulesChanged"] =
+                catalog.GetString(
+                    "These translations were read by older rules, and hold lines this build knows to be wrong. Press Update to rebuild them.");
+            _SettingsWindow.Resources["ReferenceIndexRevisionUnrecorded"] =
+                catalog.GetString(
+                    "These translations do not record which revision they came from, so there is no telling whether the project has moved. Press Update to be sure.");
+            _SettingsWindow.Resources["ReferenceIndexWrongLanguage"] =
+                catalog.GetString(
+                    "The translations installed are for {0}, and the game is being played in {1}. Press Update to fetch the pair in use.");
             _SettingsWindow.Resources["ResetSettingsTitle"] = catalog.GetString("Reset settings");
             _SettingsWindow.Resources["ResetSettingsHint"] =
                 catalog.GetString(

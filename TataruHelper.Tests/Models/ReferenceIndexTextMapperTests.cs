@@ -48,6 +48,10 @@ namespace TataruHelper.Tests.Models
                 case "ReferenceIndexUpToDate": return "current";
                 case "ReferenceIndexUpdated": return "updated {0}";
                 case "ReferenceIndexFailed": return "failed: {0}";
+                case "ReferenceIndexNewRevision": return "new lines";
+                case "ReferenceIndexRulesChanged": return "older rules";
+                case "ReferenceIndexRevisionUnrecorded": return "no revision recorded";
+                case "ReferenceIndexWrongLanguage": return "have {0}, playing {1}";
                 default: return key;
             }
         }
@@ -146,9 +150,74 @@ namespace TataruHelper.Tests.Models
                 Is.EqualTo("failed: Access to the path is denied."));
         }
 
+        [Test]
+        public void ACheckThatFoundNewLines_SaysWhatToPress()
+        {
+            // Nobody asked for this line, so it has to say both what happened
+            // and what to do about it.
+            Assert.That(Describe(ReferenceIndexCheckOutcome.RevisionChanged), Is.EqualTo("new lines"));
+        }
+
+        [Test]
+        public void ACheckAgainstOlderRules_DoesNotBlameTheProject()
+        {
+            // The translation has not moved; this build reads it differently.
+            // Told as "new lines available" it would send somebody looking for
+            // a change on GitHub that is not there.
+            Assert.That(Describe(ReferenceIndexCheckOutcome.RulesChanged), Is.EqualTo("older rules"));
+        }
+
+        [Test]
+        public void AnIndexWithNoRevision_IsNotAnnouncedAsOutOfDate()
+        {
+            // It may well be current. What can be said is that nothing knows.
+            Assert.That(Describe(ReferenceIndexCheckOutcome.UnknownRevision),
+                Is.EqualTo("no revision recorded"));
+        }
+
+        [Test]
+        public void AnIndexForAnotherLanguage_NamesBothPairs()
+        {
+            // The pair installed and the pair being played: with only one of
+            // them, "the wrong language" is not actionable.
+            var state = new ReferenceIndexState(true, "de", "ru", "abc1234", 201_924, 1);
+
+            Assert.That(
+                ReferenceIndexTextMapper.Describe(
+                    ReferenceIndexCheckOutcome.LanguagesChanged, state, "en", "ru", Localize),
+                Is.EqualTo("have de → ru, playing en → ru"));
+        }
+
+        [Test]
+        public void ACheckThatFoundNothingInstalled_SaysTheSameAsTheStatusLine()
+        {
+            Assert.That(Describe(ReferenceIndexCheckOutcome.Missing), Is.EqualTo("none"));
+        }
+
+        [Test]
+        public void ACheckThatChangedNothing_SaysSo()
+        {
+            Assert.That(Describe(ReferenceIndexCheckOutcome.UpToDate), Is.EqualTo("current"));
+        }
+
+        [Test]
+        public void ACheckThatNeverReachedTheProject_SaysNothing()
+        {
+            // An error the user did nothing to prompt, arriving in a window
+            // they may not even have open. It goes to the log instead.
+            Assert.That(Describe(ReferenceIndexCheckOutcome.Unknown), Is.Empty);
+        }
+
         private static string Describe(ReferenceIndexState state)
         {
             return ReferenceIndexTextMapper.Describe(state, Localize);
+        }
+
+        private static string Describe(ReferenceIndexCheckOutcome outcome)
+        {
+            var state = new ReferenceIndexState(true, "en", "ru", "abc1234", 201_924, 1);
+
+            return ReferenceIndexTextMapper.Describe(outcome, state, "en", "ru", Localize);
         }
     }
 }

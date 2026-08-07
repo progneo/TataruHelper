@@ -41,6 +41,50 @@ namespace FFXIVTataruHelper
                     lines, languages);
         }
 
+        /// <summary>
+        /// What the daily check found, in a line the user did not ask for and
+        /// so has to be able to make sense of on its own.
+        ///
+        /// Each of these ends by saying what to press, because none of them
+        /// does anything by itself: the check asks the project a cheap
+        /// question, and fetching an answer of a gigabyte stays the user's
+        /// decision unless they have said otherwise.
+        /// </summary>
+        /// <returns>Empty when there is nothing worth saying.</returns>
+        public static string Describe(
+            ReferenceIndexCheckOutcome outcome,
+            ReferenceIndexState state,
+            string gameLanguage,
+            string readingLanguage,
+            Func<string, string> localize)
+        {
+            switch (outcome)
+            {
+                case ReferenceIndexCheckOutcome.Missing:
+                    return localize("ReferenceIndexMissing");
+
+                case ReferenceIndexCheckOutcome.LanguagesChanged:
+                    return string.Format(CultureInfo.CurrentCulture, localize("ReferenceIndexWrongLanguage"),
+                        state.SourceLanguage + " → " + state.Language,
+                        gameLanguage + " → " + readingLanguage);
+
+                case ReferenceIndexCheckOutcome.RulesChanged:
+                    return localize("ReferenceIndexRulesChanged");
+
+                case ReferenceIndexCheckOutcome.UnknownRevision:
+                    return localize("ReferenceIndexRevisionUnrecorded");
+
+                case ReferenceIndexCheckOutcome.RevisionChanged:
+                    return localize("ReferenceIndexNewRevision");
+
+                case ReferenceIndexCheckOutcome.UpToDate:
+                    return localize("ReferenceIndexUpToDate");
+
+                default:
+                    return string.Empty;
+            }
+        }
+
         public static string Describe(ReferenceUpdateProgress report, Func<string, string> localize)
         {
             if (report.Stage != ReferenceUpdateStage.Downloading)
