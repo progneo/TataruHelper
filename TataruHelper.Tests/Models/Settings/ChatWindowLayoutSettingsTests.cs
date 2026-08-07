@@ -118,51 +118,9 @@ namespace TataruHelper.Tests
             }
         }
 
-        [Test]
-        public void NewWindow_DefaultsDelayedDialogCodesOffAndRealtimeDialogCodesOn()
-        {
-            var settings = new ChatWindowViewModelSettings("1", 0);
-            var languages = new List<TranslatorLanguage>
-            {
-                new("Auto", "Auto", "auto"), new("English", "English", "en")
-            };
-            var translationEngines = new List<TranslationEngine>
-            {
-                new(TranslationEngineName.GoogleTranslate, languages, 1.0)
-            };
-            var allChatCodes = new List<ChatMsgType>
-            {
-                new("003D", MsgType.Translate, "NPCD", Color.FromArgb(255, 171, 214, 71)),
-                new("0044", MsgType.Translate, "NPCA", Color.FromArgb(255, 171, 214, 71)),
-                new("F03D", MsgType.Translate, "NPCDRealtime", Color.FromArgb(255, 171, 214, 71)),
-                new("F044", MsgType.Translate, "NPCARealtime", Color.FromArgb(255, 171, 214, 71))
-            };
-
-            var logger = new NullLogger();
-            var hotKeyManager = new HotKeyManager(null);
-            var bindingService = new HotKeyBindingService(logger);
-
-            try
-            {
-                var viewModel = new ChatWindowViewModel(
-                    settings,
-                    translationEngines,
-                    null,
-                    allChatCodes,
-                    hotKeyManager,
-                    logger,
-                    bindingService);
-
-                Assert.That(viewModel.ChatCodes.Single(code => code.Code == "003D").IsChecked, Is.False);
-                Assert.That(viewModel.ChatCodes.Single(code => code.Code == "0044").IsChecked, Is.False);
-                Assert.That(viewModel.ChatCodes.Single(code => code.Code == "F03D").IsChecked, Is.True);
-                Assert.That(viewModel.ChatCodes.Single(code => code.Code == "F044").IsChecked, Is.True);
-            }
-            finally
-            {
-                hotKeyManager.Dispose();
-            }
-        }
+        // The default chat codes used to be pinned here, as the values they
+        // happened to have: 003D and 0044 off. That is now wrong on purpose,
+        // and what replaces it says why - see ChatWindowDefaultChatCodesTests.
 
         private sealed class NullLogger : IAppLogger
         {

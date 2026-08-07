@@ -895,22 +895,32 @@ namespace FFXIVTataruHelper.ViewModel
             }
         }
 
+        /// <summary>
+        /// The codes a window shows, and which of them start ticked.
+        /// </summary>
+        /// <remarks>
+        /// The chat-log dialogue codes 003D and 0044 start ticked like the rest
+        /// of <see cref="MsgType.Translate"/>. They used to be unticked for a
+        /// new window, to stop each NPC line being shown twice - once live from
+        /// the Talk addon and once when the player clicked through.
+        ///
+        /// That is not what stops it any more: while realtime reading is on,
+        /// the reader drops those two codes outright before they reach a window
+        /// (FFMemoryReader.IsCoveredByRealtimeReading), so the tick changes
+        /// nothing. What it did do was decide what happens when somebody turns
+        /// realtime reading off - and the answer was no story dialogue at all,
+        /// because the only path left arrives under codes nobody had ticked.
+        /// </remarks>
         private BindingList<ChatCodeViewModel> LoadChatCodes(List<ChatCodeViewModel> UserChatCodes,
             List<ChatMsgType> allChatCodes)
         {
             List<ChatMsgType> chatCodes = allChatCodes.Select(entry => new ChatMsgType(entry)).ToList();
             List<ChatCodeViewModel> chatCodesViewMode = new List<ChatCodeViewModel>();
-            var isNewWindow = UserChatCodes == null || UserChatCodes.Count == 0;
 
             foreach (var code in allChatCodes)
             {
-                bool isChecked = (code.MsgType == MsgType.Translate);
-                if (isNewWindow && IsDelayedDialogCode(code.ChatCode))
-                {
-                    isChecked = false;
-                }
-
-                chatCodesViewMode.Add(new ChatCodeViewModel(code.ChatCode, code.Name, code.Color, isChecked));
+                chatCodesViewMode.Add(new ChatCodeViewModel(
+                    code.ChatCode, code.Name, code.Color, code.MsgType == MsgType.Translate));
             }
 
             foreach (var userCode in UserChatCodes ?? Enumerable.Empty<ChatCodeViewModel>())
@@ -928,12 +938,6 @@ namespace FFXIVTataruHelper.ViewModel
             }
 
             return new BindingList<ChatCodeViewModel>(chatCodesViewMode);
-        }
-
-        private static bool IsDelayedDialogCode(string chatCode)
-        {
-            return string.Equals(chatCode, "003D", StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(chatCode, "0044", StringComparison.OrdinalIgnoreCase);
         }
 
         private void TrySetLanguage(CollectionView collection, TranslatorLanguage language)
