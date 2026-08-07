@@ -159,7 +159,12 @@
                                          IsChecked="{Binding Shell.IsRealtimeTranslation, Mode=TwoWay}" />
                     </Grid>
 
-                    <Grid Margin="0,12,0,0">
+                    <!-- Both this and the card below go when the game is
+                         played in the language being read: there is nothing
+                         to look up, so there is nothing to switch on and
+                         nothing worth fetching. -->
+                    <Grid Margin="0,12,0,0"
+                          Visibility="{Binding Shell.IsReferenceTranslationUsable, Converter={utils:BooleanToVisibilityConverterCollapse}}">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="Auto" />
@@ -177,7 +182,8 @@
                     <!-- Where those hand-made translations come from, and how to
                          fetch what the project has written since this release. -->
                     <Border Margin="0,10,0,0" Padding="12,10" CornerRadius="6"
-                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                            Background="{DynamicResource Brush.SurfaceSubtle}"
+                            Visibility="{Binding Shell.IsReferenceTranslationUsable, Converter={utils:BooleanToVisibilityConverterCollapse}}">
                       <StackPanel>
                         <Grid>
                             <Grid.ColumnDefinitions>

@@ -59,6 +59,18 @@ namespace FFXIVTataruHelper.Services.Update
         ReferenceIndexState ReadState();
 
         /// <summary>
+        /// The language the game is being played in, as last established -
+        /// from its configuration at startup, and from the process once it is
+        /// attached. Empty when neither could say.
+        ///
+        /// A read of a field, not of the game's configuration: this is asked
+        /// every time the settings page decides whether the hand-made
+        /// translations are worth showing, and <see cref="ResolveLanguages"/>
+        /// opens a file.
+        /// </summary>
+        string GameLanguage { get; }
+
+        /// <summary>
         /// The pair an update would build for, asked before starting one so the
         /// user can be told it is not the pair they already have.
         /// </summary>

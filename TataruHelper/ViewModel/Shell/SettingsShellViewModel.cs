@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Globalization;
@@ -68,6 +69,20 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
     private string _referenceIndexStatus;
     private string _referenceIndexProgress;
+
+    /// <summary>
+    /// Starts true, and only a definite answer takes it away: the saved
+    /// windows arrive on a background thread, and a section that vanishes and
+    /// comes back as they land is worse than one that stays.
+    /// </summary>
+    private bool _isReferenceTranslationUsable = true;
+
+    /// <summary>
+    /// The window whose reading language is being watched. Only the selected
+    /// one: it is the only one whose language anybody can be changing.
+    /// </summary>
+    private ChatWindowViewModel _watchedChatWindow;
+
     private bool _disposed;
     private SettingsSectionItem _selectedSection;
     private LanguageOption _selectedLanguageOption;
@@ -163,6 +178,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
         RefreshSectionTitles();
         RefreshReferenceIndexStatus();
+        RefreshReferenceTranslationUse();
 
         _settingsViewModel.PropertyChanged += OnSettingsViewModelPropertyChanged;
         _uiModel.PropertyChanged += OnUiModelPropertyChanged;
@@ -372,6 +388,17 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
     public bool HasReferenceIndexProgress => !string.IsNullOrEmpty(_referenceIndexProgress);
 
+    /// <summary>
+    /// Whether the hand-made translations are worth a place on the page.
+    ///
+    /// They translate out of the language the game is played in, so a window
+    /// reading that same language has nothing to look up. The whole section
+    /// goes rather than sitting there greyed: a switch, a line about 202,080
+    /// lines and a button offering a gigabyte are all answers to a question
+    /// nobody in that position is asking.
+    /// </summary>
+    public bool IsReferenceTranslationUsable => _isReferenceTranslationUsable;
+
     public bool IsReferenceIndexUpdating => _referenceIndexUpdateCancellation != null;
 
     public bool CanUpdateReferenceIndex =>
@@ -435,6 +462,10 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
             _ffStatusActive = value;
             OnPropertyChanged();
+
+            // Attaching to the game is when its language stops being a guess
+            // from a configuration file and starts coming from the process.
+            RefreshReferenceTranslationUse();
         }
     }
 
@@ -564,9 +595,11 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         }
 
         // Nothing to say to somebody who has turned the hand-made translations
-        // off: they are not reading them, and the answer would only be news
-        // about a feature they are not using.
+        // off, or who is reading in the language the game is already in: in
+        // both cases the answer is news about a feature they are not using,
+        // and in the second the page is not even showing it.
         if (!_uiModel.IsLiteraryTranslation ||
+            !IsReferenceTranslationUsable ||
             !_referenceIndexUpdateService.IsSupported ||
             IsReferenceIndexUpdating)
         {
@@ -727,6 +760,59 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
             ReferenceIndexTextMapper.Describe(_referenceIndexUpdateService.ReadState(), _localize);
     }
 
+    /// <summary>
+    /// Works out again whether any window reads a language the game is not
+    /// already in, and follows the selected window so a change of its reading
+    /// language is answered as it is made rather than at the next restart.
+    /// </summary>
+    private void RefreshReferenceTranslationUse()
+    {
+        var current = CurrentChatWindow;
+        if (!ReferenceEquals(_watchedChatWindow, current))
+        {
+            if (_watchedChatWindow != null)
+            {
+                _watchedChatWindow.PropertyChanged -= OnWatchedChatWindowPropertyChanged;
+            }
+
+            _watchedChatWindow = current;
+
+            if (_watchedChatWindow != null)
+            {
+                _watchedChatWindow.PropertyChanged += OnWatchedChatWindowPropertyChanged;
+            }
+        }
+
+        var usable = ReferenceTranslationUse.AnythingToLookUp(
+            _referenceIndexUpdateService.GameLanguage, ReadingLanguages());
+
+        if (_isReferenceTranslationUsable == usable)
+        {
+            return;
+        }
+
+        _isReferenceTranslationUsable = usable;
+        OnPropertyChanged(nameof(IsReferenceTranslationUsable));
+    }
+
+    private List<string> ReadingLanguages()
+    {
+        return _settingsViewModel.ChatWindows
+            .ToList()
+            .Select(window => window?.CurrentTranslateToLanguage?.LanguageCode ?? string.Empty)
+            .ToList();
+    }
+
+    private void OnWatchedChatWindowPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        // Raised by the window when the current item of its reading-language
+        // list moves, which is what a change in the combo box amounts to.
+        if (e.PropertyName == "TranslateToLanguages" || string.IsNullOrEmpty(e.PropertyName))
+        {
+            RefreshReferenceTranslationUse();
+        }
+    }
+
     private void ExecuteSwitchLanguage(object parameter)
     {
         _settingsViewModel.SwitchLanguageCommand.Execute(parameter);
@@ -796,6 +882,10 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         {
             OnPropertyChanged(nameof(CurrentChatWindow));
             OnPropertyChanged(nameof(SelectedChatWindowId));
+
+            // A window may have been added, removed or selected, and each of
+            // those changes the set of languages being read.
+            RefreshReferenceTranslationUse();
         }
     }
 
@@ -810,6 +900,10 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         if (e.PropertyName == nameof(TataruUIModel.AreSettingsLoaded))
         {
             OnPropertyChanged(nameof(CanAddWindow));
+
+            // The saved windows are in by now, so their languages can finally
+            // be asked about.
+            RefreshReferenceTranslationUse();
             return;
         }
 
@@ -888,6 +982,12 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
         _settingsViewModel.PropertyChanged -= OnSettingsViewModelPropertyChanged;
         _uiModel.PropertyChanged -= OnUiModelPropertyChanged;
+
+        if (_watchedChatWindow != null)
+        {
+            _watchedChatWindow.PropertyChanged -= OnWatchedChatWindowPropertyChanged;
+            _watchedChatWindow = null;
+        }
 
         _referenceIndexCheckTimer.Stop();
         _referenceIndexCheckTimer.Tick -= OnReferenceIndexCheckDue;

@@ -36,6 +36,8 @@ namespace FFXIVTataruHelper.Services.Update
 
         public bool IsSupported => !string.IsNullOrEmpty(_webTranslator?.ReferenceIndexPath);
 
+        public string GameLanguage => _webTranslator?.GameLanguage ?? string.Empty;
+
         public ReferenceIndexState ReadState()
         {
             if (_webTranslator == null)
