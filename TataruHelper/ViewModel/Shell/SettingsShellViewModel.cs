@@ -783,13 +783,21 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
             }
         }
 
-        var usable = ReferenceTranslationUse.AnythingToLookUp(
-            _referenceIndexUpdateService.GameLanguage, ReadingLanguages());
+        var reading = ReadingLanguages();
+        var game = _referenceIndexUpdateService.GameLanguage;
+        var usable = ReferenceTranslationUse.AnythingToLookUp(game, reading);
 
         if (_isReferenceTranslationUsable == usable)
         {
             return;
         }
+
+        // A whole section appearing or disappearing, so it says what decided
+        // that. Somebody whose translations are suddenly not on the page has
+        // one line to look at instead of a guess.
+        _logger.WriteLog("Hand-made translations " + (usable ? "shown" : "hidden") +
+                         ": game '" + (game.Length > 0 ? game : "unknown") +
+                         "', windows read '" + string.Join(", ", reading) + "'.");
 
         _isReferenceTranslationUsable = usable;
         OnPropertyChanged(nameof(IsReferenceTranslationUsable));
