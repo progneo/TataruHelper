@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml;
 
 namespace Translation.Reference
 {
@@ -26,21 +28,30 @@ namespace Translation.Reference
     /// </summary>
     public sealed class ReferenceIndexBuilder
     {
-        /// <summary>
-        /// One row: its number, and what the translators put against it.
-        ///
-        /// The source is matched as anything but a tag, and that is what keeps
-        /// this inside the row it started in. A row nobody has translated is
-        /// written &lt;target/&gt;, which has nothing to match, and a dot free
-        /// to cross the row's end would run on to the next row's target and
-        /// file its text under this row's number. That is not a line lost, it
-        /// is a line answered with somebody else's - 1 281 of them across the
-        /// export, each shown as a translation made by hand.
-        /// </summary>
-        private static readonly Regex Unit = new Regex(
-            "<trans-unit id=\"([^\"]+)\"[^>]*>\\s*<source>[^<]*</source>\\s*" +
-            "<target(?: state=\"([^\"]*)\")?>(.*?)</target>",
-            RegexOptions.Singleline | RegexOptions.Compiled);
+        /// <summary>One row of a sheet: its number, and the text against it.</summary>
+        internal readonly struct Unit
+        {
+            public Unit(string id, string text)
+            {
+                Id = id;
+                Text = text;
+            }
+
+            public string Id { get; }
+
+            public string Text { get; }
+        }
+
+        private static readonly XmlReaderSettings ReaderSettings = new XmlReaderSettings
+        {
+            // Nothing in the export declares one, and a document that fetches
+            // an external one is not something to honour while reading a
+            // hundred thousand files off the internet.
+            DtdProcessing = DtdProcessing.Prohibit,
+            IgnoreComments = true,
+            IgnoreProcessingInstructions = true,
+            CloseInput = true
+        };
 
         /// <summary>
         /// Styling: emphasis, the pair around a highlighted term, page and word
@@ -181,29 +192,55 @@ namespace Translation.Reference
         public int Conflicts { get; private set; }
 
         /// <summary>
+        /// Files that stopped being XML partway. Whatever was read before the
+        /// break is kept; this says how often that happened, because an export
+        /// where it happens often is an export to look at rather than to read.
+        /// </summary>
+        public int MalformedSheets { get; private set; }
+
+        /// <summary>
         /// Takes one sheet: the English file and its translation, as they stand
         /// in the export.
         /// </summary>
         public void AddSheet(string folder, string englishXliff, string translatedXliff)
         {
-            var english = ParseUnits(englishXliff);
-            if (english.Count == 0)
+            var englishUnits = ReadUnits(englishXliff, out var englishMalformed);
+            if (englishMalformed)
+            {
+                MalformedSheets++;
+            }
+
+            if (englishUnits.Count == 0)
             {
                 return;
+            }
+
+            // Looked up by row number from here on. A number written twice
+            // keeps the last, which is what reading them in order gave before.
+            var english = new Dictionary<string, string>(englishUnits.Count, StringComparer.Ordinal);
+            foreach (var unit in englishUnits)
+            {
+                english[unit.Id] = unit.Text;
             }
 
             Sheets++;
 
             var isRoster = FolderName(folder) == NpcSheet;
 
-            foreach (Match match in Unit.Matches(translatedXliff ?? string.Empty))
+            var translatedUnits = ReadUnits(translatedXliff, out var translatedMalformed);
+            if (translatedMalformed)
             {
-                if (!english.TryGetValue(match.Groups[1].Value, out var englishText))
+                MalformedSheets++;
+            }
+
+            foreach (var translatedUnit in translatedUnits)
+            {
+                if (!english.TryGetValue(translatedUnit.Id, out var englishText))
                 {
                     continue;
                 }
 
-                var translatedText = Unescape(match.Groups[3].Value);
+                var translatedText = translatedUnit.Text;
 
                 if (isRoster)
                 {
@@ -438,25 +475,119 @@ namespace Translation.Reference
             return separator >= 0 ? folder.Substring(separator + 1) : folder;
         }
 
-        private static Dictionary<string, string> ParseUnits(string xliff)
+        /// <summary>
+        /// The rows of one XLIFF file, in the order they are written.
+        ///
+        /// Read as XML rather than matched with an expression. The expression
+        /// this replaces had already filed 1 281 rows' text under the wrong
+        /// row's number, by running past a &lt;target/&gt; to the next row's
+        /// target; it also dropped every row whose target carried an attribute
+        /// it had not been told to expect. Neither is a mistake a reader can
+        /// make: an element ends where it ends, and an attribute it does not
+        /// know about is one it does not look at.
+        ///
+        /// Order is kept rather than handed back as a dictionary, because two
+        /// rows can reduce to the same line and the first is the one kept.
+        /// </summary>
+        /// <param name="malformed">
+        /// True when the file stopped being XML partway. What was read before
+        /// that is still returned: half a sheet of hand-made translation beats
+        /// none, and the count says how often it happens.
+        /// </param>
+        internal static List<Unit> ReadUnits(string xliff, out bool malformed)
         {
-            var units = new Dictionary<string, string>(StringComparer.Ordinal);
-            foreach (Match match in Unit.Matches(xliff ?? string.Empty))
+            var units = new List<Unit>();
+            malformed = false;
+
+            if (string.IsNullOrEmpty(xliff))
             {
-                units[match.Groups[1].Value] = Unescape(match.Groups[3].Value);
+                return units;
+            }
+
+            try
+            {
+                using var reader = XmlReader.Create(new StringReader(xliff), ReaderSettings);
+                var id = string.Empty;
+
+                while (reader.Read())
+                {
+                    if (reader.NodeType != XmlNodeType.Element)
+                    {
+                        continue;
+                    }
+
+                    if (reader.LocalName == "trans-unit")
+                    {
+                        id = reader.GetAttribute("id") ?? string.Empty;
+                        continue;
+                    }
+
+                    if (reader.LocalName != "target" || id.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    // Left out on purpose, and it used to be left out by
+                    // accident: a state-qualifier says where the text came
+                    // from, and the only one the export uses is
+                    // "leveraged-mt" - a machine's work. This index exists to
+                    // hold what people wrote instead.
+                    if (reader.GetAttribute("state-qualifier") != null)
+                    {
+                        continue;
+                    }
+
+                    // A row nobody has translated, written <target/>.
+                    if (reader.IsEmptyElement)
+                    {
+                        continue;
+                    }
+
+                    var text = ReadElementText(reader);
+                    if (text.Length > 0)
+                    {
+                        units.Add(new Unit(id, text));
+                    }
+                }
+            }
+            catch (XmlException)
+            {
+                malformed = true;
             }
 
             return units;
         }
 
-        private static string Unescape(string text)
+        /// <summary>
+        /// The text of the element the reader is on, entities resolved.
+        ///
+        /// Written out rather than using ReadElementContentAsString, which
+        /// throws if the element ever turns out to have a child. No target in
+        /// the export has one today; a sheet that grew one should lose its
+        /// markup, not throw away the words around it.
+        /// </summary>
+        private static string ReadElementText(XmlReader reader)
         {
-            return text
-                .Replace("&lt;", "<")
-                .Replace("&gt;", ">")
-                .Replace("&quot;", "\"")
-                .Replace("&apos;", "'")
-                .Replace("&amp;", "&");
+            var text = new StringBuilder();
+            var depth = reader.Depth;
+
+            while (reader.Read())
+            {
+                switch (reader.NodeType)
+                {
+                    case XmlNodeType.Text:
+                    case XmlNodeType.CDATA:
+                    case XmlNodeType.SignificantWhitespace:
+                    case XmlNodeType.Whitespace:
+                        text.Append(reader.Value);
+                        break;
+
+                    case XmlNodeType.EndElement when reader.Depth <= depth:
+                        return text.ToString();
+                }
+            }
+
+            return text.ToString();
         }
     }
 }

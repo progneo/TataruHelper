@@ -42,6 +42,7 @@ namespace Translation.Tests.Reference
             TestContext.Out.WriteLine($"gen.pat. : {builder.GenderedPatterns.Count / 2}");
             TestContext.Out.WriteLine($"skipped  : {builder.SkippedForMarkup}");
             TestContext.Out.WriteLine($"conflicts: {builder.Conflicts}");
+            TestContext.Out.WriteLine($"malformed: {builder.MalformedSheets}");
 
             // Counts from the export this was developed against. Lines and
             // speakers match the earlier python builder exactly.
@@ -102,6 +103,13 @@ namespace Translation.Tests.Reference
                 // 984 of the game's most personal lines went to an engine.
                 Assert.That(builder.GenderedPatterns.Count / 2, Is.EqualTo(1005), "gendered patterns");
                 Assert.That(builder.SkippedForMarkup, Is.EqualTo(5552), "skipped for markup");
+
+                // Every one of the counts above came out the same after the
+                // parsing moved from an expression to an XML reader, which is
+                // the whole case that the move changed nothing. This one is
+                // new: the export is well-formed throughout, so a sheet that
+                // stops being XML is news rather than routine.
+                Assert.That(builder.MalformedSheets, Is.EqualTo(0), "malformed sheets");
             });
 
             // Lines seen in game, each of which cost a round of investigation.
