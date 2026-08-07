@@ -327,6 +327,41 @@ namespace Translation.Tests.Reference
             Assert.That(builder.Lines, Is.Empty);
         }
 
+        // The game writes the hyphen in a name it will not break across lines
+        // as its own tag, and that tag was being deleted along with the colour
+        // and emphasis it sat beside. The index then held "KanESenna" against a
+        // screen that says "Kan-E-Senna" - and with it Radz-at-Han, Toto-Rak,
+        // Mun-Tuy, city-state, ill-fated and Hatching-tide.
+        [Test]
+        public void AHyphenTheGameWillNotBreak_IsAHyphen()
+        {
+            const string hyphen = "&lt;var 1F /var&gt;";
+
+            var builder = Build("exd/Quest/006",
+                Sheet(("52", $"TEXT_MANFST303_00683_SERPENTPERSONNEL_000_5&lt;tab&gt;Elder Seedseer Kan{hyphen}E" +
+                             $"{hyphen}Senna is the supreme commander of our forces.")),
+                Sheet(("52", "TEXT_MANFST303_00683_SERPENTPERSONNEL_000_5&lt;tab&gt;Верховная Жрица " +
+                             "Кан-Э-Сенна — верховный главнокомандующий наших сил.")));
+
+            Assert.That(
+                builder.Lines["Elder Seedseer Kan-E-Senna is the supreme commander of our forces."],
+                Is.EqualTo("Верховная Жрица Кан-Э-Сенна — верховный главнокомандующий наших сил."));
+        }
+
+        [Test]
+        public void APlaceTheGameMayBreakAWord_IsStillNothing()
+        {
+            // <var 16> and <var 1F> look alike and are opposites: one is drawn
+            // only if the line breaks there, the other is always drawn. Reading
+            // the first as a hyphen would put one in the middle of every long
+            // German word.
+            var builder = Build("exd/Quest/001",
+                Sheet(("1", "Waf&lt;var 16 /var&gt;fen&lt;var 16 /var&gt;fertigkeiten")),
+                Sheet(("1", "Владение оружием")));
+
+            Assert.That(builder.Lines["Waffenfertigkeiten"], Is.EqualTo("Владение оружием"));
+        }
+
         // English can carry the agreement as readily as Russian, so the line
         // reaching us differs by character and is stored under each.
         [Test]

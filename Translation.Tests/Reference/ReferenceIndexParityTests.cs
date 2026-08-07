@@ -69,8 +69,17 @@ namespace Translation.Tests.Reference
             // Recognising the player's name in its bare form as well as its
             // wrapped one stopped 138 more lines being thrown away as markup:
             // patterns 3 117 to 3 200, gendered patterns 957 to 1 005. Lines
-            // do not move, and should not - a line carrying the name was never
-            // stored as a line, it was skipped.
+            // do not move for that, and should not - a line carrying the name
+            // was never stored as a line, it was skipped.
+            //
+            // Reading <var 1F> as the hyphen it is drawn as took lines from
+            // 201 924 to 201 918. Diffing the two indexes key by key, rather
+            // than trusting the totals: 819 keys went, 813 arrived, and 813 of
+            // the departures are the same key with its hyphens restored -
+            // Kan-E-Senna, Raya-O-Senna, Radz-at-Han, Heaven-on-High. Five of
+            // the remaining six merged into a key that was already there,
+            // spelled with real hyphens by some other row, and carrying word
+            // for word the same translation. The sixth was "//".
             //
             // Gendered does not, and deliberately: python resolved the player's
             // name before asking about gender, so a line carrying both landed
@@ -82,7 +91,7 @@ namespace Translation.Tests.Reference
             Assert.Multiple(() =>
             {
                 Assert.That(builder.Sheets, Is.EqualTo(2681), "sheets");
-                Assert.That(builder.Lines.Count, Is.EqualTo(201924), "lines");
+                Assert.That(builder.Lines.Count, Is.EqualTo(201918), "lines");
                 Assert.That(builder.Patterns.Count, Is.EqualTo(3200), "patterns");
                 Assert.That(builder.Speakers.Count, Is.EqualTo(4245), "speakers");
                 Assert.That(builder.Gendered.Count / 2, Is.EqualTo(6465), "gendered");
@@ -118,6 +127,15 @@ namespace Translation.Tests.Reference
                 // capitalised, which is why the reader looks it up NOCASE.
                 Assert.That(builder.Speakers["serpent personnel officer"],
                     Is.EqualTo("Кадровый офицер Ордена"));
+
+                // The hyphens are the whole point of this one: the export
+                // writes them as a tag, and the screen says Kan-E-Senna.
+                Assert.That(
+                    builder.Lines["Elder Seedseer Kan-E-Senna is the supreme commander of our forces. " +
+                                  "Under her wise leadership, we protect the people of Gridania and " +
+                                  "the sanctity of the Twelveswood."],
+                    Is.EqualTo("Верховная Жрица Кан-Э-Сенна — верховный командир нашей армии. " +
+                               "Под её мудрым началом мы защищаем народ Гридании и Священный Лес."));
             });
         }
     }

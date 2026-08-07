@@ -49,8 +49,23 @@ namespace Translation.Reference
         /// costs 140,000 of them.
         /// </summary>
         private static readonly Regex Formatting = new Regex(
-            "<var (?:1A|48|49|17|1F|1B|1C|60)[^>]*>|</?(?:color2|glow2|color|glow)[^>]*>",
+            "<var (?:1A|48|49|17|1B|1C|60)[^>]*>|</?(?:color2|glow2|color|glow)[^>]*>",
             RegexOptions.Compiled);
+
+        /// <summary>
+        /// A hyphen the game will not break a line at, and it draws one: 4,267
+        /// of them in the export, and every sample is a place English puts a
+        /// hyphen - Kan-E-Senna, Radz-at-Han, Toto-Rak, city-state, ill-fated,
+        /// Hatching-tide.
+        ///
+        /// It sat among the formatting and was deleted, so the index held
+        /// "Elder Seedseer KanESenna" against a screen that says
+        /// "Kan-E-Senna", and every line naming one of those places or people
+        /// went to an engine. An ordinary hyphen, because that is the character
+        /// the game hands the reader - checked against the dialogue it has
+        /// actually given us, which carries U+002D and no other dash.
+        /// </summary>
+        private static readonly Regex NonBreakingHyphen = new Regex("<var 1F[^>]*>", RegexOptions.Compiled);
 
         private static readonly Regex LineBreak = new Regex("<nl>", RegexOptions.Compiled);
 
@@ -124,7 +139,7 @@ namespace Translation.Reference
         /// Raise this whenever a change here would put something different in
         /// the index for the same export.
         /// </summary>
-        public const int RulesVersion = 3;
+        public const int RulesVersion = 4;
 
         private const string KeySeparator = "<tab>";
 
@@ -350,6 +365,7 @@ namespace Translation.Reference
             text = StripKey(text);
             text = Formatting.Replace(text, string.Empty);
             text = SoftHyphen.Replace(text, string.Empty);
+            text = NonBreakingHyphen.Replace(text, "-");
             text = HardSpace.Replace(text, " ");
             text = LineBreak.Replace(text, " ");
             text = SpeakerPrefix.Replace(text.TrimStart(), string.Empty);
