@@ -165,6 +165,7 @@ public partial class MainWindow : FluentWindow
                 _translationCredentials,
                 _referenceIndexUpdateService,
                 _settingsResetService,
+                _logger,
                 // The window carries the translated strings; the application
                 // only ever has the English defaults.
                 key => TryFindResource(key) as string ?? key,

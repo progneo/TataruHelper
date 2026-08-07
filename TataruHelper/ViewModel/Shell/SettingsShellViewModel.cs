@@ -12,6 +12,7 @@ using System.Windows.Input;
 using System.Windows.Threading;
 
 using FFXIVTataruHelper.Services.HotKeys;
+using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.Services.Update;
 using FFXIVTataruHelper.Theme;
@@ -31,6 +32,13 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     private readonly Action _checkUpdatesAction;
     private readonly IReferenceIndexUpdateService _referenceIndexUpdateService;
     private readonly ISettingsResetService _settingsResetService;
+
+    /// <summary>
+    /// Where the daily check leaves a trace. Nobody watches it happen, so
+    /// without this the only evidence it ran at all is a line of text in a
+    /// window that may never have been opened.
+    /// </summary>
+    private readonly IAppLogger _logger;
 
     /// <summary>
     /// Reads an interface string as the window has it.
@@ -78,6 +86,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         TranslationCredentialsViewModel translationCredentials,
         IReferenceIndexUpdateService referenceIndexUpdateService,
         ISettingsResetService settingsResetService,
+        IAppLogger logger,
         Func<string, string> localize,
         Func<string, bool> confirm,
         Action restart)
@@ -91,6 +100,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         _referenceIndexUpdateService = referenceIndexUpdateService
                                        ?? throw new ArgumentNullException(nameof(referenceIndexUpdateService));
         _settingsResetService = settingsResetService ?? throw new ArgumentNullException(nameof(settingsResetService));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _localize = localize ?? (key => key);
         _confirm = confirm ?? (_ => true);
         _restart = restart ?? (() => { });
@@ -570,6 +580,13 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
             var outcome = ReferenceIndexAutoCheck.Decide(state, game, reading, latest);
 
+            // In English, and with both revisions in it: whoever reads this
+            // afterwards wants to know what was compared, not how it was
+            // phrased in the interface language of the day.
+            _logger.WriteLog("Reference index check: " + outcome +
+                             " (installed " + Revision(state.Revision) + ", project " + Revision(latest) +
+                             ", " + game + " → " + reading + ")");
+
             if (IsReferenceIndexAutoInstall && ReferenceIndexAutoCheck.MayInstall(outcome))
             {
                 // Straight down the button's own path, so an update that
@@ -590,6 +607,12 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         {
             // The application is closing. Nothing was being replaced.
         }
+    }
+
+    /// <summary>A commit as short as anybody quotes one, or a word saying there is none.</summary>
+    private static string Revision(string revision)
+    {
+        return string.IsNullOrEmpty(revision) ? "none" : revision.Substring(0, Math.Min(7, revision.Length));
     }
 
     /// <summary>
