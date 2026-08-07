@@ -26,8 +26,19 @@ namespace Translation.Reference
     /// </summary>
     public sealed class ReferenceIndexBuilder
     {
+        /// <summary>
+        /// One row: its number, and what the translators put against it.
+        ///
+        /// The source is matched as anything but a tag, and that is what keeps
+        /// this inside the row it started in. A row nobody has translated is
+        /// written &lt;target/&gt;, which has nothing to match, and a dot free
+        /// to cross the row's end would run on to the next row's target and
+        /// file its text under this row's number. That is not a line lost, it
+        /// is a line answered with somebody else's - 1 281 of them across the
+        /// export, each shown as a translation made by hand.
+        /// </summary>
         private static readonly Regex Unit = new Regex(
-            "<trans-unit id=\"([^\"]+)\"[^>]*>\\s*<source>.*?</source>\\s*" +
+            "<trans-unit id=\"([^\"]+)\"[^>]*>\\s*<source>[^<]*</source>\\s*" +
             "<target(?: state=\"([^\"]*)\")?>(.*?)</target>",
             RegexOptions.Singleline | RegexOptions.Compiled);
 

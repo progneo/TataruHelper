@@ -30,6 +30,36 @@ namespace Translation.Tests.Reference
         }
 
         [Test]
+        public void ARowNobodyTranslated_DoesNotTakeTheNextRowsText()
+        {
+            // Half-translated sheets write the untouched rows as <target/>.
+            // Reading across one of them put the next row's translation under
+            // this row's number: 1 281 lines answered with a different line
+            // altogether, and shown as somebody's hand-made work.
+            var english =
+                "<xliff><file><body>" +
+                "<trans-unit id=\"59\"><source>59</source><target state=\"final\">Where has he gone?</target></trans-unit>" +
+                "<trans-unit id=\"60\"><source>60</source><target state=\"final\">He yet lives!?</target></trans-unit>" +
+                "</body></file></xliff>";
+
+            var translated =
+                "<xliff><file><body>" +
+                "<trans-unit id=\"59\"><source>59</source><target/></trans-unit>" +
+                "<trans-unit id=\"60\"><source>60</source><target state=\"translated\">Он всё ещё жив?!</target></trans-unit>" +
+                "</body></file></xliff>";
+
+            var builder = new ReferenceIndexBuilder();
+            builder.AddSheet("exd/Quest/013", english, translated);
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(builder.Lines["He yet lives!?"], Is.EqualTo("Он всё ещё жив?!"));
+                Assert.That(builder.Lines.ContainsKey("Where has he gone?"), Is.False,
+                    "a row nobody translated must stay untranslated");
+            });
+        }
+
+        [Test]
         public void PlainLine_IsIndexed()
         {
             // The export wraps a line with a real newline, and we read it

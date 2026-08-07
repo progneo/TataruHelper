@@ -59,6 +59,11 @@ namespace Translation.Tests.Reference
             // move these barely at all - English has neither - but they are what
             // was throwing away the Crystal Exarch on a German client.
             //
+            // Speakers went down by four and patterns by three when rows stopped
+            // being read across a <target/>. Those were not lines lost: they were
+            // lines carrying the next row's text, and four of them were somebody
+            // else's name.
+            //
             // Gendered does not, and deliberately: python resolved the player's
             // name before asking about gender, so a line carrying both landed
             // among the gendered ones with the name still punched out - roughly
@@ -69,11 +74,11 @@ namespace Translation.Tests.Reference
             Assert.Multiple(() =>
             {
                 Assert.That(builder.Sheets, Is.EqualTo(2681), "sheets");
-                Assert.That(builder.Lines.Count, Is.EqualTo(201838), "lines");
-                Assert.That(builder.Patterns.Count, Is.EqualTo(3120), "patterns");
-                Assert.That(builder.Speakers.Count, Is.EqualTo(4249), "speakers");
-                Assert.That(builder.Gendered.Count / 2, Is.EqualTo(6464), "gendered");
-                Assert.That(builder.SkippedForMarkup, Is.EqualTo(6763), "skipped for markup");
+                Assert.That(builder.Lines.Count, Is.EqualTo(201924), "lines");
+                Assert.That(builder.Patterns.Count, Is.EqualTo(3117), "patterns");
+                Assert.That(builder.Speakers.Count, Is.EqualTo(4245), "speakers");
+                Assert.That(builder.Gendered.Count / 2, Is.EqualTo(6465), "gendered");
+                Assert.That(builder.SkippedForMarkup, Is.EqualTo(6674), "skipped for markup");
             });
 
             // Lines seen in game, each of which cost a round of investigation.
