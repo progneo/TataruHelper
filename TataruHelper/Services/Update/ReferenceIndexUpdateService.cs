@@ -83,6 +83,11 @@ namespace FFXIVTataruHelper.Services.Update
             return (game, reading);
         }
 
+        public Task<string> GetLatestRevisionAsync(CancellationToken cancellationToken)
+        {
+            return new ReferenceIndexUpdater(_logger).GetLatestRevisionAsync(cancellationToken);
+        }
+
         public async Task<ReferenceUpdateResult> UpdateAsync(
             string gameLanguage,
             string readingLanguage,

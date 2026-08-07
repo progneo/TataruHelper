@@ -64,6 +64,17 @@ namespace FFXIVTataruHelper.Services.Update
         /// </summary>
         (string GameLanguage, string ReadingLanguage) ResolveLanguages(string gameLanguage, string readingLanguage);
 
+        /// <summary>
+        /// What commit the translation project is at, or empty when it could
+        /// not be asked.
+        ///
+        /// Separate from <see cref="UpdateAsync"/>, which asks the same
+        /// question and then acts on it. This is for asking alone: it is a few
+        /// kilobytes, so it can happen by itself once a day, while fetching
+        /// the answer is a gigabyte and cannot.
+        /// </summary>
+        Task<string> GetLatestRevisionAsync(CancellationToken cancellationToken);
+
         /// <param name="gameLanguage">What the game is played in, so lines are keyed on it.</param>
         /// <param name="readingLanguage">What the user wants to read.</param>
         Task<ReferenceUpdateResult> UpdateAsync(

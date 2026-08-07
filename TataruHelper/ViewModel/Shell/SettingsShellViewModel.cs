@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Threading;
 
 using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Settings;
@@ -51,6 +52,12 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     private readonly Action _restart;
 
     private CancellationTokenSource _referenceIndexUpdateCancellation;
+
+    /// <summary>Cancels whatever the daily check is in the middle of, at shutdown.</summary>
+    private readonly CancellationTokenSource _lifetime = new CancellationTokenSource();
+
+    private readonly DispatcherTimer _referenceIndexCheckTimer;
+
     private string _referenceIndexStatus;
     private string _referenceIndexProgress;
     private bool _disposed;
@@ -149,7 +156,23 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
         _settingsViewModel.PropertyChanged += OnSettingsViewModelPropertyChanged;
         _uiModel.PropertyChanged += OnUiModelPropertyChanged;
+
+        // A dispatcher timer, so the check arrives on the thread that reads
+        // the current chat window and writes the status line - the same
+        // thread, and the same code, as pressing the button.
+        _referenceIndexCheckTimer = new DispatcherTimer { Interval = FirstCheckDelay };
+        _referenceIndexCheckTimer.Tick += OnReferenceIndexCheckDue;
+        _referenceIndexCheckTimer.Start();
     }
+
+    /// <summary>
+    /// How long after starting the first check happens.
+    ///
+    /// Not at once: the saved settings are still being read, the game may not
+    /// be attached yet, and somebody who has just opened the application is
+    /// about to play rather than to read about downloads.
+    /// </summary>
+    private static readonly TimeSpan FirstCheckDelay = TimeSpan.FromMinutes(1);
 
     public event PropertyChangedEventHandler PropertyChanged;
 
@@ -493,6 +516,83 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     }
 
     /// <summary>
+    /// Asks the translation project whether it has moved, once a day.
+    ///
+    /// The question is a few kilobytes and the answer changes over weeks, so
+    /// this is cheap enough to do unprompted and rare enough to be worth
+    /// doing. Until it existed, an index only ever got newer by somebody
+    /// wondering whether it might have - and a fresh installation with no
+    /// translations at all said nothing about it either.
+    /// </summary>
+    private void OnReferenceIndexCheckDue(object sender, EventArgs e)
+    {
+        // The saved settings arrive on a background thread and may not have
+        // landed yet, and none of what follows can be decided without them.
+        // The interval is still the short one, so this comes round again in a
+        // minute rather than tomorrow.
+        if (!_uiModel.AreSettingsLoaded)
+        {
+            return;
+        }
+
+        if (_referenceIndexCheckTimer.Interval != ReferenceIndexAutoCheck.Interval)
+        {
+            _referenceIndexCheckTimer.Interval = ReferenceIndexAutoCheck.Interval;
+        }
+
+        // Nothing to say to somebody who has turned the hand-made translations
+        // off: they are not reading them, and the answer would only be news
+        // about a feature they are not using.
+        if (!_uiModel.IsLiteraryTranslation ||
+            !_referenceIndexUpdateService.IsSupported ||
+            IsReferenceIndexUpdating)
+        {
+            return;
+        }
+
+        RunReferenceIndexCheckAsync(_lifetime.Token).Forget();
+    }
+
+    private async Task RunReferenceIndexCheckAsync(CancellationToken cancellationToken)
+    {
+        try
+        {
+            // Read before the request rather than after: it takes a moment,
+            // and the pair to compare against is the one installed now.
+            var (game, reading) = _referenceIndexUpdateService.ResolveLanguages(
+                string.Empty, CurrentChatWindow?.CurrentTranslateToLanguage?.LanguageCode ?? string.Empty);
+
+            var state = _referenceIndexUpdateService.ReadState();
+
+            var latest = await _referenceIndexUpdateService
+                .GetLatestRevisionAsync(cancellationToken)
+                .ConfigureAwait(true);
+
+            var outcome = ReferenceIndexAutoCheck.Decide(state, game, reading, latest);
+
+            if (IsReferenceIndexAutoInstall && ReferenceIndexAutoCheck.MayInstall(outcome))
+            {
+                // Straight down the button's own path, so an update that
+                // started by itself can still be watched and cancelled. It
+                // asks the project a second time, which is the same few
+                // kilobytes and keeps one place deciding what to fetch.
+                StartReferenceIndexUpdate();
+                return;
+            }
+
+            if (ReferenceIndexAutoCheck.IsWorthSaying(outcome))
+            {
+                ReferenceIndexProgress =
+                    ReferenceIndexTextMapper.Describe(outcome, state, game, reading, _localize);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // The application is closing. Nothing was being replaced.
+        }
+    }
+
+    /// <summary>
     /// Takes the saved settings away and closes, so the next start reads what
     /// a fresh installation would.
     ///
@@ -746,9 +846,13 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         _settingsViewModel.PropertyChanged -= OnSettingsViewModelPropertyChanged;
         _uiModel.PropertyChanged -= OnUiModelPropertyChanged;
 
+        _referenceIndexCheckTimer.Stop();
+        _referenceIndexCheckTimer.Tick -= OnReferenceIndexCheckDue;
+
         // An update outlives this window otherwise, and it ends by moving a
         // file over the index the application is still reading as it shuts down.
         _referenceIndexUpdateCancellation?.Cancel();
+        _lifetime.Cancel();
 
         _disposed = true;
     }
