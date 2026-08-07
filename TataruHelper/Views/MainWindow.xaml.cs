@@ -1,6 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Drawing;
+using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -167,7 +168,8 @@ public partial class MainWindow : FluentWindow
                 // The window carries the translated strings; the application
                 // only ever has the English defaults.
                 key => TryFindResource(key) as string ?? key,
-                AskUser);
+                AskUser,
+                () => ApplicationRestart.Start(Environment.GetCommandLineArgs().Skip(1).ToArray(), _logger));
 
             _settingsShellViewModel.PropertyChanged += OnSettingsShellPropertyChanged;
 

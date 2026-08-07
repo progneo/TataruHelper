@@ -9,6 +9,7 @@ using System.Windows.Threading;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Update;
 using FFXIVTataruHelper.Theme;
+using FFXIVTataruHelper.Utils;
 
 using Microsoft.Extensions.DependencyInjection;
 
@@ -42,6 +43,11 @@ namespace FFXIVTataruHelper
                 Shutdown();
                 return;
             }
+
+            // Started by a copy that is on its way out - after a settings
+            // reset - so wait for it to go before anything looks at the mutex
+            // that allows only one of us.
+            ApplicationRestart.WaitForPrevious(e.Args, null);
 
             // Asked to build the index rather than to run: do it and leave,
             // before any of the interface is put together.

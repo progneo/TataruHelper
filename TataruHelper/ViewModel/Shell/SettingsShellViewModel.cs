@@ -47,6 +47,9 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     /// </summary>
     private readonly Func<string, bool> _confirm;
 
+    /// <summary>Starts the copy that takes over once this one has gone.</summary>
+    private readonly Action _restart;
+
     private CancellationTokenSource _referenceIndexUpdateCancellation;
     private string _referenceIndexStatus;
     private string _referenceIndexProgress;
@@ -69,7 +72,8 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         IReferenceIndexUpdateService referenceIndexUpdateService,
         ISettingsResetService settingsResetService,
         Func<string, string> localize,
-        Func<string, bool> confirm)
+        Func<string, bool> confirm,
+        Action restart)
     {
         _settingsViewModel = settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
         _uiModel = uiModel ?? throw new ArgumentNullException(nameof(uiModel));
@@ -82,6 +86,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         _settingsResetService = settingsResetService ?? throw new ArgumentNullException(nameof(settingsResetService));
         _localize = localize ?? (key => key);
         _confirm = confirm ?? (_ => true);
+        _restart = restart ?? (() => { });
 
         Sections = new ObservableCollection<SettingsSectionItem>
         {
@@ -488,6 +493,12 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     private async Task ResetSettingsAsync()
     {
         await _settingsResetService.ResetAsync().ConfigureAwait(true);
+
+        // Started before the shutdown, and told to wait for this process: only
+        // one copy may run, so one started now would find the mutex taken and
+        // exit without a word.
+        _restart();
+
         _settingsViewModel.ShutDownRequestedCommand.Execute(null);
     }
 
