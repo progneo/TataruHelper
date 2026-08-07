@@ -167,9 +167,18 @@ namespace FFXIVTataruHelper
             IsFirstTime = 0;
         }
 
+        /// <summary>
+        /// A copy of somebody's settings.
+        ///
+        /// Every property is copied, and a test walks them to say so. Three
+        /// were being missed and two were wrong: the background colour was
+        /// assigned to a local variable of the same name and thrown away, and
+        /// direct memory reading was set to true rather than copied. Nothing
+        /// uses this yet, which is the only reason none of it had been noticed.
+        /// </summary>
         public UserSettings(UserSettings userSettings)
         {
-            Color BackgroundColor = userSettings.BackgroundColor;
+            BackgroundColor = userSettings.BackgroundColor;
 
             Font1Color = userSettings.Font1Color;
 
@@ -183,7 +192,13 @@ namespace FFXIVTataruHelper
 
             IsAutoHide = userSettings.IsAutoHide;
 
-            IsDirecMemoryReading = true;
+            IsDirecMemoryReading = userSettings.IsDirecMemoryReading;
+
+            IsLiteraryTranslation = userSettings.IsLiteraryTranslation;
+
+            IsMachineTranslationMarked = userSettings.IsMachineTranslationMarked;
+
+            IsSpeakerNameTranslated = userSettings.IsSpeakerNameTranslated;
 
             AutoHideTimeout = userSettings.AutoHideTimeout;
 
@@ -205,6 +220,7 @@ namespace FFXIVTataruHelper
 
             ShowHideChatKeys = new HotKeyCombination(userSettings.ShowHideChatKeys);
             ClickThoughtChatKeys = new HotKeyCombination(userSettings.ClickThoughtChatKeys);
+            ClearChatKeys = new HotKeyCombination(userSettings.ClearChatKeys);
 
             SettingsWindowSize = userSettings.SettingsWindowSize;
 
