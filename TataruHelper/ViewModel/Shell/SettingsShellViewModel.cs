@@ -497,7 +497,21 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         _hotkeyCaptureService.RegisterHotKeyUp(CurrentChatWindow, type, args);
     }
 
+    /// <summary>
+    /// The button: build for the language this window is set to read.
+    /// </summary>
     private void StartReferenceIndexUpdate()
+    {
+        BeginReferenceIndexUpdate(CurrentChatWindow?.CurrentTranslateToLanguage?.LanguageCode ?? string.Empty);
+    }
+
+    /// <param name="readingLanguage">
+    /// Empty to keep reading whatever the installed index is in. That is what
+    /// an update started by the daily check asks for: it decided on a pair
+    /// before starting, and working it out a second time from a chat window
+    /// could well produce a different one.
+    /// </param>
+    private void BeginReferenceIndexUpdate(string readingLanguage)
     {
         if (IsReferenceIndexUpdating || !_referenceIndexUpdateService.IsSupported)
         {
@@ -508,8 +522,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         // started, so what would be built is worked out now - and if it is not
         // what is installed, it is asked about rather than done. Saying nothing
         // cost somebody a working index and a download to get it back.
-        var (game, reading) = _referenceIndexUpdateService.ResolveLanguages(
-            string.Empty, CurrentChatWindow?.CurrentTranslateToLanguage?.LanguageCode ?? string.Empty);
+        var (game, reading) = _referenceIndexUpdateService.ResolveLanguages(string.Empty, readingLanguage);
 
         var state = _referenceIndexUpdateService.ReadState();
         if (ReferenceIndexRebuild.ChangesLanguages(state, game, reading) &&
@@ -522,7 +535,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         OnPropertyChanged(nameof(IsReferenceIndexUpdating));
         OnPropertyChanged(nameof(CanUpdateReferenceIndex));
 
-        RunReferenceIndexUpdateAsync(_referenceIndexUpdateCancellation.Token).Forget();
+        RunReferenceIndexUpdateAsync(readingLanguage, _referenceIndexUpdateCancellation.Token).Forget();
     }
 
     /// <summary>
@@ -567,10 +580,19 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     {
         try
         {
-            // Read before the request rather than after: it takes a moment,
-            // and the pair to compare against is the one installed now.
-            var (game, reading) = _referenceIndexUpdateService.ResolveLanguages(
-                string.Empty, CurrentChatWindow?.CurrentTranslateToLanguage?.LanguageCode ?? string.Empty);
+            // Neither language comes from a chat window here. The game's comes
+            // from the game, as always; the reading language is left empty so
+            // it falls back to the one the installed index is already in.
+            //
+            // Taking it from the current window instead is what the button
+            // does, and it was wrong for this: the first check ever run
+            // reported "your translations are for the wrong pair" against a
+            // working en → ru index, because the selected window had no
+            // language saved and its list starts at English. The button has a
+            // human in front of it to disbelieve that. A timer does not, and
+            // the question this asks is whether the index in place is current
+            // - not whether a different one should be.
+            var (game, reading) = _referenceIndexUpdateService.ResolveLanguages(string.Empty, string.Empty);
 
             var state = _referenceIndexUpdateService.ReadState();
 
@@ -593,7 +615,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
                 // started by itself can still be watched and cancelled. It
                 // asks the project a second time, which is the same few
                 // kilobytes and keeps one place deciding what to fetch.
-                StartReferenceIndexUpdate();
+                BeginReferenceIndexUpdate(string.Empty);
                 return;
             }
 
@@ -653,7 +675,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         _referenceIndexUpdateCancellation?.Cancel();
     }
 
-    private async Task RunReferenceIndexUpdateAsync(CancellationToken cancellationToken)
+    private async Task RunReferenceIndexUpdateAsync(string readingLanguage, CancellationToken cancellationToken)
     {
         // Constructed here, on the interface thread, so its callbacks arrive
         // there too and the progress line can be set without marshalling.
@@ -664,15 +686,13 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         {
             ReferenceIndexProgress = _localize("ReferenceIndexChecking");
 
-            // The language to key on comes from the game, not from here; this
-            // window only says what to read it in. Left empty, the service asks
+            // The language to key on comes from the game, not from here; the
+            // caller only says what to read it in. Left empty, the service asks
             // the game and falls back to the index already in place.
-            var window = CurrentChatWindow;
-
             var result = await _referenceIndexUpdateService
                 .UpdateAsync(
                     string.Empty,
-                    window?.CurrentTranslateToLanguage?.LanguageCode ?? string.Empty,
+                    readingLanguage,
                     progress,
                     cancellationToken)
                 .ConfigureAwait(true);
