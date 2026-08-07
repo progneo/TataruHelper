@@ -522,7 +522,13 @@ namespace Translation.Reference
             try
             {
                 _speakerLookup = _connection.CreateCommand();
-                _speakerLookup.CommandText = "SELECT translated FROM speaker WHERE source = $speaker";
+                // Case-insensitively: the game draws an NPC's name with every
+                // word capitalised, while the sheet it comes from writes it as
+                // it would sit in a sentence. "Sahjattra Concern representative"
+                // is stored, "Sahjattra Concern Representative" is on screen,
+                // and 1 847 of the 4 250 names differ exactly that way.
+                _speakerLookup.CommandText =
+                    "SELECT translated FROM speaker WHERE source = $speaker COLLATE NOCASE";
                 _speakerParameter = _speakerLookup.CreateParameter();
                 _speakerParameter.ParameterName = "$speaker";
                 _speakerLookup.Parameters.Add(_speakerParameter);

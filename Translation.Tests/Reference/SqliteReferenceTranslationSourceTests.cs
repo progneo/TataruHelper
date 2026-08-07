@@ -34,7 +34,8 @@ namespace Translation.Tests.Reference
                         "CREATE TABLE pattern (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID;" +
                         "CREATE TABLE speaker (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID;" +
                         "CREATE TABLE gendered (source TEXT NOT NULL, feminine INTEGER NOT NULL, translated TEXT NOT NULL, PRIMARY KEY (feminine, source)) WITHOUT ROWID;" +
-                        "INSERT INTO speaker VALUES ('Mother Miounne', 'Матушка Миунна'), ('Y''shtola', 'Я''штола');" +
+                        "INSERT INTO speaker VALUES ('Mother Miounne', 'Матушка Миунна'), ('Y''shtola', 'Я''штола'), " +
+                        "('Sahjattra Concern representative', 'Представитель «Саджаттры»');" +
                         "INSERT INTO gendered VALUES " +
                         "('This position is yours, adventurer.', 1, 'Искательница приключений, на позицию.')," +
                         "('This position is yours, adventurer.', 0, 'Искатель приключений, на позицию.')," +
@@ -73,6 +74,20 @@ namespace Translation.Tests.Reference
             }
             catch (IOException)
             {
+            }
+        }
+
+        [Test]
+        public void ASpeakerTheGameCapitalises_IsStillFound()
+        {
+            // The sheet writes a name as it would sit in a sentence; the game
+            // draws it with every word capitalised. Nearly half the names in
+            // the index differ that way, and none of them were being found.
+            using (var source = new SqliteReferenceTranslationSource(_databasePath, null))
+            {
+                Assert.That(source.TryGetSpeakerName("Sahjattra Concern Representative", out var translated),
+                    Is.True);
+                Assert.That(translated, Is.EqualTo("Представитель «Саджаттры»"));
             }
         }
 
