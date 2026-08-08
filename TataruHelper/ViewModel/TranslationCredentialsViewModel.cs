@@ -15,7 +15,7 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.GoogleTranslate, TranslationEngineName.Papago, TranslationEngineName.DeepL,
             TranslationEngineName.AzureTranslator, TranslationEngineName.GoogleCloudTranslate,
             TranslationEngineName.DeepLApi, TranslationEngineName.OpenAI, TranslationEngineName.DeepSeek,
-            TranslationEngineName.YandexGPT, TranslationEngineName.Yandex
+            TranslationEngineName.YandexGPT, TranslationEngineName.Gemini, TranslationEngineName.Yandex
         };
 
         private readonly ITranslationCredentialStore _store;
@@ -100,6 +100,12 @@ namespace FFXIVTataruHelper.ViewModel
             set => SetModel(TranslationEngineName.YandexGPT, value, nameof(YandexGptModel));
         }
 
+        public bool IsGeminiEnabled
+        {
+            get => _store.IsEngineEnabled(TranslationEngineName.Gemini);
+            set => SetEngineEnabled(TranslationEngineName.Gemini, value);
+        }
+
         public bool ShowAzureSettings => IsAzureEnabled;
         public bool ShowGoogleCloudSettings => IsGoogleCloudEnabled;
         public bool ShowDeepLApiSettings => IsDeepLApiEnabled;
@@ -107,6 +113,7 @@ namespace FFXIVTataruHelper.ViewModel
         public bool ShowDeepSeekSettings => IsDeepSeekEnabled;
         public bool ShowYandexSettings => IsYandexEnabled;
         public bool ShowYandexGptSettings => IsYandexGptEnabled;
+        public bool ShowGeminiSettings => IsGeminiEnabled;
 
         public string AzureApiKey
         {
@@ -189,6 +196,20 @@ namespace FFXIVTataruHelper.ViewModel
             set => SetRegion(TranslationEngineName.Yandex, value, nameof(YandexFolderId));
         }
 
+        public string GeminiApiKey
+        {
+            get => _store.GetApiKey(TranslationEngineName.Gemini);
+            set => SetApiKey(TranslationEngineName.Gemini, value, nameof(GeminiApiKey), nameof(GeminiApiKeyMasked));
+        }
+
+        public string GeminiApiKeyMasked => MaskSecret(GeminiApiKey);
+
+        public string GeminiModel
+        {
+            get => _store.GetModel(TranslationEngineName.Gemini);
+            set => SetModel(TranslationEngineName.Gemini, value, nameof(GeminiModel));
+        }
+
         public bool IsEngineEnabled(TranslationEngineName engine) => _availableEngines.Contains(engine);
 
         private void SetApiKey(TranslationEngineName engine, string value, params string[] propsToNotify)
@@ -238,6 +259,7 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.DeepSeek => nameof(IsDeepSeekEnabled),
             TranslationEngineName.Yandex => nameof(IsYandexEnabled),
             TranslationEngineName.YandexGPT => nameof(IsYandexGptEnabled),
+            TranslationEngineName.Gemini => nameof(IsGeminiEnabled),
             _ => string.Empty
         };
 
@@ -250,6 +272,7 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.DeepSeek => nameof(ShowDeepSeekSettings),
             TranslationEngineName.Yandex => nameof(ShowYandexSettings),
             TranslationEngineName.YandexGPT => nameof(ShowYandexGptSettings),
+            TranslationEngineName.Gemini => nameof(ShowGeminiSettings),
             _ => string.Empty
         };
 

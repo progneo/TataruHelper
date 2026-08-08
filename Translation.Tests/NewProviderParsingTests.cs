@@ -1,8 +1,8 @@
 using NUnit.Framework;
-
 using Translation.Providers.AI;
 using Translation.Providers.Azure;
 using Translation.Providers.DeepL;
+using Translation.Providers.Gemini;
 using Translation.Providers.GoogleCloud;
 
 namespace Translation.Tests
@@ -49,6 +49,15 @@ namespace Translation.Tests
                 @"{""id"":""x"",""choices"":[{""index"":0,""message"":{""role"":""assistant"",""content"":""Привет, мир!""}}]}";
             var result = OpenAIChatClient.ParseContent(body);
             Assert.That(result, Is.EqualTo("Привет, мир!"));
+        }
+
+        [Test]
+        public void Gemini_ExtractsCandidateText()
+        {
+            var body =
+                @"{""candidates"":[{""content"":{""parts"":[{""text"":""Hallo Welt""}],""role"":""model""},""finishReason"":""STOP""}]}";
+            var result = GeminiTranslator.ParseContent(body);
+            Assert.That(result, Is.EqualTo("Hallo Welt"));
         }
     }
 }

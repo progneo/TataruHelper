@@ -1,7 +1,6 @@
 ﻿using System;
 using System.IO;
 using System.Windows;
-
 using NGettext;
 
 namespace FFXIVTataruHelper
@@ -391,6 +390,8 @@ namespace FFXIVTataruHelper
                 catalog.GetString("Uses the Yandex Cloud API key and folder ID from the Yandex row above.");
             _SettingsWindow.Resources["YandexGptModelAliasLabel"] =
                 catalog.GetString("Model alias (optional, e.g. yandexgpt/latest, yandexgpt-lite/latest)");
+            _SettingsWindow.Resources["GeminiKeyLabel"] = catalog.GetString("Gemini key");
+            _SettingsWindow.Resources["GeminiModelLabel"] = catalog.GetString("Gemini model (optional)");
 
             // About / Appearance
             _SettingsWindow.Resources["AppTagline"] = catalog.GetString("Real-time FFXIV chat translator");

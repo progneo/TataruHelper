@@ -227,6 +227,8 @@
     <system:String x:Key="DeepSeekModelLabel">DeepSeek model (optional)</system:String>
     <system:String x:Key="YandexGptUsesYandexHint">Uses the Yandex Cloud API key and folder ID from the Yandex row above.</system:String>
     <system:String x:Key="YandexGptModelAliasLabel">Model alias (optional, e.g. yandexgpt/latest, yandexgpt-lite/latest)</system:String>
+    <system:String x:Key="GeminiKeyLabel">Gemini key</system:String>
+    <system:String x:Key="GeminiModelLabel">Gemini model (optional)</system:String>
 
     <!-- About / Appearance -->
     <system:String x:Key="AppTagline">Real-time FFXIV chat translator</system:String>
