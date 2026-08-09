@@ -62,7 +62,7 @@ No .NET runtime to install — the release carries its own.
 - Video demo: [YouTube demonstration](https://youtu.be/7HiQXzmkQuw)
 - Live preview gifs:
 
-![Live Action](Documents/LiveAction.gif)
+![Settings tour](Documents/SettingsTour.gif)
 ![Live Translation](Documents/2020-08-18_21-12-52.gif)
 
 ## Contributing / Translation
@@ -74,12 +74,21 @@ No .NET runtime to install — the release carries its own.
 
 Thanks to all contributors and the projects that helped make Tataru Helper possible:
 
+- [TataruHelper by NightlyRevenger](https://github.com/NightlyRevenger/TataruHelper) — the original, which this is a fork of
+- [TataruHelper by progneo](https://github.com/progneo/TataruHelper) — the fork this one carries on from
+- [Sharlayan](https://github.com/FFXIVAPP/sharlayan) — reads the game's text out of its memory
+- [XIV Rus Translation](https://github.com/xivrus/xiv_ru_weblate) — the hand-made Russian translation this shows instead of a machine's
 - [WPF Toolkit](https://github.com/xceedsoftware/wpftoolkit)
 - [NHotKey.Wpf](https://github.com/thomaslevesque/NHotkey)
 - [NotifyIcon WPF](https://bitbucket.org/hardcodet/notifyicon-wpf/)
-- [Sharlayan](https://github.com/FFXIVAPP/sharlayan)
+- [Velopack](https://github.com/velopack/velopack) — the installer and updater
 - [Tataru Art by Nezusagi](https://www.deviantart.com/nezusagi)
-- [Velopack](https://github.com/velopack/velopack)
+
+### Doing the same thing another way
+
+If you play with [Dalamud](https://github.com/goatcorp/Dalamud), it is worth knowing about
+[Echoglossian](https://github.com/lokinmodar/Echoglossian) — a plugin that translates dialogue
+inside the game rather than in an overlay beside it.
 
 ## Contacts
 
