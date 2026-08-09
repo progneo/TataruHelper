@@ -6,14 +6,14 @@
   },
   {
     "ShownName": "Afrikaans",
-    "SystemName": "Afrikaans ",
+    "SystemName": "Afrikaans",
     "LanguageCode": "af"
-  }, 
+  },
   {
     "ShownName": "Armenian",
-    "SystemName": "Armenian ",
+    "SystemName": "Armenian",
     "LanguageCode": "hy"
-  }, 
+  },
   {
     "ShownName": "Albanian",
     "SystemName": "Albanian",
@@ -21,7 +21,7 @@
   },
   {
     "ShownName": "Amharic",
-    "SystemName": "Amharic ",
+    "SystemName": "Amharic",
     "LanguageCode": "am"
   },
   {
@@ -468,5 +468,130 @@
     "ShownName": "Yiddish",
     "SystemName": "Yiddish",
     "LanguageCode": "yi"
+  },
+  {
+    "ShownName": "Abaza",
+    "SystemName": "Abaza",
+    "LanguageCode": "abq"
+  },
+  {
+    "ShownName": "Abkhaz",
+    "SystemName": "Abkhaz",
+    "LanguageCode": "ab"
+  },
+  {
+    "ShownName": "Adyghe",
+    "SystemName": "Adyghe",
+    "LanguageCode": "ady"
+  },
+  {
+    "ShownName": "Buryat",
+    "SystemName": "Buryat",
+    "LanguageCode": "bua"
+  },
+  {
+    "ShownName": "Chechen",
+    "SystemName": "Chechen",
+    "LanguageCode": "ce"
+  },
+  {
+    "ShownName": "Chuvash",
+    "SystemName": "Chuvash",
+    "LanguageCode": "cv"
+  },
+  {
+    "ShownName": "Elvish (Sindarin)",
+    "SystemName": "Elvish (Sindarin)",
+    "LanguageCode": "sjn"
+  },
+  {
+    "ShownName": "Emoji",
+    "SystemName": "Emoji",
+    "LanguageCode": "emj"
+  },
+  {
+    "ShownName": "Erzya",
+    "SystemName": "Erzya",
+    "LanguageCode": "myv"
+  },
+  {
+    "ShownName": "Galtaran",
+    "SystemName": "Galtaran",
+    "LanguageCode": "glt"
+  },
+  {
+    "ShownName": "Kabardian",
+    "SystemName": "Kabardian",
+    "LanguageCode": "kbd"
+  },
+  {
+    "ShownName": "Karachay-Balkar",
+    "SystemName": "Karachay-Balkar",
+    "LanguageCode": "krc"
+  },
+  {
+    "ShownName": "Kazakh (Latin)",
+    "SystemName": "Kazakh (Latin)",
+    "LanguageCode": "kazlat"
+  },
+  {
+    "ShownName": "Khakas",
+    "SystemName": "Khakas",
+    "LanguageCode": "kjh"
+  },
+  {
+    "ShownName": "Komi",
+    "SystemName": "Komi",
+    "LanguageCode": "kv"
+  },
+  {
+    "ShownName": "Mansi",
+    "SystemName": "Mansi",
+    "LanguageCode": "mns"
+  },
+  {
+    "ShownName": "Moksha",
+    "SystemName": "Moksha",
+    "LanguageCode": "mdf"
+  },
+  {
+    "ShownName": "Nogai",
+    "SystemName": "Nogai",
+    "LanguageCode": "nog"
+  },
+  {
+    "ShownName": "Ossetian",
+    "SystemName": "Ossetian",
+    "LanguageCode": "os"
+  },
+  {
+    "ShownName": "Portuguese (Brazilian)",
+    "SystemName": "Portuguese (Brazilian)",
+    "LanguageCode": "pt-BR"
+  },
+  {
+    "ShownName": "Serbian (Latin)",
+    "SystemName": "Serbian (Latin)",
+    "LanguageCode": "sr-Latn"
+  },
+  {
+    "ShownName": "Tuvan",
+    "SystemName": "Tuvan",
+    "LanguageCode": "tyv"
+  },
+  {
+    "ShownName": "Uzbek (Cyrillic)",
+    "SystemName": "Uzbek (Cyrillic)",
+    "LanguageCode": "uzbcyr"
+  },
+  {
+    "ShownName": "Yakut",
+    "SystemName": "Yakut",
+    "LanguageCode": "sah"
+  },
+  {
+    "ShownName": "Zulu",
+    "SystemName": "Zulu",
+    "LanguageCode": "zu"
   }
 ]
