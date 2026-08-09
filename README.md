@@ -35,9 +35,12 @@
 
 ## Requirements
 
-- Windows 7 x64 or newer (x64 only).
-- [.NET 10 SDK/Runtime or newer](https://dotnet.microsoft.com/download).
+- Windows 10 x64 or newer.
 - Final Fantasy XIV running with DirectX 11 (x64 client).
+- Administrator rights, which the application asks for on start: it reads the
+  game's text out of the game's own memory.
+
+No .NET runtime to install — the release carries its own.
 
 ## Quick Install
 
