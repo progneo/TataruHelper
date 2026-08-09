@@ -19,11 +19,15 @@ namespace Translation.Providers.Gemini
         {
             _client = new GeminiChatClient(
                 TranslationEngineName.Gemini,
-                // Flash rather than Pro: dialogue arrives line by line, so latency
-                // matters more here than the extra quality on long documents.
-                // 2.5 specifically - 1.5 is retired and answers 404, and the free
-                // tier for 2.0 runs out quickly.
-                "gemini-2.5-flash",
+                // Flash rather than Pro: dialogue arrives line by line, so
+                // latency matters more here than the extra quality on long
+                // documents. Flash rather than Flash-Lite for the opposite
+                // reason - a line of story is short, so what Lite saves in
+                // time and money is small in absolute terms, and this is
+                // prose. Whoever disagrees can type another model into the
+                // box on the General page; this is only what they get if
+                // they never do.
+                "gemini-3.6-flash",
                 logger,
                 credentials);
         }

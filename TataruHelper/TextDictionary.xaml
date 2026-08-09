@@ -259,7 +259,7 @@
     <system:String x:Key="OpenAIKeyLabel">OpenAI key</system:String>
     <system:String x:Key="OpenAIModelLabel">OpenAI model (optional)</system:String>
     <system:String x:Key="GeminiKeyLabel">Gemini API key</system:String>
-    <system:String x:Key="GeminiModelLabel">Gemini model (optional, e.g. gemini-2.5-flash)</system:String>
+    <system:String x:Key="GeminiModelLabel">Gemini model (optional, e.g. gemini-3.6-flash)</system:String>
     <system:String x:Key="DeepSeekKeyLabel">DeepSeek key</system:String>
     <system:String x:Key="DeepSeekModelLabel">DeepSeek model (optional)</system:String>
     <system:String x:Key="YandexGptUsesYandexHint">Uses the Yandex Cloud API key and folder ID from the Yandex row above.</system:String>
