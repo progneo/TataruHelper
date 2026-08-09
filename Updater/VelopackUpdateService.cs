@@ -43,7 +43,14 @@ namespace Updater
             }
         }
 
-        public VelopackUpdateService(ILogger logger, string repositoryUrl = "https://github.com/progneo/TataruHelper",
+        /// <param name="repositoryUrl">
+        /// Where releases are published, and so where an installed copy looks
+        /// for its next one. This fork's own repository: pointed at the one it
+        /// was forked from, an installation would update itself into somebody
+        /// else's build and quietly lose everything in this one.
+        /// </param>
+        public VelopackUpdateService(ILogger logger,
+            string repositoryUrl = "https://github.com/xDarkOne/TataruHelper",
             UpdateManagerFactory updateManagerFactory = null)
         {
             _logger = logger;

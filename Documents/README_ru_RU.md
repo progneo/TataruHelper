@@ -8,9 +8,9 @@
 <p align="center">Maintained fork of the original project: <a href="https://github.com/NightlyRevenger/TataruHelper">NightlyRevenger/TataruHelper</a>.</p>
 
 <p align="center">
-  <a href="https://github.com/progneo/TataruHelper/actions/workflows/build.yml"><img src="https://github.com/progneo/TataruHelper/actions/workflows/build.yml/badge.svg" alt="Build" /></a>
-  <a href="https://github.com/progneo/TataruHelper/releases/latest"><img src="https://img.shields.io/github/v/release/progneo/TataruHelper?label=Release" alt="Release" /></a>
-  <a href="../LICENSE"><img src="https://img.shields.io/github/license/progneo/TataruHelper" alt="License" /></a>
+  <a href="https://github.com/xDarkOne/TataruHelper/actions/workflows/build.yml"><img src="https://github.com/xDarkOne/TataruHelper/actions/workflows/build.yml/badge.svg" alt="Build" /></a>
+  <a href="https://github.com/xDarkOne/TataruHelper/releases/latest"><img src="https://img.shields.io/github/v/release/xDarkOne/TataruHelper?label=Release" alt="Release" /></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/github/license/xDarkOne/TataruHelper" alt="License" /></a>
   <img src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white" alt=".NET 10" />
   <a href="https://crowdin.com/project/tataru-helper"><img src="https://badges.crowdin.net/tataru-helper/localized.svg" alt="Crowdin" /></a>
   <a href="https://discord.gg/bSrpbd9"><img src="https://img.shields.io/discord/592039000538349569?label=Discord&logo=discord" alt="Discord" /></a>
@@ -18,12 +18,12 @@
 
 <p align="center"><strong>Download Stats</strong></p>
 <p align="center">
-  <a href="https://github.com/progneo/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/progneo/TataruHelper/Setup.exe?label=Setup.exe%20Total" alt="Setup.exe total downloads" /></a>
-  <a href="https://github.com/progneo/TataruHelper/releases/latest/download/TataruHelper-0.10.5-stable-full.nupkg"><img src="https://img.shields.io/github/downloads/progneo/TataruHelper/latest/TataruHelper-0.10.5-stable-full.nupkg?label=Current%20Update%20Full" alt="Current full update file downloads" /></a>
-  <a href="https://github.com/progneo/TataruHelper/releases/latest/download/TataruHelper-0.10.5-stable-delta.nupkg"><img src="https://img.shields.io/github/downloads/progneo/TataruHelper/latest/TataruHelper-0.10.5-stable-delta.nupkg?label=Current%20Update%20Delta" alt="Current delta update file downloads" /></a>
+  <a href="https://github.com/xDarkOne/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/xDarkOne/TataruHelper/Setup.exe?label=Setup.exe%20Total" alt="Setup.exe total downloads" /></a>
+  <a href="https://github.com/xDarkOne/TataruHelper/releases/latest/download/TataruHelper-0.10.5-stable-full.nupkg"><img src="https://img.shields.io/github/downloads/xDarkOne/TataruHelper/latest/TataruHelper-0.10.5-stable-full.nupkg?label=Current%20Update%20Full" alt="Current full update file downloads" /></a>
+  <a href="https://github.com/xDarkOne/TataruHelper/releases/latest/download/TataruHelper-0.10.5-stable-delta.nupkg"><img src="https://img.shields.io/github/downloads/xDarkOne/TataruHelper/latest/TataruHelper-0.10.5-stable-delta.nupkg?label=Current%20Update%20Delta" alt="Current delta update file downloads" /></a>
 </p>
 
-<p align="center"><strong><a href="https://github.com/progneo/TataruHelper/releases/latest/download/Setup.exe">Download Setup.exe</a></strong> · <a href="./Guide.MD">Guide</a> · <a href="https://discord.gg/bSrpbd9">Discord</a> · <a href="../README.md#support">Support</a></p>
+<p align="center"><strong><a href="https://github.com/xDarkOne/TataruHelper/releases/latest/download/Setup.exe">Download Setup.exe</a></strong> · <a href="./Guide.MD">Guide</a> · <a href="https://discord.gg/bSrpbd9">Discord</a></p>
 
 <p align="center"><strong>Languages:</strong> <a href="../README.md">EN</a> | <a href="README_ru_RU.md">RU</a> | <a href="README_ko_KR.md">KO</a> | <a href="README_es_ES.md">ES</a> | <a href="README_ca_ES.md">CA</a> | <a href="README_pl_PL.md">PL</a> | <a href="README_pt_BR.md">PT-BR</a> | <a href="README_uk_UA.md">UK</a> | <a href="README_zh_ZH.md">ZH</a> | <a href="README_ja_JP.md">JA</a></p>
 
@@ -46,7 +46,7 @@ Windows 7 **x64** или новее (**только для 64 битных си�
 [.NET 10 SDK/Runtime](https://dotnet.microsoft.com/download)или выше.  
 Final Fantasy XIV в режиме **DirectX 11** и **x64**.
 
-1. Скачайте последнюю версию приложения [здесь](https://github.com/progneo/TataruHelper/releases/latest) (Setup.exe).
+1. Скачайте последнюю версию приложения [здесь](https://github.com/xDarkOne/TataruHelper/releases/latest) (Setup.exe).
 2. Запустите файл Setup.exe, после этого вылетит предупреждение о том, что Windows защитила ваш компьютер. Нажмите Подробнее, а затем - Выполнить в любом случае. Ярлык автоматически будет создан на рабочем столе.
 3. Tataru Helper будет запущено автоматически, настройте исходный и целевой языки и проведите начальную настройку.
 4. Закройте окно настроек и переместите окно приложения в удобное место.
@@ -82,12 +82,8 @@ Final Fantasy XIV в режиме **DirectX 11** и **x64**.
 Ссылка на наш Discord сервер: [тыц](https://discord.gg/bSrpbd9)
 
 Если у вас есть какие-то вопросы, вы можете связаться со мной:  
-Discord: progneo
-Telegram: [click](https://t.me/progneo)
-Email: prograneo@gmail.com
 ## Поддержка
 
 Если вы хотите поддержать проект, воспользуйтесь ссылками ниже:  
-Boosty: [progneo](https://boosty.to/progneo)
 
 * * *

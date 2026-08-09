@@ -5,12 +5,12 @@
 <h1 align="center">Tataru Helper</h1>
 
 <p align="center">Real-time translation overlay for Final Fantasy XIV in-game text.</p>
-<p align="center">Maintained fork of the original project: <a href="https://github.com/NightlyRevenger/TataruHelper">NightlyRevenger/TataruHelper</a>.</p>
+<p align="center">Maintained by <a href="https://github.com/xDarkOne">xDarkOne</a>. A fork of the original project by <a href="https://github.com/NightlyRevenger/TataruHelper">NightlyRevenger</a>.</p>
 
 <p align="center">
-  <a href="https://github.com/progneo/TataruHelper/actions/workflows/build.yml"><img src="https://github.com/progneo/TataruHelper/actions/workflows/build.yml/badge.svg" alt="Build" /></a>
-  <a href="https://github.com/progneo/TataruHelper/releases/latest"><img src="https://img.shields.io/github/v/release/progneo/TataruHelper?label=Release" alt="Release" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/github/license/progneo/TataruHelper" alt="License" /></a>
+  <a href="https://github.com/xDarkOne/TataruHelper/actions/workflows/build.yml"><img src="https://github.com/xDarkOne/TataruHelper/actions/workflows/build.yml/badge.svg" alt="Build" /></a>
+  <a href="https://github.com/xDarkOne/TataruHelper/releases/latest"><img src="https://img.shields.io/github/v/release/xDarkOne/TataruHelper?label=Release" alt="Release" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/github/license/xDarkOne/TataruHelper" alt="License" /></a>
   <img src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white" alt=".NET 10" />
   <a href="https://crowdin.com/project/tataru-helper"><img src="https://badges.crowdin.net/tataru-helper/localized.svg" alt="Crowdin" /></a>
   <a href="https://discord.gg/bSrpbd9"><img src="https://img.shields.io/discord/592039000538349569?label=Discord&logo=discord" alt="Discord" /></a>
@@ -18,10 +18,10 @@
 
 <p align="center"><strong>Download Stats</strong></p>
 <p align="center">
-  <a href="https://github.com/progneo/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/progneo/TataruHelper/Setup.exe?label=Setup%20total%20downloads" alt="Setup total downloads" /></a>
+  <a href="https://github.com/xDarkOne/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/xDarkOne/TataruHelper/Setup.exe?label=Setup%20total%20downloads" alt="Setup total downloads" /></a>
 </p>
 
-<p align="center"><strong><a href="https://github.com/progneo/TataruHelper/releases/latest/download/Setup.exe">Download Setup.exe</a></strong> · <a href="Documents/Guide.MD">Guide</a> · <a href="https://discord.gg/bSrpbd9">Discord</a> · <a href="#support">Support</a></p>
+<p align="center"><strong><a href="https://github.com/xDarkOne/TataruHelper/releases/latest/download/Setup.exe">Download Setup.exe</a></strong> · <a href="Documents/Guide.MD">Guide</a> · <a href="https://discord.gg/bSrpbd9">Discord</a></p>
 
 <p align="center"><strong>Languages:</strong> <a href="README.md">EN</a> | <a href="Documents/README_ru_RU.md">RU</a> | <a href="Documents/README_ko_KR.md">KO</a> | <a href="Documents/README_es_ES.md">ES</a> | <a href="Documents/README_ca_ES.md">CA</a> | <a href="Documents/README_pl_PL.md">PL</a> | <a href="Documents/README_pt_BR.md">PT-BR</a> | <a href="Documents/README_uk_UA.md">UK</a> | <a href="Documents/README_zh_ZH.md">ZH</a> | <a href="Documents/README_ja_JP.md">JA</a></p>
 
@@ -41,7 +41,7 @@
 
 ## Quick Install
 
-1. Download the latest installer from [Releases](https://github.com/progneo/TataruHelper/releases/latest).
+1. Download the latest installer from [Releases](https://github.com/xDarkOne/TataruHelper/releases/latest).
 2. Run `Setup.exe`. If SmartScreen appears, select **More info** and then **Run anyway**.
 3. Let Tataru Helper launch and complete the initial language/setup flow.
 4. Close settings and place the floating overlay where you want it.
@@ -81,13 +81,6 @@ Thanks to all contributors and the projects that helped make Tataru Helper possi
 ## Contacts
 
 - Original community Discord: [discord.gg/bSrpbd9](https://discord.gg/bSrpbd9)
-- Maintainer Discord: `progneo`
-- Telegram: [t.me/progneo](https://t.me/progneo)
-- Email: `prograneo@gmail.com`
-
-## Support
-
-- Boosty: [boosty.to/progneo](https://boosty.to/progneo)
 
 ## License
 

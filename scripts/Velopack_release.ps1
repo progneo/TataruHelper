@@ -7,7 +7,7 @@
     [string]$ProjectPath = "",
     [string]$PublishDir = "",
     [string]$OutputDir = "",
-    [string]$RepoUrl = "https://github.com/progneo/TataruHelper",
+    [string]$RepoUrl = "https://github.com/xDarkOne/TataruHelper",
     [string]$RepoToken = "",
     [switch]$SkipPublish,
     [switch]$SkipDownloadLatest,
