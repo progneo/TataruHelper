@@ -18,12 +18,10 @@
 
 <p align="center"><strong>Download Stats</strong></p>
 <p align="center">
-  <a href="https://github.com/xDarkOne/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/xDarkOne/TataruHelper/Setup.exe?label=Setup.exe%20Total" alt="Setup.exe total downloads" /></a>
-  <a href="https://github.com/xDarkOne/TataruHelper/releases/latest/download/TataruHelper-0.10.5-stable-full.nupkg"><img src="https://img.shields.io/github/downloads/xDarkOne/TataruHelper/latest/TataruHelper-0.10.5-stable-full.nupkg?label=Current%20Update%20Full" alt="Current full update file downloads" /></a>
-  <a href="https://github.com/xDarkOne/TataruHelper/releases/latest/download/TataruHelper-0.10.5-stable-delta.nupkg"><img src="https://img.shields.io/github/downloads/xDarkOne/TataruHelper/latest/TataruHelper-0.10.5-stable-delta.nupkg?label=Current%20Update%20Delta" alt="Current delta update file downloads" /></a>
+  <a href="https://github.com/xDarkOne/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/xDarkOne/TataruHelper/TataruHelper-stable-Setup.exe?label=Setup.exe%20Total" alt="Setup.exe total downloads" /></a>
 </p>
 
-<p align="center"><strong><a href="https://github.com/xDarkOne/TataruHelper/releases/latest/download/Setup.exe">Download Setup.exe</a></strong> · <a href="./Guide.MD">Guide</a> · <a href="https://discord.gg/bSrpbd9">Discord</a></p>
+<p align="center"><strong><a href="https://github.com/xDarkOne/TataruHelper/releases/latest/download/TataruHelper-stable-Setup.exe">Download Setup.exe</a></strong> · <a href="./Guide.MD">Guide</a> · <a href="https://discord.gg/bSrpbd9">Discord</a></p>
 
 <p align="center"><strong>Languages:</strong> <a href="../README.md">EN</a> | <a href="README_ru_RU.md">RU</a> | <a href="README_ko_KR.md">KO</a> | <a href="README_es_ES.md">ES</a> | <a href="README_ca_ES.md">CA</a> | <a href="README_pl_PL.md">PL</a> | <a href="README_pt_BR.md">PT-BR</a> | <a href="README_uk_UA.md">UK</a> | <a href="README_zh_ZH.md">ZH</a> | <a href="README_ja_JP.md">JA</a></p>
 
