@@ -269,7 +269,13 @@ namespace FFXIVTataruHelper.ViewModel
                 if (!_TataruUIModel.AreSettingsLoaded)
                     return;
 
-                var winId = ChatWindowIds.Next(ChatWindows.Select(x => x.WinId));
+                // Counted across both lists. A saved window exists as settings
+                // before it exists as a window: the settings arrive first and
+                // the window is built from them by an event handler afterwards,
+                // so a number free among the windows can still be spoken for.
+                var winId = ChatWindowIds.Next(
+                    ChatWindows.Select(x => x.WinId)
+                        .Concat(_TataruUIModel.ChatWindows.Select(x => x.WinId)));
 
                 ChatWindowViewModelSettings cws = null;
                 ChatWindowViewModel cwm = null;
@@ -285,17 +291,36 @@ namespace FFXIVTataruHelper.ViewModel
             });
         }
 
+        /// <summary>
+        /// Builds the window a saved set of settings describes.
+        /// </summary>
+        /// <remarks>
+        /// The number has to be free, and that is decided here rather than by
+        /// whoever calls. Every caller did check first, and checking first is
+        /// not enough: the check ran on one thread and the insertion on the
+        /// interface thread, so two of them could both find the number free
+        /// before either took it. That left two windows answering to the same
+        /// number - both listed, only the first reachable, since selecting and
+        /// deleting go by number and stop at the first match.
+        /// </remarks>
         public void AddNewChatWindow(ChatWindowViewModelSettings settings)
         {
-            if (ChatWindows.Count >= 10)
-                return;
-
             ChatWindowViewModel cwm = null;
 
             var trEng = TranslationEngines;
 
             _UiDispatcher.Invoke(() =>
             {
+                if (ChatWindows.Count >= 10)
+                    return;
+
+                if (ChatWindows.Any(x => x.WinId == settings.WinId))
+                {
+                    _Logger.WriteLog("A chat window numbered " + settings.WinId +
+                                     " is already open; the settings offering that number again were ignored.");
+                    return;
+                }
+
                 cwm = new ChatWindowViewModel(settings, trEng.ToList(), _TranslationCredentials,
                     _AllChatCodes.ToList(), _TataruModel.HotKeyManager, _Logger, _HotKeyBindingService);
 

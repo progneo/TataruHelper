@@ -43,7 +43,17 @@ namespace FFXIVTataruHelper.Services.UI
             }
 
             viewModel.AddNewChatWindow(settings);
-            var newWindow = viewModel.ChatWindows[viewModel.ChatWindows.Count - 1];
+
+            // Found by its number rather than taken as the last one added. The
+            // window may not have been added at all - the number can have been
+            // claimed in between - and binding the settings to whatever happens
+            // to sit at the end of the list would tie them to another window.
+            var newWindow = viewModel.ChatWindows.FirstOrDefault(x => x.WinId == settings.WinId);
+            if (newWindow == null)
+            {
+                return;
+            }
+
             var binder = new PropertyBinder(settings, newWindow);
             CreateBinderCouples(binder);
             _propertyBinders.Add(binder);
