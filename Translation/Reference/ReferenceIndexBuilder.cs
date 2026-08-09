@@ -138,6 +138,23 @@ namespace Translation.Reference
             "^\\(-([^)]{0,60})-\\)", RegexOptions.Compiled);
 
         /// <summary>
+        /// A row number from the translation tool, left at the front of the
+        /// text: "9547_Cancel registration."
+        ///
+        /// It is not part of any line. 1 589 rows in the export carry one, and
+        /// 1 485 of those are the English source with nothing else done to
+        /// them - so once the number is gone they read as identical to the
+        /// English and are dropped, which is what should have happened all
+        /// along. The other 72 are real translations someone typed after the
+        /// number, "243_Огонь" and the like, and taking the number off is what
+        /// lets them be found at all.
+        ///
+        /// The English side never carries one, checked across the whole
+        /// export, so nothing is at risk from taking it off both.
+        /// </summary>
+        private static readonly Regex SourceKeyPrefix = new Regex("^\\d+_[ \\t]?", RegexOptions.Compiled);
+
+        /// <summary>
         /// Which set of parsing rules built an index.
         ///
         /// The revision says whether the translation has moved; it says nothing
@@ -150,7 +167,7 @@ namespace Translation.Reference
         /// Raise this whenever a change here would put something different in
         /// the index for the same export.
         /// </summary>
-        public const int RulesVersion = 4;
+        public const int RulesVersion = 5;
 
         private const string KeySeparator = "<tab>";
 
@@ -369,7 +386,7 @@ namespace Translation.Reference
         private void AddSpeaker(string englishName, string translatedName)
         {
             var english = FoldApostrophes(Collapse(englishName));
-            var translated = Collapse(translatedName);
+            var translated = Collapse(SourceKeyPrefix.Replace(translatedName, string.Empty));
 
             if (english.Length == 0 || translated.Length == 0 ||
                 string.Equals(english, translated, StringComparison.Ordinal))
@@ -399,7 +416,7 @@ namespace Translation.Reference
         /// </summary>
         internal static string Normalize(string text)
         {
-            text = StripKey(text);
+            text = SourceKeyPrefix.Replace(StripKey(text), string.Empty);
             text = Formatting.Replace(text, string.Empty);
             text = SoftHyphen.Replace(text, string.Empty);
             text = NonBreakingHyphen.Replace(text, "-");

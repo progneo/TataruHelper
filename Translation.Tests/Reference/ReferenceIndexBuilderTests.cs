@@ -362,6 +362,47 @@ namespace Translation.Tests.Reference
             Assert.That(builder.Lines["Waffenfertigkeiten"], Is.EqualTo("Владение оружием"));
         }
 
+        // The translation tool leaves its row number at the front of the text
+        // it has not had a translation typed into yet. Kept, it makes a line
+        // that differs from the English and so looks like somebody's work.
+        [Test]
+        public void ARowNumberLeftInFrontOfTheEnglish_IsNotATranslation()
+        {
+            var builder = Build("exd/Addon",
+                Sheet(("1", "Cancel registration.")),
+                Sheet(("1", "9547_Cancel registration.")));
+
+            // Nothing to show: with the number gone it is the English again,
+            // and a line that translates to itself is no translation.
+            Assert.That(builder.Lines, Is.Empty);
+        }
+
+        [Test]
+        public void ARealTranslationTypedAfterTheRowNumber_IsKept()
+        {
+            // 72 rows in the export look like this. Dropping every numbered
+            // row would have thrown them away; taking the number off is what
+            // makes them findable.
+            var builder = Build("exd/Addon",
+                Sheet(("1", "Fire")),
+                Sheet(("1", "243_Огонь")));
+
+            Assert.That(builder.Lines["Fire"], Is.EqualTo("Огонь"));
+        }
+
+        [Test]
+        public void ANumberThatIsPartOfTheLine_IsLeftAlone()
+        {
+            // The prefix is digits then an underscore. A line that merely
+            // starts with a number is a line.
+            var builder = Build("exd/Quest/001",
+                Sheet(("1", "10 gil for the trouble.")),
+                Sheet(("1", "10 гилей за беспокойство.")));
+
+            Assert.That(builder.Lines["10 gil for the trouble."],
+                Is.EqualTo("10 гилей за беспокойство."));
+        }
+
         // English can carry the agreement as readily as Russian, so the line
         // reaching us differs by character and is stored under each.
         [Test]

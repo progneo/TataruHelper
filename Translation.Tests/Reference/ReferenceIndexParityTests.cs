@@ -82,6 +82,15 @@ namespace Translation.Tests.Reference
             // spelled with real hyphens by some other row, and carrying word
             // for word the same translation. The sixth was "//".
             //
+            // Taking the translation tool's row number off the front of a
+            // target - "9547_Cancel registration." - took lines from 201 918
+            // to 201 267, conflicts from 6 693 to 5 928 and markup skips from
+            // 5 552 to 5 184. Nothing is lost by it: with the number gone
+            // those rows read as the English they always were, so they stop
+            // being stored and stop colliding, and the skips fall because the
+            // "same as the English" test now answers before the markup test
+            // is reached. 72 rows go the other way and are gained.
+            //
             // Gendered does not, and deliberately: python resolved the player's
             // name before asking about gender, so a line carrying both landed
             // among the gendered ones with the name still punched out - roughly
@@ -92,7 +101,7 @@ namespace Translation.Tests.Reference
             Assert.Multiple(() =>
             {
                 Assert.That(builder.Sheets, Is.EqualTo(2681), "sheets");
-                Assert.That(builder.Lines.Count, Is.EqualTo(201918), "lines");
+                Assert.That(builder.Lines.Count, Is.EqualTo(201267), "lines");
                 Assert.That(builder.Patterns.Count, Is.EqualTo(3200), "patterns");
                 Assert.That(builder.Speakers.Count, Is.EqualTo(4245), "speakers");
                 Assert.That(builder.Gendered.Count / 2, Is.EqualTo(6465), "gendered");
@@ -102,7 +111,7 @@ namespace Translation.Tests.Reference
                 // on the name, the pattern branch gave up on the gender, and
                 // 984 of the game's most personal lines went to an engine.
                 Assert.That(builder.GenderedPatterns.Count / 2, Is.EqualTo(1005), "gendered patterns");
-                Assert.That(builder.SkippedForMarkup, Is.EqualTo(5552), "skipped for markup");
+                Assert.That(builder.SkippedForMarkup, Is.EqualTo(5184), "skipped for markup");
 
                 // Every one of the counts above came out the same after the
                 // parsing moved from an expression to an XML reader, which is
