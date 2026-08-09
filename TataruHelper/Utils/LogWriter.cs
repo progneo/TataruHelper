@@ -9,10 +9,24 @@ namespace FFXIVTataruHelper
     {
         const int MaxLogFileSize = 5242880;
 
-        const string LogFileName = @"Log.txt";
-        const string BackUpLogFileName = @"Log_old.txt";
-        const string ChatLogFileName = @"ChatLog.txt";
-        const string RawDialogLogFileName = @"RealtimeRawLog.txt";
+        /// <summary>
+        /// Where the logs go: beside the settings, in the user's roaming data.
+        ///
+        /// They used to be written to plain file names, which means relative to
+        /// whatever the working directory happened to be. Started from a
+        /// shortcut that is the installation folder, which an update replaces
+        /// wholesale; started with elevation, which every installed copy is,
+        /// Windows makes it C:\WINDOWS\system32 - so an installed Tataru Helper
+        /// wrote no log at all, and every line put there to explain itself was
+        /// only ever visible to somebody running it out of a build folder.
+        /// </summary>
+        static readonly string LogDirectory = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TataruHelper");
+
+        static readonly string LogFileName = Path.Combine(LogDirectory, "Log.txt");
+        static readonly string BackUpLogFileName = Path.Combine(LogDirectory, "Log_old.txt");
+        static readonly string ChatLogFileName = Path.Combine(LogDirectory, "ChatLog.txt");
+        static readonly string RawDialogLogFileName = Path.Combine(LogDirectory, "RealtimeRawLog.txt");
 
         bool _keepWorking;
         bool _disposed;
@@ -28,9 +42,14 @@ namespace FFXIVTataruHelper
         {
             _keepWorking = true;
 
+            Directory.CreateDirectory(LogDirectory);
+
             _logStreamWriter = new StreamWriter(LogFileName, true);
             _logTextWriter = _logStreamWriter;
         }
+
+        /// <summary>Where to send somebody who is asked for their log.</summary>
+        public static string LogFolder => LogDirectory;
 
         public void StartWriting()
         {
