@@ -45,12 +45,16 @@ namespace Updater
 
         /// <param name="repositoryUrl">
         /// Where releases are published, and so where an installed copy looks
-        /// for its next one. This fork's own repository: pointed at the one it
-        /// was forked from, an installation would update itself into somebody
-        /// else's build and quietly lose everything in this one.
+        /// for its next one.
+        ///
+        /// Compiled in, which makes it awkward to change: a copy already
+        /// installed keeps asking whatever it was built with. Versions 1.0.0
+        /// to 1.0.2 were built asking xDarkOne/TataruHelper, so 1.0.3 was
+        /// published in both places - those copies find it where they are
+        /// looking, and every copy after it looks here.
         /// </param>
         public VelopackUpdateService(ILogger logger,
-            string repositoryUrl = "https://github.com/xDarkOne/TataruHelper",
+            string repositoryUrl = "https://github.com/NightlyRevenger/TataruHelper",
             UpdateManagerFactory updateManagerFactory = null)
         {
             _logger = logger;

@@ -5,12 +5,12 @@
 <h1 align="center">Tataru Helper</h1>
 
 <p align="center">Real-time translation overlay for Final Fantasy XIV in-game text.</p>
-<p align="center">Maintained fork of the original project: <a href="https://github.com/NightlyRevenger/TataruHelper">NightlyRevenger/TataruHelper</a>.</p>
+<p align="center">Maintained by <a href="https://github.com/xDarkOne">xDarkOne</a>. Originally created by <a href="https://github.com/NightlyRevenger">NightlyRevenger</a>.</p>
 
 <p align="center">
-  <a href="https://github.com/xDarkOne/TataruHelper/actions/workflows/build.yml"><img src="https://github.com/xDarkOne/TataruHelper/actions/workflows/build.yml/badge.svg" alt="Build" /></a>
-  <a href="https://github.com/xDarkOne/TataruHelper/releases/latest"><img src="https://img.shields.io/github/v/release/xDarkOne/TataruHelper?label=Release" alt="Release" /></a>
-  <a href="../LICENSE"><img src="https://img.shields.io/github/license/xDarkOne/TataruHelper" alt="License" /></a>
+  <a href="https://github.com/NightlyRevenger/TataruHelper/actions/workflows/build.yml"><img src="https://github.com/NightlyRevenger/TataruHelper/actions/workflows/build.yml/badge.svg" alt="Build" /></a>
+  <a href="https://github.com/NightlyRevenger/TataruHelper/releases/latest"><img src="https://img.shields.io/github/v/release/NightlyRevenger/TataruHelper?label=Release" alt="Release" /></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/github/license/NightlyRevenger/TataruHelper" alt="License" /></a>
   <img src="https://img.shields.io/badge/.NET-10-512BD4?logo=dotnet&logoColor=white" alt=".NET 10" />
   <a href="https://crowdin.com/project/tataru-helper"><img src="https://badges.crowdin.net/tataru-helper/localized.svg" alt="Crowdin" /></a>
   <a href="https://discord.gg/bSrpbd9"><img src="https://img.shields.io/discord/592039000538349569?label=Discord&logo=discord" alt="Discord" /></a>
@@ -18,10 +18,10 @@
 
 <p align="center"><strong>Download Stats</strong></p>
 <p align="center">
-  <a href="https://github.com/xDarkOne/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/xDarkOne/TataruHelper/TataruHelper-stable-Setup.exe?label=Setup.exe%20Total" alt="Setup.exe total downloads" /></a>
+  <a href="https://github.com/NightlyRevenger/TataruHelper/releases"><img src="https://img.shields.io/github/downloads/NightlyRevenger/TataruHelper/TataruHelper-stable-Setup.exe?label=Setup.exe%20Total" alt="Setup.exe total downloads" /></a>
 </p>
 
-<p align="center"><strong><a href="https://github.com/xDarkOne/TataruHelper/releases/latest/download/TataruHelper-stable-Setup.exe">Download Setup.exe</a></strong> · <a href="./Guide.MD">Guide</a> · <a href="https://discord.gg/bSrpbd9">Discord</a></p>
+<p align="center"><strong><a href="https://github.com/NightlyRevenger/TataruHelper/releases/latest/download/TataruHelper-stable-Setup.exe">Download Setup.exe</a></strong> · <a href="./Guide.MD">Guide</a> · <a href="https://discord.gg/bSrpbd9">Discord</a></p>
 
 <p align="center"><strong>Languages:</strong> <a href="../README.md">EN</a> | <a href="README_ru_RU.md">RU</a> | <a href="README_ko_KR.md">KO</a> | <a href="README_es_ES.md">ES</a> | <a href="README_ca_ES.md">CA</a> | <a href="README_pl_PL.md">PL</a> | <a href="README_pt_BR.md">PT-BR</a> | <a href="README_uk_UA.md">UK</a> | <a href="README_zh_ZH.md">ZH</a> | <a href="README_ja_JP.md">JA</a></p>
 
@@ -44,7 +44,7 @@ Windows 7 **x64** or later (**x64 només sistemes**).
 [.NET 10 SDK/Runtime](https://dotnet.microsoft.com/download)o superior.  
 Final Fantasy XIV amb **DirectX 11** i **x64</1>.</p> 
 
-1. Descarrega l'última versió de l'aplicació de [aquí](https://github.com/xDarkOne/TataruHelper/releases/latest)(Setup.exe).
+1. Descarrega l'última versió de l'aplicació de [aquí](https://github.com/NightlyRevenger/TataruHelper/releases/latest)(Setup.exe).
 2. Carrega l'arxiu Setup.exe, desprès de rebre el missatge que Windows protegeix el teu ordinador, pressiona info i carrega de totes formes. La drecera serà situada a l'escriptori.
 3. L' ajudant Tataru començara automàticament, configuri la font i la destinació del llenguatge i fes la configuració inicial.
 4. Tanqui la finestra de configuració i arrastra la finestra flotant al lloc adequat.
