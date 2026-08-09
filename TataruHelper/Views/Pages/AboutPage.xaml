@@ -67,6 +67,19 @@
                                                     Content="discord.gg/bSrpbd9"
                                                     NavigateUri="https://discord.gg/bSrpbd9" />
                             </Grid>
+                            <Grid Margin="0,8,0,0">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="160" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0"
+                                           Text="{DynamicResource SupportLabel}"
+                                           Foreground="{DynamicResource Brush.TextSecondary}"
+                                           VerticalAlignment="Center" />
+                                <ui:HyperlinkButton Grid.Column="1"
+                                                    Content="patreon.com/TataruHelper"
+                                                    NavigateUri="https://www.patreon.com/c/TataruHelper" />
+                            </Grid>
                         </StackPanel>
                     </Border>
                 </StackPanel>

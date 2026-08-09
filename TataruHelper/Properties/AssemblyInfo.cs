@@ -50,6 +50,11 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0")]
-[assembly: AssemblyFileVersion("1.0.0")]
+//
+// The version being worked towards, not the one last published. Every push to
+// master packs a Velopack release from this number, and Velopack refuses to
+// pack a version that is already out - so leaving it at the published one
+// turns the build red on every commit until somebody raises it.
+[assembly: AssemblyVersion("1.0.1")]
+[assembly: AssemblyFileVersion("1.0.1")]
 [assembly: InternalsVisibleTo("TataruHelper.Tests")]

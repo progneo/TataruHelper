@@ -92,7 +92,7 @@ inside the game rather than in an overlay beside it.
 
 ## Contacts
 
-- Original community Discord: [discord.gg/bSrpbd9](https://discord.gg/bSrpbd9)
+- Discord: [discord.gg/bSrpbd9](https://discord.gg/bSrpbd9)
 
 ## License
 

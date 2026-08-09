@@ -57,7 +57,8 @@
     <system:String x:Key="ShortcutCaptureLabel">Shortcut capture</system:String>
     <system:String x:Key="OverlayBehaviorLabel">Overlay behavior</system:String>
     <system:String x:Key="ApplicationFlagsLabel">Application flags</system:String>
-    <system:String x:Key="OriginalRepositoryLabel">Original repository:</system:String>
+    <system:String x:Key="OriginalRepositoryLabel">Repository:</system:String>
+    <system:String x:Key="SupportLabel">Support the project:</system:String>
     <system:String x:Key="CommunityDiscordLabel">Community Discord:</system:String>
     <system:String x:Key="ChatAppearance">Chat Appearance</system:String>
     <system:String x:Key="TranslationSettings">Translation Settings</system:String>
@@ -197,7 +198,7 @@
 
     <system:String x:Key="HideToTrayDescription">Hide the settings window to the system tray when minimized.</system:String>
     <system:String x:Key="RealtimeTranslationDescription">Translate NPC dialogue and cutscene subtitles as they appear, without waiting for the chat log. The chat-log copies of those lines are skipped so nothing is shown twice.</system:String>
-    <system:String x:Key="LiteraryTranslationCB">Literary translation</system:String>
+    <system:String x:Key="LiteraryTranslationCB">XIV Rus Translation</system:String>
     <system:String x:Key="LiteraryTranslationDescription">Show the XIV Rus Translation of a line when there is one, and translate the rest as usual.</system:String>
     <system:String x:Key="MarkMachineTranslationCB">Mark machine translation</system:String>
     <system:String x:Key="MarkMachineTranslationDescription">Put a dot in front of lines an engine translated, so the ones from XIV Rus Translation are the plain ones.</system:String>
@@ -223,7 +224,7 @@
     <system:String x:Key="ReferenceIndexRulesChanged">These translations were read by older rules, and hold lines this build knows to be wrong. Press Update to rebuild them.</system:String>
     <system:String x:Key="ReferenceIndexRevisionUnrecorded">These translations do not record which revision they came from, so there is no telling whether the project has moved. Press Update to be sure.</system:String>
     <system:String x:Key="ReferenceIndexWrongLanguage">The translations installed are for {0}, and the game is being played in {1}. Press Update to fetch the pair in use.</system:String>
-    <system:String x:Key="ReferenceIndexAutoInstallCB">Install new translations by themselves</system:String>
+    <system:String x:Key="ReferenceIndexAutoInstallCB">Update translations automatically</system:String>
     <system:String x:Key="ReferenceIndexAutoInstallDescription">Tataru Helper asks once a day whether XIV Rus Translation has written anything new, and says so. Turn this on to have it fetch what it finds as well; that is around a gigabyte each time. A change of language pair is still asked about.</system:String>
     <system:String x:Key="ResetSettingsTitle">Reset settings</system:String>
     <system:String x:Key="ResetSettingsHint">Put every setting back to what a fresh installation has: chat windows, colours, fonts, hotkeys, languages and chat codes. Your API keys and the installed translations are kept.</system:String>

@@ -142,6 +142,32 @@
                                           ClearButtonEnabled="False" />
                         </Grid>
                     </ui:Card>
+                    <ui:Card Padding="16" Margin="0,12,0,0">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                                <ui:SymbolIcon Symbol="TextParagraphDirectionLeft20" FontSize="16"
+                                               Margin="0,0,8,0" VerticalAlignment="Center"
+                                               Foreground="{DynamicResource Brush.Accent}" />
+                                <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
+                                           Margin="0"
+                                           Text="{DynamicResource ParagraphSettings}"
+                                           VerticalAlignment="Center" />
+                            </StackPanel>
+
+                            <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource IntervalWidth}" />
+                            <ui:NumberBox
+                                Value="{Binding BoundWindow.SpacingCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Minimum="0" Maximum="100"
+                                ClearButtonEnabled="False"
+                                Margin="0,0,0,12" />
+
+                            <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource LineBreakHeight}" />
+                            <ui:NumberBox
+                                Value="{Binding BoundWindow.LineBreakHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                Minimum="0" Maximum="100"
+                                ClearButtonEnabled="False" />
+                        </StackPanel>
+                    </ui:Card>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" VerticalAlignment="Top">
@@ -231,33 +257,6 @@
 
                             <ui:ToggleSwitch IsChecked="{Binding BoundWindow.ShowOnlyLastMessage, Mode=TwoWay}"
                                              Content="{DynamicResource ShowOnlyLastMessageLabel}" />
-                        </StackPanel>
-                    </ui:Card>
-
-                    <ui:Card Padding="16">
-                        <StackPanel>
-                            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
-                                <ui:SymbolIcon Symbol="TextParagraphDirectionLeft20" FontSize="16"
-                                               Margin="0,0,8,0" VerticalAlignment="Center"
-                                               Foreground="{DynamicResource Brush.Accent}" />
-                                <TextBlock Style="{DynamicResource SectionSubtitleStyle}"
-                                           Margin="0"
-                                           Text="{DynamicResource ParagraphSettings}"
-                                           VerticalAlignment="Center" />
-                            </StackPanel>
-
-                            <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource IntervalWidth}" />
-                            <ui:NumberBox
-                                Value="{Binding BoundWindow.SpacingCount, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                Minimum="0" Maximum="100"
-                                ClearButtonEnabled="False"
-                                Margin="0,0,0,12" />
-
-                            <Label Style="{DynamicResource BaseLabelStyle}" Content="{DynamicResource LineBreakHeight}" />
-                            <ui:NumberBox
-                                Value="{Binding BoundWindow.LineBreakHeight, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                                Minimum="0" Maximum="100"
-                                ClearButtonEnabled="False" />
                         </StackPanel>
                     </ui:Card>
                 </StackPanel>

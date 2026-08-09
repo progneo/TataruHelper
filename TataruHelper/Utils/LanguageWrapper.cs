@@ -174,8 +174,9 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["ShortcutCaptureLabel"] = catalog.GetString("Shortcut capture");
             _SettingsWindow.Resources["OverlayBehaviorLabel"] = catalog.GetString("Overlay behavior");
             _SettingsWindow.Resources["ApplicationFlagsLabel"] = catalog.GetString("Application flags");
-            _SettingsWindow.Resources["OriginalRepositoryLabel"] = catalog.GetString("Original repository:");
+            _SettingsWindow.Resources["OriginalRepositoryLabel"] = catalog.GetString("Repository:");
             _SettingsWindow.Resources["CommunityDiscordLabel"] = catalog.GetString("Community Discord:");
+            _SettingsWindow.Resources["SupportLabel"] = catalog.GetString("Support the project:");
 
             _SettingsWindow.Resources["ChatWindowBehavior"] = catalog.GetString("Behavior");
             _SettingsWindow.Resources["ChatWindowHotkeys"] = catalog.GetString("Hotkeys");
@@ -236,7 +237,7 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["AlwaysOnTopCB"] = catalog.GetString("Always On Top");
             _SettingsWindow.Resources["HideToTrayCB"] = catalog.GetString("Hide to Tray");
             _SettingsWindow.Resources["RealtimeTranslationCB"] = catalog.GetString("Real-Time Translation");
-            _SettingsWindow.Resources["LiteraryTranslationCB"] = catalog.GetString("Literary translation");
+            _SettingsWindow.Resources["LiteraryTranslationCB"] = catalog.GetString("XIV Rus Translation");
             _SettingsWindow.Resources["MarkMachineTranslationCB"] = catalog.GetString("Mark machine translation");
             _SettingsWindow.Resources["TranslateSpeakerNamesCB"] = catalog.GetString("Translate speaker names");
             _SettingsWindow.Resources["ShowTimestampsCb"] = catalog.GetString("Show Timestamps");
@@ -415,7 +416,7 @@ namespace FFXIVTataruHelper
                 catalog.GetString(
                     "The translations installed are for {0}, and the game is being played in {1}. Press Update to fetch the pair in use.");
             _SettingsWindow.Resources["ReferenceIndexAutoInstallCB"] =
-                catalog.GetString("Install new translations by themselves");
+                catalog.GetString("Update translations automatically");
             _SettingsWindow.Resources["ReferenceIndexAutoInstallDescription"] =
                 catalog.GetString(
                     "Tataru Helper asks once a day whether XIV Rus Translation has written anything new, and says so. Turn this on to have it fetch what it finds as well; that is around a gigabyte each time. A change of language pair is still asked about.");
