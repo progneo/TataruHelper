@@ -58,6 +58,23 @@ namespace FFXIVTataruHelper
                 return;
             }
 
+            // Only one copy may run, and that is settled here rather than in
+            // the window's constructor, where it used to be. A constructor can
+            // ask for a shutdown but cannot stop the caller: the startup that
+            // built the window went on to show it, so a second copy put up a
+            // window that had never been initialised and raced its own
+            // shutdown. Sometimes the race went the wrong way and two copies
+            // sat there translating the same game twice.
+            //
+            // After the index command above, which is a job rather than a
+            // second copy of the application and has no window to duplicate.
+            if (!TataruSingleInstance.IsOnlyInstance)
+            {
+                // The copy already running has been asked to show itself.
+                Shutdown();
+                return;
+            }
+
             base.OnStartup(e);
 
             Logger.RawDialogLogEnabled = ShouldEnableRawDialogLog(e.Args);

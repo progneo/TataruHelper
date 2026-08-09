@@ -98,11 +98,12 @@ public partial class MainWindow : FluentWindow
         _optimizeFootprint = optimizeFootprint;
         _winMessagesHandler = winMessagesHandler;
 
-        if (!TataruSingleInstance.IsOnlyInstance)
-        {
-            ShutDown();
-            return;
-        }
+        // Whether this is the only copy running is settled before the window
+        // is built, in App.OnStartup. Asking here meant the answer arrived too
+        // late: a second copy could only ask for a shutdown and return, and
+        // the startup that had called this constructor went on to show the
+        // window it had just been handed - one that never reached
+        // InitializeComponent. Two copies then raced, and sometimes both won.
 
         try
         {
