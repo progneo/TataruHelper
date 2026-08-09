@@ -136,7 +136,7 @@ msgid "Application flags"
 msgstr "Application flags"
 
 #: TataruHelper/Utils/LanguagueWrapper.cs:168
-msgid "Original repository:"
+msgid "Repository:"
 msgstr "Original repository:"
 
 #: TataruHelper/Utils/LanguagueWrapper.cs:169
@@ -873,5 +873,98 @@ msgstr "Yandex Cloud folder ID"
 msgid "Gemini API key"
 msgstr "Gemini API key"
 
-msgid "Gemini model (optional, e.g. gemini-2.5-flash)"
+msgid "Gemini model (optional, e.g. gemini-3.6-flash)"
 msgstr "Gemini model (optional, e.g. gemini-2.5-flash)"
+
+msgid "Support the project:"
+msgstr "Support the project:"
+
+msgid "XIV Rus Translation"
+msgstr "XIV Rus Translation"
+
+msgid "Mark machine translation"
+msgstr "Mark machine translation"
+
+msgid "Translate speaker names"
+msgstr "Translate speaker names"
+
+msgid "Show the XIV Rus Translation of a line when there is one, and translate the rest as usual."
+msgstr "Show the XIV Rus Translation of a line when there is one, and translate the rest as usual."
+
+msgid "Put a dot in front of lines an engine translated, so the ones from XIV Rus Translation are the plain ones."
+msgstr "Put a dot in front of lines an engine translated, so the ones from XIV Rus Translation are the plain ones."
+
+msgid "Show who is speaking in the reading language, using the XIV Rus Translation spelling where there is one."
+msgstr "Show who is speaking in the reading language, using the XIV Rus Translation spelling where there is one."
+
+msgid "XIV Rus Translation gains lines every week. Rebuilding fetches its current work; around a gigabyte is read as it downloads and only the index is kept."
+msgstr "XIV Rus Translation gains lines every week. Rebuilding fetches its current work; around a gigabyte is read as it downloads and only the index is kept."
+
+msgid "Update"
+msgstr "Update"
+
+msgid "Cancel"
+msgstr "Cancel"
+
+msgid "{0} lines, {1}, revision {2}"
+msgstr "{0} lines, {1}, revision {2}"
+
+msgid "{0} lines, {1}, from an unnamed revision"
+msgstr "{0} lines, {1}, from an unnamed revision"
+
+msgid "No translations yet. Press Update to fetch them; until then every line is translated by engine."
+msgstr "No translations yet. Press Update to fetch them; until then every line is translated by engine."
+
+msgid "Asking what the translation project is at…"
+msgstr "Asking what the translation project is at…"
+
+msgid "Downloading… {0} MB"
+msgstr "Downloading… {0} MB"
+
+msgid "Downloading… {0} MB, {1} lines so far"
+msgstr "Downloading… {0} MB, {1} lines so far"
+
+msgid "Writing the index…"
+msgstr "Writing the index…"
+
+msgid "Already up to date."
+msgstr "Already up to date."
+
+msgid "Updated: {0} lines, in use now."
+msgstr "Updated: {0} lines, in use now."
+
+msgid "Update cancelled; the previous translations are still in use."
+msgstr "Update cancelled; the previous translations are still in use."
+
+msgid "Update failed: {0}"
+msgstr "Update failed: {0}"
+
+msgid "XIV Rus Translation has written new lines since these were built. Press Update to fetch them."
+msgstr "XIV Rus Translation has written new lines since these were built. Press Update to fetch them."
+
+msgid "These translations were read by older rules, and hold lines this build knows to be wrong. Press Update to rebuild them."
+msgstr "These translations were read by older rules, and hold lines this build knows to be wrong. Press Update to rebuild them."
+
+msgid "These translations do not record which revision they came from, so there is no telling whether the project has moved. Press Update to be sure."
+msgstr "These translations do not record which revision they came from, so there is no telling whether the project has moved. Press Update to be sure."
+
+msgid "The translations installed are for {0}, and the game is being played in {1}. Press Update to fetch the pair in use."
+msgstr "The translations installed are for {0}, and the game is being played in {1}. Press Update to fetch the pair in use."
+
+msgid "Update translations automatically"
+msgstr "Update translations automatically"
+
+msgid "Tataru Helper asks once a day whether XIV Rus Translation has written anything new, and says so. Turn this on to have it fetch what it finds as well; that is around a gigabyte each time. A change of language pair is still asked about."
+msgstr "Tataru Helper asks once a day whether XIV Rus Translation has written anything new, and says so. Turn this on to have it fetch what it finds as well; that is around a gigabyte each time. A change of language pair is still asked about."
+
+msgid "Reset settings"
+msgstr "Reset settings"
+
+msgid "Put every setting back to what a fresh installation has: chat windows, colours, fonts, hotkeys, languages and chat codes. Your API keys and the installed translations are kept."
+msgstr "Put every setting back to what a fresh installation has: chat windows, colours, fonts, hotkeys, languages and chat codes. Your API keys and the installed translations are kept."
+
+msgid "Every setting goes back to what a fresh installation has - chat windows, colours, fonts, hotkeys, languages and chat codes. API keys and installed translations are kept. Tataru Helper closes; start it again to carry on. Go ahead?"
+msgstr "Every setting goes back to what a fresh installation has - chat windows, colours, fonts, hotkeys, languages and chat codes. API keys and installed translations are kept. Tataru Helper closes; start it again to carry on. Go ahead?"
+
+msgid "The translations installed are for {0}, and the game is now being played in another language. Fetching {1} replaces them, and downloads the whole export again. Go ahead?"
+msgstr "The translations installed are for {0}, and the game is now being played in another language. Fetching {1} replaces them, and downloads the whole export again. Go ahead?"
