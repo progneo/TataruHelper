@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -273,19 +273,24 @@ namespace Translation
 
         public void LoadLanguages()
         {
-            LoadLanguages(
-                _settings.GoogleTranslateLanguages,
-                _settings.PapagoLanguages,
-                _settings.DeepLLanguages,
-                _settings.AzureTranslatorLanguages,
-                _settings.GoogleCloudTranslateLanguages,
-                _settings.DeepLApiLanguages,
-                _settings.OpenAILanguages,
-                _settings.DeepSeekLanguages,
-                _settings.YandexCloudLanguages,
-                _settings.YandexGptLanguages,
-                _settings.YandexLanguages,
-                _settings.GeminiLanguages);
+            try
+            {
+                var engines = new List<TranslationEngine>();
+
+                foreach (var source in EngineLanguageCatalog.From(_settings))
+                {
+                    var languages =
+                        JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(source.LanguagesPath, _Logger);
+                    engines.Add(new TranslationEngine(source.Engine, languages, source.Quality));
+                }
+
+                _translationEngines = new ReadOnlyCollection<TranslationEngine>(
+                    engines.OrderByDescending(x => x.Quality).ToList());
+            }
+            catch (Exception e)
+            {
+                _Logger.LogInformation("{Message}", Convert.ToString(e));
+            }
         }
 
         public Task<TranslationResult> TranslateAsync(string inSentence, TranslationEngine translationEngine,
@@ -627,72 +632,6 @@ namespace Translation
             return detectedLanguage ?? fromLang;
         }
 
-        private void LoadLanguages(
-            string glTrPath,
-            string PapagoTrPath,
-            string deepLPath,
-            string azurePath,
-            string gCloudPath,
-            string deepLApiPath,
-            string openAiPath,
-            string deepSeekPath,
-            string yandexCloudPath,
-            string yandexGptPath,
-            string yandexFreePath,
-            string geminiPath)
-        {
-            try
-            {
-                List<TranslationEngine> tmptranslationEngines = new List<TranslationEngine>();
-                var tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(glTrPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.GoogleTranslate, tmpList, 9));
-
-                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(PapagoTrPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.Papago, tmpList, 6));
-
-                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(deepLPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.DeepL, tmpList, 10));
-
-                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(azurePath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.AzureTranslator, tmpList, 9));
-
-                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(gCloudPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.GoogleCloudTranslate, tmpList,
-                    9));
-
-                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(deepLApiPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.DeepLApi, tmpList, 10));
-
-                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(openAiPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.OpenAI, tmpList, 8));
-
-                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(deepSeekPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.DeepSeek, tmpList, 7));
-
-                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(yandexCloudPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.Yandex, tmpList, 8));
-
-                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(yandexGptPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.YandexGPT, tmpList, 8));
-
-                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(geminiPath, _Logger);
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.Gemini, tmpList, 8));
-
-                tmpList = JsonDataLoader.LoadJsonData<List<TranslatorLanguage>>(yandexFreePath, _Logger);
-                // Ranked above Google: on game dialogue it reads more naturally and
-                // answers in about a fifth of the time (250ms against 1250ms).
-                tmptranslationEngines.Add(new TranslationEngine(TranslationEngineName.YandexFree, tmpList, 9.5));
-
-                tmptranslationEngines = tmptranslationEngines.OrderByDescending(x => x.Quality).ToList();
-
-
-                _translationEngines = new ReadOnlyCollection<TranslationEngine>(tmptranslationEngines);
-            }
-            catch (Exception e)
-            {
-                _Logger.LogInformation("{Message}", Convert.ToString(e));
-            }
-        }
 
         private string PreprocessSentence(string sentence)
         {
