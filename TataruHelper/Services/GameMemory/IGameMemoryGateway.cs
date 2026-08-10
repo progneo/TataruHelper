@@ -14,6 +14,13 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         ChatLogResult GetDirectDialog();
 
+        /// <summary>
+        /// Whether dialogue under this code has been read off the screen at least
+        /// once since attaching, and so whether the chat log's later copy of it
+        /// would be a repeat rather than the only copy there is.
+        /// </summary>
+        bool HasReadCodeLive(string chatCode);
+
         bool CheckChatEquality(ChatLogItem item1, ChatLogItem item2);
 
 

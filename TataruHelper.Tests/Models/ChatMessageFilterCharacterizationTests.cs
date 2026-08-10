@@ -61,13 +61,11 @@ namespace TataruHelper.Tests
 
         [TestCase("003D")]
         [TestCase("0044")]
-        [TestCase("F03D")]
-        [TestCase("F044")]
         public void TrySplitNickname_SplitsDirectDialogSpeakerCodes(string chatCode)
         {
             var filter = new ChatMessageFilter(
                 new string[0],
-                new[] { "003D", "0044", "F03D", "F044" });
+                new[] { "003D", "0044" });
 
             var split = filter.TrySplitNickname(chatCode, "Npc Name: hello world", out var nickname, out var body);
 

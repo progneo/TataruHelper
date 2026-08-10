@@ -904,17 +904,15 @@ namespace FFXIVTataruHelper.ViewModel
         /// new window, to stop each NPC line being shown twice - once live from
         /// the Talk addon and once when the player clicked through.
         ///
-        /// That is not what stops it any more: while realtime reading is on,
-        /// the reader drops those two codes outright before they reach a window
-        /// (FFMemoryReader.IsCoveredByRealtimeReading), so the tick changes
-        /// nothing. What it did do was decide what happens when somebody turns
-        /// realtime reading off - and the answer was no story dialogue at all,
-        /// because the only path left arrives under codes nobody had ticked.
+        /// That is not what stops it any more: while realtime reading is on, the
+        /// reader drops the chat log's copy of a line it has already read off the
+        /// screen. What the untick did do was decide what happens when somebody
+        /// turns realtime reading off - and the answer was no story dialogue at
+        /// all, because the only path left arrives under codes nobody had ticked.
         /// </remarks>
         private BindingList<ChatCodeViewModel> LoadChatCodes(List<ChatCodeViewModel> UserChatCodes,
             List<ChatMsgType> allChatCodes)
         {
-            List<ChatMsgType> chatCodes = allChatCodes.Select(entry => new ChatMsgType(entry)).ToList();
             List<ChatCodeViewModel> chatCodesViewMode = new List<ChatCodeViewModel>();
 
             foreach (var code in allChatCodes)
@@ -937,8 +935,60 @@ namespace FFXIVTataruHelper.ViewModel
                 }
             }
 
+            FoldRetiredRealtimeCodes(UserChatCodes, chatCodesViewMode);
+
             return new BindingList<ChatCodeViewModel>(chatCodesViewMode);
         }
+
+        /// <summary>
+        /// Carries a saved tick for one of the retired F-prefixed realtime codes
+        /// over to the code that now covers both ways a line can arrive.
+        /// </summary>
+        /// <remarks>
+        /// A window saved before the two were merged holds ticks for four codes,
+        /// and the pair it kept ticked depended on which version it was made
+        /// under: a window from 1.0.0 has the live pair ticked and the chat-log
+        /// pair not. Ignoring the retired ticks would read that window as having
+        /// dialogue switched off and leave the player with silence.
+        ///
+        /// Ticked either way wins, and only ticks the window actually saved are
+        /// consulted - a retired code the window never mentioned says nothing
+        /// about what its owner wanted, and treating its default as a vote would
+        /// re-tick a channel somebody had switched off on purpose.
+        /// </remarks>
+        private static void FoldRetiredRealtimeCodes(
+            List<ChatCodeViewModel> savedCodes, List<ChatCodeViewModel> loadedCodes)
+        {
+            if (savedCodes == null)
+            {
+                return;
+            }
+
+            foreach (var (retired, nowCoveredBy) in RetiredRealtimeCodes)
+            {
+                var savedRetired = savedCodes.FirstOrDefault(
+                    x => string.Equals(x.Code, retired, StringComparison.OrdinalIgnoreCase));
+
+                if (savedRetired == null || !savedRetired.IsChecked)
+                {
+                    continue;
+                }
+
+                var survivor = loadedCodes.FirstOrDefault(
+                    x => string.Equals(x.Code, nowCoveredBy, StringComparison.OrdinalIgnoreCase));
+
+                if (survivor != null)
+                {
+                    survivor.IsChecked = true;
+                }
+            }
+        }
+
+        private static readonly (string Retired, string NowCoveredBy)[] RetiredRealtimeCodes =
+        {
+            ("F03D", "003D"),
+            ("F044", "0044")
+        };
 
         private void TrySetLanguage(CollectionView collection, TranslatorLanguage language)
         {

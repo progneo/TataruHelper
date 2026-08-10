@@ -45,8 +45,6 @@ namespace TataruHelper.Tests.ViewModel
                 new("0039", MsgType.Translate, "System", white),
                 new("003D", MsgType.Translate, "NPCD", white),
                 new("0044", MsgType.Translate, "NPCA", white),
-                new("F03D", MsgType.Translate, "NPCDRealtime", white),
-                new("F044", MsgType.Translate, "NPCARealtime", white),
                 new("2AB9", MsgType.Translate, "BossQuotes", white),
                 new("000A", MsgType.Skip, "Say", white),
                 new("000E", MsgType.Skip, "Party", white),
@@ -57,21 +55,60 @@ namespace TataruHelper.Tests.ViewModel
         [Test]
         public void AFreshWindow_ListensToDialogueWhicheverWayItArrives()
         {
-            // The live codes and the chat-log codes both. With realtime reading
-            // on, the reader drops the chat-log pair itself; with it off, that
-            // pair is the only way a line of story reaches the window.
+            // One tick per channel, covering both the line read off the screen
+            // and the chat log's later copy of it. Which of the two a player
+            // gets is what the Real-Time Translation switch decides.
             WithFreshWindow(codes =>
             {
                 Assert.Multiple(() =>
                 {
-                    Assert.That(IsTicked(codes, "F03D"), Is.True, "live dialogue");
-                    Assert.That(IsTicked(codes, "F044"), Is.True, "live cutscene dialogue");
-                    Assert.That(IsTicked(codes, "003D"), Is.True,
-                        "without this, turning realtime reading off shows no dialogue at all");
-                    Assert.That(IsTicked(codes, "0044"), Is.True,
-                        "without this, turning realtime reading off shows no cutscenes at all");
+                    Assert.That(IsTicked(codes, "003D"), Is.True, "NPC dialogue");
+                    Assert.That(IsTicked(codes, "0044"), Is.True, "cutscene dialogue");
                 });
             });
+        }
+
+        // A window saved before the two ways a line can arrive were merged holds
+        // ticks for four codes, and which pair it kept ticked depended on the
+        // version it was made under: 1.0.0 ticked the live pair and left the
+        // chat-log pair alone. Read literally, such a window looks like one with
+        // dialogue switched off, and its owner would be left with silence.
+        [Test]
+        public void AWindowFromBeforeTheMerge_KeepsItsDialogue()
+        {
+            var settings = NewWindowSettings();
+            settings.ChatCodes = new List<ChatCodeViewModel>
+            {
+                new("003D", "NPCD", Color.FromArgb(255, 1, 2, 3), false),
+                new("0044", "NPCA", Color.FromArgb(255, 1, 2, 3), false),
+                new("F03D", "NPCDRealtime", Color.FromArgb(255, 1, 2, 3), true),
+                new("F044", "NPCARealtime", Color.FromArgb(255, 1, 2, 3), true)
+            };
+
+            WithWindow(settings, codes =>
+            {
+                Assert.Multiple(() =>
+                {
+                    Assert.That(IsTicked(codes, "003D"), Is.True, "was ticked as F03D");
+                    Assert.That(IsTicked(codes, "0044"), Is.True, "was ticked as F044");
+                });
+            });
+        }
+
+        [Test]
+        public void AWindowThatSwitchedDialogueOffBothWays_StaysOff()
+        {
+            // The retired codes only ever vote when the window saved them
+            // ticked. Counting their absence as a vote would re-tick a channel
+            // somebody switched off on purpose.
+            var settings = NewWindowSettings();
+            settings.ChatCodes = new List<ChatCodeViewModel>
+            {
+                new("003D", "NPCD", Color.FromArgb(255, 1, 2, 3), false),
+                new("F03D", "NPCDRealtime", Color.FromArgb(255, 1, 2, 3), false)
+            };
+
+            WithWindow(settings, codes => Assert.That(IsTicked(codes, "003D"), Is.False));
         }
 
         [Test]
@@ -125,7 +162,7 @@ namespace TataruHelper.Tests.ViewModel
                 {
                     Assert.That(IsTicked(codes, "003D"), Is.False, "unticked on purpose");
                     Assert.That(IsTicked(codes, "000A"), Is.True, "ticked on purpose");
-                    Assert.That(IsTicked(codes, "F03D"), Is.True, "not mentioned, so the default stands");
+                    Assert.That(IsTicked(codes, "0044"), Is.True, "not mentioned, so the default stands");
                 });
             });
         }

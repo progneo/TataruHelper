@@ -504,7 +504,15 @@ namespace FFXIVTataruHelper.FFHandlers
                 // While reading live, the chat log will repeat every NPC line the
                 // moment the player clicks through it. Letting both in translated
                 // and displayed each line twice.
-                if (IsRealtimeTranslationEnabled && IsCoveredByRealtimeReading(chatLogItem))
+                //
+                // Only for a code we have actually managed to read off the screen,
+                // though. Dropping it unconditionally meant that on a client whose
+                // subtitles we cannot read - the one offset that has to be
+                // re-derived by hand after a patch - cutscenes showed nothing at
+                // all, when the chat log would have shown them a moment later.
+                if (IsRealtimeTranslationEnabled &&
+                    IsStoryDialogueCode(chatLogItem) &&
+                    _gameMemoryGateway.HasReadCodeLive(chatLogItem.Code))
                 {
                     continue;
                 }
@@ -527,7 +535,7 @@ namespace FFXIVTataruHelper.FFHandlers
 
             foreach (var directItem in directDialog.ChatLogItems.ToArray())
             {
-                if (IsRealtimeDirectDialogCode(directItem))
+                if (IsStoryDialogueCode(directItem))
                 {
                     ProcessChatMsg(directItem);
                 }
@@ -535,10 +543,18 @@ namespace FFXIVTataruHelper.FFHandlers
         }
 
         /// <summary>
-        /// Chat-log codes whose lines the realtime reader already reports, in its
-        /// own F-prefixed codes, before the player clicks through.
+        /// The two codes story dialogue arrives under: an NPC speaking, and a
+        /// cutscene subtitle.
+        ///
+        /// One code per channel, whichever way the line reached us. The realtime
+        /// reader used to relabel its lines F03D and F044 so that a window could
+        /// tick the live copy and the chat-log copy separately - but the two are
+        /// the same line, arriving either at once or after the player clicks
+        /// through, and which of them happens is what the Real-Time Translation
+        /// switch decides. Two ticks for one channel only ever misled the person
+        /// reading the list.
         /// </summary>
-        internal static bool IsCoveredByRealtimeReading(ChatLogItem chatLogItem)
+        internal static bool IsStoryDialogueCode(ChatLogItem chatLogItem)
         {
             if (chatLogItem == null || string.IsNullOrEmpty(chatLogItem.Code))
             {
@@ -547,17 +563,6 @@ namespace FFXIVTataruHelper.FFHandlers
 
             return string.Equals(chatLogItem.Code, "003D", StringComparison.OrdinalIgnoreCase) ||
                    string.Equals(chatLogItem.Code, "0044", StringComparison.OrdinalIgnoreCase);
-        }
-
-        internal static bool IsRealtimeDirectDialogCode(ChatLogItem chatLogItem)
-        {
-            if (chatLogItem == null || string.IsNullOrEmpty(chatLogItem.Code))
-            {
-                return false;
-            }
-
-            return string.Equals(chatLogItem.Code, "F03D", StringComparison.OrdinalIgnoreCase) ||
-                   string.Equals(chatLogItem.Code, "F044", StringComparison.OrdinalIgnoreCase);
         }
 
         private bool ShouldSuppressAsDuplicate(ChatLogItem chatLogItem)

@@ -18,8 +18,6 @@ namespace FFXIVTataruHelper.Services.GameMemory
     {
         private const string DirectDialogCode = "003D";
         private const string CutsceneDialogCode = "0044";
-        private const string RealtimeDirectDialogCode = "F03D";
-        private const string RealtimeCutsceneDialogCode = "F044";
 
         private readonly IDirectDialogReader _directDialogReader;
         private readonly IAppLogger _logger;
@@ -37,6 +35,21 @@ namespace FFXIVTataruHelper.Services.GameMemory
         private readonly HashSet<string> _recentRealtimeLines = new HashSet<string>(StringComparer.Ordinal);
 
         private readonly Queue<string> _recentRealtimeLineOrder = new Queue<string>();
+
+        /// <summary>
+        /// Codes this session has managed to read off the screen at least once.
+        ///
+        /// The chat log repeats every line the moment the player clicks through
+        /// it, so while realtime reading works its copy has to go. But whether
+        /// realtime reading works is not one answer for the whole application:
+        /// the offset for the cutscene subtitle is the one FFXIVClientStructs
+        /// cannot supply and has to be re-derived by hand after a patch, so
+        /// speech bubbles can be readable on a client whose subtitles are not.
+        /// Dropping the chat-log copy of a code we have never once delivered
+        /// leaves the player with nothing at all - which is precisely how this
+        /// was reported.
+        /// </summary>
+        private readonly HashSet<string> _codesReadLive = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
         /// <summary>Bare text of the last realtime line, without the speaker prefix.</summary>
         private string _lastEmittedRealtimeText = string.Empty;
@@ -89,6 +102,17 @@ namespace FFXIVTataruHelper.Services.GameMemory
             _lastEmittedRealtimeText = string.Empty;
             _recentRealtimeLines.Clear();
             _recentRealtimeLineOrder.Clear();
+            _codesReadLive.Clear();
+        }
+
+        /// <summary>
+        /// Whether dialogue under this code has been read off the screen at
+        /// least once since attaching to the game, and so whether the chat log's
+        /// later copy of it would be a repeat.
+        /// </summary>
+        public bool HasReadCodeLive(string chatCode)
+        {
+            return !string.IsNullOrEmpty(chatCode) && _codesReadLive.Contains(chatCode);
         }
 
         public void UnsetProcess()
@@ -290,8 +314,6 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 chatCode = DirectDialogCode;
             }
 
-            chatCode = MapRealtimeChatCode(chatCode);
-
             var speakerName = NormalizeDialogToken(realtimeSnapshot.SpeakerName);
             var signature = BuildRealtimeSignature(speakerName, talkText);
             if (!string.Equals(_lastRealtimeDialogSignature, signature, StringComparison.Ordinal))
@@ -318,6 +340,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
                     {
                         Code = chatCode, Line = line, TimeStamp = _timestampProvider()
                     });
+
+                    _codesReadLive.Add(chatCode);
                 }
 
                 // Remembered even when priming swallowed the line, so the chat-log
@@ -433,22 +457,6 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             return string.Concat(normalizedSpeakerName, ":", normalizedTalkText);
-        }
-
-        internal static string MapRealtimeChatCode(string chatCode)
-        {
-            var normalizedChatCode = NormalizeDialogToken(chatCode);
-            if (string.Equals(normalizedChatCode, DirectDialogCode, StringComparison.OrdinalIgnoreCase))
-            {
-                return RealtimeDirectDialogCode;
-            }
-
-            if (string.Equals(normalizedChatCode, CutsceneDialogCode, StringComparison.OrdinalIgnoreCase))
-            {
-                return RealtimeCutsceneDialogCode;
-            }
-
-            return normalizedChatCode;
         }
 
         private static GameLanguage ParseGameLanguage(string gameLanguage)

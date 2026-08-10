@@ -47,10 +47,32 @@ namespace TataruHelper.Tests
             var items = result.ChatLogItems.ToArray();
 
             Assert.That(items.Length, Is.EqualTo(2));
-            Assert.That(items.Count(item => item.Code == "F03D"), Is.EqualTo(1));
-            Assert.That(items.Any(item => item.Code == "F03D" && item.Line == "LiveText"), Is.True);
+            Assert.That(items.Count(item => item.Code == "003D"), Is.EqualTo(1));
+            Assert.That(items.Any(item => item.Code == "003D" && item.Line == "LiveText"), Is.True,
+                "the line read off the screen keeps the channel's own code");
             Assert.That(items.Any(item => item.Code == "0044" && item.Line == "CutsceneNpc:FromChatLog"), Is.True);
             Assert.That(items.Any(item => item.Code == "003D" && item.Line == "OldNpc:FromChatLog"), Is.False);
+        }
+
+        // What lets the reader tell a channel it can read off the screen from one
+        // it cannot, and so whether the chat log's copy is a repeat or the only
+        // copy there will be.
+        [Test]
+        public void Gateway_ReportsWhichCodesItHasManagedToReadLive()
+        {
+            var gateway = CreateGateway(
+                new FakeDirectDialogReader(),
+                () => TalkAddonRealtimeDialogSnapshot.Available("003D", string.Empty, "LiveText"));
+
+            Assert.That(gateway.HasReadCodeLive("003D"), Is.False, "nothing read yet");
+
+            gateway.GetDirectDialog();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(gateway.HasReadCodeLive("003D"), Is.True);
+                Assert.That(gateway.HasReadCodeLive("0044"), Is.False, "no subtitle has been read");
+            });
         }
 
         [Test]
@@ -108,12 +130,12 @@ namespace TataruHelper.Tests
 
             var item = gateway.GetDirectDialog().ChatLogItems.Single();
 
-            Assert.That(item.Code, Is.EqualTo("F03D"));
+            Assert.That(item.Code, Is.EqualTo("003D"));
             Assert.That(item.Line, Is.EqualTo("LiveNpc:LiveText"));
         }
 
         [Test]
-        public void Gateway_EmitsRealtime0044_WhenSnapshotIsCutsceneCode()
+        public void Gateway_EmitsTheCutsceneCode_WhenSnapshotIsASubtitle()
         {
             var directDialogReader = new FakeDirectDialogReader();
             var gateway = CreateGateway(
@@ -122,7 +144,7 @@ namespace TataruHelper.Tests
 
             var item = gateway.GetDirectDialog().ChatLogItems.Single();
 
-            Assert.That(item.Code, Is.EqualTo("F044"));
+            Assert.That(item.Code, Is.EqualTo("0044"));
             Assert.That(item.Line, Is.EqualTo("CutsceneNpc:LiveText"));
         }
 
@@ -144,7 +166,7 @@ namespace TataruHelper.Tests
             var secondTick = gateway.GetDirectDialog().ChatLogItems.ToArray();
 
             Assert.That(firstTick.Length, Is.EqualTo(1));
-            Assert.That(firstTick[0].Code, Is.EqualTo("F03D"));
+            Assert.That(firstTick[0].Code, Is.EqualTo("003D"));
             Assert.That(secondTick, Is.Empty);
         }
 
@@ -286,14 +308,6 @@ namespace TataruHelper.Tests
             Assert.That(snapshot.ChatCode, Is.EqualTo("003D"));
             Assert.That(snapshot.SpeakerName, Is.EqualTo("VisibleNpc"));
             Assert.That(snapshot.TalkText, Is.EqualTo("Visible dialog text"));
-        }
-
-        [TestCase("003D", "F03D")]
-        [TestCase("0044", "F044")]
-        [TestCase("2AB9", "2AB9")]
-        public void MapRealtimeChatCode_MapsOnlyDirectDialogCodes(string input, string expected)
-        {
-            Assert.That(SharlayanGameMemoryGateway.MapRealtimeChatCode(input), Is.EqualTo(expected));
         }
 
         [Test]

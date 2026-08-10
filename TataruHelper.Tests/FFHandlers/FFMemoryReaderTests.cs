@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -18,14 +20,13 @@ namespace TataruHelper.Tests
     public class FFMemoryReaderTests
     {
         [Test]
-        public void ProcessReadResult_WithRealtimeOn_DropsTheChatLogCopiesOfDialogue()
+        public void ProcessReadResult_DropsTheChatLogCopyOfALineItAlreadyReadLive()
         {
             var gateway = new FakeGameMemoryGateway
             {
+                CodesReadLive = { "003D" },
                 DirectDialogResult = BuildResult(
-                    new ChatLogItem { Code = "003D", Line = "FallbackNpc:DelayedFallback" },
-                    new ChatLogItem { Code = "F03D", Line = "RealtimeNpc:RealtimeDialog" },
-                    new ChatLogItem { Code = "F044", Line = "RealtimeCutscene" })
+                    new ChatLogItem { Code = "003D", Line = "RealtimeNpc:RealtimeDialog" })
             };
             var reader = new FFMemoryReader(gateway, new NullLogger(), new FakeSettingsStore());
 
@@ -33,22 +34,47 @@ namespace TataruHelper.Tests
                 reader,
                 BuildResult(
                     new ChatLogItem { Code = "003D", Line = "LogNpc:DelayedDialog" },
-                    new ChatLogItem { Code = "0044", Line = "DelayedCutscene" },
                     new ChatLogItem { Code = "000A", Line = "Someone:Say something" }));
 
             var messages = ReadQueuedMessages(reader);
 
             // The chat log repeats every NPC line once the player clicks through it,
-            // so with realtime on those copies must not be shown a second time.
-            Assert.That(messages.Select(message => message.Code),
-                Is.EquivalentTo(new[] { "000A", "F03D", "F044" }));
-            Assert.That(messages.Any(message => message.Code == "F03D" && message.Text == "RealtimeNpc:RealtimeDialog"),
+            // so that copy must not be shown a second time.
+            Assert.That(messages.Any(message => message.Text == "LogNpc:DelayedDialog"), Is.False,
+                "the delayed copy of a line already shown live");
+            Assert.That(messages.Any(message => message.Code == "003D" && message.Text == "RealtimeNpc:RealtimeDialog"),
                 Is.True);
-            Assert.That(messages.Any(message => message.Code == "F044" && message.Text == "RealtimeCutscene"), Is.True);
 
             // Unrelated chat channels are untouched.
             Assert.That(messages.Any(message => message.Code == "000A" && message.Text == "Someone:Say something"),
                 Is.True);
+        }
+
+        // The reason the drop is conditional. Speech bubbles and cutscene
+        // subtitles are read out of different addons, and the subtitle's offset
+        // is the one FFXIVClientStructs cannot supply - so it can be the only
+        // one broken on a given client. Dropping the chat log's copy of a code
+        // we have never once managed to read left cutscenes showing nothing at
+        // all, which is how a player reported it.
+        [Test]
+        public void ProcessReadResult_KeepsTheChatLogCopyOfACodeItHasNeverReadLive()
+        {
+            var gateway = new FakeGameMemoryGateway
+            {
+                CodesReadLive = { "003D" },
+                DirectDialogResult = BuildResult(
+                    new ChatLogItem { Code = "003D", Line = "RealtimeNpc:RealtimeDialog" })
+            };
+            var reader = new FFMemoryReader(gateway, new NullLogger(), new FakeSettingsStore());
+
+            InvokeProcessReadResult(
+                reader,
+                BuildResult(new ChatLogItem { Code = "0044", Line = "DelayedCutscene" }));
+
+            var messages = ReadQueuedMessages(reader);
+
+            Assert.That(messages.Any(message => message.Code == "0044" && message.Text == "DelayedCutscene"), Is.True,
+                "late is better than never");
         }
 
         [Test]
@@ -56,8 +82,9 @@ namespace TataruHelper.Tests
         {
             var gateway = new FakeGameMemoryGateway
             {
+                CodesReadLive = { "003D" },
                 DirectDialogResult =
-                    BuildResult(new ChatLogItem { Code = "F03D", Line = "RealtimeNpc:RealtimeDialog" })
+                    BuildResult(new ChatLogItem { Code = "003D", Line = "RealtimeNpc:RealtimeDialog" })
             };
             var reader = new FFMemoryReader(gateway, new NullLogger(), new FakeSettingsStore())
             {
@@ -71,7 +98,7 @@ namespace TataruHelper.Tests
             var messages = ReadQueuedMessages(reader);
 
             Assert.That(gateway.GetDirectDialogCalls, Is.EqualTo(0));
-            Assert.That(messages.Select(message => message.Code), Is.EquivalentTo(new[] { "003D" }));
+            Assert.That(messages.Select(message => message.Text), Is.EquivalentTo(new[] { "LogNpc:DelayedDialog" }));
         }
 
         [Test]
@@ -79,8 +106,9 @@ namespace TataruHelper.Tests
         {
             var gateway = new FakeGameMemoryGateway
             {
+                CodesReadLive = { "003D" },
                 DirectDialogResult =
-                    BuildResult(new ChatLogItem { Code = "F03D", Line = "RealtimeNpc:RealtimeDialog" })
+                    BuildResult(new ChatLogItem { Code = "003D", Line = "RealtimeNpc:RealtimeDialog" })
             };
             var reader = new FFMemoryReader(gateway, new NullLogger(), new FakeSettingsStore());
 
@@ -91,19 +119,19 @@ namespace TataruHelper.Tests
             var messages = ReadQueuedMessages(reader);
 
             Assert.That(gateway.GetDirectDialogCalls, Is.EqualTo(1));
-            Assert.That(messages.Select(message => message.Code), Is.EquivalentTo(new[] { "F03D" }));
-            Assert.That(messages.Any(message => message.Code == "F03D" && message.Text == "RealtimeNpc:RealtimeDialog"),
-                Is.True);
+            Assert.That(messages.Select(message => message.Text),
+                Is.EquivalentTo(new[] { "RealtimeNpc:RealtimeDialog" }));
         }
 
-        [TestCase("F03D", true)]
-        [TestCase("F044", true)]
-        [TestCase("003D", false)]
-        [TestCase("0044", false)]
-        public void IsRealtimeDirectDialogCode_MatchesOnlySyntheticRealtimeCodes(string code, bool expected)
+        [TestCase("003D", true)]
+        [TestCase("0044", true)]
+        [TestCase("000A", false)]
+        [TestCase("0039", false)]
+        [TestCase("F03D", false, Description = "retired: one code per channel now, whichever way the line arrives")]
+        public void IsStoryDialogueCode_MatchesTheTwoDialogueCodes(string code, bool expected)
         {
             Assert.That(
-                FFMemoryReader.IsRealtimeDirectDialogCode(new ChatLogItem { Code = code }),
+                FFMemoryReader.IsStoryDialogueCode(new ChatLogItem { Code = code }),
                 Is.EqualTo(expected));
         }
 
@@ -140,6 +168,14 @@ namespace TataruHelper.Tests
         {
             public int GetDirectDialogCalls { get; private set; }
             public ChatLogResult DirectDialogResult { get; set; } = new ChatLogResult();
+
+            /// <summary>Codes this gateway claims to have read off the screen.</summary>
+            public HashSet<string> CodesReadLive { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+            public bool HasReadCodeLive(string chatCode)
+            {
+                return chatCode != null && CodesReadLive.Contains(chatCode);
+            }
 
             public void SetProcess(
                 ProcessModel processModel,
