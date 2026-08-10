@@ -44,6 +44,11 @@ namespace TataruHelper.Tests.Services.Diagnostics
                     Assert.That(report, Does.Contain("English -> Russian"), "the pair");
                     Assert.That(report, Does.Contain("003D"), "the ticked codes");
                     Assert.That(report, Does.Contain("NPC dialogue yes"));
+
+                    // The name its owner sees. The window is called "1" and its
+                    // internal id is 0, so printing the id had them talking
+                    // about different windows.
+                    Assert.That(report, Does.Contain("  1: GoogleTranslate"));
                 });
             });
         }

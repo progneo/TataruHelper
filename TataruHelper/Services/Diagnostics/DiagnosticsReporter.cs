@@ -126,7 +126,12 @@ namespace FFXIVTataruHelper.Services.Diagnostics
                     .Where(window => window != null)
                     .Select(window => new DiagnosticsWindow
                     {
-                        Name = window.WinId.ToString(CultureInfo.InvariantCulture),
+                        // The name on screen, not the internal id: they differ,
+                        // and a report that calls a window 0 while its owner
+                        // calls it 1 costs a message to sort out.
+                        Name = string.IsNullOrWhiteSpace(window.Name)
+                            ? window.WinId.ToString(CultureInfo.InvariantCulture)
+                            : window.Name,
                         Engine = window.SelectedEngine?.EngineName.ToString() ?? string.Empty,
                         FromLanguage = window.CurrentTranslateFromLanguage?.SystemName ?? string.Empty,
                         ToLanguage = window.CurrentTranslateToLanguage?.SystemName ?? string.Empty,
