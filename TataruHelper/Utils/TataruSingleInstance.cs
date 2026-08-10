@@ -16,7 +16,6 @@ namespace FFXIVTataruHelper.Utils
             Win32Interfaces.RegisterWindowMessageM("WM_SHOWFIRSTINSTANCE|{0}", ProgramInfo.AssemblyGuid);
 
         private static Mutex mutex = null;
-        private static bool mutexOwned;
 
 
         public static bool IsOnlyInstance
@@ -44,14 +43,21 @@ namespace FFXIVTataruHelper.Utils
 
             try
             {
-                mutex = new Mutex(true, mutexName, out onlyInstance);
-                mutexOwned = onlyInstance;
+                // Not owned. What answers the question is whether this process
+                // created the named object, which is what the out parameter
+                // reports either way - and a mutex belongs to the thread that
+                // took it, so asking for ownership here meant the release at
+                // shutdown came from the wrong thread and threw
+                // "Object synchronization method was called from an
+                // unsynchronized block of code" into every session's log. The
+                // handle is held for the life of the process, so the object
+                // outlives any thread regardless.
+                mutex = new Mutex(false, mutexName, out onlyInstance);
             }
             catch (Exception e)
             {
                 Logger.WriteLog(e);
                 onlyInstance = true;
-                mutexOwned = false;
             }
 
             //Logger.WriteLog("onlyInstance: " + Convert.ToString(onlyInstance));
@@ -81,12 +87,9 @@ namespace FFXIVTataruHelper.Utils
             {
                 if (mutex != null)
                 {
-                    if (mutexOwned)
-                    {
-                        mutex.ReleaseMutex();
-                        mutexOwned = false;
-                    }
-
+                    // Closing the handle is the whole of it: the last one closed
+                    // takes the named object with it, and the next copy started
+                    // then finds nothing and runs.
                     mutex.Dispose();
                     mutex = null;
                 }
