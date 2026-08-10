@@ -1,4 +1,4 @@
-namespace Translation.Models
+﻿namespace Translation.Models
 {
     public static class TranslationEngineDefaults
     {
@@ -20,6 +20,7 @@ namespace Translation.Models
             {
                 case TranslationEngineName.Ollama:
                 case TranslationEngineName.LmStudio:
+                case TranslationEngineName.LibreTranslate:
                     return false;
                 default:
                     return true;

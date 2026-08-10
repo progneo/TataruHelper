@@ -31,6 +31,9 @@ namespace Translation.Models
         LmStudio = 18,
 
         Claude = 19,
+
+        /// <summary>An open translation server the player points at. Needs an address, not a key.</summary>
+        LibreTranslate = 20,
     }
 
     public class TranslationEngine : IEquatable<TranslationEngine>

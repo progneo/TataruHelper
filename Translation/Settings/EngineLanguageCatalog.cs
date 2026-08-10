@@ -67,6 +67,8 @@ namespace Translation.Settings
                 // Ranked below the hosted engines as stand-ins: whatever model
                 // the player happens to be running is the one thing here we
                 // cannot judge the quality of.
+                new EngineLanguageSource(TranslationEngineName.LibreTranslate,
+                    settings.LibreTranslateLanguages, 6),
                 new EngineLanguageSource(TranslationEngineName.Ollama,
                     settings.OllamaLanguages, 6),
                 new EngineLanguageSource(TranslationEngineName.LmStudio,

@@ -92,6 +92,10 @@
     "TranslationResources/GoogleTranslateLanguages.json"
   ],
   [
+    "LibreTranslateLanguages",
+    "TranslationResources/LibreTranslateLanguages.json"
+  ],
+  [
     "OllamaLanguages",
     "TranslationResources/GoogleTranslateLanguages.json"
   ],

@@ -18,7 +18,8 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.DeepLApi, TranslationEngineName.OpenAI, TranslationEngineName.Gemini,
             TranslationEngineName.DeepSeek, TranslationEngineName.Claude, TranslationEngineName.OpenRouter,
             TranslationEngineName.YandexGPT, TranslationEngineName.Yandex,
-            TranslationEngineName.Ollama, TranslationEngineName.LmStudio
+            TranslationEngineName.Ollama, TranslationEngineName.LmStudio,
+            TranslationEngineName.LibreTranslate
         };
 
         private readonly ITranslationCredentialStore _store;
@@ -121,6 +122,12 @@ namespace FFXIVTataruHelper.ViewModel
             set => SetEngineEnabled(TranslationEngineName.LmStudio, value);
         }
 
+        public bool IsLibreTranslateEnabled
+        {
+            get => _store.IsEngineEnabled(TranslationEngineName.LibreTranslate);
+            set => SetEngineEnabled(TranslationEngineName.LibreTranslate, value);
+        }
+
         public bool IsYandexEnabled
         {
             get => _store.IsEngineEnabled(TranslationEngineName.Yandex);
@@ -149,6 +156,24 @@ namespace FFXIVTataruHelper.ViewModel
         public bool ShowClaudeSettings => IsClaudeEnabled;
         public bool ShowOllamaSettings => IsOllamaEnabled;
         public bool ShowLmStudioSettings => IsLmStudioEnabled;
+        public bool ShowLibreTranslateSettings => IsLibreTranslateEnabled;
+
+        public string LibreTranslateEndpoint
+        {
+            get => _store.GetEndpoint(TranslationEngineName.LibreTranslate);
+            set => SetEndpoint(
+                TranslationEngineName.LibreTranslate, value, nameof(LibreTranslateEndpoint));
+        }
+
+        public string LibreTranslateApiKey
+        {
+            get => _store.GetApiKey(TranslationEngineName.LibreTranslate);
+            set => SetApiKey(
+                TranslationEngineName.LibreTranslate, value,
+                nameof(LibreTranslateApiKey), nameof(LibreTranslateApiKeyMasked));
+        }
+
+        public string LibreTranslateApiKeyMasked => MaskSecret(LibreTranslateApiKey);
 
         public string ClaudeApiKey
         {
@@ -364,6 +389,7 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.Claude => nameof(IsClaudeEnabled),
             TranslationEngineName.Ollama => nameof(IsOllamaEnabled),
             TranslationEngineName.LmStudio => nameof(IsLmStudioEnabled),
+            TranslationEngineName.LibreTranslate => nameof(IsLibreTranslateEnabled),
             TranslationEngineName.Yandex => nameof(IsYandexEnabled),
             TranslationEngineName.YandexGPT => nameof(IsYandexGptEnabled),
             _ => string.Empty
@@ -381,6 +407,7 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.Claude => nameof(ShowClaudeSettings),
             TranslationEngineName.Ollama => nameof(ShowOllamaSettings),
             TranslationEngineName.LmStudio => nameof(ShowLmStudioSettings),
+            TranslationEngineName.LibreTranslate => nameof(ShowLibreTranslateSettings),
             TranslationEngineName.Yandex => nameof(ShowYandexSettings),
             TranslationEngineName.YandexGPT => nameof(ShowYandexGptSettings),
             _ => string.Empty

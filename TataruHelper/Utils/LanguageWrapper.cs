@@ -487,6 +487,10 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["SelfHostedTranslatorsHint"] =
                 catalog.GetString(
                     "Nothing leaves your machine and nothing is billed. Off until you point them at a server that is running.");
+            _SettingsWindow.Resources["LibreTranslateAddressLabel"] =
+                catalog.GetString("Instance address (optional, e.g. http://localhost:5000)");
+            _SettingsWindow.Resources["LibreTranslateKeyLabel"] =
+                catalog.GetString("Instance key (only if your instance asks for one)");
             _SettingsWindow.Resources["ServerAddressLabel"] =
                 catalog.GetString("Server address (optional, e.g. http://localhost:11434)");
             _SettingsWindow.Resources["OllamaModelLabel"] =

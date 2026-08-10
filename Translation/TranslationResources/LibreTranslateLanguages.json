@@ -1,0 +1,237 @@
+[
+  {
+    "ShownName": "Auto",
+    "SystemName": "Auto",
+    "LanguageCode": "auto"
+  },
+  {
+    "ShownName": "English",
+    "SystemName": "English",
+    "LanguageCode": "en"
+  },
+  {
+    "ShownName": "Arabic",
+    "SystemName": "Arabic",
+    "LanguageCode": "ar"
+  },
+  {
+    "ShownName": "Azerbaijani",
+    "SystemName": "Azerbaijani",
+    "LanguageCode": "az"
+  },
+  {
+    "ShownName": "Bulgarian",
+    "SystemName": "Bulgarian",
+    "LanguageCode": "bg"
+  },
+  {
+    "ShownName": "Bengali",
+    "SystemName": "Bengali",
+    "LanguageCode": "bn"
+  },
+  {
+    "ShownName": "Catalan",
+    "SystemName": "Catalan",
+    "LanguageCode": "ca"
+  },
+  {
+    "ShownName": "Czech",
+    "SystemName": "Czech",
+    "LanguageCode": "cs"
+  },
+  {
+    "ShownName": "Danish",
+    "SystemName": "Danish",
+    "LanguageCode": "da"
+  },
+  {
+    "ShownName": "German",
+    "SystemName": "German",
+    "LanguageCode": "de"
+  },
+  {
+    "ShownName": "Greek",
+    "SystemName": "Greek",
+    "LanguageCode": "el"
+  },
+  {
+    "ShownName": "Esperanto",
+    "SystemName": "Esperanto",
+    "LanguageCode": "eo"
+  },
+  {
+    "ShownName": "Spanish",
+    "SystemName": "Spanish",
+    "LanguageCode": "es"
+  },
+  {
+    "ShownName": "Estonian",
+    "SystemName": "Estonian",
+    "LanguageCode": "et"
+  },
+  {
+    "ShownName": "Persian",
+    "SystemName": "Persian",
+    "LanguageCode": "fa"
+  },
+  {
+    "ShownName": "Finnish",
+    "SystemName": "Finnish",
+    "LanguageCode": "fi"
+  },
+  {
+    "ShownName": "French",
+    "SystemName": "French",
+    "LanguageCode": "fr"
+  },
+  {
+    "ShownName": "Irish",
+    "SystemName": "Irish",
+    "LanguageCode": "ga"
+  },
+  {
+    "ShownName": "Hebrew",
+    "SystemName": "Hebrew",
+    "LanguageCode": "he"
+  },
+  {
+    "ShownName": "Hindi",
+    "SystemName": "Hindi",
+    "LanguageCode": "hi"
+  },
+  {
+    "ShownName": "Hungarian",
+    "SystemName": "Hungarian",
+    "LanguageCode": "hu"
+  },
+  {
+    "ShownName": "Indonesian",
+    "SystemName": "Indonesian",
+    "LanguageCode": "id"
+  },
+  {
+    "ShownName": "Italian",
+    "SystemName": "Italian",
+    "LanguageCode": "it"
+  },
+  {
+    "ShownName": "Japanese",
+    "SystemName": "Japanese",
+    "LanguageCode": "ja"
+  },
+  {
+    "ShownName": "Korean",
+    "SystemName": "Korean",
+    "LanguageCode": "ko"
+  },
+  {
+    "ShownName": "Lithuanian",
+    "SystemName": "Lithuanian",
+    "LanguageCode": "lt"
+  },
+  {
+    "ShownName": "Latvian",
+    "SystemName": "Latvian",
+    "LanguageCode": "lv"
+  },
+  {
+    "ShownName": "Malay",
+    "SystemName": "Malay",
+    "LanguageCode": "ms"
+  },
+  {
+    "ShownName": "Norwegian",
+    "SystemName": "Norwegian",
+    "LanguageCode": "nb"
+  },
+  {
+    "ShownName": "Dutch",
+    "SystemName": "Dutch",
+    "LanguageCode": "nl"
+  },
+  {
+    "ShownName": "Polish",
+    "SystemName": "Polish",
+    "LanguageCode": "pl"
+  },
+  {
+    "ShownName": "Portuguese",
+    "SystemName": "Portuguese",
+    "LanguageCode": "pt"
+  },
+  {
+    "ShownName": "Romanian",
+    "SystemName": "Romanian",
+    "LanguageCode": "ro"
+  },
+  {
+    "ShownName": "Russian",
+    "SystemName": "Russian",
+    "LanguageCode": "ru"
+  },
+  {
+    "ShownName": "Slovak",
+    "SystemName": "Slovak",
+    "LanguageCode": "sk"
+  },
+  {
+    "ShownName": "Slovenian",
+    "SystemName": "Slovenian",
+    "LanguageCode": "sl"
+  },
+  {
+    "ShownName": "Albanian",
+    "SystemName": "Albanian",
+    "LanguageCode": "sq"
+  },
+  {
+    "ShownName": "Serbian",
+    "SystemName": "Serbian",
+    "LanguageCode": "sr"
+  },
+  {
+    "ShownName": "Swedish",
+    "SystemName": "Swedish",
+    "LanguageCode": "sv"
+  },
+  {
+    "ShownName": "Thai",
+    "SystemName": "Thai",
+    "LanguageCode": "th"
+  },
+  {
+    "ShownName": "Filipino",
+    "SystemName": "Filipino",
+    "LanguageCode": "tl"
+  },
+  {
+    "ShownName": "Turkish",
+    "SystemName": "Turkish",
+    "LanguageCode": "tr"
+  },
+  {
+    "ShownName": "Ukrainian",
+    "SystemName": "Ukrainian",
+    "LanguageCode": "uk"
+  },
+  {
+    "ShownName": "Urdu",
+    "SystemName": "Urdu",
+    "LanguageCode": "ur"
+  },
+  {
+    "ShownName": "Vietnamese",
+    "SystemName": "Vietnamese",
+    "LanguageCode": "vi"
+  },
+  {
+    "ShownName": "Chinese Simplified",
+    "SystemName": "Chinese Simplified",
+    "LanguageCode": "zh"
+  },
+  {
+    "ShownName": "Chinese Traditional",
+    "SystemName": "Chinese",
+    "LanguageCode": "zt"
+  }
+]

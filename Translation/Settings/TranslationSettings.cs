@@ -85,6 +85,9 @@
 
         public string ClaudeLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
 
+        public string LibreTranslateLanguages { get; set; } =
+            "TranslationResources/LibreTranslateLanguages.json";
+
         public string OllamaLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
 
         public string LmStudioLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
