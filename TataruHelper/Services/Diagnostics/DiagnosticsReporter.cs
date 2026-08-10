@@ -2,9 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using System.Text;
 
 using FFXIVTataruHelper.FFHandlers;
 using FFXIVTataruHelper.Services.Logging;
@@ -77,9 +79,8 @@ namespace FFXIVTataruHelper.Services.Diagnostics
             };
 
             var report = DiagnosticsReport.Build(snapshot, DateTime.Now);
-            var savedTo = TrySave(report);
 
-            return (report, savedTo);
+            return (report, TryBundle(report));
         }
 
         private string DescribeReferenceIndex()
@@ -175,21 +176,114 @@ namespace FFXIVTataruHelper.Services.Diagnostics
             }
         }
 
-        private string TrySave(string report)
+        /// <summary>
+        /// How much of the end of each log to carry. Enough to hold the evening
+        /// somebody is asking about, small enough that the archive can be sent
+        /// over a chat service - text of this kind compresses about tenfold.
+        /// </summary>
+        private const int LogTailBytes = 1024 * 1024;
+
+        /// <summary>
+        /// Writes the report and the tail of every log into one archive.
+        ///
+        /// One file, because the reason to have it is handing it to somebody
+        /// else, and a person asked for four files will send one. The logs are
+        /// the half that matters most: the report says what the state is now, and
+        /// they say what happened - which line arrived under which code, and what
+        /// it was turned into.
+        /// </summary>
+        private string TryBundle(string report)
         {
             try
             {
-                var path = Path.Combine(
-                    Path.GetDirectoryName(LogWriter.LogFilePath) ?? AppContext.BaseDirectory,
-                    "Diagnostics.txt");
+                var directory = Path.GetDirectoryName(LogWriter.LogFilePath) ?? AppContext.BaseDirectory;
+                var path = Path.Combine(directory, "Diagnostics.zip");
 
-                File.WriteAllText(path, report);
+                // Replaced rather than added to, so what is sent is this press
+                // and not an accumulation of every previous one.
+                if (File.Exists(path))
+                {
+                    File.Delete(path);
+                }
+
+                using var archive = ZipFile.Open(path, ZipArchiveMode.Create);
+
+                WriteEntry(archive, "report.txt", report);
+
+                foreach (var logPath in LogWriter.AllLogPaths)
+                {
+                    var tail = TryReadTail(logPath, LogTailBytes);
+                    if (tail != null)
+                    {
+                        WriteEntry(archive, Path.GetFileName(logPath), tail);
+                    }
+                }
+
                 return path;
             }
             catch (Exception ex)
             {
                 _logger?.WriteLog(ex);
                 return string.Empty;
+            }
+        }
+
+        private static void WriteEntry(ZipArchive archive, string name, string content)
+        {
+            using var stream = archive.CreateEntry(name, CompressionLevel.Optimal).Open();
+            using var writer = new StreamWriter(stream, new UTF8Encoding(false));
+            writer.Write(content);
+        }
+
+        /// <summary>
+        /// The end of a log, or null when there is nothing to read.
+        ///
+        /// Opened sharing write access, because the log writer holds these open
+        /// for the life of the application - without that this would fail on
+        /// every file that matters.
+        /// </summary>
+        private string TryReadTail(string path, int maxBytes)
+        {
+            try
+            {
+                if (!File.Exists(path))
+                {
+                    return null;
+                }
+
+                using var stream = new FileStream(
+                    path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite | FileShare.Delete);
+
+                if (stream.Length == 0)
+                {
+                    return null;
+                }
+
+                var truncated = stream.Length > maxBytes;
+                if (truncated)
+                {
+                    stream.Seek(-maxBytes, SeekOrigin.End);
+                }
+
+                using var reader = new StreamReader(stream);
+                var text = reader.ReadToEnd();
+
+                if (!truncated)
+                {
+                    return text;
+                }
+
+                // Started mid-line, and a half line at the top reads as a
+                // corrupt file rather than as a window onto a longer one.
+                var firstBreak = text.IndexOf('\n');
+                var body = firstBreak >= 0 ? text.Substring(firstBreak + 1) : text;
+
+                return "[earlier lines omitted]" + Environment.NewLine + body;
+            }
+            catch (Exception ex)
+            {
+                _logger?.WriteLog(ex);
+                return null;
             }
         }
 

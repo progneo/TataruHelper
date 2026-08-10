@@ -972,17 +972,17 @@ msgstr "The translations installed are for {0}, and the game is now being played
 msgid "Diagnostics"
 msgstr "Diagnostics"
 
-msgid "Copy a description of what Tataru Helper is seeing right now - the game it found, what it manages to read, and how each window is set up. Paste it into a bug report."
-msgstr "Copy a description of what Tataru Helper is seeing right now - the game it found, what it manages to read, and how each window is set up. Paste it into a bug report."
+msgid "Describe what Tataru Helper is seeing right now - the game it found, what it manages to read, how each window is set up - and pack it up with the recent logs. The folder opens with the archive selected; send that along with your report."
+msgstr "Describe what Tataru Helper is seeing right now - the game it found, what it manages to read, how each window is set up - and pack it up with the recent logs. The folder opens with the archive selected; send that along with your report."
 
-msgid "Copy diagnostics"
-msgstr "Copy diagnostics"
+msgid "Collect diagnostics"
+msgstr "Collect diagnostics"
 
-msgid "Copied to the clipboard. Also saved to"
-msgstr "Copied to the clipboard. Also saved to"
+msgid "Copied to the clipboard. The report and the recent logs are in"
+msgstr "Copied to the clipboard. The report and the recent logs are in"
 
-msgid "The clipboard was busy, so this was only saved to"
-msgstr "The clipboard was busy, so this was only saved to"
+msgid "The clipboard was busy. The report and the recent logs are in"
+msgstr "The clipboard was busy. The report and the recent logs are in"
 
 msgid "Could not be collected. The log will say why."
 msgstr "Could not be collected. The log will say why."

@@ -57,8 +57,11 @@ namespace FFXIVTataruHelper.Services.Diagnostics
             Field(report, "Language", reading.GameLanguage);
             Field(report, "Character read", YesNo(reading.PlayerResolved));
             Field(report, "Real-Time Translation", OnOff(reading.RealtimeEnabled));
-            Field(report, "Lines read live", reading.LinesReadLive.ToString(CultureInfo.InvariantCulture));
-            Field(report, "Codes read live", reading.CodesReadLive.Count == 0
+            // Totals for the attachment, not for this instant: a report is
+            // usually written after playing, and "0 lines" would then be the
+            // answer to a question nobody asked.
+            Field(report, "Lines read off screen", reading.LinesReadLive.ToString(CultureInfo.InvariantCulture));
+            Field(report, "Codes read off screen", reading.CodesReadLive.Count == 0
                 ? "none"
                 : string.Join(", ", reading.CodesReadLive));
 
@@ -100,14 +103,26 @@ namespace FFXIVTataruHelper.Services.Diagnostics
             var findings = new List<string>();
             var reading = snapshot.Reading;
 
-            if (!reading.GameAttached)
+            if (!reading.EverAttached)
             {
-                findings.Add("The game is not attached, so nothing can be translated. " +
-                             "Start Final Fantasy XIV, and run Tataru Helper as administrator.");
+                findings.Add("The game has not been attached at any point, so nothing could be " +
+                             "translated and there is nothing else to go on. Start Final Fantasy XIV, " +
+                             "and run Tataru Helper as administrator.");
                 return findings;
             }
 
-            if (!reading.PlayerResolved)
+            // Closed since, most likely - somebody stops playing and then writes
+            // the report. Everything below still happened, so it is still worth
+            // saying; it just did not happen in the last few seconds. Returning
+            // here instead threw away the whole session's evidence and left the
+            // report contradicting itself, announcing that nothing had been read
+            // above a count of the lines that had been.
+            if (!reading.GameAttached)
+            {
+                findings.Add("The game is not attached right now - closed, most likely. What follows " +
+                             "is from earlier in this session, while it was.");
+            }
+            else if (!reading.PlayerResolved)
             {
                 findings.Add("The game is attached but its memory has not been read: not even the " +
                              "character could be. Either the character is not logged in yet, or this " +

@@ -272,12 +272,12 @@ namespace FFXIVTataruHelper
 
             _SettingsWindow.Resources["DiagnosticsTitle"] = catalog.GetString("Diagnostics");
             _SettingsWindow.Resources["DiagnosticsHint"] = catalog.GetString(
-                "Copy a description of what Tataru Helper is seeing right now - the game it found, what it manages to read, and how each window is set up. Paste it into a bug report.");
-            _SettingsWindow.Resources["DiagnosticsButton"] = catalog.GetString("Copy diagnostics");
+                "Describe what Tataru Helper is seeing right now - the game it found, what it manages to read, how each window is set up - and pack it up with the recent logs. The folder opens with the archive selected; send that along with your report.");
+            _SettingsWindow.Resources["DiagnosticsButton"] = catalog.GetString("Collect diagnostics");
             _SettingsWindow.Resources["DiagnosticsCopied"] =
-                catalog.GetString("Copied to the clipboard. Also saved to");
+                catalog.GetString("Copied to the clipboard. The report and the recent logs are in");
             _SettingsWindow.Resources["DiagnosticsSavedOnly"] =
-                catalog.GetString("The clipboard was busy, so this was only saved to");
+                catalog.GetString("The clipboard was busy. The report and the recent logs are in");
             _SettingsWindow.Resources["DiagnosticsFailed"] =
                 catalog.GetString("Could not be collected. The log will say why.");
             _SettingsWindow.Resources["DiagnosticsUnavailable"] = catalog.GetString("Not available in this build.");

@@ -921,17 +921,17 @@ msgstr "Установленные переводы — для {0}, а игра 
 msgid "Diagnostics"
 msgstr "Диагностика"
 
-msgid "Copy a description of what Tataru Helper is seeing right now - the game it found, what it manages to read, and how each window is set up. Paste it into a bug report."
-msgstr "Скопировать описание того, что Tataru Helper видит прямо сейчас: какую игру нашёл, что из неё удаётся прочитать и как настроено каждое окно. Приложите это к сообщению об ошибке."
+msgid "Describe what Tataru Helper is seeing right now - the game it found, what it manages to read, how each window is set up - and pack it up with the recent logs. The folder opens with the archive selected; send that along with your report."
+msgstr "Описать, что Tataru Helper видит прямо сейчас — какую игру нашёл, что из неё удаётся прочитать, как настроено каждое окно — и упаковать это вместе со свежими логами. Откроется папка с готовым архивом: приложите его к сообщению об ошибке."
 
-msgid "Copy diagnostics"
-msgstr "Скопировать диагностику"
+msgid "Collect diagnostics"
+msgstr "Собрать диагностику"
 
-msgid "Copied to the clipboard. Also saved to"
-msgstr "Скопировано в буфер обмена. Копия сохранена в"
+msgid "Copied to the clipboard. The report and the recent logs are in"
+msgstr "Скопировано в буфер обмена. Отчёт и свежие логи лежат в"
 
-msgid "The clipboard was busy, so this was only saved to"
-msgstr "Буфер обмена был занят, поэтому сохранено только в файл"
+msgid "The clipboard was busy. The report and the recent logs are in"
+msgstr "Буфер обмена был занят. Отчёт и свежие логи лежат в"
 
 msgid "Could not be collected. The log will say why."
 msgstr "Собрать не удалось — причина в логе."

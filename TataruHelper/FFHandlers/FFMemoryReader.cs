@@ -140,6 +140,15 @@ namespace FFXIVTataruHelper.FFHandlers
         private string _detectedGameLanguage = string.Empty;
 
         /// <summary>
+        /// Whether a game has been attached at any point since startup, which is
+        /// what tells a report taken after the game was closed apart from one
+        /// taken before it was ever started. The first has a session worth of
+        /// evidence behind it; the second has nothing, and saying so is the whole
+        /// answer.
+        /// </summary>
+        private bool _everAttached;
+
+        /// <summary>
         /// The game side of a bug report, in one read. The character's name is
         /// deliberately not among it: whether it could be read is the diagnostic,
         /// and the name itself is nobody's business but its owner's.
@@ -152,6 +161,7 @@ namespace FFXIVTataruHelper.FFHandlers
 
                 return new GameReadingDiagnostics(
                     IsGameRunning,
+                    _everAttached,
                     GameProcessDescription,
                     _detectedGameLanguage,
                     _playerNameResolved,
@@ -446,6 +456,15 @@ namespace FFXIVTataruHelper.FFHandlers
                         FFWindowState = WindowState.Minimized;
                         IsGameWindowForeground = false;
 
+                        // The character and the language belonged to the process
+                        // that has gone. Kept, they would be reported as current
+                        // while nothing is attached - and the next game started
+                        // could be a different character in a different language,
+                        // which would then never be read because this said it
+                        // already had been.
+                        _playerNameResolved = false;
+                        _detectedGameLanguage = string.Empty;
+
                         _gameMemoryGateway.UnsetProcess();
                     }
                     else
@@ -471,6 +490,7 @@ namespace FFXIVTataruHelper.FFHandlers
 
                         isRunningPrev = true;
                         IsGameRunning = true;
+                        _everAttached = true;
                         GameProcessDescription = processes[0].ProcessName + ".exe" + "  PID: " +
                                                  processes[0].Id.ToString();
                     }

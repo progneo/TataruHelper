@@ -134,9 +134,14 @@ namespace FFXIVTataruHelper
             if (_ChatMessageFilter.ShouldTranslate(ea.ChatMessage.Text))
                 await ProcessChatMsg(ea, msgType);
 
-            if (CmdArgsStatus.LogAllChat || CmdArgsStatus.LogPlotChat)
-                _Logger.WriteChatLog(String.Format("{0} {1}: {2}", ea.ChatMessage.TimeStamp, ea.ChatMessage.Code,
-                    ea.ChatMessage.Text));
+            // Written every session, not only when somebody thought to pass a
+            // switch. When a line comes out wrong there is no way back to it: the
+            // conversation is over, the chat log has scrolled, and asking the
+            // player to reproduce it means asking them to replay a quest. This is
+            // one line per message and rolls over at ten megabytes, and it is the
+            // difference between diagnosing a report and guessing at it.
+            _Logger.WriteChatLog(String.Format("{0} {1}: {2}", ea.ChatMessage.TimeStamp, ea.ChatMessage.Code,
+                ea.ChatMessage.Text));
         }
 
         public async Task<TranslationResult> Translate(string inSentence, TranslationEngine translationEngine,

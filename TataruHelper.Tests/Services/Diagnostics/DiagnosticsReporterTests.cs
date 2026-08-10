@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.IO.Compression;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -95,8 +97,41 @@ namespace TataruHelper.Tests.Services.Diagnostics
             Assert.Multiple(() =>
             {
                 Assert.That(report, Does.Contain("v1.0.4"), "what could be read still gets out");
-                Assert.That(report, Does.Contain("not attached"));
+                Assert.That(report, Does.Contain("not been attached at any point"));
                 Assert.That(report, Does.Contain("not available in this build"));
+            });
+        }
+
+        // The half of this worth sending. A report on the clipboard says what the
+        // state is; the logs say what happened, and they are the only way back to
+        // a line that came out wrong once and will not be seen again.
+        [Test]
+        public void BundlesTheReportAndTheLogsIntoOneArchive()
+        {
+            WithWindow(window =>
+            {
+                var reporter = new DiagnosticsReporter(
+                    () => new GameReadingDiagnostics(
+                        true, true, "ffxiv_dx11.exe  PID: 4242", "en", true, true, 12, new[] { "003D" }),
+                    null,
+                    () => new[] { window },
+                    () => true,
+                    () => "Russian",
+                    "v1.0.4",
+                    new NullLogger());
+
+                var (report, bundledTo) = reporter.Collect();
+
+                Assert.That(bundledTo, Does.EndWith("Diagnostics.zip"));
+                Assert.That(File.Exists(bundledTo), Is.True);
+
+                using var archive = ZipFile.OpenRead(bundledTo);
+
+                var entry = archive.GetEntry("report.txt");
+                Assert.That(entry, Is.Not.Null, "the report travels with the logs");
+
+                using var reader = new StreamReader(entry.Open());
+                Assert.That(reader.ReadToEnd(), Is.EqualTo(report));
             });
         }
 
@@ -105,7 +140,7 @@ namespace TataruHelper.Tests.Services.Diagnostics
         {
             var reporter = new DiagnosticsReporter(
                 () => new GameReadingDiagnostics(
-                    true, "ffxiv_dx11.exe  PID: 4242", "en", true, true, 12, new[] { "003D" }),
+                    true, true, "ffxiv_dx11.exe  PID: 4242", "en", true, true, 12, new[] { "003D" }),
                 referenceIndex,
                 () => new[] { window },
                 () => true,

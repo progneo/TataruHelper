@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Reflection;
@@ -765,12 +766,41 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
             if (!string.IsNullOrEmpty(savedTo))
             {
                 DiagnosticsStatus += " " + savedTo;
+
+                // Opened for them, because the archive is the half of this worth
+                // sending and it lives under %APPDATA% - a path somebody has to
+                // be talked through typing.
+                RevealInExplorer(savedTo);
             }
         }
         catch (Exception ex)
         {
             _logger.WriteLog(ex);
             DiagnosticsStatus = _localize("DiagnosticsFailed");
+        }
+    }
+
+    /// <summary>
+    /// Shows the archive in Explorer with it already selected, so the next step
+    /// is dragging it into a chat window.
+    /// </summary>
+    private void RevealInExplorer(string path)
+    {
+        try
+        {
+            Process.Start(new ProcessStartInfo
+            {
+                FileName = "explorer.exe",
+                // Quoted, and no space after the comma: Explorer takes the rest
+                // of the line as the path, so a space makes it open Documents
+                // instead and say nothing about why.
+                Arguments = "/select,\"" + path + "\"",
+                UseShellExecute = true
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.WriteLog(ex);
         }
     }
 

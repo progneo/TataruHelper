@@ -122,10 +122,10 @@
     <system:String x:Key="CkEcho">Echo</system:String>
     <system:String x:Key="CkError">Error</system:String>
     <system:String x:Key="DiagnosticsTitle">Diagnostics</system:String>
-    <system:String x:Key="DiagnosticsHint">Copy a description of what Tataru Helper is seeing right now — the game it found, what it manages to read, and how each window is set up. Paste it into a bug report.</system:String>
-    <system:String x:Key="DiagnosticsButton">Copy diagnostics</system:String>
-    <system:String x:Key="DiagnosticsCopied">Copied to the clipboard. Also saved to</system:String>
-    <system:String x:Key="DiagnosticsSavedOnly">The clipboard was busy, so this was only saved to</system:String>
+    <system:String x:Key="DiagnosticsHint">Describe what Tataru Helper is seeing right now — the game it found, what it manages to read, how each window is set up — and pack it up with the recent logs. The folder opens with the archive selected; send that along with your report.</system:String>
+    <system:String x:Key="DiagnosticsButton">Collect diagnostics</system:String>
+    <system:String x:Key="DiagnosticsCopied">Copied to the clipboard. The report and the recent logs are in</system:String>
+    <system:String x:Key="DiagnosticsSavedOnly">The clipboard was busy. The report and the recent logs are in</system:String>
     <system:String x:Key="DiagnosticsFailed">Could not be collected. The log will say why.</system:String>
     <system:String x:Key="DiagnosticsUnavailable">Not available in this build.</system:String>
     <system:String x:Key="CkNPCD">NPCD</system:String>

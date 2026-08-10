@@ -17,10 +17,11 @@ namespace FFXIVTataruHelper.FFHandlers
     public sealed class GameReadingDiagnostics
     {
         public static readonly GameReadingDiagnostics Unavailable = new GameReadingDiagnostics(
-            false, string.Empty, string.Empty, false, false, 0, Array.Empty<string>());
+            false, false, string.Empty, string.Empty, false, false, 0, Array.Empty<string>());
 
         public GameReadingDiagnostics(
             bool gameAttached,
+            bool everAttached,
             string processDescription,
             string gameLanguage,
             bool playerResolved,
@@ -29,6 +30,7 @@ namespace FFXIVTataruHelper.FFHandlers
             IReadOnlyList<string> codesReadLive)
         {
             GameAttached = gameAttached;
+            EverAttached = everAttached || gameAttached;
             ProcessDescription = processDescription ?? string.Empty;
             GameLanguage = gameLanguage ?? string.Empty;
             PlayerResolved = playerResolved;
@@ -38,6 +40,13 @@ namespace FFXIVTataruHelper.FFHandlers
         }
 
         public bool GameAttached { get; }
+
+        /// <summary>
+        /// Whether a game was attached at any point since startup. What follows
+        /// in a report describes that attachment, and while it is false there is
+        /// nothing behind any of it.
+        /// </summary>
+        public bool EverAttached { get; }
 
         public string ProcessDescription { get; }
 

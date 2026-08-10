@@ -1,5 +1,6 @@
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -7,7 +8,16 @@ namespace FFXIVTataruHelper
 {
     public sealed class LogWriter : IDisposable
     {
-        const int MaxLogFileSize = 5242880;
+        /// <summary>
+        /// How large one log may grow before it is rolled over to its ".old"
+        /// companion, so each of them costs at most twice this on disk.
+        ///
+        /// Ten megabytes because the dialogue log is the one that matters for a
+        /// bug report and it is written a line at a time all session: an earlier
+        /// one reached 38 MB before anybody looked, and at the old five it rolled
+        /// often enough to lose the evening somebody was asking about.
+        /// </summary>
+        const long MaxLogFileSize = 10 * 1024 * 1024;
 
         /// <summary>
         /// Where the logs go: beside the settings, in the user's roaming data.
@@ -24,17 +34,16 @@ namespace FFXIVTataruHelper
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TataruHelper");
 
         static readonly string LogFileName = Path.Combine(LogDirectory, "Log.txt");
-        static readonly string BackUpLogFileName = Path.Combine(LogDirectory, "Log_old.txt");
         static readonly string ChatLogFileName = Path.Combine(LogDirectory, "ChatLog.txt");
         static readonly string RawDialogLogFileName = Path.Combine(LogDirectory, "RealtimeRawLog.txt");
 
         bool _keepWorking;
         bool _disposed;
-        TextWriter _logTextWriter;
-        StreamWriter _logStreamWriter;
 
-        TextWriter _chatWriter;
-        TextWriter _rawDialogWriter;
+        readonly RollingLog _appLog;
+        readonly RollingLog _chatLog;
+        readonly RollingLog _rawDialogLog;
+        readonly RollingLog[] _allLogs;
 
         Task _worker = Task.CompletedTask;
 
@@ -44,8 +53,14 @@ namespace FFXIVTataruHelper
 
             Directory.CreateDirectory(LogDirectory);
 
-            _logStreamWriter = new StreamWriter(LogFileName, true);
-            _logTextWriter = _logStreamWriter;
+            // The application log is opened now, because something may need to
+            // be written before anything has happened. The other two are opened
+            // on their first line: a session where nobody speaks should not
+            // leave an empty dialogue log behind.
+            _appLog = new RollingLog(LogFileName, openNow: true);
+            _chatLog = new RollingLog(ChatLogFileName, openNow: false);
+            _rawDialogLog = new RollingLog(RawDialogLogFileName, openNow: false);
+            _allLogs = new[] { _appLog, _chatLog, _rawDialogLog };
         }
 
         /// <summary>Where to send somebody who is asked for their log.</summary>
@@ -53,6 +68,17 @@ namespace FFXIVTataruHelper
 
         /// <summary>The log itself, for a report to name rather than describe.</summary>
         public static string LogFilePath => LogFileName;
+
+        /// <summary>Every log a report should carry, whether or not it exists yet.</summary>
+        public static IReadOnlyList<string> AllLogPaths => new[]
+        {
+            LogFileName,
+            RollingLog.PreviousPathOf(LogFileName),
+            ChatLogFileName,
+            RollingLog.PreviousPathOf(ChatLogFileName),
+            RawDialogLogFileName,
+            RollingLog.PreviousPathOf(RawDialogLogFileName)
+        };
 
         public void StartWriting()
         {
@@ -81,8 +107,7 @@ namespace FFXIVTataruHelper
 
                 if (Logger.LogQueue.TryDequeue(out str))
                 {
-                    _logTextWriter.WriteLine(str);
-                    _logTextWriter.Flush();
+                    _appLog.WriteLine(str);
                     dequeueFlag = true;
                 }
 
@@ -94,21 +119,13 @@ namespace FFXIVTataruHelper
 
                 if (Logger.ChatLogQueue.TryDequeue(out str))
                 {
-                    if (_chatWriter == null)
-                        _chatWriter = new StreamWriter(ChatLogFileName, true);
-
-                    _chatWriter.WriteLine(str);
-                    _chatWriter.Flush();
+                    _chatLog.WriteLine(str);
                     dequeueFlag = true;
                 }
 
                 if (Logger.RawDialogLogQueue.TryDequeue(out str))
                 {
-                    if (_rawDialogWriter == null)
-                        _rawDialogWriter = new StreamWriter(RawDialogLogFileName, true);
-
-                    _rawDialogWriter.WriteLine(str);
-                    _rawDialogWriter.Flush();
+                    _rawDialogLog.WriteLine(str);
                     dequeueFlag = true;
                 }
 
@@ -128,67 +145,17 @@ namespace FFXIVTataruHelper
 
         private void LimitLogFileSize()
         {
-            if (_logStreamWriter != null && _logTextWriter != null)
+            foreach (var log in _allLogs)
             {
-                if (_logStreamWriter.BaseStream.Length >= MaxLogFileSize)
-                {
-                    try
-                    {
-                        _logTextWriter.Flush();
-                        _logTextWriter.Close();
-                        _logTextWriter.Dispose();
-
-                        _logStreamWriter.Close();
-                        _logStreamWriter.Dispose();
-
-                        if (File.Exists(BackUpLogFileName))
-                            File.Delete(BackUpLogFileName);
-
-                        if (File.Exists(LogFileName))
-                        {
-                            File.Copy(LogFileName, BackUpLogFileName);
-                            File.Delete(LogFileName);
-                        }
-
-                        _logStreamWriter = new StreamWriter(LogFileName, true);
-                        _logTextWriter = _logStreamWriter;
-                    }
-                    catch (Exception e)
-                    {
-                        Logger.WriteLog(e);
-                    }
-                }
+                log.RollOverIfTooLarge(MaxLogFileSize);
             }
         }
 
         void ReleaseResources()
         {
-            try
+            foreach (var log in _allLogs)
             {
-                if (_logTextWriter != null)
-                {
-                    _logTextWriter.Flush();
-                    _logTextWriter.Dispose();
-                    _logTextWriter = null;
-                }
-
-                if (_chatWriter != null)
-                {
-                    _chatWriter.Flush();
-                    _chatWriter.Dispose();
-                    _chatWriter = null;
-                }
-
-                if (_rawDialogWriter != null)
-                {
-                    _rawDialogWriter.Flush();
-                    _rawDialogWriter.Dispose();
-                    _rawDialogWriter = null;
-                }
-            }
-            catch (Exception e)
-            {
-                Logger.WriteLog(e);
+                log.Close();
             }
         }
 
@@ -225,6 +192,123 @@ namespace FFXIVTataruHelper
             Stop();
 
             ReleaseResources();
+        }
+
+        /// <summary>
+        /// One log file that keeps the previous generation beside it.
+        ///
+        /// The three logs used to each carry their own copy of this, and only the
+        /// application log's copy had the size check - which is how the dialogue
+        /// log came to be tens of megabytes.
+        /// </summary>
+        private sealed class RollingLog
+        {
+            private readonly string _path;
+            private readonly string _previousPath;
+
+            private StreamWriter _writer;
+
+            public RollingLog(string path, bool openNow)
+            {
+                _path = path;
+                _previousPath = PreviousPathOf(path);
+
+                if (openNow)
+                {
+                    Open();
+                }
+            }
+
+            public static string PreviousPathOf(string path)
+            {
+                var directory = Path.GetDirectoryName(path) ?? string.Empty;
+
+                return Path.Combine(
+                    directory,
+                    Path.GetFileNameWithoutExtension(path) + "_old" + Path.GetExtension(path));
+            }
+
+            public void WriteLine(string line)
+            {
+                try
+                {
+                    if (_writer == null)
+                    {
+                        Open();
+                    }
+
+                    _writer?.WriteLine(line);
+                    _writer?.Flush();
+                }
+                catch (Exception e)
+                {
+                    // Not through Logger: this may be the application log itself,
+                    // and a failure to write that would queue a line describing
+                    // the failure to write it.
+                    Console.WriteLine(e);
+                }
+            }
+
+            public void RollOverIfTooLarge(long maxBytes)
+            {
+                if (_writer == null)
+                {
+                    return;
+                }
+
+                try
+                {
+                    if (_writer.BaseStream.Length < maxBytes)
+                    {
+                        return;
+                    }
+
+                    Close();
+
+                    if (File.Exists(_previousPath))
+                    {
+                        File.Delete(_previousPath);
+                    }
+
+                    if (File.Exists(_path))
+                    {
+                        File.Move(_path, _previousPath);
+                    }
+
+                    Open();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+            }
+
+            public void Close()
+            {
+                try
+                {
+                    if (_writer == null)
+                    {
+                        return;
+                    }
+
+                    _writer.Flush();
+                    _writer.Dispose();
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
+                }
+                finally
+                {
+                    _writer = null;
+                }
+            }
+
+            private void Open()
+            {
+                _writer = new StreamWriter(_path, true);
+            }
         }
     }
 }

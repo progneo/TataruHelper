@@ -17,10 +17,29 @@ namespace TataruHelper.Tests.Services.Diagnostics
         [Test]
         public void SaysSoWhenTheGameWasNeverFound()
         {
-            var findings = DiagnosticsReport.Describe(Snapshot(Reading(attached: false)));
+            var findings = DiagnosticsReport.Describe(
+                Snapshot(Reading(attached: false, everAttached: false)));
 
             Assert.That(findings, Has.Count.EqualTo(1), "nothing else is worth saying yet");
-            Assert.That(findings[0], Does.Contain("not attached"));
+            Assert.That(findings[0], Does.Contain("not been attached at any point"));
+        }
+
+        // A report is usually written after playing, with the game already
+        // closed. Treating that as "nothing is attached, nothing can be
+        // translated" threw away the whole session's evidence and left the
+        // report contradicting the line counts printed under it.
+        [Test]
+        public void KeepsTheSessionsEvidenceWhenTheGameHasSinceClosed()
+        {
+            var findings = DiagnosticsReport.Describe(
+                Snapshot(Reading(attached: false, codesReadLive: new[] { "003D" })));
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(findings.Any(x => x.Contains("not attached right now")), Is.True);
+                Assert.That(findings.Any(x => x.Contains("NPC dialogue is being read")), Is.True,
+                    "what happened while it was attached still stands");
+            });
         }
 
         [Test]
@@ -142,10 +161,12 @@ namespace TataruHelper.Tests.Services.Diagnostics
             bool attached = true,
             bool playerResolved = true,
             bool realtimeEnabled = true,
-            string[] codesReadLive = null)
+            string[] codesReadLive = null,
+            bool everAttached = true)
         {
             return new GameReadingDiagnostics(
                 attached,
+                everAttached,
                 "ffxiv_dx11.exe  PID: 4242",
                 "en",
                 playerResolved,
