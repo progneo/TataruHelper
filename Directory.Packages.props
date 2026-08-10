@@ -1,6 +1,12 @@
-<Project>
+﻿<Project>
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+    <!--
+      Lets a PackageVersion below also govern a package we never reference
+      directly. Needed to lift a dependency that arrives underneath another one.
+    -->
+    <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,6 +27,18 @@
     <PackageVersion Include="NTextCat" Version="0.3.65" />
     <PackageVersion Include="Jurassic" Version="3.2.9" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.0" />
+
+    <!--
+      Pinned above what Microsoft.Data.Sqlite asks for. Its 2.1.11 carries a
+      SQLite with advisory GHSA-2m69-gcr7-jv3q (high), which covers everything
+      up to and including 2.1.11; 2.1.12 is the first release outside it. The
+      four move together - they are one library split across packages, and
+      lifting one alone leaves the set mismatched.
+    -->
+    <PackageVersion Include="SQLitePCLRaw.core" Version="2.1.12" />
+    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.12" />
+    <PackageVersion Include="SQLitePCLRaw.lib.e_sqlite3" Version="2.1.12" />
+    <PackageVersion Include="SQLitePCLRaw.provider.e_sqlite3" Version="2.1.12" />
     <PackageVersion Include="NUnit" Version="4.6.0" />
     <PackageVersion Include="NUnit3TestAdapter" Version="6.2.0" />
   </ItemGroup>
