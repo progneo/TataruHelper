@@ -134,14 +134,42 @@ namespace FFXIVTataruHelper
             if (_ChatMessageFilter.ShouldTranslate(ea.ChatMessage.Text))
                 await ProcessChatMsg(ea, msgType);
 
-            // Written every session, not only when somebody thought to pass a
-            // switch. When a line comes out wrong there is no way back to it: the
-            // conversation is over, the chat log has scrolled, and asking the
-            // player to reproduce it means asking them to replay a quest. This is
-            // one line per message and rolls over at ten megabytes, and it is the
-            // difference between diagnosing a report and guessing at it.
-            _Logger.WriteChatLog(String.Format("{0} {1}: {2}", ea.ChatMessage.TimeStamp, ea.ChatMessage.Code,
-                ea.ChatMessage.Text));
+            if (ShouldLogToChatLog(ea.ChatMessage.Code))
+            {
+                _Logger.WriteChatLog(String.Format("{0} {1}: {2}", ea.ChatMessage.TimeStamp, ea.ChatMessage.Code,
+                    ea.ChatMessage.Text));
+            }
+        }
+
+        /// <summary>
+        /// The codes the story is told in: an NPC speaking, a cutscene subtitle,
+        /// narration, and what a boss shouts.
+        /// </summary>
+        private static readonly HashSet<string> StoryChatCodes =
+            new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "003D", "0044", "0039", "2AB9" };
+
+        /// <summary>
+        /// Whether this line belongs in the log a bug report carries.
+        /// </summary>
+        /// <remarks>
+        /// The story codes go in every session, rather than only when somebody
+        /// thought to pass -logall - which nobody reporting a fault ever has.
+        /// When a line comes out wrong there is no way back to it: the
+        /// conversation is over, the game's own log has scrolled, and asking the
+        /// player to reproduce it means asking them to replay a quest.
+        ///
+        /// The rest of the chat log stays behind the switch, and that is a
+        /// deliberate limit rather than an oversight. It carries what other
+        /// people said in party chat and in tells, and this file is now offered
+        /// up for sending to a stranger who is helping with a fault. Somebody
+        /// diagnosing a translation has no business reading either, and the
+        /// person pressing the button should not have to know that they would.
+        /// </remarks>
+        private static bool ShouldLogToChatLog(string chatCode)
+        {
+            return CmdArgsStatus.LogAllChat
+                   || CmdArgsStatus.LogPlotChat
+                   || (!string.IsNullOrEmpty(chatCode) && StoryChatCodes.Contains(chatCode));
         }
 
         public async Task<TranslationResult> Translate(string inSentence, TranslationEngine translationEngine,
