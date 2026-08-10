@@ -474,10 +474,10 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["DeepSeekModelLabel"] = catalog.GetString("DeepSeek model (optional)");
             _SettingsWindow.Resources["ClaudeKeyLabel"] = catalog.GetString("Anthropic API key");
             _SettingsWindow.Resources["ClaudeModelLabel"] =
-                catalog.GetString("Claude model (optional, e.g. claude-opus-5, claude-haiku-4-5)");
+                catalog.GetString("Claude model (optional, e.g. claude-haiku-4-5, claude-sonnet-5, claude-opus-5)");
             _SettingsWindow.Resources["ClaudeCostHint"] =
                 catalog.GetString(
-                    "Billed per token, and the default model is the capable, expensive one. For chat lines a smaller model is usually enough — put its name in the box above.");
+                    "Billed per token. Defaults to the small, cheap model, which is usually enough for chat lines — name a bigger one above if you want it.");
             _SettingsWindow.Resources["OpenRouterKeyLabel"] = catalog.GetString("OpenRouter key");
             _SettingsWindow.Resources["OpenRouterModelLabel"] =
                 catalog.GetString("OpenRouter model (optional, e.g. openai/gpt-4o-mini)");

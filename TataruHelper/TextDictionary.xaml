@@ -269,8 +269,8 @@
     <system:String x:Key="DeepSeekKeyLabel">DeepSeek key</system:String>
     <system:String x:Key="DeepSeekModelLabel">DeepSeek model (optional)</system:String>
     <system:String x:Key="ClaudeKeyLabel">Anthropic API key</system:String>
-    <system:String x:Key="ClaudeModelLabel">Claude model (optional, e.g. claude-opus-5, claude-haiku-4-5)</system:String>
-    <system:String x:Key="ClaudeCostHint">Billed per token, and the default model is the capable, expensive one. For chat lines a smaller model is usually enough — put its name in the box above.</system:String>
+    <system:String x:Key="ClaudeModelLabel">Claude model (optional, e.g. claude-haiku-4-5, claude-sonnet-5, claude-opus-5)</system:String>
+    <system:String x:Key="ClaudeCostHint">Billed per token. Defaults to the small, cheap model, which is usually enough for chat lines — name a bigger one above if you want it.</system:String>
     <system:String x:Key="OpenRouterKeyLabel">OpenRouter key</system:String>
     <system:String x:Key="OpenRouterModelLabel">OpenRouter model (optional, e.g. openai/gpt-4o-mini)</system:String>
     <system:String x:Key="OpenRouterHint">One key for models from many providers. Pick any model OpenRouter lists.</system:String>

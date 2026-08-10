@@ -19,7 +19,10 @@ namespace Translation.Providers.Claude
         {
             _client = new ClaudeChatClient(
                 TranslationEngineName.Claude,
-                "claude-opus-5",
+                // The small model by default. A chat line is one sentence, and
+                // the capable models cost several times as much for a job that
+                // does not need them; anyone who wants one names it in settings.
+                "claude-haiku-4-5",
                 logger,
                 credentials);
         }
