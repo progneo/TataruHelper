@@ -271,6 +271,11 @@
     <system:String x:Key="OpenRouterKeyLabel">OpenRouter key</system:String>
     <system:String x:Key="OpenRouterModelLabel">OpenRouter model (optional, e.g. openai/gpt-4o-mini)</system:String>
     <system:String x:Key="OpenRouterHint">One key for models from many providers. Pick any model OpenRouter lists.</system:String>
+    <system:String x:Key="SelfHostedTranslatorsLabel">Your own server</system:String>
+    <system:String x:Key="SelfHostedTranslatorsHint">Nothing leaves your machine and nothing is billed. Off until you point them at a server that is running.</system:String>
+    <system:String x:Key="ServerAddressLabel">Server address (optional, e.g. http://localhost:11434)</system:String>
+    <system:String x:Key="OllamaModelLabel">Model (must be one you have pulled — see "ollama list")</system:String>
+    <system:String x:Key="LmStudioModelLabel">Model (optional — LM Studio answers with whichever model is loaded)</system:String>
     <system:String x:Key="YandexGptUsesYandexHint">Uses the Yandex Cloud API key and folder ID from the Yandex row above.</system:String>
     <system:String x:Key="YandexGptModelAliasLabel">Model alias (optional, e.g. yandexgpt/latest, yandexgpt-lite/latest)</system:String>
 

@@ -83,6 +83,10 @@ namespace Translation.Settings
 
         public string OpenRouterLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
 
+        public string OllamaLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
+
+        public string LmStudioLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
+
         public string YandexGptLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
 
         public string GeminiLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";

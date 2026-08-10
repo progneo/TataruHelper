@@ -61,6 +61,14 @@ namespace Translation.Settings
                     settings.DeepSeekLanguages, 7),
                 new EngineLanguageSource(TranslationEngineName.OpenRouter,
                     settings.OpenRouterLanguages, 8),
+
+                // Ranked below the hosted engines as stand-ins: whatever model
+                // the player happens to be running is the one thing here we
+                // cannot judge the quality of.
+                new EngineLanguageSource(TranslationEngineName.Ollama,
+                    settings.OllamaLanguages, 6),
+                new EngineLanguageSource(TranslationEngineName.LmStudio,
+                    settings.LmStudioLanguages, 6),
                 new EngineLanguageSource(TranslationEngineName.Yandex,
                     settings.YandexCloudLanguages, 8),
                 new EngineLanguageSource(TranslationEngineName.YandexGPT,

@@ -477,6 +477,16 @@ namespace FFXIVTataruHelper
                 catalog.GetString("OpenRouter model (optional, e.g. openai/gpt-4o-mini)");
             _SettingsWindow.Resources["OpenRouterHint"] =
                 catalog.GetString("One key for models from many providers. Pick any model OpenRouter lists.");
+            _SettingsWindow.Resources["SelfHostedTranslatorsLabel"] = catalog.GetString("Your own server");
+            _SettingsWindow.Resources["SelfHostedTranslatorsHint"] =
+                catalog.GetString(
+                    "Nothing leaves your machine and nothing is billed. Off until you point them at a server that is running.");
+            _SettingsWindow.Resources["ServerAddressLabel"] =
+                catalog.GetString("Server address (optional, e.g. http://localhost:11434)");
+            _SettingsWindow.Resources["OllamaModelLabel"] =
+                catalog.GetString("Model (must be one you have pulled — see \"ollama list\")");
+            _SettingsWindow.Resources["LmStudioModelLabel"] =
+                catalog.GetString("Model (optional — LM Studio answers with whichever model is loaded)");
             _SettingsWindow.Resources["YandexGptUsesYandexHint"] =
                 catalog.GetString("Uses the Yandex Cloud API key and folder ID from the Yandex row above.");
             _SettingsWindow.Resources["YandexGptModelAliasLabel"] =

@@ -582,6 +582,62 @@
                             </StackPanel>
                         </StackPanel>
                     </Border>
+
+                    <!-- Your own server -->
+                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                               FontWeight="SemiBold"
+                               Margin="0,14,0,2" Text="{DynamicResource SelfHostedTranslatorsLabel}" />
+                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                               TextWrapping="Wrap"
+                               Margin="0,0,0,6" Text="{DynamicResource SelfHostedTranslatorsHint}" />
+
+                    <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                                 IsChecked="{Binding Shell.TranslationCredentials.IsOllamaEnabled, Mode=TwoWay}" />
+                                <TextBlock Text="Ollama" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <StackPanel Margin="0,8,0,0"
+                                        Visibility="{Binding Shell.TranslationCredentials.ShowOllamaSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource ServerAddressLabel}" />
+                                <TextBox
+                                    Text="{Binding Shell.TranslationCredentials.OllamaEndpoint, UpdateSourceTrigger=LostFocus}"
+                                    KeyDown="CredentialTextBox_KeyDown" Margin="0,0,0,6" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource OllamaModelLabel}" />
+                                <TextBox
+                                    Text="{Binding Shell.TranslationCredentials.OllamaModel, UpdateSourceTrigger=LostFocus}"
+                                    KeyDown="CredentialTextBox_KeyDown" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <Border Padding="12,10" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                                 IsChecked="{Binding Shell.TranslationCredentials.IsLmStudioEnabled, Mode=TwoWay}" />
+                                <TextBlock Text="LM Studio" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <StackPanel Margin="0,8,0,0"
+                                        Visibility="{Binding Shell.TranslationCredentials.ShowLmStudioSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource ServerAddressLabel}" />
+                                <TextBox
+                                    Text="{Binding Shell.TranslationCredentials.LmStudioEndpoint, UpdateSourceTrigger=LostFocus}"
+                                    KeyDown="CredentialTextBox_KeyDown" Margin="0,0,0,6" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource LmStudioModelLabel}" />
+                                <TextBox
+                                    Text="{Binding Shell.TranslationCredentials.LmStudioModel, UpdateSourceTrigger=LostFocus}"
+                                    KeyDown="CredentialTextBox_KeyDown" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
                 </StackPanel>
             </ui:Card>
 

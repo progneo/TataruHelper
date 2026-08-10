@@ -23,6 +23,12 @@ namespace Translation.Models
         Gemini = 15,
 
         OpenRouter = 16,
+
+        /// <summary>Runs on the player's own machine; no key, no quota, no network.</summary>
+        Ollama = 17,
+
+        /// <summary>The other common local runner. Same shape as <see cref="Ollama"/>, different port.</summary>
+        LmStudio = 18,
     }
 
     public class TranslationEngine : IEquatable<TranslationEngine>
@@ -56,6 +62,8 @@ namespace Translation.Models
                     return "Azure Translator";
                 case TranslationEngineName.YandexGPT:
                     return "YandexGPT";
+                case TranslationEngineName.LmStudio:
+                    return "LM Studio";
                 default:
                     return engineName.ToString();
             }

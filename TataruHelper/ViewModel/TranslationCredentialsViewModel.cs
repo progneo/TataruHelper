@@ -17,7 +17,8 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.AzureTranslator, TranslationEngineName.GoogleCloudTranslate,
             TranslationEngineName.DeepLApi, TranslationEngineName.OpenAI, TranslationEngineName.Gemini,
             TranslationEngineName.DeepSeek, TranslationEngineName.OpenRouter,
-            TranslationEngineName.YandexGPT, TranslationEngineName.Yandex
+            TranslationEngineName.YandexGPT, TranslationEngineName.Yandex,
+            TranslationEngineName.Ollama, TranslationEngineName.LmStudio
         };
 
         private readonly ITranslationCredentialStore _store;
@@ -125,8 +126,46 @@ namespace FFXIVTataruHelper.ViewModel
         public bool ShowDeepLApiSettings => IsDeepLApiEnabled;
         public bool ShowOpenAISettings => IsOpenAIEnabled;
         public bool ShowGeminiSettings => IsGeminiEnabled;
+        public bool IsOllamaEnabled
+        {
+            get => _store.IsEngineEnabled(TranslationEngineName.Ollama);
+            set => SetEngineEnabled(TranslationEngineName.Ollama, value);
+        }
+
+        public bool IsLmStudioEnabled
+        {
+            get => _store.IsEngineEnabled(TranslationEngineName.LmStudio);
+            set => SetEngineEnabled(TranslationEngineName.LmStudio, value);
+        }
+
         public bool ShowDeepSeekSettings => IsDeepSeekEnabled;
         public bool ShowOpenRouterSettings => IsOpenRouterEnabled;
+        public bool ShowOllamaSettings => IsOllamaEnabled;
+        public bool ShowLmStudioSettings => IsLmStudioEnabled;
+
+        public string OllamaEndpoint
+        {
+            get => _store.GetEndpoint(TranslationEngineName.Ollama);
+            set => SetEndpoint(TranslationEngineName.Ollama, value, nameof(OllamaEndpoint));
+        }
+
+        public string OllamaModel
+        {
+            get => _store.GetModel(TranslationEngineName.Ollama);
+            set => SetModel(TranslationEngineName.Ollama, value, nameof(OllamaModel));
+        }
+
+        public string LmStudioEndpoint
+        {
+            get => _store.GetEndpoint(TranslationEngineName.LmStudio);
+            set => SetEndpoint(TranslationEngineName.LmStudio, value, nameof(LmStudioEndpoint));
+        }
+
+        public string LmStudioModel
+        {
+            get => _store.GetModel(TranslationEngineName.LmStudio);
+            set => SetModel(TranslationEngineName.LmStudio, value, nameof(LmStudioModel));
+        }
         public bool ShowYandexSettings => IsYandexEnabled;
         public bool ShowYandexGptSettings => IsYandexGptEnabled;
 
@@ -266,6 +305,13 @@ namespace FFXIVTataruHelper.ViewModel
             NotifyMany(propsToNotify);
         }
 
+        private void SetEndpoint(TranslationEngineName engine, string value, params string[] propsToNotify)
+        {
+            _store.SetEndpoint(engine, value);
+            _store.Save();
+            NotifyMany(propsToNotify);
+        }
+
         private void SetEngineEnabled(TranslationEngineName engine, bool isEnabled)
         {
             if (_store.IsEngineEnabled(engine) == isEnabled) return;
@@ -293,6 +339,8 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.Gemini => nameof(IsGeminiEnabled),
             TranslationEngineName.DeepSeek => nameof(IsDeepSeekEnabled),
             TranslationEngineName.OpenRouter => nameof(IsOpenRouterEnabled),
+            TranslationEngineName.Ollama => nameof(IsOllamaEnabled),
+            TranslationEngineName.LmStudio => nameof(IsLmStudioEnabled),
             TranslationEngineName.Yandex => nameof(IsYandexEnabled),
             TranslationEngineName.YandexGPT => nameof(IsYandexGptEnabled),
             _ => string.Empty
@@ -307,6 +355,8 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.Gemini => nameof(ShowGeminiSettings),
             TranslationEngineName.DeepSeek => nameof(ShowDeepSeekSettings),
             TranslationEngineName.OpenRouter => nameof(ShowOpenRouterSettings),
+            TranslationEngineName.Ollama => nameof(ShowOllamaSettings),
+            TranslationEngineName.LmStudio => nameof(ShowLmStudioSettings),
             TranslationEngineName.Yandex => nameof(ShowYandexSettings),
             TranslationEngineName.YandexGPT => nameof(ShowYandexGptSettings),
             _ => string.Empty

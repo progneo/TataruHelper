@@ -88,6 +88,14 @@
     "TranslationResources/GoogleTranslateLanguages.json"
   ],
   [
+    "OllamaLanguages",
+    "TranslationResources/GoogleTranslateLanguages.json"
+  ],
+  [
+    "LmStudioLanguages",
+    "TranslationResources/GoogleTranslateLanguages.json"
+  ],
+  [
     "YandexGptLanguages",
     "TranslationResources/GoogleTranslateLanguages.json"
   ],

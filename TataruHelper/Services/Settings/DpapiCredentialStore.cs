@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
@@ -43,6 +43,9 @@ namespace FFXIVTataruHelper.Services.Settings
         public bool IsEngineEnabled(TranslationEngineName engine)
         {
             var raw = Get(Key(engine, "enabled"));
+            if (raw.Length == 0)
+                return TranslationEngineDefaults.IsOnByDefault(engine);
+
             return !string.Equals(raw, "0", StringComparison.Ordinal);
         }
 
@@ -55,8 +58,13 @@ namespace FFXIVTataruHelper.Services.Settings
         public void SetEndpoint(TranslationEngineName engine, string endpoint)
             => Set(Key(engine, "endpoint"), endpoint);
 
+        /// <summary>
+        /// Writes "1" rather than an empty string: <see cref="Set"/> treats empty
+        /// as "forget this", which for an engine that is off by default reads
+        /// back as off again - the switch would not hold.
+        /// </summary>
         public void SetEngineEnabled(TranslationEngineName engine, bool isEnabled)
-            => Set(Key(engine, "enabled"), isEnabled ? string.Empty : "0");
+            => Set(Key(engine, "enabled"), isEnabled ? "1" : "0");
 
         public void Save()
         {
