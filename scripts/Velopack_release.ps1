@@ -228,7 +228,16 @@ if (-not $SkipDownloadLatest) {
     }
 
     Write-Host "[Velopack] Downloading latest published release for delta base..."
-    Write-Host ("[Velopack] Command: " + ((@($vpkPrefix) + $downloadArgs) -join " "))
+
+    # The token is masked out of the echo. It was printed in full, which put a
+    # live credential into the release log of every build - the one file anybody
+    # would attach when asking why a release failed.
+    $echoedArgs = @()
+    for ($i = 0; $i -lt $downloadArgs.Count; $i++) {
+        $echoedArgs += if ($i -gt 0 -and $downloadArgs[$i - 1] -eq "--token") { "***" } else { $downloadArgs[$i] }
+    }
+
+    Write-Host ("[Velopack] Command: " + ((@($vpkPrefix) + $echoedArgs) -join " "))
 
     try {
         Invoke-VpkCommand -Prefix $vpkPrefix -Args $downloadArgs
