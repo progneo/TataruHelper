@@ -255,6 +255,8 @@ namespace TataruHelper.Tests.ViewModel
 
             public string GetModel(TranslationEngineName engine) => string.Empty;
 
+            public string GetEndpoint(TranslationEngineName engine) => string.Empty;
+
             public void SetApiKey(TranslationEngineName engine, string apiKey)
             {
             }
@@ -264,6 +266,10 @@ namespace TataruHelper.Tests.ViewModel
             }
 
             public void SetModel(TranslationEngineName engine, string model)
+            {
+            }
+
+            public void SetEndpoint(TranslationEngineName engine, string endpoint)
             {
             }
 

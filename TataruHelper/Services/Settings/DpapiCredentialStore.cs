@@ -38,6 +38,8 @@ namespace FFXIVTataruHelper.Services.Settings
 
         public string GetModel(TranslationEngineName engine) => Get(Key(engine, "model"));
 
+        public string GetEndpoint(TranslationEngineName engine) => Get(Key(engine, "endpoint"));
+
         public bool IsEngineEnabled(TranslationEngineName engine)
         {
             var raw = Get(Key(engine, "enabled"));
@@ -49,6 +51,9 @@ namespace FFXIVTataruHelper.Services.Settings
         public void SetRegion(TranslationEngineName engine, string region) => Set(Key(engine, "region"), region);
 
         public void SetModel(TranslationEngineName engine, string model) => Set(Key(engine, "model"), model);
+
+        public void SetEndpoint(TranslationEngineName engine, string endpoint)
+            => Set(Key(engine, "endpoint"), endpoint);
 
         public void SetEngineEnabled(TranslationEngineName engine, bool isEnabled)
             => Set(Key(engine, "enabled"), isEnabled ? string.Empty : "0");
