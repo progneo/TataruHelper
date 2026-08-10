@@ -268,6 +268,9 @@
     <system:String x:Key="GeminiModelLabel">Gemini model (optional, e.g. gemini-3.6-flash)</system:String>
     <system:String x:Key="DeepSeekKeyLabel">DeepSeek key</system:String>
     <system:String x:Key="DeepSeekModelLabel">DeepSeek model (optional)</system:String>
+    <system:String x:Key="OpenRouterKeyLabel">OpenRouter key</system:String>
+    <system:String x:Key="OpenRouterModelLabel">OpenRouter model (optional, e.g. openai/gpt-4o-mini)</system:String>
+    <system:String x:Key="OpenRouterHint">One key for models from many providers. Pick any model OpenRouter lists.</system:String>
     <system:String x:Key="YandexGptUsesYandexHint">Uses the Yandex Cloud API key and folder ID from the Yandex row above.</system:String>
     <system:String x:Key="YandexGptModelAliasLabel">Model alias (optional, e.g. yandexgpt/latest, yandexgpt-lite/latest)</system:String>
 

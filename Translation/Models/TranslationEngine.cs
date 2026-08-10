@@ -21,6 +21,8 @@ namespace Translation.Models
         YandexFree = 14,
 
         Gemini = 15,
+
+        OpenRouter = 16,
     }
 
     public class TranslationEngine : IEquatable<TranslationEngine>

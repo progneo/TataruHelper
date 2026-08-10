@@ -10,6 +10,7 @@ using Translation.Providers.Gemini;
 using Translation.Providers.Google;
 using Translation.Providers.GoogleCloud;
 using Translation.Providers.OpenAI;
+using Translation.Providers.OpenRouter;
 using Translation.Providers.Papago;
 using Translation.Providers.Yandex;
 using Translation.Providers.YandexCloud;
@@ -40,11 +41,12 @@ namespace Translation.Providers
             var yandexGpt = new YandexGptTranslator(logger, credentials);
             var yandexFree = new YandexFreeTranslator(logger);
             var gemini = new GeminiTranslator(logger, credentials);
+            var openRouter = new OpenRouterTranslator(logger, credentials);
 
             var providers = new ITranslationProvider[]
             {
                 google, papago, deepLF, azure, googleCloud, deepLApi, openAi, deepSeek, yandexCloud, yandexGpt,
-                yandexFree, gemini,
+                yandexFree, gemini, openRouter,
             };
 
             return providers.ToDictionary(x => x.EngineName, x => x);

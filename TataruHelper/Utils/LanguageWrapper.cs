@@ -472,6 +472,11 @@ namespace FFXIVTataruHelper
                 catalog.GetString("Gemini model (optional, e.g. gemini-3.6-flash)");
             _SettingsWindow.Resources["DeepSeekKeyLabel"] = catalog.GetString("DeepSeek key");
             _SettingsWindow.Resources["DeepSeekModelLabel"] = catalog.GetString("DeepSeek model (optional)");
+            _SettingsWindow.Resources["OpenRouterKeyLabel"] = catalog.GetString("OpenRouter key");
+            _SettingsWindow.Resources["OpenRouterModelLabel"] =
+                catalog.GetString("OpenRouter model (optional, e.g. openai/gpt-4o-mini)");
+            _SettingsWindow.Resources["OpenRouterHint"] =
+                catalog.GetString("One key for models from many providers. Pick any model OpenRouter lists.");
             _SettingsWindow.Resources["YandexGptUsesYandexHint"] =
                 catalog.GetString("Uses the Yandex Cloud API key and folder ID from the Yandex row above.");
             _SettingsWindow.Resources["YandexGptModelAliasLabel"] =

@@ -84,6 +84,10 @@
     "TranslationResources/GoogleTranslateLanguages.json"
   ],
   [
+    "OpenRouterLanguages",
+    "TranslationResources/GoogleTranslateLanguages.json"
+  ],
+  [
     "YandexGptLanguages",
     "TranslationResources/GoogleTranslateLanguages.json"
   ],

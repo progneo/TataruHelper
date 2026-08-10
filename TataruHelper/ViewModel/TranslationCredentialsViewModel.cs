@@ -16,7 +16,7 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.DeepL,
             TranslationEngineName.AzureTranslator, TranslationEngineName.GoogleCloudTranslate,
             TranslationEngineName.DeepLApi, TranslationEngineName.OpenAI, TranslationEngineName.Gemini,
-            TranslationEngineName.DeepSeek,
+            TranslationEngineName.DeepSeek, TranslationEngineName.OpenRouter,
             TranslationEngineName.YandexGPT, TranslationEngineName.Yandex
         };
 
@@ -96,6 +96,12 @@ namespace FFXIVTataruHelper.ViewModel
             set => SetEngineEnabled(TranslationEngineName.DeepSeek, value);
         }
 
+        public bool IsOpenRouterEnabled
+        {
+            get => _store.IsEngineEnabled(TranslationEngineName.OpenRouter);
+            set => SetEngineEnabled(TranslationEngineName.OpenRouter, value);
+        }
+
         public bool IsYandexEnabled
         {
             get => _store.IsEngineEnabled(TranslationEngineName.Yandex);
@@ -120,6 +126,7 @@ namespace FFXIVTataruHelper.ViewModel
         public bool ShowOpenAISettings => IsOpenAIEnabled;
         public bool ShowGeminiSettings => IsGeminiEnabled;
         public bool ShowDeepSeekSettings => IsDeepSeekEnabled;
+        public bool ShowOpenRouterSettings => IsOpenRouterEnabled;
         public bool ShowYandexSettings => IsYandexEnabled;
         public bool ShowYandexGptSettings => IsYandexGptEnabled;
 
@@ -204,6 +211,24 @@ namespace FFXIVTataruHelper.ViewModel
             set => SetModel(TranslationEngineName.DeepSeek, value, nameof(DeepSeekModel));
         }
 
+        public string OpenRouterApiKey
+        {
+            get => _store.GetApiKey(TranslationEngineName.OpenRouter);
+            set => SetApiKey(
+                TranslationEngineName.OpenRouter,
+                value,
+                nameof(OpenRouterApiKey),
+                nameof(OpenRouterApiKeyMasked));
+        }
+
+        public string OpenRouterApiKeyMasked => MaskSecret(OpenRouterApiKey);
+
+        public string OpenRouterModel
+        {
+            get => _store.GetModel(TranslationEngineName.OpenRouter);
+            set => SetModel(TranslationEngineName.OpenRouter, value, nameof(OpenRouterModel));
+        }
+
         public string YandexApiKey
         {
             get => _store.GetApiKey(TranslationEngineName.Yandex);
@@ -267,6 +292,7 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.OpenAI => nameof(IsOpenAIEnabled),
             TranslationEngineName.Gemini => nameof(IsGeminiEnabled),
             TranslationEngineName.DeepSeek => nameof(IsDeepSeekEnabled),
+            TranslationEngineName.OpenRouter => nameof(IsOpenRouterEnabled),
             TranslationEngineName.Yandex => nameof(IsYandexEnabled),
             TranslationEngineName.YandexGPT => nameof(IsYandexGptEnabled),
             _ => string.Empty
@@ -280,6 +306,7 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.OpenAI => nameof(ShowOpenAISettings),
             TranslationEngineName.Gemini => nameof(ShowGeminiSettings),
             TranslationEngineName.DeepSeek => nameof(ShowDeepSeekSettings),
+            TranslationEngineName.OpenRouter => nameof(ShowOpenRouterSettings),
             TranslationEngineName.Yandex => nameof(ShowYandexSettings),
             TranslationEngineName.YandexGPT => nameof(ShowYandexGptSettings),
             _ => string.Empty

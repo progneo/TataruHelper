@@ -59,6 +59,8 @@ namespace Translation.Settings
                     settings.OpenAILanguages, 8),
                 new EngineLanguageSource(TranslationEngineName.DeepSeek,
                     settings.DeepSeekLanguages, 7),
+                new EngineLanguageSource(TranslationEngineName.OpenRouter,
+                    settings.OpenRouterLanguages, 8),
                 new EngineLanguageSource(TranslationEngineName.Yandex,
                     settings.YandexCloudLanguages, 8),
                 new EngineLanguageSource(TranslationEngineName.YandexGPT,

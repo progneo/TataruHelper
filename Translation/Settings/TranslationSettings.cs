@@ -81,6 +81,8 @@ namespace Translation.Settings
 
         public string DeepSeekLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
 
+        public string OpenRouterLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
+
         public string YandexGptLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
 
         public string GeminiLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";

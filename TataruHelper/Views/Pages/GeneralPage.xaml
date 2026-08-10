@@ -533,6 +533,34 @@
                         </StackPanel>
                     </Border>
 
+                    <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
+                            Background="{DynamicResource Brush.SurfaceSubtle}">
+                        <StackPanel>
+                            <DockPanel>
+                                <ui:ToggleSwitch DockPanel.Dock="Right" VerticalAlignment="Center"
+                                                 IsChecked="{Binding Shell.TranslationCredentials.IsOpenRouterEnabled, Mode=TwoWay}" />
+                                <TextBlock Text="OpenRouter" VerticalAlignment="Center" />
+                            </DockPanel>
+                            <StackPanel Margin="0,8,0,0"
+                                        Visibility="{Binding Shell.TranslationCredentials.ShowOpenRouterSettings, Converter={utils:BooleanToVisibilityConverterCollapse}}">
+                                <TextBlock Style="{DynamicResource CaptionTextStyle}"
+                                           TextWrapping="Wrap" Margin="0,0,0,6"
+                                           Text="{DynamicResource OpenRouterHint}" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource OpenRouterKeyLabel}" />
+                                <ctl:SecretField
+                                    Value="{Binding Shell.TranslationCredentials.OpenRouterApiKey, UpdateSourceTrigger=LostFocus}"
+                                    Masked="{Binding Shell.TranslationCredentials.OpenRouterApiKeyMasked}"
+                                    Margin="0,0,0,6" />
+                                <Label Style="{DynamicResource BaseLabelStyle}"
+                                       Content="{DynamicResource OpenRouterModelLabel}" />
+                                <TextBox
+                                    Text="{Binding Shell.TranslationCredentials.OpenRouterModel, UpdateSourceTrigger=LostFocus}"
+                                    KeyDown="CredentialTextBox_KeyDown" />
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
                     <Border Padding="12,10" CornerRadius="6"
                             Background="{DynamicResource Brush.SurfaceSubtle}">
                         <StackPanel>
