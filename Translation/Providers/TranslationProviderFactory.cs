@@ -1,9 +1,10 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Logging;
 using Translation.Credentials;
 using Translation.Models;
 using Translation.Providers.Azure;
+using Translation.Providers.Claude;
 using Translation.Providers.DeepL;
 using Translation.Providers.DeepSeek;
 using Translation.Providers.Gemini;
@@ -43,13 +44,14 @@ namespace Translation.Providers
             var yandexFree = new YandexFreeTranslator(logger);
             var gemini = new GeminiTranslator(logger, credentials);
             var openRouter = new OpenRouterTranslator(logger, credentials);
+            var claude = new ClaudeTranslator(logger, credentials);
             var ollama = new OllamaTranslator(logger, credentials);
             var lmStudio = new LmStudioTranslator(logger, credentials);
 
             var providers = new ITranslationProvider[]
             {
                 google, papago, deepLF, azure, googleCloud, deepLApi, openAi, deepSeek, yandexCloud, yandexGpt,
-                yandexFree, gemini, openRouter, ollama, lmStudio,
+                yandexFree, gemini, openRouter, claude, ollama, lmStudio,
             };
 
             return providers.ToDictionary(x => x.EngineName, x => x);

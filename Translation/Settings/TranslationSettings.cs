@@ -1,4 +1,4 @@
-namespace Translation.Settings
+﻿namespace Translation.Settings
 {
     public sealed class TranslationSettings
     {
@@ -82,6 +82,8 @@ namespace Translation.Settings
         public string DeepSeekLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
 
         public string OpenRouterLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
+
+        public string ClaudeLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
 
         public string OllamaLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
 

@@ -1,4 +1,4 @@
-[
+﻿[
   [
     "TranslationCacheSize",
     10000
@@ -85,6 +85,10 @@
   ],
   [
     "OpenRouterLanguages",
+    "TranslationResources/GoogleTranslateLanguages.json"
+  ],
+  [
+    "ClaudeLanguages",
     "TranslationResources/GoogleTranslateLanguages.json"
   ],
   [

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Windows;
 
@@ -472,6 +472,12 @@ namespace FFXIVTataruHelper
                 catalog.GetString("Gemini model (optional, e.g. gemini-3.6-flash)");
             _SettingsWindow.Resources["DeepSeekKeyLabel"] = catalog.GetString("DeepSeek key");
             _SettingsWindow.Resources["DeepSeekModelLabel"] = catalog.GetString("DeepSeek model (optional)");
+            _SettingsWindow.Resources["ClaudeKeyLabel"] = catalog.GetString("Anthropic API key");
+            _SettingsWindow.Resources["ClaudeModelLabel"] =
+                catalog.GetString("Claude model (optional, e.g. claude-opus-5, claude-haiku-4-5)");
+            _SettingsWindow.Resources["ClaudeCostHint"] =
+                catalog.GetString(
+                    "Billed per token, and the default model is the capable, expensive one. For chat lines a smaller model is usually enough — put its name in the box above.");
             _SettingsWindow.Resources["OpenRouterKeyLabel"] = catalog.GetString("OpenRouter key");
             _SettingsWindow.Resources["OpenRouterModelLabel"] =
                 catalog.GetString("OpenRouter model (optional, e.g. openai/gpt-4o-mini)");

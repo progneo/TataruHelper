@@ -29,6 +29,8 @@ namespace Translation.Models
 
         /// <summary>The other common local runner. Same shape as <see cref="Ollama"/>, different port.</summary>
         LmStudio = 18,
+
+        Claude = 19,
     }
 
     public class TranslationEngine : IEquatable<TranslationEngine>

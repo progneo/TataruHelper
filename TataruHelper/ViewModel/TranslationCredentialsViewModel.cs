@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
@@ -16,7 +16,7 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.DeepL,
             TranslationEngineName.AzureTranslator, TranslationEngineName.GoogleCloudTranslate,
             TranslationEngineName.DeepLApi, TranslationEngineName.OpenAI, TranslationEngineName.Gemini,
-            TranslationEngineName.DeepSeek, TranslationEngineName.OpenRouter,
+            TranslationEngineName.DeepSeek, TranslationEngineName.Claude, TranslationEngineName.OpenRouter,
             TranslationEngineName.YandexGPT, TranslationEngineName.Yandex,
             TranslationEngineName.Ollama, TranslationEngineName.LmStudio
         };
@@ -103,6 +103,24 @@ namespace FFXIVTataruHelper.ViewModel
             set => SetEngineEnabled(TranslationEngineName.OpenRouter, value);
         }
 
+        public bool IsClaudeEnabled
+        {
+            get => _store.IsEngineEnabled(TranslationEngineName.Claude);
+            set => SetEngineEnabled(TranslationEngineName.Claude, value);
+        }
+
+        public bool IsOllamaEnabled
+        {
+            get => _store.IsEngineEnabled(TranslationEngineName.Ollama);
+            set => SetEngineEnabled(TranslationEngineName.Ollama, value);
+        }
+
+        public bool IsLmStudioEnabled
+        {
+            get => _store.IsEngineEnabled(TranslationEngineName.LmStudio);
+            set => SetEngineEnabled(TranslationEngineName.LmStudio, value);
+        }
+
         public bool IsYandexEnabled
         {
             get => _store.IsEngineEnabled(TranslationEngineName.Yandex);
@@ -126,22 +144,26 @@ namespace FFXIVTataruHelper.ViewModel
         public bool ShowDeepLApiSettings => IsDeepLApiEnabled;
         public bool ShowOpenAISettings => IsOpenAIEnabled;
         public bool ShowGeminiSettings => IsGeminiEnabled;
-        public bool IsOllamaEnabled
-        {
-            get => _store.IsEngineEnabled(TranslationEngineName.Ollama);
-            set => SetEngineEnabled(TranslationEngineName.Ollama, value);
-        }
-
-        public bool IsLmStudioEnabled
-        {
-            get => _store.IsEngineEnabled(TranslationEngineName.LmStudio);
-            set => SetEngineEnabled(TranslationEngineName.LmStudio, value);
-        }
-
         public bool ShowDeepSeekSettings => IsDeepSeekEnabled;
         public bool ShowOpenRouterSettings => IsOpenRouterEnabled;
+        public bool ShowClaudeSettings => IsClaudeEnabled;
         public bool ShowOllamaSettings => IsOllamaEnabled;
         public bool ShowLmStudioSettings => IsLmStudioEnabled;
+
+        public string ClaudeApiKey
+        {
+            get => _store.GetApiKey(TranslationEngineName.Claude);
+            set => SetApiKey(
+                TranslationEngineName.Claude, value, nameof(ClaudeApiKey), nameof(ClaudeApiKeyMasked));
+        }
+
+        public string ClaudeApiKeyMasked => MaskSecret(ClaudeApiKey);
+
+        public string ClaudeModel
+        {
+            get => _store.GetModel(TranslationEngineName.Claude);
+            set => SetModel(TranslationEngineName.Claude, value, nameof(ClaudeModel));
+        }
 
         public string OllamaEndpoint
         {
@@ -339,6 +361,7 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.Gemini => nameof(IsGeminiEnabled),
             TranslationEngineName.DeepSeek => nameof(IsDeepSeekEnabled),
             TranslationEngineName.OpenRouter => nameof(IsOpenRouterEnabled),
+            TranslationEngineName.Claude => nameof(IsClaudeEnabled),
             TranslationEngineName.Ollama => nameof(IsOllamaEnabled),
             TranslationEngineName.LmStudio => nameof(IsLmStudioEnabled),
             TranslationEngineName.Yandex => nameof(IsYandexEnabled),
@@ -355,6 +378,7 @@ namespace FFXIVTataruHelper.ViewModel
             TranslationEngineName.Gemini => nameof(ShowGeminiSettings),
             TranslationEngineName.DeepSeek => nameof(ShowDeepSeekSettings),
             TranslationEngineName.OpenRouter => nameof(ShowOpenRouterSettings),
+            TranslationEngineName.Claude => nameof(ShowClaudeSettings),
             TranslationEngineName.Ollama => nameof(ShowOllamaSettings),
             TranslationEngineName.LmStudio => nameof(ShowLmStudioSettings),
             TranslationEngineName.Yandex => nameof(ShowYandexSettings),
