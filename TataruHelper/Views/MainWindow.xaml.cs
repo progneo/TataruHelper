@@ -13,6 +13,7 @@ using System.Windows.Navigation;
 using FFXIVTataruHelper.EventArguments;
 using FFXIVTataruHelper.Services.Settings;
 using FFXIVTataruHelper.Factories;
+using FFXIVTataruHelper.Services.Diagnostics;
 using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.UI;
@@ -171,7 +172,15 @@ public partial class MainWindow : FluentWindow
                 // only ever has the English defaults.
                 key => TryFindResource(key) as string ?? key,
                 AskUser,
-                () => ApplicationRestart.Start(Environment.GetCommandLineArgs().Skip(1).ToArray(), _logger));
+                () => ApplicationRestart.Start(Environment.GetCommandLineArgs().Skip(1).ToArray(), _logger),
+                new DiagnosticsReporter(
+                    () => _tataruModel.FFMemoryReader.Reading,
+                    _referenceIndexUpdateService,
+                    () => _tataruModel.TataruViewModel.ChatWindows.ToArray(),
+                    () => _tataruUiModel.IsLiteraryTranslation,
+                    () => ((LanguageWrapper.Languages)_tataruUiModel.UiLanguage).ToString(),
+                    "v" + (Assembly.GetEntryAssembly()?.GetName().Version?.ToString(3) ?? "unknown"),
+                    _logger));
 
             _settingsShellViewModel.PropertyChanged += OnSettingsShellPropertyChanged;
 

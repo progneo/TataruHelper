@@ -270,6 +270,18 @@ namespace FFXIVTataruHelper
                 "We express our great appreciation to the people who support our project and motivate us for new achievements.");
             _SettingsWindow.Resources["PatronsThankYou"] = catalog.GetString("Thank you");
 
+            _SettingsWindow.Resources["DiagnosticsTitle"] = catalog.GetString("Diagnostics");
+            _SettingsWindow.Resources["DiagnosticsHint"] = catalog.GetString(
+                "Copy a description of what Tataru Helper is seeing right now - the game it found, what it manages to read, and how each window is set up. Paste it into a bug report.");
+            _SettingsWindow.Resources["DiagnosticsButton"] = catalog.GetString("Copy diagnostics");
+            _SettingsWindow.Resources["DiagnosticsCopied"] =
+                catalog.GetString("Copied to the clipboard. Also saved to");
+            _SettingsWindow.Resources["DiagnosticsSavedOnly"] =
+                catalog.GetString("The clipboard was busy, so this was only saved to");
+            _SettingsWindow.Resources["DiagnosticsFailed"] =
+                catalog.GetString("Could not be collected. The log will say why.");
+            _SettingsWindow.Resources["DiagnosticsUnavailable"] = catalog.GetString("Not available in this build.");
+
             _SettingsWindow.Resources["CkSystem"] = catalog.GetString("System");
             _SettingsWindow.Resources["CkEcho"] = catalog.GetString("Echo");
             _SettingsWindow.Resources["CkError"] = catalog.GetString("Error");

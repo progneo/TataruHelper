@@ -177,6 +177,9 @@ namespace TataruHelper.Tests
                 return chatCode != null && CodesReadLive.Contains(chatCode);
             }
 
+            public LiveReadingStats LiveReading =>
+                new LiveReadingStats(CodesReadLive.Count, CodesReadLive.ToArray());
+
             public void SetProcess(
                 ProcessModel processModel,
                 string gameLanguage,

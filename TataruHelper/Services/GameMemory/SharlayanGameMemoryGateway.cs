@@ -51,6 +51,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
         /// </summary>
         private readonly HashSet<string> _codesReadLive = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+        private int _linesReadLive;
+
         /// <summary>Bare text of the last realtime line, without the speaker prefix.</summary>
         private string _lastEmittedRealtimeText = string.Empty;
 
@@ -103,6 +105,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
             _recentRealtimeLines.Clear();
             _recentRealtimeLineOrder.Clear();
             _codesReadLive.Clear();
+            _linesReadLive = 0;
         }
 
         /// <summary>
@@ -114,6 +117,9 @@ namespace FFXIVTataruHelper.Services.GameMemory
         {
             return !string.IsNullOrEmpty(chatCode) && _codesReadLive.Contains(chatCode);
         }
+
+        public LiveReadingStats LiveReading =>
+            new LiveReadingStats(_linesReadLive, _codesReadLive.OrderBy(code => code).ToArray());
 
         public void UnsetProcess()
         {
@@ -342,6 +348,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
                     });
 
                     _codesReadLive.Add(chatCode);
+                    _linesReadLive++;
                 }
 
                 // Remembered even when priming swallowed the line, so the chat-log

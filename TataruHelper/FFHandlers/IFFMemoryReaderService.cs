@@ -30,6 +30,12 @@ namespace FFXIVTataruHelper.FFHandlers
         string GameProcessDescription { get; }
 
         /// <summary>
+        /// The game side of a bug report: what was attached, what was read, and
+        /// under which dialogue codes.
+        /// </summary>
+        GameReadingDiagnostics Reading { get; }
+
+        /// <summary>
         /// Reads dialogue from the game's UI as it appears rather than waiting for
         /// the chat log. Off falls back to chat-log-only behaviour.
         /// </summary>

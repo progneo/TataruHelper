@@ -51,6 +51,9 @@ namespace FFXIVTataruHelper
         /// <summary>Where to send somebody who is asked for their log.</summary>
         public static string LogFolder => LogDirectory;
 
+        /// <summary>The log itself, for a report to name rather than describe.</summary>
+        public static string LogFilePath => LogFileName;
+
         public void StartWriting()
         {
             _worker = Task.Factory.StartNew(() =>

@@ -137,6 +137,30 @@ namespace FFXIVTataruHelper.FFHandlers
 
         private bool _playerNameResolved;
 
+        private string _detectedGameLanguage = string.Empty;
+
+        /// <summary>
+        /// The game side of a bug report, in one read. The character's name is
+        /// deliberately not among it: whether it could be read is the diagnostic,
+        /// and the name itself is nobody's business but its owner's.
+        /// </summary>
+        public GameReadingDiagnostics Reading
+        {
+            get
+            {
+                var live = _gameMemoryGateway?.LiveReading ?? LiveReadingStats.None;
+
+                return new GameReadingDiagnostics(
+                    IsGameRunning,
+                    GameProcessDescription,
+                    _detectedGameLanguage,
+                    _playerNameResolved,
+                    IsRealtimeTranslationEnabled,
+                    live.Lines,
+                    live.Codes);
+            }
+        }
+
         private void ResolvePlayerNameOnce()
         {
             if (_playerNameResolved || PlayerNameResolved == null)
@@ -296,6 +320,7 @@ namespace FFXIVTataruHelper.FFHandlers
 
                             processNotFound = false;
                             _keepReading = true;
+                            _detectedGameLanguage = languageCode;
 
                             GameLanguageResolved?.Invoke(languageCode);
                         }

@@ -968,3 +968,24 @@ msgstr "Every setting goes back to what a fresh installation has - chat windows,
 
 msgid "The translations installed are for {0}, and the game is now being played in another language. Fetching {1} replaces them, and downloads the whole export again. Go ahead?"
 msgstr "The translations installed are for {0}, and the game is now being played in another language. Fetching {1} replaces them, and downloads the whole export again. Go ahead?"
+
+msgid "Diagnostics"
+msgstr "Diagnostics"
+
+msgid "Copy a description of what Tataru Helper is seeing right now - the game it found, what it manages to read, and how each window is set up. Paste it into a bug report."
+msgstr "Copy a description of what Tataru Helper is seeing right now - the game it found, what it manages to read, and how each window is set up. Paste it into a bug report."
+
+msgid "Copy diagnostics"
+msgstr "Copy diagnostics"
+
+msgid "Copied to the clipboard. Also saved to"
+msgstr "Copied to the clipboard. Also saved to"
+
+msgid "The clipboard was busy, so this was only saved to"
+msgstr "The clipboard was busy, so this was only saved to"
+
+msgid "Could not be collected. The log will say why."
+msgstr "Could not be collected. The log will say why."
+
+msgid "Not available in this build."
+msgstr "Not available in this build."

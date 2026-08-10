@@ -21,6 +21,12 @@ namespace FFXIVTataruHelper.Services.GameMemory
         /// </summary>
         bool HasReadCodeLive(string chatCode);
 
+        /// <summary>
+        /// What has been read off the screen since attaching, for reporting when
+        /// somebody says translation is not working.
+        /// </summary>
+        LiveReadingStats LiveReading { get; }
+
         bool CheckChatEquality(ChatLogItem item1, ChatLogItem item2);
 
 

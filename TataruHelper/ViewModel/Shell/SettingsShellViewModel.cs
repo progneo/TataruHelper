@@ -12,6 +12,7 @@ using System.Windows;
 using System.Windows.Input;
 using System.Windows.Threading;
 
+using FFXIVTataruHelper.Services.Diagnostics;
 using FFXIVTataruHelper.Services.HotKeys;
 using FFXIVTataruHelper.Services.Logging;
 using FFXIVTataruHelper.Services.Settings;
@@ -33,6 +34,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     private readonly Action _checkUpdatesAction;
     private readonly IReferenceIndexUpdateService _referenceIndexUpdateService;
     private readonly ISettingsResetService _settingsResetService;
+    private readonly IDiagnosticsReporter _diagnosticsReporter;
 
     /// <summary>
     /// Where the daily check leaves a trace. Nobody watches it happen, so
@@ -91,6 +93,8 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
     private bool _ffStatusActive;
     private readonly string _appVersion;
 
+    private string _diagnosticsStatus = string.Empty;
+
     public TranslationCredentialsViewModel TranslationCredentials { get; }
 
     public SettingsShellViewModel(
@@ -104,8 +108,10 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         IAppLogger logger,
         Func<string, string> localize,
         Func<string, bool> confirm,
-        Action restart)
+        Action restart,
+        IDiagnosticsReporter diagnosticsReporter = null)
     {
+        _diagnosticsReporter = diagnosticsReporter;
         _settingsViewModel = settingsViewModel ?? throw new ArgumentNullException(nameof(settingsViewModel));
         _uiModel = uiModel ?? throw new ArgumentNullException(nameof(uiModel));
         _hotkeyCaptureService = hotkeyCaptureService ?? throw new ArgumentNullException(nameof(hotkeyCaptureService));
@@ -164,6 +170,7 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         UpdateReferenceIndexCommand = new TataruUICommand(StartReferenceIndexUpdate);
         CancelReferenceIndexUpdateCommand = new TataruUICommand(CancelReferenceIndexUpdate);
         ResetSettingsCommand = new TataruUICommand(ResetSettings);
+        CopyDiagnosticsCommand = new TataruUICommand(CopyDiagnostics);
         SelectChatWindowCommand = new TataruUICommand(SelectChatWindowByParameter);
         AddWindowCommand = new TataruUICommand(() => _settingsViewModel.AddNewChatWindowCommand.Execute(null));
         DeleteWindowCommand = new TataruUICommand(() => _settingsViewModel.DeleteChatWindowCommand.Execute(null));
@@ -508,6 +515,31 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
 
     public TataruUICommand ResetSettingsCommand { get; }
 
+    public TataruUICommand CopyDiagnosticsCommand { get; }
+
+    /// <summary>
+    /// What came of the last press of the diagnostics button, shown beside it.
+    /// A button that copies something invisibly and says nothing leaves the
+    /// person wondering whether it worked.
+    /// </summary>
+    public string DiagnosticsStatus
+    {
+        get => _diagnosticsStatus;
+        private set
+        {
+            if (string.Equals(_diagnosticsStatus, value, StringComparison.Ordinal))
+            {
+                return;
+            }
+
+            _diagnosticsStatus = value;
+            OnPropertyChanged();
+            OnPropertyChanged(nameof(HasDiagnosticsStatus));
+        }
+    }
+
+    public bool HasDiagnosticsStatus => !string.IsNullOrEmpty(DiagnosticsStatus);
+
     public TataruUICommand SelectChatWindowCommand { get; }
 
     public TataruUICommand AddWindowCommand { get; }
@@ -699,6 +731,69 @@ public sealed class SettingsShellViewModel : INotifyPropertyChanged, IDisposable
         _restart();
 
         _settingsViewModel.ShutDownRequestedCommand.Execute(null);
+    }
+
+    /// <summary>
+    /// Puts a description of this session on the clipboard, and a copy of it on
+    /// disk beside the log.
+    ///
+    /// The clipboard is the point: a report is going to be pasted into Discord,
+    /// and asking somebody to find a file, open it, and copy its contents is
+    /// three chances to end up with nothing. The file is there for when the
+    /// paste has been and gone.
+    /// </summary>
+    private void CopyDiagnostics()
+    {
+        if (_diagnosticsReporter == null)
+        {
+            DiagnosticsStatus = _localize("DiagnosticsUnavailable");
+            return;
+        }
+
+        try
+        {
+            var (report, savedTo) = _diagnosticsReporter.Collect();
+
+            _logger.WriteLog("Diagnostics collected." + Environment.NewLine + report);
+
+            var copied = TryCopyToClipboard(report);
+
+            DiagnosticsStatus = copied
+                ? _localize("DiagnosticsCopied")
+                : _localize("DiagnosticsSavedOnly");
+
+            if (!string.IsNullOrEmpty(savedTo))
+            {
+                DiagnosticsStatus += " " + savedTo;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.WriteLog(ex);
+            DiagnosticsStatus = _localize("DiagnosticsFailed");
+        }
+    }
+
+    /// <summary>
+    /// Another application can hold the clipboard open, and then setting it
+    /// throws. Worth retrying once - and worth not losing the report over.
+    /// </summary>
+    private bool TryCopyToClipboard(string report)
+    {
+        for (var attempt = 0; attempt < 2; attempt++)
+        {
+            try
+            {
+                Clipboard.SetText(report);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.WriteLog(ex);
+            }
+        }
+
+        return false;
     }
 
     private void CancelReferenceIndexUpdate()
