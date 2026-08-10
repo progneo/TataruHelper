@@ -487,6 +487,9 @@ namespace FFXIVTataruHelper
             _SettingsWindow.Resources["SelfHostedTranslatorsHint"] =
                 catalog.GetString(
                     "Nothing leaves your machine and nothing is billed. Off until you point them at a server that is running.");
+            _SettingsWindow.Resources["BingRefusedHint"] =
+                catalog.GetString(
+                    "Off by default: Bing is currently refusing keyless requests. Try it if you like — if nothing comes through, that is why.");
             _SettingsWindow.Resources["LibreTranslateAddressLabel"] =
                 catalog.GetString("Instance address (optional, e.g. http://localhost:5000)");
             _SettingsWindow.Resources["LibreTranslateKeyLabel"] =

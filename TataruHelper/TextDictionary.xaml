@@ -276,6 +276,7 @@
     <system:String x:Key="OpenRouterHint">One key for models from many providers. Pick any model OpenRouter lists.</system:String>
     <system:String x:Key="SelfHostedTranslatorsLabel">Your own server</system:String>
     <system:String x:Key="SelfHostedTranslatorsHint">Nothing leaves your machine and nothing is billed. Off until you point them at a server that is running.</system:String>
+    <system:String x:Key="BingRefusedHint">Off by default: Bing is currently refusing keyless requests. Try it if you like — if nothing comes through, that is why.</system:String>
     <system:String x:Key="LibreTranslateAddressLabel">Instance address (optional, e.g. http://localhost:5000)</system:String>
     <system:String x:Key="LibreTranslateKeyLabel">Instance key (only if your instance asks for one)</system:String>
     <system:String x:Key="ServerAddressLabel">Server address (optional, e.g. http://localhost:11434)</system:String>

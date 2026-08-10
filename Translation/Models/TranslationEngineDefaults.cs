@@ -21,6 +21,14 @@
                 case TranslationEngineName.Ollama:
                 case TranslationEngineName.LmStudio:
                 case TranslationEngineName.LibreTranslate:
+
+                // Off for a different reason: as of 2026-08-10 the keyless page
+                // answers 401 {"ShowCaptcha":false} to every translate call,
+                // from this machine at least. The page still hands out session
+                // values exactly as read here, so the engine is kept rather than
+                // deleted - but on by default it would fetch a page and be
+                // refused on every failed line, for nothing.
+                case TranslationEngineName.BingFree:
                     return false;
                 default:
                     return true;
