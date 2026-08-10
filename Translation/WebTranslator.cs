@@ -38,6 +38,7 @@ namespace Translation
 
         private readonly ILogger _Logger;
         private readonly TranslationSettings _settings;
+        private readonly ITranslationCredentialStore _credentials;
 
         private readonly string _translationSettingsPath = "TranslationSysSettings.json";
 
@@ -83,10 +84,11 @@ namespace Translation
             _translationCache =
                 new List<KeyValuePair<TranslationRequest, string>>(_settings.TranslationCacheSize);
 
+            _credentials = credentials ?? NullCredentialStore.Instance;
+
             _TranslationProviders = translationProviders != null
                 ? translationProviders.ToDictionary(x => x.EngineName, x => x)
-                : TranslationProviderFactory.CreateDefaultProviders(_Logger,
-                    credentials ?? NullCredentialStore.Instance, _settings);
+                : TranslationProviderFactory.CreateDefaultProviders(_Logger, _credentials, _settings);
 
             _LanguageDetector = new LanguageDetector(_settings.MaxSameLanguagePercent,
                 _settings.NTextCatLanguageModelsPath, _Logger);
@@ -475,9 +477,10 @@ namespace Translation
         /// rest of the session, and the only way out was to pick another engine by
         /// hand mid-conversation.
         ///
-        /// Engines are tried best-quality first, and only those that offer the
-        /// target language. A missing API key is skipped silently rather than
-        /// counted as a failure - it means the user never set that engine up.
+        /// Engines are tried best-quality first, and only those the user left
+        /// switched on and that offer the target language. A missing API key is
+        /// skipped silently rather than counted as a failure - it means the user
+        /// never set that engine up.
         /// </summary>
         private async Task<TranslationResult> TryFallbackProvidersAsync(
             TranslationEngine selectedEngine,
@@ -497,6 +500,16 @@ namespace Translation
             foreach (var candidate in engines.OrderByDescending(x => x.Quality))
             {
                 if (candidate.EngineName == selectedEngine.EngineName)
+                {
+                    continue;
+                }
+
+                // An engine the user switched off is not a stand-in. This used to
+                // be moot: every engine needed a key, and one without a key threw
+                // before it reached the network. An engine that needs no key has
+                // nothing to throw, so without this it is called anyway - a dead
+                // port on the player's own machine, or a service refusing us.
+                if (!_credentials.IsEngineEnabled(candidate.EngineName))
                 {
                     continue;
                 }
