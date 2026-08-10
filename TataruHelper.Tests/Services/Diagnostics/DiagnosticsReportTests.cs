@@ -140,6 +140,18 @@ namespace TataruHelper.Tests.Services.Diagnostics
             });
         }
 
+        // Which language the lines were in explains half of what gets asked
+        // about a translation, and the report is written once play has
+        // finished - so it survives the game closing, and says that it has.
+        [Test]
+        public void KeepsTheGamesLanguageAfterItCloses()
+        {
+            var report = DiagnosticsReport.Build(
+                Snapshot(Reading(attached: false, codesReadLive: new[] { "003D" })), DateTime.Now);
+
+            Assert.That(report, Does.Contain("en (last attached)"));
+        }
+
         // A character's name is readable once the memory reading works, and
         // reports get pasted into public channels.
         [Test]

@@ -54,7 +54,12 @@ namespace FFXIVTataruHelper.Services.Diagnostics
             report.AppendLine();
             report.AppendLine("Game");
             Field(report, "Process", reading.GameAttached ? reading.ProcessDescription : "not attached");
-            Field(report, "Language", reading.GameLanguage);
+
+            // Said to be the last one known while nothing is attached, rather
+            // than left to read as the language of a game that is not running.
+            Field(report, "Language", reading.GameAttached || reading.GameLanguage.Length == 0
+                ? reading.GameLanguage
+                : reading.GameLanguage + " (last attached)");
             Field(report, "Character read", YesNo(reading.PlayerResolved));
             Field(report, "Real-Time Translation", OnOff(reading.RealtimeEnabled));
             // Totals for the attachment, not for this instant: a report is

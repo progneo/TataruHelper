@@ -140,6 +140,17 @@ namespace FFXIVTataruHelper.FFHandlers
         private string _detectedGameLanguage = string.Empty;
 
         /// <summary>
+        /// The language of the last game attached to, kept after it closes.
+        ///
+        /// Separate from <see cref="_detectedGameLanguage"/>, which is forgotten
+        /// on purpose so that a game restarted in another language is detected
+        /// afresh. This one is for the report: it is usually written once play
+        /// has finished, and which language the lines were in explains half of
+        /// what people ask about a translation.
+        /// </summary>
+        private string _lastKnownGameLanguage = string.Empty;
+
+        /// <summary>
         /// Whether a game has been attached at any point since startup, which is
         /// what tells a report taken after the game was closed apart from one
         /// taken before it was ever started. The first has a session worth of
@@ -163,7 +174,7 @@ namespace FFXIVTataruHelper.FFHandlers
                     IsGameRunning,
                     _everAttached,
                     GameProcessDescription,
-                    _detectedGameLanguage,
+                    _lastKnownGameLanguage,
                     _playerNameResolved,
                     IsRealtimeTranslationEnabled,
                     live.Lines,
@@ -331,6 +342,7 @@ namespace FFXIVTataruHelper.FFHandlers
                             processNotFound = false;
                             _keepReading = true;
                             _detectedGameLanguage = languageCode;
+                            _lastKnownGameLanguage = languageCode;
 
                             GameLanguageResolved?.Invoke(languageCode);
                         }
