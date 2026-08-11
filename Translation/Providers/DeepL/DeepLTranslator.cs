@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -165,7 +165,12 @@ namespace Translation.Providers.DeepL
 
             var body = payload.ToString(Formatting.None);
 
-            var spacedMethod = (id + 5) % 29 == 0 || id % 13 == 0
+            // The endpoint checks how this one key is spaced against the request
+            // id, and rejects the request when they disagree. The second clause
+            // read "id % 13" here, which is not the rule the endpoint applies -
+            // the two disagree on 2 ids in 13, so around a sixth of requests
+            // went out spaced the wrong way and came back refused.
+            var spacedMethod = (id + 5) % 29 == 0 || (id + 3) % 13 == 0
                 ? "\"method\" : \""
                 : "\"method\": \"";
 

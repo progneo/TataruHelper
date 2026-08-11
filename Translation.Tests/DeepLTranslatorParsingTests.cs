@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using Translation.Providers.DeepL;
 
 namespace Translation.Tests
@@ -61,19 +61,31 @@ namespace Translation.Tests
             Assert.That(result, Is.EqualTo(1_700_000_000_001));
         }
 
-        [Test]
-        public void BuildRequestBody_UsesExtraSpacing_WhenIdMatchesFingerprintRule()
+        /// <summary>
+        /// The endpoint checks how the "method" key is spaced against the request
+        /// id and refuses the request when they disagree, so both arms of the rule
+        /// are pinned by id.
+        ///
+        /// These cases previously described "id % 13", which is not the rule the
+        /// endpoint applies - so the test agreed with our arithmetic instead of
+        /// with the service, and held the mistake in place.
+        /// </summary>
+        [TestCase(10)]   // (10 + 3) % 13 == 0
+        [TestCase(23)]   // (23 + 3) % 13 == 0
+        [TestCase(24)]   // (24 + 5) % 29 == 0
+        public void BuildRequestBody_UsesExtraSpacing_WhenIdMatchesFingerprintRule(long id)
         {
-            // 13 % 13 == 0 → the "method" key gets spaces on both sides of the colon.
-            var body = DeepLTranslator.BuildRequestBody("hi", "auto", "EN", 13, 1000);
+            var body = DeepLTranslator.BuildRequestBody("hi", "auto", "EN", id, 1000);
 
             Assert.That(body, Does.Contain("\"method\" : \"LMT_handle_texts\""));
         }
 
-        [Test]
-        public void BuildRequestBody_UsesSingleSpace_WhenIdDoesNotMatchFingerprintRule()
+        [TestCase(13)]   // divisible by 13, which is not what the rule asks
+        [TestCase(14)]
+        [TestCase(26)]   // divisible by 13 again
+        public void BuildRequestBody_UsesSingleSpace_WhenIdDoesNotMatchFingerprintRule(long id)
         {
-            var body = DeepLTranslator.BuildRequestBody("hi", "auto", "EN", 14, 1000);
+            var body = DeepLTranslator.BuildRequestBody("hi", "auto", "EN", id, 1000);
 
             Assert.That(body, Does.Contain("\"method\": \"LMT_handle_texts\""));
             Assert.That(body, Does.Not.Contain("\"method\" : "));
