@@ -611,13 +611,10 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Your own server -->
+                    <!-- Local models -->
                     <TextBlock Style="{DynamicResource CaptionTextStyle}"
                                FontWeight="SemiBold"
-                               Margin="0,14,0,2" Text="{DynamicResource SelfHostedTranslatorsLabel}" />
-                    <TextBlock Style="{DynamicResource CaptionTextStyle}"
-                               TextWrapping="Wrap"
-                               Margin="0,0,0,6" Text="{DynamicResource SelfHostedTranslatorsHint}" />
+                               Margin="0,14,0,6" Text="{DynamicResource LocalModelsLabel}" />
 
                     <Border Padding="12,10" Margin="0,0,0,6" CornerRadius="6"
                             Background="{DynamicResource Brush.SurfaceSubtle}">

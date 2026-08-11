@@ -483,10 +483,7 @@ namespace FFXIVTataruHelper
                 catalog.GetString("OpenRouter model (optional, e.g. openai/gpt-4o-mini)");
             _SettingsWindow.Resources["OpenRouterHint"] =
                 catalog.GetString("One key for models from many providers. Pick any model OpenRouter lists.");
-            _SettingsWindow.Resources["SelfHostedTranslatorsLabel"] = catalog.GetString("Your own server");
-            _SettingsWindow.Resources["SelfHostedTranslatorsHint"] =
-                catalog.GetString(
-                    "Nothing leaves your machine and nothing is billed. Off until you point them at a server that is running.");
+            _SettingsWindow.Resources["LocalModelsLabel"] = catalog.GetString("Local Models");
             _SettingsWindow.Resources["LibreTranslateAddressLabel"] =
                 catalog.GetString("Instance address (optional, e.g. http://localhost:5000)");
             _SettingsWindow.Resources["LibreTranslateKeyLabel"] =
