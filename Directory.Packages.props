@@ -27,7 +27,6 @@
     <PackageVersion Include="NTextCat" Version="0.3.65" />
     <PackageVersion Include="Jurassic" Version="3.2.9" />
     <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.0" />
-    <PackageVersion Include="GTranslate" Version="2.3.1" />
 
     <!--
       Pinned above what Microsoft.Data.Sqlite asks for. Its 2.1.11 carries a
