@@ -15,6 +15,7 @@
     <PackageReference Include="Jurassic" />
     <PackageReference Include="Microsoft.Data.Sqlite" />
     <PackageReference Include="Newtonsoft.Json" />
+    <PackageReference Include="GTranslate" />
   </ItemGroup>
 
   <ItemGroup>
