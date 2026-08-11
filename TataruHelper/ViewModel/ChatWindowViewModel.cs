@@ -779,6 +779,17 @@ namespace FFXIVTataruHelper.ViewModel
             if (!AvailableEngines.Contains(_selectedEngine))
             {
                 SelectedEngine = SavedEngine() ?? AvailableEngines.FirstOrDefault();
+
+                // Put back the languages captured above, rather than leaving it
+                // to the engine setter. Clearing the list makes the picker write
+                // a null selection back through its two-way binding, and a null
+                // engine tears both language lists down - so by the time an
+                // engine is chosen again there is nothing left for it to read
+                // the previous choice from, and both pickers fall to the first
+                // language in the list. Switching any engine off in settings was
+                // enough to lose the language the user had chosen.
+                TrySetLanguage(_TranslateFromLanguages, prevFrom);
+                TrySetLanguage(_TranslateToLanguages, prevTo);
                 return;
             }
 
