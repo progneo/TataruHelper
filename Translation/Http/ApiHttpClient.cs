@@ -28,7 +28,11 @@ namespace Translation.Http
         {
             var handler = new HttpClientHandler
             {
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                // The handler both announces these and unpacks them, so nothing
+                // may set Accept-Encoding by hand: announcing an encoding we
+                // cannot unpack returns bytes nobody can read.
+                AutomaticDecompression =
+                    DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli,
             };
 
             var client = new HttpClient(handler)

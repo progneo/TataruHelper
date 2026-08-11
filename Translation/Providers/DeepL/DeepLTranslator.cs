@@ -20,9 +20,6 @@ namespace Translation.Providers.DeepL
 
         private const string Endpoint = "https://www2.deepl.com/jsonrpc";
 
-        private const string BrowserUserAgent =
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
-
         private static long _requestId = InitializeRequestId();
 
         private readonly ILogger _logger;
@@ -33,7 +30,6 @@ namespace Translation.Providers.DeepL
             _logger = logger;
             _settings = settings ?? new TranslationSettings();
         }
-
 
         public async Task<string> TranslateAsync(string sentence, string inLang, string outLang,
             CancellationToken cancellationToken)
@@ -82,11 +78,16 @@ namespace Translation.Providers.DeepL
             using (var request = new HttpRequestMessage(HttpMethod.Post, Endpoint))
             {
                 request.Content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-                request.Headers.UserAgent.ParseAdd(BrowserUserAgent);
-                request.Headers.Accept.ParseAdd("*/*");
-                request.Headers.AcceptLanguage.ParseAdd("en-US,en;q=0.8");
-                request.Headers.TryAddWithoutValidation("Origin", "https://www.deepl.com");
-                request.Headers.TryAddWithoutValidation("Referer", "https://www.deepl.com/");
+
+                // Настройки заголовков для мимикрии под DeepL iOS App
+                request.Headers.TryAddWithoutValidation("Accept", "*/*");
+                request.Headers.TryAddWithoutValidation("x-app-os-name", "iOS");
+                request.Headers.TryAddWithoutValidation("x-app-os-version", "16.3.0");
+                request.Headers.TryAddWithoutValidation("Accept-Language", "en-US,en;q=0.9");
+                request.Headers.TryAddWithoutValidation("x-app-device", "iPhone13,2");
+                request.Headers.TryAddWithoutValidation("User-Agent", "DeepL-iOS/2.9.1 iOS 16.3.0 (iPhone13,2)");
+                request.Headers.TryAddWithoutValidation("x-app-build", "510265");
+                request.Headers.TryAddWithoutValidation("x-app-version", "2.9.1");
 
                 using (var response = await ApiHttpClient.SendAsync(request, cancellationToken)
                            .ConfigureAwait(false))
@@ -165,11 +166,12 @@ namespace Translation.Providers.DeepL
 
             var body = payload.ToString(Formatting.None);
 
-            // The endpoint checks how this one key is spaced against the request
-            // id, and rejects the request when they disagree. The second clause
-            // read "id % 13" here, which is not the rule the endpoint applies -
-            // the two disagree on 2 ids in 13, so around a sixth of requests
-            // went out spaced the wrong way and came back refused.
+            // Not arbitrary: the endpoint checks how this one key is spaced
+            // against the request id and refuses the request when they disagree.
+            // The second clause once read "id % 13", which is not the rule the
+            // endpoint applies - the two disagree on 2 ids in 13, so about a
+            // sixth of requests went out spaced the wrong way and came back
+            // refused. The tests pin both arms by id.
             var spacedMethod = (id + 5) % 29 == 0 || (id + 3) % 13 == 0
                 ? "\"method\" : \""
                 : "\"method\": \"";
