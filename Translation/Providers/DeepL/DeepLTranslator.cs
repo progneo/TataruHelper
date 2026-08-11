@@ -97,6 +97,14 @@ namespace Translation.Providers.DeepL
 
                     if (response.StatusCode == (HttpStatusCode)429)
                     {
+                        // The body is the only thing that says which refusal this
+                        // is - the endpoint uses more than one code for 429, and
+                        // they mean different things. Logged before throwing,
+                        // because the exception carries a message for the user
+                        // and this is for whoever reads the log afterwards.
+                        _logger?.LogInformation("{Message}",
+                            "[DEEPL_HTTP_429] " + Truncate(responseBody, 300));
+
                         throw new QuotaExceededException(TranslationEngineName.DeepL,
                             "DeepL web endpoint rate-limited the request (HTTP 429). It clears on its own; " +
                             "wait a bit or switch to another engine.");
@@ -112,6 +120,19 @@ namespace Translation.Providers.DeepL
                     return responseBody;
                 }
             }
+        }
+
+        /// <summary>
+        /// Keeps a refusal readable in the log without letting a page of HTML
+        /// from some proxy in front of the endpoint push everything else out.
+        /// </summary>
+        private static string Truncate(string value, int limit)
+        {
+            if (string.IsNullOrEmpty(value))
+                return "(empty body)";
+
+            var trimmed = value.Trim();
+            return trimmed.Length <= limit ? trimmed : trimmed.Substring(0, limit) + "…";
         }
 
         private static long InitializeRequestId()
