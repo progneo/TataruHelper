@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -103,7 +104,7 @@ namespace Translation.Providers.DeepL
                         // because the exception carries a message for the user
                         // and this is for whoever reads the log afterwards.
                         _logger?.LogInformation("{Message}",
-                            "[DEEPL_HTTP_429] " + Truncate(responseBody, 300));
+                            "[DEEPL_HTTP_429] " + DescribeRefusal(responseBody));
 
                         throw new QuotaExceededException(TranslationEngineName.DeepL,
                             "DeepL web endpoint rate-limited the request (HTTP 429). It clears on its own; " +
@@ -123,16 +124,40 @@ namespace Translation.Providers.DeepL
         }
 
         /// <summary>
-        /// Keeps a refusal readable in the log without letting a page of HTML
-        /// from some proxy in front of the endpoint push everything else out.
+        /// Makes a refusal readable in the log.
+        ///
+        /// A refusal from the endpoint itself is JSON and says what it objects
+        /// to. A refusal from something standing in front of it is a web page,
+        /// and taking the first few hundred characters of one of those returns
+        /// the stylesheet - the sentence naming who refused us sits below it.
+        /// So markup is stripped and what a reader would have seen is kept.
+        ///
+        /// Crude on purpose: this is a log line, not parsing we depend on.
         /// </summary>
-        private static string Truncate(string value, int limit)
+        internal static string DescribeRefusal(string body, int limit = 300)
         {
-            if (string.IsNullOrEmpty(value))
+            if (string.IsNullOrWhiteSpace(body))
                 return "(empty body)";
 
-            var trimmed = value.Trim();
-            return trimmed.Length <= limit ? trimmed : trimmed.Substring(0, limit) + "…";
+            var text = body.Trim();
+
+            if (text.StartsWith("<", StringComparison.Ordinal))
+            {
+                var title = Regex.Match(text, @"<title[^>]*>(.*?)</title>",
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline);
+
+                var stripped = Regex.Replace(text, @"<(script|style)[^>]*>.*?</\1>", " ",
+                    RegexOptions.IgnoreCase | RegexOptions.Singleline);
+                stripped = Regex.Replace(stripped, "<[^>]+>", " ");
+                stripped = WebUtility.HtmlDecode(stripped);
+                stripped = Regex.Replace(stripped, @"\s+", " ").Trim();
+
+                text = title.Success
+                    ? "[html] " + title.Groups[1].Value.Trim() + " :: " + stripped
+                    : "[html] " + stripped;
+            }
+
+            return text.Length <= limit ? text : text.Substring(0, limit) + "…";
         }
 
         private static long InitializeRequestId()
