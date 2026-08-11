@@ -23,8 +23,19 @@ namespace Translation.Providers.DeepL
 
         private static long _requestId = InitializeRequestId();
 
+        /// <summary>
+        /// How long to leave the endpoint alone after it asks us to slow down.
+        /// It says the refusal clears by itself shortly; this is our reading of
+        /// "shortly", and it is a floor rather than a promise - one line every
+        /// minute is nothing, and it stops a cutscene turning into a run of
+        /// refusals.
+        /// </summary>
+        private static readonly TimeSpan CooldownAfterRefusal = TimeSpan.FromSeconds(60);
+
         private readonly ILogger _logger;
         private readonly TranslationSettings _settings;
+
+        private readonly RefusalCooldown _cooldown = new RefusalCooldown(CooldownAfterRefusal);
 
         public DeepLTranslator(ILogger logger, TranslationSettings settings)
         {
@@ -37,6 +48,17 @@ namespace Translation.Providers.DeepL
         {
             if (string.IsNullOrEmpty(sentence))
                 return string.Empty;
+
+            // Asked to slow down, so slow down. Every line used to go on
+            // knocking after the first refusal, which kept the rate exactly
+            // where the endpoint had objected to it and made each line wait out
+            // a round trip before falling back to another engine.
+            if (_cooldown.IsActiveAt(DateTime.UtcNow, out var refusedUntilUtc))
+            {
+                throw new QuotaExceededException(TranslationEngineName.DeepL,
+                    "DeepL asked for fewer requests; leaving it alone until " +
+                    refusedUntilUtc.ToLocalTime().ToString("HH:mm:ss") + ".");
+            }
 
             var source = string.IsNullOrWhiteSpace(inLang) ? "auto" : inLang;
             var target = string.IsNullOrWhiteSpace(outLang) ? "EN" : outLang.ToUpperInvariant();
@@ -98,17 +120,20 @@ namespace Translation.Providers.DeepL
 
                     if (response.StatusCode == (HttpStatusCode)429)
                     {
+                        _cooldown.Record(DateTime.UtcNow);
+
                         // The body is the only thing that says which refusal this
-                        // is - the endpoint uses more than one code for 429, and
-                        // they mean different things. Logged before throwing,
-                        // because the exception carries a message for the user
-                        // and this is for whoever reads the log afterwards.
+                        // is: the endpoint's own, or one from something standing
+                        // in front of it. Logged rather than thrown, because the
+                        // exception carries a sentence for the user and this is
+                        // for whoever reads the log afterwards.
                         _logger?.LogInformation("{Message}",
-                            "[DEEPL_HTTP_429] " + DescribeRefusal(responseBody));
+                            "[DEEPL_HTTP_429] " + DescribeRefusal(responseBody) +
+                            " | standing down for " + (int)CooldownAfterRefusal.TotalSeconds + "s");
 
                         throw new QuotaExceededException(TranslationEngineName.DeepL,
-                            "DeepL web endpoint rate-limited the request (HTTP 429). It clears on its own; " +
-                            "wait a bit or switch to another engine.");
+                            "DeepL is receiving requests faster than it allows. It clears on its own; " +
+                            "translation continues on another engine in the meantime.");
                     }
 
                     if (!response.IsSuccessStatusCode)
@@ -118,6 +143,7 @@ namespace Translation.Providers.DeepL
                         return null;
                     }
 
+                    _cooldown.Clear();
                     return responseBody;
                 }
             }
