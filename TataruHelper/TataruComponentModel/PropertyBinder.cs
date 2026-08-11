@@ -118,7 +118,11 @@ namespace FFXIVTataruHelper.TataruComponentModel
 
             lock (lockObj)
             {
-                if (!obj1Val1.Equals(obj2Val1))
+                // Static Equals rather than the instance one: a property that is
+                // still null is normal early on, and calling Equals on it threw
+                // before either value could be compared. Two nulls count as
+                // equal, one null as a difference to be mirrored.
+                if (!Equals(obj1Val1, obj2Val1))
                 {
                     if (couple.HasConverter)
                     {
@@ -129,7 +133,10 @@ namespace FFXIVTataruHelper.TataruComponentModel
                     }
                     else
                     {
-                        var obj1Val1Type = obj1Val1.GetType();
+                        // The type was read into a variable nothing used - the
+                        // code that wanted it is commented out below. All it
+                        // could do was throw on a null value, so it is gone and
+                        // a null now copies across like any other value.
                         propertyInfo2.SetValue(obj2, obj1Val1);
 
                         /*
