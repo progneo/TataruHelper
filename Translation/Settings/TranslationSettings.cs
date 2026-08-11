@@ -85,12 +85,6 @@
 
         public string ClaudeLanguages { get; set; } = "TranslationResources/GoogleTranslateLanguages.json";
 
-        /// <summary>
-        /// Shares the Azure list on purpose: the keyless page and the keyed API
-        /// are the same service, so the language codes are the same too.
-        /// </summary>
-        public string BingLanguages { get; set; } = "TranslationResources/AzureTranslatorLanguages.json";
-
         public string LibreTranslateLanguages { get; set; } =
             "TranslationResources/LibreTranslateLanguages.json";
 

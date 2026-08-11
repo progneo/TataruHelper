@@ -34,9 +34,6 @@ namespace Translation.Models
 
         /// <summary>An open translation server the player points at. Needs an address, not a key.</summary>
         LibreTranslate = 20,
-
-        /// <summary>Keyless Microsoft Translator, as opposed to <see cref="AzureTranslator"/> which is keyed.</summary>
-        BingFree = 21,
     }
 
     public class TranslationEngine : IEquatable<TranslationEngine>
@@ -72,8 +69,6 @@ namespace Translation.Models
                     return "YandexGPT";
                 case TranslationEngineName.LmStudio:
                     return "LM Studio";
-                case TranslationEngineName.BingFree:
-                    return "Bing";
                 default:
                     return engineName.ToString();
             }

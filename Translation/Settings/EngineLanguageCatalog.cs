@@ -67,12 +67,6 @@ namespace Translation.Settings
                 // Ranked below the hosted engines as stand-ins: whatever model
                 // the player happens to be running is the one thing here we
                 // cannot judge the quality of.
-                // Ranked below the keyed Azure path to the same service: this
-                // one reads its credentials off a web page, so when it breaks it
-                // breaks for everyone at once.
-                new EngineLanguageSource(TranslationEngineName.BingFree,
-                    settings.BingLanguages, 8.5),
-
                 new EngineLanguageSource(TranslationEngineName.LibreTranslate,
                     settings.LibreTranslateLanguages, 6),
                 new EngineLanguageSource(TranslationEngineName.Ollama,

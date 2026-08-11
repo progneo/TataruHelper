@@ -92,10 +92,6 @@
     "TranslationResources/GoogleTranslateLanguages.json"
   ],
   [
-    "BingLanguages",
-    "TranslationResources/AzureTranslatorLanguages.json"
-  ],
-  [
     "LibreTranslateLanguages",
     "TranslationResources/LibreTranslateLanguages.json"
   ],
