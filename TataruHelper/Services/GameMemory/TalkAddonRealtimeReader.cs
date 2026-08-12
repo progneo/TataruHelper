@@ -51,6 +51,15 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private string _lastLoggedBubbleFlags = string.Empty;
 
+        private string _lastLoggedBounds = string.Empty;
+
+        private string _lastLoggedNodeGeometry = string.Empty;
+
+        // The client works out where every node lands and keeps the answer, so
+        // the drawn place is read rather than accumulated from the tree.
+        private const long NodeScreenXOffset = 0x70;
+        private const long NodeScreenYOffset = 0x74;
+
         // What each addon was showing on the previous sweep, as name-and-text
         // pairs rather than keyed by the candidate key: that key carries the
         // addon's address, and the game destroys and recreates Talk for every
@@ -317,6 +326,15 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 }
 
                 loadedAddons.Add(new LoadedAddon(addonAddress, addonName));
+
+                // Where the window stands, so a copy of it can be checked
+                // against the real one before anything is drawn.
+                if (Logger.RawDialogLogEnabled && TryReadAddonBounds(addonAddress, out var addonBounds))
+                {
+                    WriteDistinctRawDialogLog(ref _lastLoggedBounds,
+                        FormattableString.Invariant(
+                            $"AddonBounds {addonName} x={addonBounds.X} y={addonBounds.Y} w={addonBounds.Width} h={addonBounds.Height}"));
+                }
             }
 
             if (diagnosticNames != null)
@@ -1076,16 +1094,12 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 return false;
             }
 
-            var scale = ReadSingle(addonAddress, offsets.Bounds.ScaleOffset);
-            var width = _memoryHandler.GetUInt16(rootNodeAddress, offsets.Bounds.NodeWidthOffset);
-            var height = _memoryHandler.GetUInt16(rootNodeAddress, offsets.Bounds.NodeHeightOffset);
-
             bounds = AddonBounds.From(
-                ReadInt16(addonAddress, offsets.Bounds.XOffset),
-                ReadInt16(addonAddress, offsets.Bounds.YOffset),
-                width,
-                height,
-                scale);
+                ReadSingle(rootNodeAddress, offsets.Bounds.NodeScreenXOffset),
+                ReadSingle(rootNodeAddress, offsets.Bounds.NodeScreenYOffset),
+                _memoryHandler.GetUInt16(rootNodeAddress, offsets.Bounds.NodeWidthOffset),
+                _memoryHandler.GetUInt16(rootNodeAddress, offsets.Bounds.NodeHeightOffset),
+                ReadSingle(rootNodeAddress, offsets.Bounds.NodeScaleXOffset));
 
             return bounds.IsKnown;
         }
@@ -1184,6 +1198,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             var described = new List<string>(nodeCount);
+            var geometry = new List<string>(nodeCount);
             for (int index = 0; index < nodeCount; index++)
             {
                 var nodeAddress = _memoryHandler.ReadPointer(nodeListAddress, index * IntPtr.Size);
@@ -1196,6 +1211,13 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 var type = _memoryHandler.GetUInt16(nodeAddress, walk.NodeTypeOffset);
                 var visible = (_memoryHandler.GetUInt16(nodeAddress, walk.NodeFlagsOffset) & VisibleNodeFlag) != 0;
 
+                if (visible)
+                {
+                    var bounds = offsets.Bounds;
+                    geometry.Add(FormattableString.Invariant(
+                        $"id={id} t={type} sxy={ReadSingle(nodeAddress, NodeScreenXOffset)},{ReadSingle(nodeAddress, NodeScreenYOffset)} wh={_memoryHandler.GetUInt16(nodeAddress, bounds.NodeWidthOffset)}x{_memoryHandler.GetUInt16(nodeAddress, bounds.NodeHeightOffset)} sc={ReadSingle(nodeAddress, bounds.NodeScaleXOffset)}"));
+                }
+
                 if (type != TextNodeType)
                 {
                     continue;
@@ -1207,6 +1229,9 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
             WriteDistinctRawDialogLog(ref _lastLoggedNodeList,
                 $"NodeList addon=[{addonName}] count={nodeCount} text={{ {string.Join(" | ", described)} }}");
+
+            WriteDistinctRawDialogLog(ref _lastLoggedNodeGeometry,
+                $"NodeGeometry addon=[{addonName}] { string.Join(" | ", geometry) }");
         }
 
         private static string DecodeUtf8(byte[] data, int start, int count)
@@ -1508,11 +1533,11 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 ResolveFieldOffset(atkUnitBaseType, "RootNode"),
                 ResolveNodeWalkOffsets(atkUnitBaseType),
                 new AddonBoundsOffsets(
-                    ResolveFieldOffset(atkUnitBaseType, "X"),
-                    ResolveFieldOffset(atkUnitBaseType, "Y"),
-                    ResolveFieldOffset(atkUnitBaseType, "Scale"),
+                    ResolveFieldOffset(atkResNodeType, "ScreenX"),
+                    ResolveFieldOffset(atkResNodeType, "ScreenY"),
                     ResolveFieldOffset(atkResNodeType, "Width"),
-                    ResolveFieldOffset(atkResNodeType, "Height")),
+                    ResolveFieldOffset(atkResNodeType, "Height"),
+                    ResolveFieldOffset(atkResNodeType, "ScaleX")),
                 addonSpecs);
         }
 
@@ -1723,23 +1748,26 @@ namespace FFXIVTataruHelper.Services.GameMemory
         {
             public static AddonBoundsOffsets Empty => new AddonBoundsOffsets(-1, -1, -1, -1, -1);
 
-            public AddonBoundsOffsets(long x, long y, long scale, long nodeWidth, long nodeHeight)
+            public AddonBoundsOffsets(
+                long nodeScreenX, long nodeScreenY, long nodeWidth, long nodeHeight, long nodeScaleX)
             {
-                XOffset = x;
-                YOffset = y;
-                ScaleOffset = scale;
+                NodeScreenXOffset = nodeScreenX;
+                NodeScreenYOffset = nodeScreenY;
                 NodeWidthOffset = nodeWidth;
                 NodeHeightOffset = nodeHeight;
+                NodeScaleXOffset = nodeScaleX;
             }
 
-            public long XOffset { get; }
-            public long YOffset { get; }
-            public long ScaleOffset { get; }
+            // Where the client worked out the node lands, which is not what the
+            // window says its position is once the interface is scaled.
+            public long NodeScreenXOffset { get; }
+            public long NodeScreenYOffset { get; }
             public long NodeWidthOffset { get; }
             public long NodeHeightOffset { get; }
+            public long NodeScaleXOffset { get; }
 
             public bool IsValid =>
-                XOffset >= 0 && YOffset >= 0 && ScaleOffset >= 0 &&
+                NodeScreenXOffset >= 0 && NodeScreenYOffset >= 0 && NodeScaleXOffset >= 0 &&
                 NodeWidthOffset >= 0 && NodeHeightOffset >= 0;
         }
 

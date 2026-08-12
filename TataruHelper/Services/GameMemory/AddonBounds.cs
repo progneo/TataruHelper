@@ -34,17 +34,27 @@ namespace FFXIVTataruHelper.Services.GameMemory
         public float Height { get; }
 
         /// <summary>
-        /// A rectangle from what the client keeps: the window's position, the
-        /// unscaled size of the node it draws into, and the interface scale.
+        /// A rectangle from what the client keeps: where it worked out that the
+        /// window's own node lands, the unscaled size of that node, and the
+        /// scale it is drawn at.
+        ///
+        /// The place is taken already worked out rather than built up from the
+        /// window's stated position. Those two are not the same: the window
+        /// keeps the position it would have unscaled, and the client grows it
+        /// about its middle, so at an interface scale of 150% the stated
+        /// position is 170 pixels to the right of where the box is drawn. At
+        /// 100% they agree, which is the sort of difference that never shows up
+        /// until it is somebody else's screen.
         ///
         /// Unknown rather than a guess when any of it reads as nothing. A
         /// window of no size is one that was read wrongly or is being torn
         /// down, and putting a translation at its corner would drop the line in
         /// the top left of the screen - worse than leaving it where it was.
         /// </summary>
-        public static AddonBounds From(short x, short y, ushort width, ushort height, float scale)
+        public static AddonBounds From(float x, float y, ushort width, ushort height, float scale)
         {
-            if (width == 0 || height == 0 || !(scale > 0f))
+            if (width == 0 || height == 0 || !(scale > 0f) ||
+                float.IsNaN(x) || float.IsNaN(y))
             {
                 return Unknown;
             }
