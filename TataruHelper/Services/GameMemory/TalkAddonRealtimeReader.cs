@@ -445,27 +445,32 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 }
             }
 
-            if (TrySelectActiveCandidate(candidates, out snapshot))
+            var announced = TrySelectActiveCandidate(candidates, out snapshot);
+
+            // Settled on every sweep, not only on the sweeps that find a new
+            // line to announce. A line is announced once and then stays on
+            // screen for as long as the player takes to read it; tying the
+            // rectangle to the announcement meant it was known for one sweep in
+            // fifty and unknown for the rest, and nothing could be drawn over.
+            //
+            // The window that is speaking is the one to draw over, and a
+            // cutscene subtitle is not drawn in a window at all - it is bare
+            // text over the picture, so anything covering it has to be bare
+            // too.
+            if (_stickyCandidateKey != null &&
+                boundsByCandidate.TryGetValue(_stickyCandidateKey, out var speaking))
             {
-                // The window that is speaking is the one to draw over.
-                DialogueBounds =
-                    _stickyCandidateKey != null &&
-                    boundsByCandidate.TryGetValue(_stickyCandidateKey, out var speaking)
-                        ? speaking
-                        : AddonBounds.Unknown;
-
-                // A cutscene subtitle is not drawn in a window at all - it is
-                // bare text over the picture - so anything covering it has to
-                // be bare too, or it puts a frame where the game has none.
+                DialogueBounds = speaking;
                 DialogueIsSubtitle =
-                    _stickyCandidateKey != null &&
                     _stickyCandidateKey.StartsWith(TalkSubtitleAddonName, StringComparison.Ordinal);
-
-                return true;
+            }
+            else
+            {
+                DialogueBounds = AddonBounds.Unknown;
+                DialogueIsSubtitle = false;
             }
 
-            DialogueBounds = AddonBounds.Unknown;
-            return matchedEmptySource;
+            return announced || matchedEmptySource;
         }
 
         /// <summary>
