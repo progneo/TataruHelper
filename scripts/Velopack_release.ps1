@@ -280,6 +280,23 @@ finally {
     }
 }
 
+# The installer under the name it had for years.
+#
+# https://github.com/NightlyRevenger/TataruHelper/releases/latest/download/Setup.exe
+# is the link in the guides, in Discord, and in whatever people bookmarked -
+# 76,493 downloads on v0.9.108 alone - and it broke when packaging started
+# naming the file after the pack id. Both names are shipped rather than one
+# renamed: the current name is what the README links and what the downloads
+# badge counts, and moving it would trade one broken link for another.
+$setupPath = Join-Path $OutputDir "$PackId-$vpkChannel-Setup.exe"
+if (Test-Path $setupPath) {
+    Copy-Item $setupPath (Join-Path $OutputDir "Setup.exe") -Force
+    Write-Host "[Velopack] Installer also published as Setup.exe for the long-standing link."
+}
+else {
+    Write-Warning "Installer '$setupPath' was not found; Setup.exe was not written."
+}
+
 Write-Host "[Velopack] Done."
 Write-Host "[Velopack] Channel: $vpkChannel"
 Write-Host "[Velopack] Version: $Version"
