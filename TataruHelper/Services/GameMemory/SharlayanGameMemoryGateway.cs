@@ -290,6 +290,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
         public AddonBounds DialogueBounds =>
             _talkAddonRealtimeReader?.DialogueBounds ?? AddonBounds.Unknown;
 
+        public bool DialogueIsSubtitle => _talkAddonRealtimeReader?.DialogueIsSubtitle ?? false;
+
         public ChatLogResult GetDirectDialog()
         {
             var fallbackDirectDialog =

@@ -21,6 +21,9 @@ namespace FFXIVTataruHelper.Services.GameMemory
         /// </summary>
         AddonBounds DialogueBounds { get; }
 
+        /// <summary>Whether that line is a cutscene subtitle, drawn without a window.</summary>
+        bool DialogueIsSubtitle { get; }
+
         /// <summary>
         /// Whether dialogue under this code has been read off the screen at least
         /// once since attaching, and so whether the chat log's later copy of it

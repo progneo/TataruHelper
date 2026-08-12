@@ -116,6 +116,8 @@ namespace FFXIVTataruHelper.FFHandlers
         public Services.GameMemory.AddonBounds DialogueBounds =>
             _gameMemoryGateway?.DialogueBounds ?? Services.GameMemory.AddonBounds.Unknown;
 
+        public bool DialogueIsSubtitle => _gameMemoryGateway?.DialogueIsSubtitle ?? false;
+
         public bool IsGameWindowForeground
         {
             get;

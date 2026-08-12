@@ -172,6 +172,8 @@ namespace TataruHelper.Tests
             public FFXIVTataruHelper.Services.GameMemory.AddonBounds DialogueBounds { get; set; } =
                 FFXIVTataruHelper.Services.GameMemory.AddonBounds.Unknown;
 
+            public bool DialogueIsSubtitle { get; set; }
+
             /// <summary>Codes this gateway claims to have read off the screen.</summary>
             public HashSet<string> CodesReadLive { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 

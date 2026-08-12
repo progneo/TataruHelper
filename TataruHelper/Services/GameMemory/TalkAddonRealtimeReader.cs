@@ -135,6 +135,12 @@ namespace FFXIVTataruHelper.Services.GameMemory
         /// </summary>
         public AddonBounds DialogueBounds { get; private set; }
 
+        /// <summary>
+        /// Whether what is being shown is a cutscene subtitle, which the game
+        /// draws as bare text over the picture rather than inside a window.
+        /// </summary>
+        public bool DialogueIsSubtitle { get; private set; }
+
         public TalkAddonRealtimeReader(MemoryHandler memoryHandler)
         {
             _memoryHandler = memoryHandler;
@@ -447,6 +453,13 @@ namespace FFXIVTataruHelper.Services.GameMemory
                     boundsByCandidate.TryGetValue(_stickyCandidateKey, out var speaking)
                         ? speaking
                         : AddonBounds.Unknown;
+
+                // A cutscene subtitle is not drawn in a window at all - it is
+                // bare text over the picture - so anything covering it has to
+                // be bare too, or it puts a frame where the game has none.
+                DialogueIsSubtitle =
+                    _stickyCandidateKey != null &&
+                    _stickyCandidateKey.StartsWith(TalkSubtitleAddonName, StringComparison.Ordinal);
 
                 return true;
             }

@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Effects;
 using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
@@ -39,6 +40,10 @@ namespace FFXIVTataruHelper
         private readonly TextBlock _line;
         private readonly Border _box;
         private readonly Border _plate;
+        private readonly ImageBrush _frame;
+
+        /// <summary>Which of the two the copy is currently dressed as.</summary>
+        private bool _dressedAsSubtitle;
 
         private readonly DialogueOverlayHold _hold = new DialogueOverlayHold();
 
@@ -91,13 +96,15 @@ namespace FFXIVTataruHelper
             // approximates. Stretched whole rather than cut into corners and
             // edges, because the window is always the same design size and only
             // the interface scale changes it - so the proportions never move.
+            _frame = new ImageBrush(
+                new BitmapImage(new Uri("pack://application:,,,/Resources/DialogueFrame.png")))
+            {
+                Stretch = Stretch.Fill
+            };
+
             var box = new Border
             {
-                Background = new ImageBrush(
-                    new BitmapImage(new Uri("pack://application:,,,/Resources/DialogueFrame.png")))
-                {
-                    Stretch = Stretch.Fill
-                },
+                Background = _frame,
                 Child = _line
             };
 
@@ -185,9 +192,20 @@ namespace FFXIVTataruHelper
             var bounds = _memoryReader.DialogueBounds;
             var foreground = _memoryReader.IsGameWindowForeground;
 
+            // Away from the game, the copy comes off the screen but keeps what
+            // it was showing. Treated as though the line had ended, alt-tabbing
+            // away and back left the box blank until somebody said something
+            // new - the line was still on screen underneath the whole time.
+            if (!foreground)
+            {
+                Report("hidden: the game is not in front");
+                Visibility = Visibility.Hidden;
+                return;
+            }
+
             var placed = DialogueOverlayPlacement.TryPlace(
                 true,
-                foreground,
+                true,
                 bounds,
                 projection,
                 _lineText,
@@ -221,6 +239,8 @@ namespace FFXIVTataruHelper
 
             _widestSeen = Math.Max(_widestSeen, rect.Width);
 
+            Dress(_memoryReader.DialogueIsSubtitle, rect);
+
             Report(FormattableString.Invariant(
                 $"shown at {rect.Left},{rect.Top} {rect.Width}x{rect.Height}"));
 
@@ -252,6 +272,45 @@ namespace FFXIVTataruHelper
             _plate.MinWidth = rect.Width * 0.30;
             _line.Margin = new Thickness(
                 rect.Width * 0.088, rect.Height * 0.225, rect.Width * 0.075, rect.Height * 0.06);
+        }
+
+        /// <summary>
+        /// Dresses the copy for what it is covering.
+        ///
+        /// A cutscene subtitle is not in a window at all - Hydaelyn's lines are
+        /// bare text laid over the picture, centred, pale, with a dark edge so
+        /// they read against anything. Putting the dialogue frame over one of
+        /// those would hang a wooden box in the middle of a cutscene.
+        /// </summary>
+        private void Dress(bool subtitle, Rect rect)
+        {
+            if (subtitle == _dressedAsSubtitle)
+            {
+                return;
+            }
+
+            _dressedAsSubtitle = subtitle;
+
+            _box.Background = subtitle ? null : _frame;
+            _plate.Visibility = subtitle ? Visibility.Collapsed : Visibility.Visible;
+
+            _line.TextAlignment = subtitle ? TextAlignment.Center : TextAlignment.Left;
+            _line.VerticalAlignment = subtitle ? VerticalAlignment.Center : VerticalAlignment.Top;
+            _line.Foreground = subtitle
+                ? Brushes.White
+                : new SolidColorBrush(Color.FromRgb(0x2A, 0x24, 0x1C));
+
+            // The game outlines its subtitles rather than shadowing them, and
+            // over a bright sky an unoutlined white line is unreadable.
+            _line.Effect = subtitle
+                ? new DropShadowEffect
+                {
+                    Color = Colors.Black,
+                    BlurRadius = 6,
+                    ShadowDepth = 0,
+                    Opacity = 1
+                }
+                : null;
 
             if (Visibility != Visibility.Visible)
             {

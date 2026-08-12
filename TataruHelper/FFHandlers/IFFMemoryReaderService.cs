@@ -24,6 +24,9 @@ namespace FFXIVTataruHelper.FFHandlers
         /// </summary>
         Services.GameMemory.AddonBounds DialogueBounds { get; }
 
+        /// <summary>Whether that line is a cutscene subtitle, drawn without a window.</summary>
+        bool DialogueIsSubtitle { get; }
+
         /// <summary>The game's own window, for putting something over it.</summary>
         IntPtr GameWindowHandle { get; }
 
