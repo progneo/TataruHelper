@@ -145,6 +145,29 @@ namespace Translation.Reference
             "<var 08 E905 \\(\\((.*?)\\)\\) \\(\\((.*?)\\)\\) /var>",
             RegexOptions.Singleline | RegexOptions.Compiled);
 
+        /// <summary>
+        /// A choice the game makes as it draws, with the wording for every
+        /// outcome written out beside it: the time of day, the player's race,
+        /// which Grand Company they signed with.
+        ///
+        /// Unlike gender, the outcome need not be known. What reaches us has
+        /// been drawn already, so every wording is worth keeping and whichever
+        /// one the game picked is the one that will be looked up.
+        ///
+        /// E905 is left out: gender is answered rather than guessed, and the
+        /// store above keeps it by the answer.
+        /// </summary>
+        private static readonly Regex ChoiceStart = new Regex(
+            "<var (?:08|09) (?!E905 )([0-9A-F]+) ", RegexOptions.Compiled);
+
+        /// <summary>
+        /// How many wordings of one line are worth keeping. A line asking two
+        /// questions of eight answers each has 64, and nobody says 64 things.
+        /// Past this the rest are left out rather than the line dropped: each
+        /// wording kept is a true pair whether or not its siblings are there.
+        /// </summary>
+        private const int MaxRenderings = 32;
+
         private static readonly Regex SpeakerPrefix = new Regex(
             "^\\(-([^)]{0,60})-\\)", RegexOptions.Compiled);
 
@@ -178,7 +201,7 @@ namespace Translation.Reference
         /// Raise this whenever a change here would put something different in
         /// the index for the same export.
         /// </summary>
-        public const int RulesVersion = 6;
+        public const int RulesVersion = 7;
 
         private const string KeySeparator = "<tab>";
 
@@ -310,9 +333,57 @@ namespace Translation.Reference
 
         private void Add(string englishText, string translatedText)
         {
-            var english = Normalize(englishText);
-            var translated = Normalize(translatedText);
+            var remaining = MaxRenderings;
+            AddChoices(Normalize(englishText), Normalize(translatedText), ref remaining);
+        }
 
+        /// <summary>
+        /// Writes down every wording the line can be drawn as.
+        ///
+        /// The two sides have to be making the same choice, in the same order,
+        /// with the same number of outcomes - then the first outcome of one is
+        /// the first outcome of the other and they can be paired off. When they
+        /// disagree there is no telling which wording answers which, and the
+        /// line is left as it stands to be dropped for the markup it carries,
+        /// which is what happened to it before any of this.
+        /// </summary>
+        private void AddChoices(string english, string translated, ref int remaining)
+        {
+            if (remaining <= 0)
+            {
+                return;
+            }
+
+            var hasEnglish = TryReadChoice(english, out var englishChoice);
+            var hasTranslated = TryReadChoice(translated, out var translatedChoice);
+
+            if (!hasEnglish && !hasTranslated)
+            {
+                remaining--;
+                AddRendering(english, translated);
+                return;
+            }
+
+            if (hasEnglish != hasTranslated ||
+                !string.Equals(englishChoice.Code, translatedChoice.Code, StringComparison.Ordinal) ||
+                englishChoice.Arms.Count != translatedChoice.Arms.Count)
+            {
+                remaining--;
+                AddRendering(english, translated);
+                return;
+            }
+
+            for (var arm = 0; arm < englishChoice.Arms.Count; arm++)
+            {
+                AddChoices(
+                    englishChoice.Draw(english, arm),
+                    translatedChoice.Draw(translated, arm),
+                    ref remaining);
+            }
+        }
+
+        private void AddRendering(string english, string translated)
+        {
             if (english.Length == 0 || translated.Length == 0 ||
                 string.Equals(english, translated, StringComparison.Ordinal))
             {
@@ -522,6 +593,135 @@ namespace Translation.Reference
             }
 
             return builder.ToString();
+        }
+
+        /// <summary>
+        /// One choice found in a line: where it stands, what it asks, and the
+        /// wording the game draws for each outcome.
+        /// </summary>
+        private readonly struct Choice
+        {
+            public Choice(int start, int length, string code, IReadOnlyList<string> arms)
+            {
+                Start = start;
+                Length = length;
+                Code = code;
+                Arms = arms;
+            }
+
+            public int Start { get; }
+
+            public int Length { get; }
+
+            /// <summary>What is being asked. Two sides asking differently cannot be paired.</summary>
+            public string Code { get; }
+
+            public IReadOnlyList<string> Arms { get; }
+
+            /// <summary>The line as it reads once the game has picked this outcome.</summary>
+            public string Draw(string text, int arm)
+            {
+                return text.Substring(0, Start) + Arms[arm] + text.Substring(Start + Length);
+            }
+        }
+
+        private const string ArmOpen = "((";
+
+        private const string ArmClose = "))";
+
+        private const string ChoiceEnd = "/var>";
+
+        /// <summary>
+        /// Finds the first choice in the line whose shape can be read. A
+        /// condition carrying a tail after its outcomes, or a bracket that
+        /// never closes, is not one: those are left alone and the line goes
+        /// where it went before rather than being half understood.
+        /// </summary>
+        private static bool TryReadChoice(string text, out Choice choice)
+        {
+            choice = default;
+
+            var start = ChoiceStart.Match(text);
+            while (start.Success)
+            {
+                if (TryReadArms(text, start.Index + start.Length, out var arms, out var end))
+                {
+                    choice = new Choice(start.Index, end - start.Index, start.Groups[1].Value, arms);
+                    return true;
+                }
+
+                start = ChoiceStart.Match(text, start.Index + 1);
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Reads the run of "((wording))" that follows a choice. Brackets are
+        /// counted rather than searched for, because an outcome may hold a
+        /// choice of its own and its brackets are not the end of this one.
+        /// </summary>
+        private static bool TryReadArms(string text, int at, out List<string> arms, out int end)
+        {
+            arms = new List<string>();
+            end = 0;
+
+            while (Has(text, at, ArmOpen))
+            {
+                var depth = 1;
+                var from = at + ArmOpen.Length;
+                var scan = from;
+
+                while (scan < text.Length && depth > 0)
+                {
+                    if (Has(text, scan, ArmOpen))
+                    {
+                        depth++;
+                        scan += ArmOpen.Length;
+                    }
+                    else if (Has(text, scan, ArmClose))
+                    {
+                        depth--;
+                        if (depth == 0)
+                        {
+                            break;
+                        }
+
+                        scan += ArmClose.Length;
+                    }
+                    else
+                    {
+                        scan++;
+                    }
+                }
+
+                if (depth > 0)
+                {
+                    return false;
+                }
+
+                arms.Add(text.Substring(from, scan - from));
+                at = scan + ArmClose.Length;
+
+                if (Has(text, at, " "))
+                {
+                    at++;
+                }
+            }
+
+            if (arms.Count == 0 || !Has(text, at, ChoiceEnd))
+            {
+                return false;
+            }
+
+            end = at + ChoiceEnd.Length;
+            return true;
+        }
+
+        private static bool Has(string text, int at, string token)
+        {
+            return at >= 0 && at + token.Length <= text.Length &&
+                   string.CompareOrdinal(text, at, token, 0, token.Length) == 0;
         }
 
         private static int Count(string text, string needle)

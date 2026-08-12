@@ -473,8 +473,142 @@ namespace Translation.Tests.Reference
                 Is.EqualTo("Хайделин говорила с этим мужчиной..."));
         }
 
-        // A condition we cannot answer - this one asks about the controller -
-        // has to leave the line to a translator rather than be guessed at.
+        /// <summary>
+        /// The game picks the wording as it draws, and what reaches us has been
+        /// drawn already - so which outcome it picked need not be known. Every
+        /// wording is kept, and whichever one appeared is the one looked up.
+        /// </summary>
+        [Test]
+        public void AChoiceOfWordings_IsKeptOneWayForEachOutcome()
+        {
+            var builder = Build("exd/Quest/001",
+                Sheet(("1", "Our favorite delivery &lt;var 09 E948 ((Hyur)) ((Elezen)) ((Lalafell)) /var&gt;!")),
+                Sheet(("1", "Наш любимчик среди &lt;var 09 E948 ((хьюров)) ((элезенов)) ((лалафелей)) /var&gt;!")));
+
+            Assert.That(builder.Lines.Count, Is.EqualTo(3));
+            Assert.That(builder.Lines["Our favorite delivery Hyur!"],
+                Is.EqualTo("Наш любимчик среди хьюров!"));
+            Assert.That(builder.Lines["Our favorite delivery Lalafell!"],
+                Is.EqualTo("Наш любимчик среди лалафелей!"));
+        }
+
+        /// <summary>
+        /// An innkeeper's greeting asks the hour twice, the second question
+        /// inside an answer to the first. The outcomes have to be walked into,
+        /// not just counted.
+        /// </summary>
+        [Test]
+        public void AChoiceInsideAChoice_IsWalkedInto()
+        {
+            var builder = Build("exd/Quest/001",
+                Sheet(("1", "Good &lt;var 08 E3E90C0D ((&lt;var 08 E3E90C05 ((evening)) ((morrow)) /var&gt;)) ((day)) /var&gt;.")),
+                Sheet(("1", "Доброго вам &lt;var 08 E3E90C0D ((&lt;var 08 E3E90C05 ((вечера)) ((утра)) /var&gt;)) ((дня)) /var&gt;.")));
+
+            Assert.That(builder.Lines.Count, Is.EqualTo(3));
+            Assert.That(builder.Lines["Good evening."], Is.EqualTo("Доброго вам вечера."));
+            Assert.That(builder.Lines["Good morrow."], Is.EqualTo("Доброго вам утра."));
+            Assert.That(builder.Lines["Good day."], Is.EqualTo("Доброго вам дня."));
+        }
+
+        /// <summary>
+        /// Pairing outcomes off by position is only honest while the two sides
+        /// are making the same choice. Offer three wordings against two and
+        /// there is no telling which answers which - saying so would put a
+        /// translation on screen that was written for a different outcome.
+        /// </summary>
+        [Test]
+        public void SidesOfferingDifferentOutcomes_ArePaired()
+        {
+            var mismatched = Build("exd/Quest/001",
+                Sheet(("1", "A &lt;var 09 E948 ((one)) ((two)) ((three)) /var&gt;.")),
+                Sheet(("1", "А &lt;var 09 E948 ((раз)) ((два)) /var&gt;.")));
+
+            Assert.That(mismatched.Lines, Is.Empty);
+            Assert.That(mismatched.SkippedForMarkup, Is.EqualTo(1));
+
+            var different = Build("exd/Quest/002",
+                Sheet(("1", "A &lt;var 09 E948 ((one)) ((two)) /var&gt;.")),
+                Sheet(("1", "А &lt;var 09 E802 ((раз)) ((два)) /var&gt;.")));
+
+            Assert.That(different.Lines, Is.Empty);
+            Assert.That(different.SkippedForMarkup, Is.EqualTo(1));
+        }
+
+        /// <summary>
+        /// Some conditions carry a tail of their own after the wordings, and
+        /// what it does is not known here. Half-understanding one would leave
+        /// its debris in the line, so it is left whole and the line goes where
+        /// it went before.
+        /// </summary>
+        [Test]
+        public void AConditionWithATailAfterIt_IsLeftAlone()
+        {
+            var builder = Build("exd/Quest/001",
+                Sheet(("1", "You have &lt;var 08 E908 ((one)) ((two)) EB03 /var&gt;.")),
+                Sheet(("1", "У вас &lt;var 08 E908 ((один)) ((два)) EB03 /var&gt;.")));
+
+            Assert.That(builder.Lines, Is.Empty);
+            Assert.That(builder.SkippedForMarkup, Is.EqualTo(1));
+        }
+
+        /// <summary>
+        /// Two questions of eight answers is sixty-four wordings of one line,
+        /// and nobody says sixty-four things. The rest are left out rather than
+        /// the line dropped: each wording kept is a true pair either way.
+        /// </summary>
+        [Test]
+        public void ALineWithMoreWordingsThanAnyoneSays_KeepsWhatItCan()
+        {
+            var english = "A";
+            var translated = "А";
+            for (var choice = 0; choice < 2; choice++)
+            {
+                english += " &lt;var 09 E94" + choice + " ";
+                translated += " &lt;var 09 E94" + choice + " ";
+                for (var arm = 0; arm < 8; arm++)
+                {
+                    english += "((en" + choice + arm + ")) ";
+                    translated += "((ру" + choice + arm + ")) ";
+                }
+
+                english += "/var&gt;";
+                translated += "/var&gt;";
+            }
+
+            var builder = Build("exd/Quest/001", Sheet(("1", english)), Sheet(("1", translated)));
+
+            Assert.That(builder.Lines.Count, Is.EqualTo(32));
+            Assert.That(builder.Lines["A en00 en10"], Is.EqualTo("А ру00 ру10"));
+            foreach (var line in builder.Lines)
+            {
+                Assert.That(line.Key, Does.Not.Contain("var"), "a kept wording carries no markup");
+            }
+        }
+
+        /// <summary>
+        /// Once the wording is settled, everything else about the line still
+        /// applies: this one names the player too, and comes out a pattern.
+        /// </summary>
+        [Test]
+        public void AWordingThatAlsoNamesThePlayer_BecomesAPattern()
+        {
+            var builder = Build("exd/Quest/001",
+                Sheet(("1", "&lt;var 09 E948 ((Well met)) ((Good day)) /var&gt;, &lt;var 29 EB02 /var&gt;.")),
+                Sheet(("1", "&lt;var 09 E948 ((Приветствую)) ((Доброго дня)) /var&gt;, &lt;var 29 EB02 /var&gt;.")));
+
+            var name = ReferenceIndexBuilder.PlayerPlaceholder;
+
+            Assert.That(builder.Patterns.Count, Is.EqualTo(2));
+            Assert.That(builder.Patterns["Well met, " + name + "."],
+                Is.EqualTo("Приветствую, " + name + "."));
+            Assert.That(builder.Patterns["Good day, " + name + "."],
+                Is.EqualTo("Доброго дня, " + name + "."));
+        }
+
+        // Both sides have to be making the same choice for its outcomes to be
+        // paired off. Here only the translation asks, so nothing can be said
+        // about which of its wordings answers the English, and the line waits
+        // for a translator as it did before.
         [Test]
         public void OtherConditions_AreNotResolved()
         {
