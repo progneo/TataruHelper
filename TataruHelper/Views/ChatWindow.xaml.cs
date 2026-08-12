@@ -166,6 +166,7 @@ namespace FFXIVTataruHelper
         protected async Task OnTextArrived(ChatMessageArrivedEventArgs ea)
         {
             string text = "";
+            string speaker = "";
             Color textColor = Color.FromArgb(255, 255, 255, 255);
             ChatCodeViewModel chatCode;
 
@@ -206,6 +207,7 @@ namespace FFXIVTataruHelper
                 if (result.IsSuccess)
                 {
                     text = result.Text;
+                    speaker = result.SpeakerName;
 
                     // The selected engine failed and another one answered instead.
                     // Adopt it so the picker reflects what is actually translating.
@@ -255,7 +257,7 @@ namespace FFXIVTataruHelper
                 if (_ChatWindowViewModel.IsHiddenByUser == false)
                     _TextArrivedTime = DateTime.UtcNow;
 
-                ShowTranslatedText(text, textColor, timeStamp);
+                ShowTranslatedText(text, textColor, speaker, timeStamp);
 
                 if (_ChatWindowViewModel.IsHiddenByUser == false)
                     _TextArrivedTime = DateTime.UtcNow;
@@ -434,7 +436,8 @@ namespace FFXIVTataruHelper
 
         #region **Transaltion.
 
-        void ShowTranslatedText(string translatedMsg, Color color, DateTime timeStamp = default(DateTime))
+        void ShowTranslatedText(
+            string translatedMsg, Color color, string speaker = "", DateTime timeStamp = default(DateTime))
         {
             try
             {
@@ -444,7 +447,8 @@ namespace FFXIVTataruHelper
                     ChatRtb.Document.Blocks.Clear();
                 }
 
-                Paragraph paragraph = _paragraphBuilder.BuildMessageParagraph(translatedMsg, color, timeStamp);
+                Paragraph paragraph = _paragraphBuilder.BuildMessageParagraph(
+                    translatedMsg, color, speaker, timeStamp);
                 ChatRtb.Document.Blocks.Add(paragraph);
 
                 TrimToMaxMessages();

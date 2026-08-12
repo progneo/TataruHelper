@@ -17,44 +17,77 @@ namespace FFXIVTataruHelper.Services.UI
             _viewModel = viewModel;
         }
 
-        public Paragraph BuildMessageParagraph(string translatedMsg, Color color, DateTime timeStamp)
+        public Paragraph BuildMessageParagraph(
+            string translatedMsg, Color color, string speaker, DateTime timeStamp)
         {
             string leadingSpaces = _viewModel.SpacingCount > 0
                 ? new string(' ', _viewModel.SpacingCount)
                 : string.Empty;
 
+            string prefix = string.Empty;
             string name = null;
             string text = translatedMsg;
 
-            // Only a plausible speaker name gets the bold treatment. A cutscene
-            // subtitle has no speaker, so a line like "Ради всех нас, я умоляю
-            // тебя: избавь нас от этой участи!" would otherwise have its opening
-            // clause rendered as if someone were named that.
-            int nameInd = translatedMsg.IndexOf(":", StringComparison.Ordinal);
-            if (nameInd > 0 && ChatMessageFilter.LooksLikeSpeakerName(translatedMsg.Substring(0, nameInd)))
+            // Who is speaking was settled upstream, where the line still read as
+            // the game wrote it. Looking for it again here - by taking whatever
+            // stands before the first colon - put half a sentence in bold:
+            // Hydaelyn's "Ради всех умоляю Тебя: избавь нас от этой участи!" has
+            // no speaker at all, and no reading of the Russian can tell that
+            // colon from the one after a name. The English it was translated
+            // from has a comma, which is why the same line passes upstream and
+            // failed here.
+            //
+            // Found rather than assumed to be at the front: a notice about the
+            // engine having changed is put before the line.
+            var nameStart = FindSpeaker(translatedMsg, speaker);
+            if (nameStart >= 0)
             {
-                name = translatedMsg.Substring(0, nameInd);
-                text = translatedMsg.Substring(nameInd, translatedMsg.Length - nameInd);
+                prefix = translatedMsg.Substring(0, nameStart);
+                name = translatedMsg.Substring(nameStart, speaker.Length);
+                text = translatedMsg.Substring(nameStart + speaker.Length);
             }
 
             if (timeStamp != default(DateTime))
             {
-                if (!string.IsNullOrEmpty(name))
+                var stamp = timeStamp.ToString("HH:mm") + " ";
+
+                if (prefix.Length > 0)
                 {
-                    name = timeStamp.ToString("HH:mm") + " " + name;
+                    prefix = stamp + prefix;
+                }
+                else if (!string.IsNullOrEmpty(name))
+                {
+                    name = stamp + name;
                 }
                 else
                 {
-                    text = timeStamp.ToString("HH:mm") + " " + text;
+                    text = stamp + text;
                 }
             }
 
             if (_viewModel.MessagesInContainer)
             {
-                return BuildContainedMessageParagraph(leadingSpaces, name, text, color);
+                return BuildContainedMessageParagraph(leadingSpaces, prefix, name, text, color);
             }
 
-            return BuildPlainMessageParagraph(leadingSpaces, name, text, color);
+            return BuildPlainMessageParagraph(leadingSpaces, prefix, name, text, color);
+        }
+
+        /// <summary>
+        /// Where the speaker stands in the line, or -1 when nobody is speaking.
+        ///
+        /// The name is not always at the front - a notice about the engine
+        /// having changed is put before it - so it is searched for. Only the
+        /// name itself is bold; whatever precedes it is left as it reads.
+        /// </summary>
+        private static int FindSpeaker(string translatedMsg, string speaker)
+        {
+            if (string.IsNullOrEmpty(speaker) || string.IsNullOrEmpty(translatedMsg))
+            {
+                return -1;
+            }
+
+            return translatedMsg.IndexOf(speaker, StringComparison.Ordinal);
         }
 
         public void ApplyMessageContainerVisual(Border border)
@@ -76,7 +109,8 @@ namespace FFXIVTataruHelper.Services.UI
                 Color.FromArgb(borderAlpha, baseColor.R, baseColor.G, baseColor.B));
         }
 
-        private Paragraph BuildPlainMessageParagraph(string leadingSpaces, string name, string text, Color color)
+        private Paragraph BuildPlainMessageParagraph(
+            string leadingSpaces, string prefix, string name, string text, Color color)
         {
             var paragraph = new Paragraph
             {
@@ -88,6 +122,11 @@ namespace FFXIVTataruHelper.Services.UI
                 paragraph.Inlines.Add(CreateRun(leadingSpaces, color, FontWeights.Normal));
             }
 
+            if (!string.IsNullOrEmpty(prefix))
+            {
+                paragraph.Inlines.Add(CreateRun(prefix, color, FontWeights.Normal));
+            }
+
             if (!string.IsNullOrEmpty(name))
             {
                 paragraph.Inlines.Add(CreateRun(name, color, FontWeights.Bold));
@@ -97,7 +136,8 @@ namespace FFXIVTataruHelper.Services.UI
             return paragraph;
         }
 
-        private Paragraph BuildContainedMessageParagraph(string leadingSpaces, string name, string text, Color color)
+        private Paragraph BuildContainedMessageParagraph(
+            string leadingSpaces, string prefix, string name, string text, Color color)
         {
             var messageText = new TextBlock
             {
@@ -110,6 +150,11 @@ namespace FFXIVTataruHelper.Services.UI
             if (!string.IsNullOrEmpty(leadingSpaces))
             {
                 messageText.Inlines.Add(new Run(leadingSpaces));
+            }
+
+            if (!string.IsNullOrEmpty(prefix))
+            {
+                messageText.Inlines.Add(new Run(prefix));
             }
 
             if (!string.IsNullOrEmpty(name))

@@ -209,7 +209,7 @@ namespace FFXIVTataruHelper
                 line = MachineTranslationMarker + line;
             }
 
-            return result.WithText(line);
+            return result.WithText(line).WithSpeaker(nickName);
         }
 
         /// <summary>
