@@ -1050,6 +1050,59 @@ namespace FFXIVTataruHelper.Services.GameMemory
         }
 
         /// <summary>
+        /// The rectangle an addon occupies, in the coordinates the game client
+        /// draws in, or unknown when the client does not say.
+        ///
+        /// The window carries its own position and the interface scale the
+        /// player chose; the node it draws into carries the size it was
+        /// designed at, unscaled. So the size on screen is the one multiplied
+        /// by the other, and the position is taken as it stands.
+        /// </summary>
+        internal bool TryReadAddonBounds(IntPtr addonAddress, out AddonBounds bounds)
+        {
+            bounds = AddonBounds.Unknown;
+
+            var offsets = _uiDirectDialogOffsets.Value;
+            if (addonAddress == IntPtr.Zero ||
+                !offsets.Bounds.IsValid ||
+                offsets.AtkUnitBaseRootNodeOffset < 0)
+            {
+                return false;
+            }
+
+            var rootNodeAddress = _memoryHandler.ReadPointer(addonAddress, offsets.AtkUnitBaseRootNodeOffset);
+            if (rootNodeAddress == IntPtr.Zero)
+            {
+                return false;
+            }
+
+            var scale = ReadSingle(addonAddress, offsets.Bounds.ScaleOffset);
+            var width = _memoryHandler.GetUInt16(rootNodeAddress, offsets.Bounds.NodeWidthOffset);
+            var height = _memoryHandler.GetUInt16(rootNodeAddress, offsets.Bounds.NodeHeightOffset);
+
+            bounds = AddonBounds.From(
+                ReadInt16(addonAddress, offsets.Bounds.XOffset),
+                ReadInt16(addonAddress, offsets.Bounds.YOffset),
+                width,
+                height,
+                scale);
+
+            return bounds.IsKnown;
+        }
+
+        private short ReadInt16(IntPtr address, long offset)
+        {
+            var buffer = _memoryHandler.GetByteArray(IntPtr.Add(address, (int)offset), sizeof(short));
+            return buffer == null || buffer.Length < sizeof(short) ? (short)0 : BitConverter.ToInt16(buffer, 0);
+        }
+
+        private float ReadSingle(IntPtr address, long offset)
+        {
+            var buffer = _memoryHandler.GetByteArray(IntPtr.Add(address, (int)offset), sizeof(float));
+            return buffer == null || buffer.Length < sizeof(float) ? 0f : BitConverter.ToSingle(buffer, 0);
+        }
+
+        /// <summary>
         /// Fills the speaker and line slots from the addon's named nodes.
         ///
         /// The slots themselves are unchanged - everything downstream still reads
@@ -1402,6 +1455,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
             var atkUnitBaseType = Type.GetType("FFXIVClientStructs.FFXIV.Component.GUI.AtkUnitBase, Sharlayan");
             var addonTalkType = Type.GetType("FFXIVClientStructs.FFXIV.Client.UI.AddonTalk, Sharlayan");
             var atkTextNodeType = Type.GetType("FFXIVClientStructs.FFXIV.Component.GUI.AtkTextNode, Sharlayan");
+            var atkResNodeType = Type.GetType("FFXIVClientStructs.FFXIV.Component.GUI.AtkResNode, Sharlayan");
 
             if (raptureAtkModuleType == null ||
                 atkUnitManagerType == null ||
@@ -1453,6 +1507,12 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 ResolveFieldOffset(atkUnitBaseType, "VisibilityFlags"),
                 ResolveFieldOffset(atkUnitBaseType, "RootNode"),
                 ResolveNodeWalkOffsets(atkUnitBaseType),
+                new AddonBoundsOffsets(
+                    ResolveFieldOffset(atkUnitBaseType, "X"),
+                    ResolveFieldOffset(atkUnitBaseType, "Y"),
+                    ResolveFieldOffset(atkUnitBaseType, "Scale"),
+                    ResolveFieldOffset(atkResNodeType, "Width"),
+                    ResolveFieldOffset(atkResNodeType, "Height")),
                 addonSpecs);
         }
 
@@ -1654,11 +1714,41 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
         }
 
+        /// <summary>
+        /// Where the client keeps an addon's place on screen. Resolved by
+        /// reflection like everything else here, so a patch that moves these
+        /// moves them for the text as well and there is one thing to mend.
+        /// </summary>
+        private readonly struct AddonBoundsOffsets
+        {
+            public static AddonBoundsOffsets Empty => new AddonBoundsOffsets(-1, -1, -1, -1, -1);
+
+            public AddonBoundsOffsets(long x, long y, long scale, long nodeWidth, long nodeHeight)
+            {
+                XOffset = x;
+                YOffset = y;
+                ScaleOffset = scale;
+                NodeWidthOffset = nodeWidth;
+                NodeHeightOffset = nodeHeight;
+            }
+
+            public long XOffset { get; }
+            public long YOffset { get; }
+            public long ScaleOffset { get; }
+            public long NodeWidthOffset { get; }
+            public long NodeHeightOffset { get; }
+
+            public bool IsValid =>
+                XOffset >= 0 && YOffset >= 0 && ScaleOffset >= 0 &&
+                NodeWidthOffset >= 0 && NodeHeightOffset >= 0;
+        }
+
         private readonly struct UiDirectDialogOffsets
         {
             public static UiDirectDialogOffsets Empty =>
                 new UiDirectDialogOffsets(-1, -1, -1, -1, -1, -1, -1, -1, -1, 0, -1, -1, -1,
-                    AtkNodeWalkOffsets.Empty, Array.Empty<AddonRealtimeTextSpec>());
+                    AtkNodeWalkOffsets.Empty, AddonBoundsOffsets.Empty,
+                    Array.Empty<AddonRealtimeTextSpec>());
 
             public long RaptureLogModuleOffset { get; }
             public long RaptureAtkModuleOffset { get; }
@@ -1679,6 +1769,10 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
             // Not part of IsValid: the reader works without it, just less well.
             public AtkNodeWalkOffsets NodeWalk { get; }
+
+            // Nor this one: reading the line does not depend on knowing where
+            // the window that holds it stands.
+            public AddonBoundsOffsets Bounds { get; }
 
             public AddonRealtimeTextSpec[] AddonSpecs { get; }
 
@@ -1712,9 +1806,11 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 long atkUnitBaseVisibilityFlagsOffset,
                 long atkUnitBaseRootNodeOffset,
                 AtkNodeWalkOffsets nodeWalk,
+                AddonBoundsOffsets bounds,
                 AddonRealtimeTextSpec[] addonSpecs)
             {
                 NodeWalk = nodeWalk;
+                Bounds = bounds;
                 RaptureLogModuleOffset = raptureLogModuleOffset;
                 RaptureAtkModuleOffset = raptureAtkModuleOffset;
                 LastTalkNameOffset = lastTalkNameOffset;
