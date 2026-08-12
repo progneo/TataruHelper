@@ -9,7 +9,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
     /// dialogue box and scales the interface as they like, and both are read
     /// from the client rather than guessed or configured.
     /// </summary>
-    internal readonly struct AddonBounds
+    public readonly struct AddonBounds
     {
         public static AddonBounds Unknown => default;
 

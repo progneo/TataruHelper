@@ -128,6 +128,13 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         private bool _hasLastSelectedSnapshot;
 
+        /// <summary>
+        /// Where the game is drawing the line it is showing, as of the last
+        /// sweep, or unknown when it is showing none. Read so a translation can
+        /// be put over that line rather than beside it.
+        /// </summary>
+        public AddonBounds DialogueBounds { get; private set; }
+
         public TalkAddonRealtimeReader(MemoryHandler memoryHandler)
         {
             _memoryHandler = memoryHandler;
@@ -274,6 +281,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             var diagnosticNames = Logger.RawDialogLogEnabled ? new List<string>() : null;
+            var sweptBounds = AddonBounds.Unknown;
 
             var readable = entryBytes.Length / IntPtr.Size;
             for (var i = 0; i < Math.Min(safeCount, readable); i++)
@@ -327,15 +335,28 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
                 loadedAddons.Add(new LoadedAddon(addonAddress, addonName));
 
-                // Where the window stands, so a copy of it can be checked
-                // against the real one before anything is drawn.
-                if (Logger.RawDialogLogEnabled && TryReadAddonBounds(addonAddress, out var addonBounds))
+                // Where the window stands, taken on the sweep that is already
+                // walking these addons rather than on a second one of its own.
+                // The first is the one worth keeping: the game shows a line in
+                // one place at a time, and a bubble left over from a passer-by
+                // should not move a copy off the conversation being read.
+                if (TryReadAddonBounds(addonAddress, out var addonBounds))
                 {
-                    WriteDistinctRawDialogLog(ref _lastLoggedBounds,
-                        FormattableString.Invariant(
-                            $"AddonBounds {addonName} x={addonBounds.X} y={addonBounds.Y} w={addonBounds.Width} h={addonBounds.Height}"));
+                    if (!sweptBounds.IsKnown)
+                    {
+                        sweptBounds = addonBounds;
+                    }
+
+                    if (Logger.RawDialogLogEnabled)
+                    {
+                        WriteDistinctRawDialogLog(ref _lastLoggedBounds,
+                            FormattableString.Invariant(
+                                $"AddonBounds {addonName} x={addonBounds.X} y={addonBounds.Y} w={addonBounds.Width} h={addonBounds.Height}"));
+                    }
                 }
             }
+
+            DialogueBounds = sweptBounds;
 
             if (diagnosticNames != null)
             {

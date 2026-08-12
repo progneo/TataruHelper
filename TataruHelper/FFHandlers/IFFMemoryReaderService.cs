@@ -18,6 +18,16 @@ namespace FFXIVTataruHelper.FFHandlers
         bool IsGameWindowForeground { get; }
 
         /// <summary>
+        /// Where the game is drawing the line it is showing, or unknown when it
+        /// is showing none - so a translation can be put over that line rather
+        /// than beside it.
+        /// </summary>
+        Services.GameMemory.AddonBounds DialogueBounds { get; }
+
+        /// <summary>The game's own window, for putting something over it.</summary>
+        IntPtr GameWindowHandle { get; }
+
+        /// <summary>
         /// Whether the game process is attached right now.
         ///
         /// FFWindowStateChanged only fires on transitions, and the reader starts

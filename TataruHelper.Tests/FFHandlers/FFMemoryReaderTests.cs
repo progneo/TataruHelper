@@ -169,6 +169,9 @@ namespace TataruHelper.Tests
             public int GetDirectDialogCalls { get; private set; }
             public ChatLogResult DirectDialogResult { get; set; } = new ChatLogResult();
 
+            public FFXIVTataruHelper.Services.GameMemory.AddonBounds DialogueBounds { get; set; } =
+                FFXIVTataruHelper.Services.GameMemory.AddonBounds.Unknown;
+
             /// <summary>Codes this gateway claims to have read off the screen.</summary>
             public HashSet<string> CodesReadLive { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 

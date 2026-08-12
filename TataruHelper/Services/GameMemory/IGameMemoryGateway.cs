@@ -15,6 +15,13 @@ namespace FFXIVTataruHelper.Services.GameMemory
         ChatLogResult GetDirectDialog();
 
         /// <summary>
+        /// Where the game is drawing the line it is showing, or unknown when it
+        /// is showing none. Taken on the sweep that reads the line itself, so
+        /// asking costs nothing beyond what is already being read.
+        /// </summary>
+        AddonBounds DialogueBounds { get; }
+
+        /// <summary>
         /// Whether dialogue under this code has been read off the screen at least
         /// once since attaching, and so whether the chat log's later copy of it
         /// would be a repeat rather than the only copy there is.

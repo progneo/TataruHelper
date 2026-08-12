@@ -93,6 +93,29 @@ namespace FFXIVTataruHelper.FFHandlers
             }
         } = string.Empty;
 
+        /// <summary>
+        /// The game's own window, for putting something over it. Zero while
+        /// nothing is attached.
+        /// </summary>
+        public IntPtr GameWindowHandle
+        {
+            get
+            {
+                try
+                {
+                    return _ffXivProcess?.MainWindowHandle ?? IntPtr.Zero;
+                }
+                catch (InvalidOperationException)
+                {
+                    // The process went away between the check and the ask.
+                    return IntPtr.Zero;
+                }
+            }
+        }
+
+        public Services.GameMemory.AddonBounds DialogueBounds =>
+            _gameMemoryGateway?.DialogueBounds ?? Services.GameMemory.AddonBounds.Unknown;
+
         public bool IsGameWindowForeground
         {
             get;

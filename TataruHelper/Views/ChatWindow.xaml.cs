@@ -436,6 +436,31 @@ namespace FFXIVTataruHelper
 
         #region **Transaltion.
 
+        private DialogueOverlayWindow _dialogueOverlay;
+
+        /// <summary>
+        /// The copy of the game's dialogue box, made the first time there is
+        /// something to put in it. Nothing is created when the draft is off, so
+        /// the switch costs a comparison and not a window.
+        /// </summary>
+        private DialogueOverlayWindow EnsureDialogueOverlay()
+        {
+            if (!Logger.DialogueOverlayEnabled)
+            {
+                return null;
+            }
+
+            if (_dialogueOverlay == null)
+            {
+                _dialogueOverlay = new DialogueOverlayWindow(
+                    _TataruModel.FFMemoryReader,
+                    () => _TataruModel.FFMemoryReader.GameWindowHandle);
+                _dialogueOverlay.Start();
+            }
+
+            return _dialogueOverlay;
+        }
+
         void ShowTranslatedText(
             string translatedMsg, Color color, string speaker = "", DateTime timeStamp = default(DateTime))
         {
@@ -446,6 +471,8 @@ namespace FFXIVTataruHelper
                 {
                     ChatRtb.Document.Blocks.Clear();
                 }
+
+                EnsureDialogueOverlay()?.SetLine(speaker, translatedMsg);
 
                 Paragraph paragraph = _paragraphBuilder.BuildMessageParagraph(
                     translatedMsg, color, speaker, timeStamp);
