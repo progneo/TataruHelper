@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -126,6 +126,17 @@ namespace Translation.Reference
             RegexOptions.Singleline | RegexOptions.Compiled);
 
         /// <summary>
+        /// An item's name, written in as the game draws.
+        ///
+        /// Worth punching a hole for rather than dropping the line: the project
+        /// leaves item names in English, so whatever the game drew there can be
+        /// carried straight across into the translation without having to know
+        /// which item it was.
+        /// </summary>
+        private static readonly Regex Item = new Regex(
+            "<var 31[^>]*>", RegexOptions.Compiled);
+
+        /// <summary>
         /// Agreement with the player's gender, feminine first. E905 alone: the
         /// other condition codes ask about things that cannot be answered here,
         /// and one of them distinguishes a joystick from a mini-joystick.
@@ -167,12 +178,22 @@ namespace Translation.Reference
         /// Raise this whenever a change here would put something different in
         /// the index for the same export.
         /// </summary>
-        public const int RulesVersion = 5;
+        public const int RulesVersion = 6;
 
         private const string KeySeparator = "<tab>";
 
         /// <summary>Stands in for the name; a control character cannot collide.</summary>
         public const string PlayerPlaceholder = "\u0001";
+
+        /// <summary>
+        /// Stands in for an item the game names as it draws.
+        ///
+        /// Unlike the player's name there is no one value to write in: the
+        /// shopkeeper says the same sentence whichever tomestone she is
+        /// selling. So this one stays a hole, and whatever the game drew there
+        /// is carried across from the line being looked up.
+        /// </summary>
+        public const string ItemPlaceholder = "\u0002";
 
         /// <summary>The game's own list of who everyone is, as "Name&lt;tab&gt;Title".</summary>
         private const string NpcSheet = "ENpcResident";
@@ -180,6 +201,9 @@ namespace Translation.Reference
         private readonly Dictionary<string, string> _lines = new Dictionary<string, string>(StringComparer.Ordinal);
         private readonly Dictionary<string, string> _patterns = new Dictionary<string, string>(StringComparer.Ordinal);
         private readonly Dictionary<string, string> _speakers = new Dictionary<string, string>(StringComparer.Ordinal);
+
+        private readonly Dictionary<string, string> _itemPatterns =
+            new Dictionary<string, string>(StringComparer.Ordinal);
 
         private readonly Dictionary<(string Source, bool Feminine), string> _gendered =
             new Dictionary<(string, bool), string>();
@@ -190,6 +214,13 @@ namespace Translation.Reference
         public IReadOnlyDictionary<string, string> Lines => _lines;
 
         public IReadOnlyDictionary<string, string> Patterns => _patterns;
+
+        /// <summary>
+        /// Lines with one item's name punched out. Matched by what stands on
+        /// either side of the hole rather than filled in ahead of time - which
+        /// item it is cannot be known until the line arrives.
+        /// </summary>
+        public IReadOnlyDictionary<string, string> ItemPatterns => _itemPatterns;
 
         public IReadOnlyDictionary<string, string> Speakers => _speakers;
 
@@ -343,7 +374,32 @@ namespace Translation.Reference
                 translated = translatedPlayer;
                 target = _patterns;
             }
+            else
+            {
+                // An item's name is the other hole worth punching, and it is
+                // kept apart from the player's: that one is written in once,
+                // when the character becomes known, while this one has to be
+                // read off the line being looked up.
+                //
+                // Only when the player is not named too. Two holes and what is
+                // left stops pinning the line down, which is the same reason
+                // the name allows itself only one.
+                var englishItem = Item.Replace(english, ItemPlaceholder);
+                var translatedItem = Item.Replace(translated, ItemPlaceholder);
 
+                if (Count(englishItem, ItemPlaceholder) == 1 &&
+                    Count(translatedItem, ItemPlaceholder) == 1)
+                {
+                    english = englishItem;
+                    translated = translatedItem;
+                    target = _itemPatterns;
+                }
+            }
+
+            // Whatever is left after the holes were punched. A line still
+            // carrying something the game substitutes cannot be matched, so it
+            // goes - which is also what catches a line that has an item's name
+            // and something else besides.
             if (Dynamic.IsMatch(english) || Dynamic.IsMatch(translated))
             {
                 SkippedForMarkup++;

@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -23,6 +23,37 @@ namespace Translation.Reference
 
         /// <summary>Stands in for the character's name inside a stored pattern.</summary>
         private const string PlayerPlaceholder = "\u0001";
+
+        /// <summary>Stands in for an item the game names, inside a stored pattern.</summary>
+        private const string ItemPlaceholder = "\u0002";
+
+        /// <summary>
+        /// A line with one item's name punched out, already split at the hole.
+        ///
+        /// Split once at load rather than per lookup: this is tried on every
+        /// line that misses, and a cutscene misses often.
+        /// </summary>
+        internal readonly struct ItemPattern
+        {
+            public ItemPattern(string prefix, string suffix, string translated)
+            {
+                Prefix = prefix;
+                Suffix = suffix;
+                Translated = translated;
+            }
+
+            public string Prefix { get; }
+
+            public string Suffix { get; }
+
+            /// <summary>Still carries the hole, for whatever the line had in it.</summary>
+            public string Translated { get; }
+
+            /// <summary>How much of the line the pattern actually pins down.</summary>
+            public int FixedLength => Prefix.Length + Suffix.Length;
+        }
+
+        private ItemPattern[] _itemPatterns = Array.Empty<ItemPattern>();
 
         private string _playerName = string.Empty;
 
@@ -270,13 +301,24 @@ namespace Translation.Reference
                 {
                     _sentenceParameter.Value = key;
                     var found = _lookup.ExecuteScalar() as string;
-                    if (string.IsNullOrEmpty(found) || CarriesUnresolvedMarkup(found))
+                    if (!string.IsNullOrEmpty(found) && !CarriesUnresolvedMarkup(found))
                     {
-                        return false;
+                        translation = found;
+                        return true;
                     }
 
-                    translation = found;
-                    return true;
+                    // Last, and only when nothing was written for this line as
+                    // it stands: a line that differs from a stored one only in
+                    // the item it names. An exact line is always the better
+                    // answer, so this never gets to override one.
+                    if (TryMatchItemPattern(_itemPatterns, key, out var named) &&
+                        !CarriesUnresolvedMarkup(named))
+                    {
+                        translation = named;
+                        return true;
+                    }
+
+                    return false;
                 }
                 catch (Exception ex)
                 {
@@ -311,6 +353,107 @@ namespace Translation.Reference
         /// dialogue across lines and we read it back joined, so runs of
         /// whitespace cannot be part of the key.
         /// </summary>
+        /// <summary>
+        /// Finds a line that differs from a stored one only in the item it
+        /// names, and writes what this line had into the translation.
+        ///
+        /// The most particular match wins: two patterns can both fit, and the
+        /// one that pins down more of the line is the one that meant it. A hole
+        /// has to swallow something - a line identical to the fixed parts with
+        /// nothing between them is a different line, not this one.
+        /// </summary>
+        internal static bool TryMatchItemPattern(
+            IReadOnlyList<ItemPattern> patterns, string key, out string translation)
+        {
+            translation = string.Empty;
+
+            if (patterns == null || key == null)
+            {
+                return false;
+            }
+
+            var pinned = -1;
+
+            for (var i = 0; i < patterns.Count; i++)
+            {
+                var pattern = patterns[i];
+
+                if (pattern.FixedLength >= key.Length || pattern.FixedLength <= pinned)
+                {
+                    continue;
+                }
+
+                if (!key.StartsWith(pattern.Prefix, StringComparison.Ordinal) ||
+                    !key.EndsWith(pattern.Suffix, StringComparison.Ordinal))
+                {
+                    continue;
+                }
+
+                var item = key.Substring(pattern.Prefix.Length, key.Length - pattern.FixedLength);
+
+                pinned = pattern.FixedLength;
+                translation = pattern.Translated.Replace(ItemPlaceholder, item);
+            }
+
+            return pinned >= 0;
+        }
+
+        /// <summary>
+        /// Reads the item patterns and splits each at its hole.
+        ///
+        /// An index built before these existed has no such table, and that has
+        /// to cost only these lines rather than the whole index.
+        /// </summary>
+        private ItemPattern[] LoadItemPatterns()
+        {
+            if (_connection == null)
+            {
+                return Array.Empty<ItemPattern>();
+            }
+
+            var patterns = new List<ItemPattern>();
+
+            try
+            {
+                using (var command = _connection.CreateCommand())
+                {
+                    command.CommandText = "SELECT source, translated FROM item_pattern";
+                    using (var reader = command.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            var source = Normalize(reader.GetString(0));
+                            var translated = reader.GetString(1);
+
+                            var hole = source.IndexOf(ItemPlaceholder, StringComparison.Ordinal);
+                            if (hole < 0 || !translated.Contains(ItemPlaceholder))
+                            {
+                                continue;
+                            }
+
+                            patterns.Add(new ItemPattern(
+                                source.Substring(0, hole),
+                                source.Substring(hole + ItemPlaceholder.Length),
+                                translated));
+                        }
+                    }
+                }
+
+                _logger?.LogInformation("Lines naming an item: {Count}.", patterns.Count);
+            }
+            catch (SqliteException)
+            {
+                return Array.Empty<ItemPattern>();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogInformation("{Message}", Convert.ToString(ex));
+                return Array.Empty<ItemPattern>();
+            }
+
+            return patterns.ToArray();
+        }
+
         internal static string Normalize(string sentence)
         {
             if (string.IsNullOrWhiteSpace(sentence))
@@ -595,6 +738,8 @@ namespace Translation.Reference
             _sentenceParameter.ParameterName = "$sentence";
             _lookup.Parameters.Add(_sentenceParameter);
             _lookup.Prepare();
+
+            _itemPatterns = LoadItemPatterns();
 
 
             // An index built before names were collected has no such table, and

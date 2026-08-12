@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Formats.Tar;
 using System.Globalization;
@@ -540,6 +540,11 @@ namespace Translation.Reference
                     "CREATE TABLE line (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID;" +
                     "CREATE TABLE pattern (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID;" +
                     "CREATE TABLE speaker (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID;" +
+                    // One item's name punched out. Apart from "pattern"
+                    // because it is read differently: that one is filled in
+                    // once the character is known, this one is matched by what
+                    // stands either side of the hole.
+                    "CREATE TABLE item_pattern (source TEXT PRIMARY KEY, translated TEXT NOT NULL) WITHOUT ROWID;" +
                     "CREATE TABLE gendered (source TEXT NOT NULL, feminine INTEGER NOT NULL, " +
                     "translated TEXT NOT NULL, PRIMARY KEY (feminine, source)) WITHOUT ROWID;" +
                     // Lines that both name the character and agree with them.
@@ -553,6 +558,7 @@ namespace Translation.Reference
 
             InsertPairs(connection, transaction, "line", builder.Lines);
             InsertPairs(connection, transaction, "pattern", builder.Patterns);
+            InsertPairs(connection, transaction, "item_pattern", builder.ItemPatterns);
             InsertPairs(connection, transaction, "speaker", builder.Speakers);
 
             InsertGendered(connection, transaction, "gendered", builder.Gendered);
@@ -582,6 +588,7 @@ namespace Translation.Reference
                 ["rules"] = ReferenceIndexBuilder.RulesVersion.ToString(CultureInfo.InvariantCulture),
                 ["lines"] = builder.Lines.Count.ToString(),
                 ["patterns"] = builder.Patterns.Count.ToString(),
+                ["itemPatterns"] = builder.ItemPatterns.Count.ToString(),
                 ["speakers"] = builder.Speakers.Count.ToString(),
                 ["gendered"] = (builder.Gendered.Count / 2).ToString(),
                 ["genderedPatterns"] = (builder.GenderedPatterns.Count / 2).ToString(),

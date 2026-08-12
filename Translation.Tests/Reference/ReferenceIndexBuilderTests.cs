@@ -1,4 +1,4 @@
-using NUnit.Framework;
+﻿using NUnit.Framework;
 
 using Translation.Reference;
 
@@ -27,6 +27,61 @@ namespace Translation.Tests.Reference
             var builder = new ReferenceIndexBuilder();
             builder.AddSheet(folder, english, translated);
             return builder;
+        }
+
+        /// <summary>
+        /// A shopkeeper says the same sentence whichever thing she is selling,
+        /// and the game writes the name in as it draws. The whole line used to
+        /// be thrown away as unsubstitutable markup - 394 of them in the export
+        /// of 11 August, all hand-translated, all reaching the screen from a
+        /// machine instead.
+        /// </summary>
+        [Test]
+        public void ALineNamingAnItem_IsKeptWithTheNamePunchedOut()
+        {
+            var builder = Build("exd/custom/001",
+                Sheet(("1", "I will part with each book for 100 &lt;var 31 ((Item)) 04 (( 28)) 0302 /var&gt;.")),
+                Sheet(("1", "Я расстанусь с каждой книгой за 100 &lt;var 31 ((Item)) 04 (( 28)) 0302 /var&gt;.")));
+
+            var key = "I will part with each book for 100 " + ReferenceIndexBuilder.ItemPlaceholder + ".";
+
+            Assert.That(builder.ItemPatterns.ContainsKey(key), Is.True,
+                "the line should be kept as a pattern rather than dropped");
+            Assert.That(builder.ItemPatterns[key],
+                Is.EqualTo("Я расстанусь с каждой книгой за 100 " +
+                           ReferenceIndexBuilder.ItemPlaceholder + "."));
+            Assert.That(builder.Lines, Is.Empty, "it is a pattern, not a fixed line");
+        }
+
+        /// <summary>
+        /// Two holes and what is left no longer pins the line down, so it is
+        /// still not usable - the same rule the player's name lives under.
+        /// </summary>
+        [Test]
+        public void ALineNamingTwoItems_IsStillDropped()
+        {
+            var builder = Build("exd/custom/001",
+                Sheet(("1", "Trade &lt;var 31 ((Item)) 04 (( 28)) 0302 /var&gt; for &lt;var 31 ((Item)) 04 (( 29)) 0302 /var&gt;.")),
+                Sheet(("1", "Обменяйте &lt;var 31 ((Item)) 04 (( 28)) 0302 /var&gt; на &lt;var 31 ((Item)) 04 (( 29)) 0302 /var&gt;.")));
+
+            Assert.That(builder.ItemPatterns, Is.Empty);
+            Assert.That(builder.Lines, Is.Empty);
+            Assert.That(builder.SkippedForMarkup, Is.EqualTo(1));
+        }
+
+        /// <summary>
+        /// An item's name beside something else the game fills in leaves the
+        /// line unusable: only one hole can be carried across.
+        /// </summary>
+        [Test]
+        public void ALineNamingAnItemAndSomethingElse_IsDropped()
+        {
+            var builder = Build("exd/custom/001",
+                Sheet(("1", "Take &lt;var 31 ((Item)) 04 (( 28)) 0302 /var&gt; to &lt;var 08 E905 ((her)) ((him)) /var&gt;.")),
+                Sheet(("1", "Отнесите &lt;var 31 ((Item)) 04 (( 28)) 0302 /var&gt; &lt;var 08 E905 ((ей)) ((ему)) /var&gt;.")));
+
+            Assert.That(builder.ItemPatterns, Is.Empty);
+            Assert.That(builder.Lines, Is.Empty);
         }
 
         [Test]
