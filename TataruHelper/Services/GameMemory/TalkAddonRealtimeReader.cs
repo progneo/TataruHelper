@@ -281,7 +281,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             var diagnosticNames = Logger.RawDialogLogEnabled ? new List<string>() : null;
-            var sweptBounds = AddonBounds.Unknown;
+            var boundsByAddon = new Dictionary<IntPtr, AddonBounds>();
+            var boundsByCandidate = new Dictionary<string, AddonBounds>(StringComparer.Ordinal);
 
             var readable = entryBytes.Length / IntPtr.Size;
             for (var i = 0; i < Math.Min(safeCount, readable); i++)
@@ -342,15 +343,16 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 // should not move a copy off the conversation being read.
                 if (TryReadAddonBounds(addonAddress, out var addonBounds))
                 {
-                    // Only from an addon actually being drawn. The others stay
-                    // loaded with a place and a size of their own long after
-                    // the game has finished with them - a speech bubble sits
-                    // there at 60 by 45 - so taking the first that had a
-                    // rectangle left the copy shrunk onto a bubble nobody could
-                    // see when the conversation ended, instead of going away.
-                    if (!sweptBounds.IsKnown && !IsAddonOffScreen(addonAddress))
+                    // Kept against the addon it belongs to rather than taken as
+                    // "the first one drawn". Which window is speaking is
+                    // settled further down, and the two are not the same during
+                    // the changeover between lines: a subtitle spanning the
+                    // screen was lending its width to a line coming from the
+                    // little talk window, and the copy stretched across the
+                    // display for a moment on every line.
+                    if (!IsAddonOffScreen(addonAddress))
                     {
-                        sweptBounds = addonBounds;
+                        boundsByAddon[addonAddress] = addonBounds;
                     }
 
                     if (Logger.RawDialogLogEnabled)
@@ -362,7 +364,6 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 }
             }
 
-            DialogueBounds = sweptBounds;
 
             if (diagnosticNames != null)
             {
@@ -426,18 +427,31 @@ namespace FFXIVTataruHelper.Services.GameMemory
                         continue;
                     }
 
-                    candidates.Add((
-                        addonSpec.AddonName + "@" + loadedAddon.AddonAddress.ToInt64().ToString("X"),
-                        addonSnapshot,
-                        addonText));
+                    var candidateKey =
+                        addonSpec.AddonName + "@" + loadedAddon.AddonAddress.ToInt64().ToString("X");
+
+                    boundsByCandidate[candidateKey] =
+                        boundsByAddon.TryGetValue(loadedAddon.AddonAddress, out var known)
+                            ? known
+                            : AddonBounds.Unknown;
+
+                    candidates.Add((candidateKey, addonSnapshot, addonText));
                 }
             }
 
             if (TrySelectActiveCandidate(candidates, out snapshot))
             {
+                // The window that is speaking is the one to draw over.
+                DialogueBounds =
+                    _stickyCandidateKey != null &&
+                    boundsByCandidate.TryGetValue(_stickyCandidateKey, out var speaking)
+                        ? speaking
+                        : AddonBounds.Unknown;
+
                 return true;
             }
 
+            DialogueBounds = AddonBounds.Unknown;
             return matchedEmptySource;
         }
 

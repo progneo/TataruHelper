@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 
 using FFXIVTataruHelper.FFHandlers;
@@ -77,15 +78,26 @@ namespace FFXIVTataruHelper
             {
                 Foreground = new SolidColorBrush(Color.FromRgb(0x2A, 0x24, 0x1C)),
                 TextWrapping = TextWrapping.Wrap,
-                Margin = new Thickness(26, 12, 26, 12)
+
+                // Said outright: stretched to fill the frame the text came out
+                // sitting near the bottom of it, where the game starts it just
+                // under the name.
+                VerticalAlignment = VerticalAlignment.Top,
+                HorizontalAlignment = HorizontalAlignment.Stretch
             };
 
+            // The game's own frame, lifted from it: the shape has notches, a
+            // shadow and an embossed rim that a drawn rectangle only ever
+            // approximates. Stretched whole rather than cut into corners and
+            // edges, because the window is always the same design size and only
+            // the interface scale changes it - so the proportions never move.
             var box = new Border
             {
-                CornerRadius = new CornerRadius(18),
-                Background = new SolidColorBrush(Color.FromRgb(0xF2, 0xEC, 0xDE)),
-                BorderBrush = new SolidColorBrush(Color.FromRgb(0x8A, 0x7E, 0x66)),
-                BorderThickness = new Thickness(2),
+                Background = new ImageBrush(
+                    new BitmapImage(new Uri("pack://application:,,,/Resources/DialogueFrame.png")))
+                {
+                    Stretch = Stretch.Fill
+                },
                 Child = _line
             };
 
@@ -96,13 +108,23 @@ namespace FFXIVTataruHelper
             // box, which then stopped short of the game's frame and left a
             // strip of the original showing along the top - including the name
             // in the language being translated away.
+            // The game does not put the name in a box. It lays it on a dark
+            // strip that fades away to the right, so the strip ends wherever
+            // the name does without ever showing an edge.
+            var plateWash = new LinearGradientBrush
+            {
+                StartPoint = new Point(0, 0),
+                EndPoint = new Point(1, 0)
+            };
+            plateWash.GradientStops.Add(new GradientStop(Color.FromArgb(0xE6, 0x14, 0x12, 0x10), 0));
+            plateWash.GradientStops.Add(new GradientStop(Color.FromArgb(0xE0, 0x14, 0x12, 0x10), 0.62));
+            plateWash.GradientStops.Add(new GradientStop(Color.FromArgb(0x00, 0x14, 0x12, 0x10), 1));
+
             _plate = new Border
             {
-                CornerRadius = new CornerRadius(6),
-                Background = new SolidColorBrush(Color.FromArgb(0xCC, 0x1C, 0x1A, 0x17)),
+                Background = plateWash,
                 HorizontalAlignment = HorizontalAlignment.Left,
                 VerticalAlignment = VerticalAlignment.Top,
-                Padding = new Thickness(12, 2, 12, 2),
                 Child = _speaker
             };
 
@@ -211,15 +233,25 @@ namespace FFXIVTataruHelper
             // fixed size: the player's interface scale is already in the
             // rectangle, and text that ignored it would not fit the frame.
             // The figures are the game's frame measured off a screenshot.
-            _line.FontSize = Math.Max(10, rect.Height * 0.105);
-            _speaker.FontSize = Math.Max(10, rect.Height * 0.095);
+            // Fractions of the box, measured off the game's own frame at an
+            // interface scale of 150%: the name sits at 0.083 across and 0.04
+            // down, the line starts at 0.088 across and 0.225 down.
+            _line.FontSize = Math.Max(10, rect.Height * 0.098);
+            _speaker.FontSize = Math.Max(10, rect.Height * 0.092);
 
-            var plateHeight = rect.Height * 0.13;
-            _plate.Margin = new Thickness(rect.Width * 0.07, 0, 0, 0);
-            _box.Margin = new Thickness(0, plateHeight * 0.75, 0, 0);
-            _box.CornerRadius = new CornerRadius(rect.Height * 0.14);
+            // The strip is given room past the name for the fade to happen in.
+            // Sized to the name alone it ended in a hard edge a few pixels
+            // after the last letter - a dark tab, where the game has a wash.
+            _plate.Margin = new Thickness(rect.Width * 0.083, rect.Height * 0.035, 0, 0);
+            _plate.Padding = new Thickness(rect.Width * 0.012, rect.Height * 0.005, rect.Width * 0.14, 0);
+
+            // Wide enough to bury the game's own name underneath, whatever it
+            // says. A strip cut to the translated name left the English one
+            // showing past it - two names side by side, which is worse than
+            // either alone.
+            _plate.MinWidth = rect.Width * 0.30;
             _line.Margin = new Thickness(
-                rect.Width * 0.035, rect.Height * 0.09, rect.Width * 0.035, rect.Height * 0.05);
+                rect.Width * 0.088, rect.Height * 0.225, rect.Width * 0.075, rect.Height * 0.06);
 
             if (Visibility != Visibility.Visible)
             {
