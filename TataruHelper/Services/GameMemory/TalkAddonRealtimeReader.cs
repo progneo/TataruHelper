@@ -342,7 +342,13 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 // should not move a copy off the conversation being read.
                 if (TryReadAddonBounds(addonAddress, out var addonBounds))
                 {
-                    if (!sweptBounds.IsKnown)
+                    // Only from an addon actually being drawn. The others stay
+                    // loaded with a place and a size of their own long after
+                    // the game has finished with them - a speech bubble sits
+                    // there at 60 by 45 - so taking the first that had a
+                    // rectangle left the copy shrunk onto a bubble nobody could
+                    // see when the conversation ended, instead of going away.
+                    if (!sweptBounds.IsKnown && !IsAddonOffScreen(addonAddress))
                     {
                         sweptBounds = addonBounds;
                     }
