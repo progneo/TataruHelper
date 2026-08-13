@@ -25,8 +25,6 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$env:DOTNET_ROLL_FORWARD = "LatestMajor"
-
 #region Helpers
 
 function Assert-ExitCode {
@@ -78,12 +76,29 @@ function Invoke-Vpk {
     }
     Write-Host ("[Velopack] Command: " + ((@($script:Vpk.Exe) + $echoed) -join " "))
 
-    if ($Capture) {
-        $output = & $script:Vpk.Exe @all 2>&1
-        return $output
-    }
+    # Rolling forward is for the Velopack tool, which is built against a .NET
+    # this machine need not have. Set around the call and put back after, rather
+    # than once at the top: set at the top it outlives the script and quietly
+    # changes how every later dotnet command in the same console picks a
+    # runtime - a release script should leave the shell as it found it.
+    $previousRollForward = $env:DOTNET_ROLL_FORWARD
+    $env:DOTNET_ROLL_FORWARD = "LatestMajor"
+    try {
+        if ($Capture) {
+            $output = & $script:Vpk.Exe @all 2>&1
+            return $output
+        }
 
-    & $script:Vpk.Exe @all
+        & $script:Vpk.Exe @all
+    }
+    finally {
+        if ($null -eq $previousRollForward) {
+            Remove-Item Env:DOTNET_ROLL_FORWARD -ErrorAction SilentlyContinue
+        }
+        else {
+            $env:DOTNET_ROLL_FORWARD = $previousRollForward
+        }
+    }
 }
 
 function Publish-Asset {
