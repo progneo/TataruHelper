@@ -97,30 +97,8 @@ namespace FFXIVTataruHelper.Services.UI
             _chatWindowsEventCoordinator.Start(uiModel, viewModel, tataruModel, mainWindow);
         }
 
-        public void Stop(IChatWindowCoordinator chatWindowCoordinator)
-        {
-            StopBestEffort(_chatWindowsEventCoordinator.Stop, "chat windows events");
-            StopBestEffort(chatWindowCoordinator.CloseAll, "chat windows");
-            StopBestEffort(_translationPipelineCoordinator.Stop, "translation pipeline");
-            StopBestEffort(_ffMemoryReader.Stop, "ff memory reader");
-
-            try
-            {
-                using (var cancellation = new CancellationTokenSource(SettingsShutdownTimeout))
-                {
-                    _settingsSyncService.StopAsync(cancellation.Token).GetAwaiter().GetResult();
-                }
-            }
-            catch (OperationCanceledException)
-            {
-                _logger.WriteLog("ApplicationCoordinator.Stop settings sync timed out.");
-            }
-            catch (Exception ex)
-            {
-                _logger.WriteLog("ApplicationCoordinator.Stop settings sync failed.");
-                _logger.WriteLog(ex);
-            }
-        }
+        // The synchronous Stop had no callers: the only shutdown path is StopAsync,
+        // reached from the thread-pool cleanup task in Window_Closing.
 
         public async Task StopAsync(IChatWindowCoordinator chatWindowCoordinator)
         {

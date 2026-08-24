@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
@@ -128,11 +129,6 @@ namespace FFXIVTataruHelper
             await _ApplicationCoordinator.InitializeAsync(this, _MainWindow, _TataruUIModel, _TataruViewModel);
         }
 
-        public void Stop()
-        {
-            _ApplicationCoordinator.Stop(_ChatWindowCoordinator);
-        }
-
         public Task StopAsync()
         {
             return _ApplicationCoordinator.StopAsync(_ChatWindowCoordinator);
@@ -169,6 +165,8 @@ namespace FFXIVTataruHelper
         {
             await Task.Run(() =>
             {
+                LogWindowListDivergenceIfAny();
+
                 try
                 {
                     var userSettings = TataruUIModel.GetSettings();
@@ -181,6 +179,45 @@ namespace FFXIVTataruHelper
                     throw;
                 }
             });
+        }
+
+        /// <summary>
+        /// The interface list and the list that gets saved are two separate
+        /// collections, and they are matched by window number rather than by
+        /// object. If a number exists in one and not the other, the window it
+        /// names shows in one place and is impossible to select or delete in
+        /// the other. Comparing the two right before a save is the cheapest
+        /// moment to catch that drift, and a healthy pair prints nothing.
+        /// </summary>
+        internal void LogWindowListDivergenceIfAny()
+        {
+            try
+            {
+                var settingsWindows = TataruUIModel.ChatWindows
+                    .Select(x => x.WinId)
+                    .OrderBy(x => x)
+                    .ToArray();
+                var shownWindows = TataruViewModel.ChatWindows
+                    .Select(x => x.WinId)
+                    .OrderBy(x => x)
+                    .ToArray();
+
+                if (settingsWindows.SequenceEqual(shownWindows))
+                {
+                    return;
+                }
+
+                _Logger.WriteLog("Chat window lists diverged before save - settings: [" +
+                                  string.Join(", ", TataruUIModel.ChatWindows.Select(x => x.Name + "#" + x.WinId)) +
+                                  "]; interface: [" +
+                                  string.Join(", ", TataruViewModel.ChatWindows.Select(x => x.Name + "#" + x.WinId)) +
+                                  "].");
+            }
+            catch (Exception e)
+            {
+                _Logger.WriteLog("TataruModel.SaveSettings divergence check failed.");
+                _Logger.WriteLog(e);
+            }
         }
     }
 }

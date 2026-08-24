@@ -55,7 +55,10 @@ public partial class MainWindow : FluentWindow
     private TataruUIModel _tataruUiModel;
     private SettingsShellViewModel _settingsShellViewModel;
 
+    // Assigned only in non-DEBUG: the updater timer never runs in debug.
+#pragma warning disable CS0649
     private Timer _updaterTimer;
+#pragma warning restore CS0649
     private readonly LanguageWrapper _languageWrapper;
     private readonly ISettingsStore _settingsStore;
     private readonly OptimizeFootprint _optimizeFootprint;
@@ -228,6 +231,15 @@ public partial class MainWindow : FluentWindow
         catch (Exception ex)
         {
             _logger.WriteLog(ex);
+
+            // The settings window is the only interface; a half-initialised
+            // one must not be the only place a startup fault is hidden.
+            System.Windows.MessageBox.Show(
+                this,
+                "The settings window did not finish starting. Details are in the log:\r\n\r\n" + ex.Message,
+                TryFindResource("SettingsWindowName") as string ?? "Tataru Helper",
+                System.Windows.MessageBoxButton.OK,
+                System.Windows.MessageBoxImage.Error);
         }
     }
 

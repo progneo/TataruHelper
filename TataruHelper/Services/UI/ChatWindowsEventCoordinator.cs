@@ -94,6 +94,10 @@ namespace FFXIVTataruHelper.Services.UI
                             }
                         }
                     });
+
+                    // The two lists should now agree; when they do not, log
+                    // both while the cause is still minutes, not days, old.
+                    _tataruModel?.LogWindowListDivergenceIfAny();
                     break;
                 }
                 case ListChangedType.ItemDeleted:
@@ -125,6 +129,7 @@ namespace FFXIVTataruHelper.Services.UI
                         _deletionGate.Release();
                     }
 
+                    _tataruModel?.LogWindowListDivergenceIfAny();
                     break;
                 }
             }
@@ -146,6 +151,8 @@ namespace FFXIVTataruHelper.Services.UI
                             _chatWindowCoordinator.AddFromViewModel(newElem, _uiModel);
                         }
                     });
+
+                    _tataruModel?.LogWindowListDivergenceIfAny();
                     break;
                 }
                 case ListChangedType.ItemDeleted:
@@ -177,6 +184,7 @@ namespace FFXIVTataruHelper.Services.UI
                         _deletionGate.Release();
                     }
 
+                    _tataruModel?.LogWindowListDivergenceIfAny();
                     break;
                 }
             }

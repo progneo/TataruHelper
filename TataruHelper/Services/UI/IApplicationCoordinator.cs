@@ -12,8 +12,6 @@ namespace FFXIVTataruHelper.Services.UI
         Task InitializeAsync(TataruModel tataruModel, MainWindow mainWindow, TataruUIModel uiModel,
             TataruViewModel viewModel);
 
-        void Stop(IChatWindowCoordinator chatWindowCoordinator);
-
         Task StopAsync(IChatWindowCoordinator chatWindowCoordinator);
 
         void LoadSettings(TataruUIModel uiModel, string systemSettingFileName, ChatProcessor chatProcessor,
