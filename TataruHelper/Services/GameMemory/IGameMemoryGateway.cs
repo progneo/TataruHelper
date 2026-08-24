@@ -25,6 +25,18 @@ namespace FFXIVTataruHelper.Services.GameMemory
         bool DialogueIsSubtitle { get; }
 
         /// <summary>
+        /// The line the game is drawing in its dialogue window right now, in the
+        /// "speaker:text" form it reaches the translation pipeline - or empty
+        /// when it is drawing none, which is how a copy of a translated line
+        /// knows the ground has moved under it while its translation is in
+        /// flight.
+        ///
+        /// Taken on the sweep that reads the line itself, so asking costs
+        /// nothing beyond what is already being read.
+        /// </summary>
+        string CurrentDialogueLine { get; }
+
+        /// <summary>
         /// Whether dialogue under this code has been read off the screen at least
         /// once since attaching, and so whether the chat log's later copy of it
         /// would be a repeat rather than the only copy there is.

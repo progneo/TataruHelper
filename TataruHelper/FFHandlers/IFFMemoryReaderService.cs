@@ -27,6 +27,14 @@ namespace FFXIVTataruHelper.FFHandlers
         /// <summary>Whether that line is a cutscene subtitle, drawn without a window.</summary>
         bool DialogueIsSubtitle { get; }
 
+        /// <summary>
+        /// The line the game is drawing in its dialogue window right now, in the
+        /// form it reaches the translation pipeline - or empty when it is
+        /// drawing none, which is how a copy of a translated line knows the
+        /// game has moved on to another while its own is still on its way.
+        /// </summary>
+        string CurrentDialogueLine { get; }
+
         /// <summary>The game's own window, for putting something over it.</summary>
         IntPtr GameWindowHandle { get; }
 

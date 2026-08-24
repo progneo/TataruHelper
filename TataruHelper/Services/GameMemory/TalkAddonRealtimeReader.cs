@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
@@ -50,6 +50,14 @@ namespace FFXIVTataruHelper.Services.GameMemory
         private string _lastLoggedNodeList = string.Empty;
 
         private string _lastLoggedBubbleFlags = string.Empty;
+
+        /// <summary>
+        /// Which bubble on screen was just said. The addon shows several at
+        /// once and keeps them long after they were spoken.
+        /// </summary>
+        private readonly SpeechBubbles _speechBubbles = new SpeechBubbles();
+
+        private string _lastLoggedBubblePick = string.Empty;
 
         private string _lastLoggedBounds = string.Empty;
 
@@ -919,7 +927,24 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 }
             }
 
-            nodeTexts = textCandidates.ToArray();
+            // Narrowed to the one just spoken. The addon holds every bubble
+            // on screen at once, and asked for the longest of them the reader
+            // answered with a passer-by's stale sentence for minutes on end,
+            // because it was longer than every live one.
+            var spoken = _speechBubbles.Pick(textCandidates);
+
+            // Logged before the narrowing, and separately from it: printing
+            // only what was picked hid what was on screen to pick from, which
+            // is the whole of what has to be seen to judge the picking.
+            if (Logger.RawDialogLogEnabled)
+            {
+                WriteDistinctRawDialogLog(ref _lastLoggedBubblePick,
+                    "Bubbles on screen={ " +
+                    string.Join(" | ", textCandidates.Select(text => "[" + text + "]")) +
+                    " } spoken=[" + spoken + "]");
+            }
+
+            nodeTexts = spoken.Length > 0 ? new[] { spoken } : Array.Empty<string>();
             return true;
         }
 

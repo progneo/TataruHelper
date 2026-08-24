@@ -422,7 +422,8 @@ namespace TataruHelper.Tests
         {
             var directDialogReader = new FakeDirectDialogReader();
             var current = TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, "The wood... It's watching!");
-            var gateway = CreateGateway(directDialogReader, () => current);
+            var now = new DateTime(2026, 5, 16, 10, 0, 0);
+            var gateway = CreateGateway(directDialogReader, () => current, () => now);
 
             gateway.ResetRealtimeDialogState();
             Assert.That(gateway.GetDirectDialog().ChatLogItems.Single().Line,
@@ -433,8 +434,94 @@ namespace TataruHelper.Tests
 
             current = TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, "The wood... It's watching!");
 
+            // Walked past again, not the same breath. Inside it the two are
+            // indistinguishable from one line arriving by both roads, which is
+            // what the guard is there to collapse.
+            now = now.Add(RecentUtterance.SameBreath);
+
             Assert.That(gateway.GetDirectDialog().ChatLogItems.Single().Line,
                 Is.EqualTo("The wood... It's watching!"));
+        }
+
+        // The line the game is drawing is the only judge of which conversation a
+        // translated copy of an earlier line still belongs to - but it can only
+        // be judged on the sweep that reads it, which is what costs nothing.
+        [Test]
+        public void Gateway_TellsTheLineItIsDrawing_OnEverySweep()
+        {
+            var directDialogReader = new FakeDirectDialogReader();
+            var current = TalkAddonRealtimeDialogSnapshot.Available("003D", "Cid", "First line");
+            var gateway = CreateGateway(directDialogReader, () => current);
+
+            Assert.That(gateway.CurrentDialogueLine, Is.Empty, "nothing read yet, nothing drawn");
+
+            gateway.GetDirectDialog();
+
+            var firstReading = gateway.CurrentDialogueLine;
+            gateway.GetDirectDialog();
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(
+                    firstReading,
+                    Is.EqualTo("Cid:First line"),
+                    "the line it is drawing, in the form it reaches the pipeline");
+                Assert.That(
+                    gateway.CurrentDialogueLine,
+                    Is.EqualTo(firstReading),
+                    "the same line, on the next sweep");
+            });
+        }
+
+        [Test]
+        public void Gateway_ClearsTheLineItIsDrawing_WhenTheScreenGoesQuiet()
+        {
+            var current = TalkAddonRealtimeDialogSnapshot.Available("003D", "Cid", "First line");
+            var gateway = CreateGateway(new FakeDirectDialogReader(), () => current);
+
+            gateway.GetDirectDialog();
+            Assert.That(gateway.CurrentDialogueLine, Is.EqualTo("Cid:First line"));
+
+            current = TalkAddonRealtimeDialogSnapshot.Unavailable();
+            gateway.GetDirectDialog();
+
+            Assert.That(
+                gateway.CurrentDialogueLine,
+                Is.Empty,
+                "holding on to it would make a copy still on its way look current");
+        }
+
+        [Test]
+        public void Gateway_ClearsTheLineItIsDrawing_WhenTheAddonSaysNothing()
+        {
+            var current = TalkAddonRealtimeDialogSnapshot.Available("003D", "Cid", "First line");
+            var gateway = CreateGateway(new FakeDirectDialogReader(), () => current);
+
+            gateway.GetDirectDialog();
+
+            current = TalkAddonRealtimeDialogSnapshot.Available("003D", "Cid", "   ");
+            gateway.GetDirectDialog();
+
+            Assert.That(
+                gateway.CurrentDialogueLine,
+                Is.Empty,
+                "an addon speaking no words is drawing no line");
+        }
+
+        [Test]
+        public void Gateway_ForgettingThePreviousGame_ForgetsWhatItWasDrawing()
+        {
+            var gateway = CreateGateway(
+                new FakeDirectDialogReader(),
+                () => TalkAddonRealtimeDialogSnapshot.Available("003D", "Cid", "First line"));
+
+            gateway.GetDirectDialog();
+            gateway.ResetRealtimeDialogState();
+
+            Assert.That(
+                gateway.CurrentDialogueLine,
+                Is.Empty,
+                "the previous process's words are not drawn by this one");
         }
 
         private static SharlayanGameMemoryGateway CreateGateway(
@@ -446,6 +533,136 @@ namespace TataruHelper.Tests
                 new NullLogger(),
                 realtimeReader,
                 () => new DateTime(2026, 5, 16, 10, 0, 0));
+        }
+
+        /// <summary>
+        /// Replayed from a duty on 24 August: the subtitle strip showed the
+        /// line naming nobody, and a second later the dialogue window showed
+        /// the same line with Cassard's name on it. Both went out, so the
+        /// reader said everything twice for the length of the dungeon.
+        /// </summary>
+        [Test]
+        public void Gateway_ShowsOneLineOnce_WhenTwoWindowsCarryIt()
+        {
+            const string said = "I haven't the faintest what's going on, but you'd best keep moving!";
+
+            var directDialogReader = new FakeDirectDialogReader();
+            var queue = new Queue<TalkAddonRealtimeDialogSnapshot>();
+            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, said));
+            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("0044", "Cassard", said));
+
+            var now = new DateTime(2026, 8, 24, 15, 31, 38, DateTimeKind.Utc);
+            var gateway = CreateGateway(directDialogReader, () => queue.Dequeue(), () => now);
+
+            Assert.That(gateway.GetDirectDialog().ChatLogItems.Single().Line, Is.EqualTo(said));
+
+            now = now.AddSeconds(1);
+
+            Assert.That(gateway.GetDirectDialog().ChatLogItems, Is.Empty,
+                "the dialogue window's copy of what the subtitle already said");
+        }
+
+        /// <summary>
+        /// The same words half a minute on are the line being said again, not
+        /// the other window catching up.
+        /// </summary>
+        [Test]
+        public void Gateway_ShowsTheLineAgain_WhenItIsSaidLater()
+        {
+            const string said = "I haven't the faintest what's going on, but you'd best keep moving!";
+
+            var directDialogReader = new FakeDirectDialogReader();
+            var queue = new Queue<TalkAddonRealtimeDialogSnapshot>();
+            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, said));
+            queue.Enqueue(TalkAddonRealtimeDialogSnapshot.Available("0044", "Cassard", said));
+
+            var now = new DateTime(2026, 8, 24, 15, 31, 38, DateTimeKind.Utc);
+            var gateway = CreateGateway(directDialogReader, () => queue.Dequeue(), () => now);
+
+            gateway.GetDirectDialog();
+            now = now.AddSeconds(34);
+
+            Assert.That(gateway.GetDirectDialog().ChatLogItems.Single().Line, Is.EqualTo("Cassard:" + said));
+        }
+
+        /// <summary>
+        /// Replayed from a duty on 24 August, to the millisecond:
+        ///
+        ///   16:29:05.119  the chat log's copy is judged - nothing read live yet
+        ///   16:29:05.160  the screen's copy is read, forty-one milliseconds on
+        ///
+        /// The guard only asked whether the screen had spoken first, so with
+        /// the log winning the race both copies were shown - which is every
+        /// line of a duty, since there the log always wins.
+        /// </summary>
+        [Test]
+        public void Gateway_ShowsOneLineOnce_WhenTheChatLogArrivesFirst()
+        {
+            const string said = "No small coup to roll that boulder over!";
+
+            var directDialogReader = new FakeDirectDialogReader();
+            var now = new DateTime(2026, 8, 24, 16, 29, 5, 119, DateTimeKind.Utc);
+            var gateway = CreateGateway(
+                directDialogReader,
+                () => TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, said),
+                () => now);
+
+            var fromChatLog = BuildResult(new ChatLogItem { Code = "0044", Line = "Thancred's Avatar:" + said });
+            gateway.DropLinesAlreadySeenLive(fromChatLog);
+
+            Assert.That(fromChatLog.ChatLogItems, Has.Count.EqualTo(1),
+                "the log got here first, so its copy is the one shown");
+
+            now = now.AddMilliseconds(41);
+
+            Assert.That(gateway.GetDirectDialog().ChatLogItems, Is.Empty,
+                "and the screen's copy of the same words is not shown again");
+        }
+
+        /// <summary>
+        /// The same duty line, with the sweep that finds nothing on screen put
+        /// back in between - which is what really happens, and what the first
+        /// version of this test left out:
+        ///
+        ///   16:37:31.925  the chat log's copy is recorded
+        ///                 a sweep finds the screen still empty
+        ///   16:37:31.971  the screen's copy arrives
+        ///
+        /// Clearing the memory on the empty sweep undid the whole guard, and
+        /// the test that omitted the sweep passed while the duty duplicated
+        /// every line.
+        /// </summary>
+        [Test]
+        public void Gateway_ShowsOneLineOnce_AcrossASweepWithNothingOnScreen()
+        {
+            const string said = "No small coup to roll that boulder over!";
+
+            var directDialogReader = new FakeDirectDialogReader();
+            var current = TalkAddonRealtimeDialogSnapshot.Unavailable();
+            var now = new DateTime(2026, 8, 24, 16, 37, 31, 925, DateTimeKind.Utc);
+            var gateway = CreateGateway(directDialogReader, () => current, () => now);
+
+            var fromChatLog = BuildResult(new ChatLogItem { Code = "0044", Line = "Thancred's Avatar:" + said });
+            gateway.DropLinesAlreadySeenLive(fromChatLog);
+            Assert.That(fromChatLog.ChatLogItems, Has.Count.EqualTo(1));
+
+            now = now.AddMilliseconds(20);
+            gateway.GetDirectDialog();
+
+            now = now.AddMilliseconds(26);
+            current = TalkAddonRealtimeDialogSnapshot.Available("0044", string.Empty, said);
+
+            Assert.That(gateway.GetDirectDialog().ChatLogItems, Is.Empty,
+                "the empty sweep in between must not erase what the log just said");
+        }
+
+        private static SharlayanGameMemoryGateway CreateGateway(
+            FakeDirectDialogReader directDialogReader,
+            Func<TalkAddonRealtimeDialogSnapshot> realtimeReader,
+            Func<DateTime> clock)
+        {
+            return new SharlayanGameMemoryGateway(
+                directDialogReader, new NullLogger(), realtimeReader, clock);
         }
 
         private static ChatLogResult BuildResult(params ChatLogItem[] items)

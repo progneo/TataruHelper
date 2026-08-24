@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -30,6 +30,13 @@ namespace FFXIVTataruHelper.Services.GameMemory
         private ChatLogResult _lastChatLogResult = new ChatLogResult();
         private string _lastRealtimeDialogSignature = string.Empty;
 
+        /// <summary>
+        /// Guards against the two windows a duty shows one line in. The
+        /// signature above cannot: it carries the speaker, and one of the two
+        /// windows names nobody.
+        /// </summary>
+        private readonly RecentUtterance _recentUtterance = new RecentUtterance();
+
         private const int MaxRememberedRealtimeLines = 64;
 
         private readonly HashSet<string> _recentRealtimeLines = new HashSet<string>(StringComparer.Ordinal);
@@ -55,6 +62,13 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         /// <summary>Bare text of the last realtime line, without the speaker prefix.</summary>
         private string _lastEmittedRealtimeText = string.Empty;
+
+        /// <summary>
+        /// The line the game is drawing in its dialogue window at the last
+        /// sweep, in the form it reaches the translation pipeline. Refreshed
+        /// on every sweep, including the one that finds the window gone.
+        /// </summary>
+        private string _currentDialogueLine = string.Empty;
 
         public SharlayanGameMemoryGateway(IDirectDialogReader directDialogReader, IAppLogger logger)
             : this(directDialogReader, logger, null, null)
@@ -102,10 +116,12 @@ namespace FFXIVTataruHelper.Services.GameMemory
             _lastChatLogResult = new ChatLogResult();
             _lastRealtimeDialogSignature = string.Empty;
             _lastEmittedRealtimeText = string.Empty;
+            _recentUtterance.Forget();
             _recentRealtimeLines.Clear();
             _recentRealtimeLineOrder.Clear();
             _codesReadLive.Clear();
             _linesReadLive = 0;
+            _currentDialogueLine = string.Empty;
         }
 
         /// <summary>
@@ -182,7 +198,11 @@ namespace FFXIVTataruHelper.Services.GameMemory
         /// </summary>
         internal void DropLinesAlreadySeenLive(ChatLogResult chatLogResult)
         {
-            if (_recentRealtimeLines.Count == 0 || chatLogResult?.ChatLogItems == null)
+            // No early-out on "nothing read live yet". That was true exactly
+            // when this matters: at the first lines of a session the screen
+            // has told us nothing, the chat log arrives first, and leaving
+            // without looking is how its copy got through unrecorded.
+            if (chatLogResult?.ChatLogItems == null)
             {
                 return;
             }
@@ -217,7 +237,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
         private bool IsDuplicateOfRealtimeLine(ChatLogItem item)
         {
             var key = BuildDuplicateKey(item?.Line);
-            var seenLive = _recentRealtimeLines.Contains(key);
+            var seenLive = _recentRealtimeLines.Contains(key) ||
+                           _recentUtterance.IsEcho(key, SpeakerOf(item?.Line), _timestampProvider());
 
             if (Logger.RawDialogLogEnabled)
             {
@@ -232,6 +253,20 @@ namespace FFXIVTataruHelper.Services.GameMemory
         /// chat-log copy compare equal. The two render the speaker differently, so
         /// matching whole lines let every NPC line through twice.
         /// </summary>
+        /// <summary>
+        /// Who the chat log says is speaking - the part it puts before the
+        /// colon, which is exactly what the key below drops. Empty when the
+        /// line names nobody, as a bubble or a subtitle does.
+        /// </summary>
+        internal static string SpeakerOf(string line)
+        {
+            var normalized = NormalizeDialogToken(line);
+            var separatorIndex = normalized.IndexOf(':');
+            return separatorIndex > 0 && separatorIndex < normalized.Length - 1
+                ? normalized.Substring(0, separatorIndex)
+                : string.Empty;
+        }
+
         internal static string BuildDuplicateKey(string line)
         {
             var normalized = NormalizeDialogToken(line);
@@ -292,6 +327,8 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
         public bool DialogueIsSubtitle => _talkAddonRealtimeReader?.DialogueIsSubtitle ?? false;
 
+        public string CurrentDialogueLine => _currentDialogueLine;
+
         public ChatLogResult GetDirectDialog()
         {
             var fallbackDirectDialog =
@@ -309,6 +346,16 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 // taken for an echo, so they only ever get through when somebody
                 // else has spoken in between.
                 _lastRealtimeDialogSignature = string.Empty;
+                _currentDialogueLine = string.Empty;
+
+                // Deliberately not forgetting what was just said. Clearing it
+                // here looked tidy and cost the whole guard: the chat log's
+                // copy is recorded while nothing is on screen yet, and the
+                // screen's copy follows some forty milliseconds later - so the
+                // clearing happened in between, every time, and both were
+                // shown. What the memory is for is exactly that gap. An NPC
+                // repeating a bubble as you walk past is handled by the two
+                // seconds, not by wiping the slate.
                 return fallbackDirectDialog;
             }
 
@@ -316,6 +363,10 @@ namespace FFXIVTataruHelper.Services.GameMemory
             var talkText = NormalizeDialogToken(realtimeSnapshot.TalkText);
             if (talkText.Length == 0)
             {
+                // Nothing is being drawn. Forgetting that matters: a copy of the last line,
+                // still on its way, would arrive into a matching state and be
+                // shown as though it were still on screen.
+                _currentDialogueLine = string.Empty;
                 return fallbackDirectDialog;
             }
 
@@ -326,26 +377,33 @@ namespace FFXIVTataruHelper.Services.GameMemory
             }
 
             var speakerName = NormalizeDialogToken(realtimeSnapshot.SpeakerName);
+            var line = BuildRealtimeDialogLine(speakerName, talkText);
+            _currentDialogueLine = line;
             var signature = BuildRealtimeSignature(speakerName, talkText);
             if (!string.Equals(_lastRealtimeDialogSignature, signature, StringComparison.Ordinal))
             {
                 _lastRealtimeDialogSignature = signature;
                 _lastEmittedRealtimeText = talkText;
 
+                // A duty shows the same line in two windows a breath apart -
+                // the subtitle strip, which names nobody, and the dialogue
+                // window, which names the speaker. The signature above tells
+                // them apart because it carries the speaker, so both went out.
+                // Compared without him, they are one utterance.
+                var echo = _recentUtterance.IsEcho(BuildDuplicateKey(line), speakerName, _timestampProvider());
+
                 // Every line counts, including the first after attaching. Holding
                 // that one back used to be how an already-running game avoided
                 // reporting the conversation the player had before as though it
                 // had just happened; the reader now skips addons the game is not
                 // drawing, so a line that reaches here is one that is on screen.
-                var line = BuildRealtimeDialogLine(speakerName, talkText);
-
                 if (Logger.RawDialogLogEnabled)
                 {
                     Logger.WriteRawDialogLog(
-                        $"Emit code=[{chatCode}] speaker=[{speakerName}] text=[{talkText}] line=[{line}]");
+                        $"Emit code=[{chatCode}] speaker=[{speakerName}] echo=[{echo}] text=[{talkText}] line=[{line}]");
                 }
 
-                if (line.Length > 0)
+                if (line.Length > 0 && !echo)
                 {
                     result.ChatLogItems.Enqueue(new ChatLogItem
                     {
@@ -358,7 +416,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
 
                 // Remembered even when priming swallowed the line, so the chat-log
                 // copy of an already-seen conversation is dropped too.
-                RememberRealtimeLine(line.Length > 0 ? line : BuildRealtimeDialogLine(speakerName, talkText));
+                RememberRealtimeLine(line);
             }
 
             if (fallbackDirectDialog.ChatLogItems == null || fallbackDirectDialog.ChatLogItems.Count == 0)
@@ -404,6 +462,7 @@ namespace FFXIVTataruHelper.Services.GameMemory
                 _talkAddonRealtimeReader = null;
                 _lastChatLogResult = new ChatLogResult();
                 _lastRealtimeDialogSignature = string.Empty;
+                _currentDialogueLine = string.Empty;
             }
         }
 
