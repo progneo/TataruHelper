@@ -56,6 +56,7 @@ No .NET runtime to install — the release carries its own.
 
 - Full usage walkthrough: [Guide](Documents/Guide.MD).
 - After install, launch from the desktop/start-menu shortcut (not from `Setup.exe` again).
+- How dialogue is read out of the game, for anyone changing that part: [Reading the game](Documents/ReadingTheGame.md).
 
 ## Demo
 
