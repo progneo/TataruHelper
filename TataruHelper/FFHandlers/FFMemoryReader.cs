@@ -118,6 +118,8 @@ namespace FFXIVTataruHelper.FFHandlers
 
         public bool DialogueIsSubtitle => _gameMemoryGateway?.DialogueIsSubtitle ?? false;
 
+        public string CurrentDialogueLine => _gameMemoryGateway?.CurrentDialogueLine ?? string.Empty;
+
         public bool IsGameWindowForeground
         {
             get;
@@ -334,58 +336,75 @@ namespace FFXIVTataruHelper.FFHandlers
                 while (_keepWorking && processNotFound && !cancellationToken.IsCancellationRequested)
                 {
                     var processes = Process.GetProcessesByName(_ffProcessName);
-                    if (processes.Length > 0)
+                    try
                     {
-                        try
+                        if (processes.Length > 0)
                         {
-                            // Read off the game rather than assumed. This was
-                            // "English" whatever the client was set to, which
-                            // is the wrong signatures and the wrong text for
-                            // everybody playing in one of the other three.
-                            // Supported: English, Chinese, Japanese, French,
-                            // German, Korean.
-                            var languageCode = GameClientLanguage.Detect(_logger);
-                            var gameLanguage = GameClientLanguage.ReaderName(languageCode);
-                            // whether to always hit API on start to get the latest sigs based on patchVersion, or use the local json cache (if the file doesn't exist, API will be hit)
-                            const bool useLocalCache = true;
-                            const bool scanAllMemoryRegions = false;
-                            // patchVersion of game, or latest//
-                            const string patchVersion = "latest";
-                            var process = processes[0];
-
-                            if (_ffXivProcess != null)
+                            try
                             {
-                                _ffXivProcess.Dispose();
+                                // Read off the game rather than assumed. This was
+                                // "English" whatever the client was set to, which
+                                // is the wrong signatures and the wrong text for
+                                // everybody playing in one of the other three.
+                                // Supported: English, Chinese, Japanese, French,
+                                // German, Korean.
+                                var languageCode = GameClientLanguage.Detect(_logger);
+                                var gameLanguage = GameClientLanguage.ReaderName(languageCode);
+                                // whether to always hit API on start to get the latest sigs based on patchVersion, or use the local json cache (if the file doesn't exist, API will be hit)
+                                const bool useLocalCache = true;
+                                const bool scanAllMemoryRegions = false;
+                                // patchVersion of game, or latest//
+                                const string patchVersion = "latest";
+                                var process = processes[0];
+
+                                if (_ffXivProcess != null)
+                                {
+                                    _ffXivProcess.Dispose();
+                                }
+
+                                _ffXivProcess = process;
+                                var processModel = new ProcessModel { Process = process };
+
+                                _gameMemoryGateway.SetProcess(processModel, gameLanguage, patchVersion, useLocalCache,
+                                    scanAllMemoryRegions);
+
+                                processNotFound = false;
+                                _keepReading = true;
+                                _detectedGameLanguage = languageCode;
+                                _lastKnownGameLanguage = languageCode;
+
+                                GameLanguageResolved?.Invoke(languageCode);
                             }
-
-                            _ffXivProcess = process;
-                            var processModel = new ProcessModel { Process = process };
-
-                            _gameMemoryGateway.SetProcess(processModel, gameLanguage, patchVersion, useLocalCache,
-                                scanAllMemoryRegions);
-
-                            processNotFound = false;
-                            _keepReading = true;
-                            _detectedGameLanguage = languageCode;
-                            _lastKnownGameLanguage = languageCode;
-
-                            GameLanguageResolved?.Invoke(languageCode);
+                            catch (OperationCanceledException)
+                            {
+                                _logger.WriteLog("FFMemoryReader.InitMemoryReader process attach canceled.");
+                                throw;
+                            }
+                            catch (Exception e)
+                            {
+                                await Task.Delay(_settingsStore.LookForProcessDelayMs, cancellationToken);
+                                _logger.WriteLog("FFMemoryReader.InitMemoryReader process attach failed.");
+                                _logger.WriteLog(e);
+                            }
                         }
-                        catch (OperationCanceledException)
-                        {
-                            _logger.WriteLog("FFMemoryReader.InitMemoryReader process attach canceled.");
-                            throw;
-                        }
-                        catch (Exception e)
+                        else
                         {
                             await Task.Delay(_settingsStore.LookForProcessDelayMs, cancellationToken);
-                            _logger.WriteLog("FFMemoryReader.InitMemoryReader process attach failed.");
-                            _logger.WriteLog(e);
                         }
                     }
-                    else
+                    finally
                     {
-                        await Task.Delay(_settingsStore.LookForProcessDelayMs, cancellationToken);
+                        // The array hands out live process handles; keep the one
+                        // now held by _ffXivProcess and release the rest, so a
+                        // long search for a game that is not running does not
+                        // leak a handle per poll.
+                        for (var i = 0; i < processes.Length; i++)
+                        {
+                            if (!ReferenceEquals(processes[i], _ffXivProcess))
+                            {
+                                processes[i].Dispose();
+                            }
+                        }
                     }
                 }
             }
@@ -469,8 +488,28 @@ namespace FFXIVTataruHelper.FFHandlers
 
                     FFWindowState = ffxivPrevWindowState;
 
-                    var processes = Process.GetProcessesByName(_ffProcessName);
-                    if (processes.Length == 0)
+                    // Sampled and released on the spot: holding live process
+                    // handles across the delay would leak one per poll for as
+                    // long as the game keeps running.
+                    string gameProcessName = null;
+                    int gameProcessId = 0;
+                    {
+                        var processes = Process.GetProcessesByName(_ffProcessName);
+                        try
+                        {
+                            gameProcessName = processes.Length > 0 ? processes[0].ProcessName : null;
+                            gameProcessId = processes.Length > 0 ? processes[0].Id : 0;
+                        }
+                        finally
+                        {
+                            foreach (var gameProcess in processes)
+                            {
+                                gameProcess.Dispose();
+                            }
+                        }
+                    }
+
+                    if (gameProcessName == null)
                     {
                         const WindowState oldState = WindowState.Normal;
                         var ea = new WindowStateChangeEventArgs(this)
@@ -516,8 +555,8 @@ namespace FFXIVTataruHelper.FFHandlers
                                 NewWindowState = newState,
                                 IsRunningOld = isRunningPrev,
                                 IsRunningNew = true,
-                                Text = processes[0].ProcessName + ".exe" + "  PID: " +
-                                       processes[0].Id.ToString()
+                                Text = gameProcessName + ".exe" + "  PID: " +
+                                       gameProcessId.ToString()
                             };
 
                             _FFWindowStateChanged.InvokeAsync(ea).Forget();
@@ -528,8 +567,8 @@ namespace FFXIVTataruHelper.FFHandlers
                         isRunningPrev = true;
                         IsGameRunning = true;
                         _everAttached = true;
-                        GameProcessDescription = processes[0].ProcessName + ".exe" + "  PID: " +
-                                                 processes[0].Id.ToString();
+                        GameProcessDescription = gameProcessName + ".exe" + "  PID: " +
+                                                 gameProcessId.ToString();
                     }
                 }
                 catch (OperationCanceledException)

@@ -123,6 +123,17 @@ namespace TataruHelper.Tests
                 Is.EquivalentTo(new[] { "RealtimeNpc:RealtimeDialog" }));
         }
 
+        // The overlay has to be told which line the game is drawing so it can
+        // keep an arriving copy of an earlier line from being put over it.
+        [Test]
+        public void CurrentDialogueLine_ComesFromTheGateway()
+        {
+            var gateway = new FakeGameMemoryGateway { CurrentDialogueLine = "Cid:Quite." };
+            var reader = new FFMemoryReader(gateway, new NullLogger(), new FakeSettingsStore());
+
+            Assert.That(reader.CurrentDialogueLine, Is.EqualTo("Cid:Quite."));
+        }
+
         [TestCase("003D", true)]
         [TestCase("0044", true)]
         [TestCase("000A", false)]
@@ -173,6 +184,8 @@ namespace TataruHelper.Tests
                 FFXIVTataruHelper.Services.GameMemory.AddonBounds.Unknown;
 
             public bool DialogueIsSubtitle { get; set; }
+
+            public string CurrentDialogueLine { get; set; } = string.Empty;
 
             /// <summary>Codes this gateway claims to have read off the screen.</summary>
             public HashSet<string> CodesReadLive { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
