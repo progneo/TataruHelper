@@ -42,8 +42,12 @@ namespace FFXIVTataruHelper
         private readonly Border _plate;
         private readonly ImageBrush _frame;
 
-        /// <summary>Which of the two the copy is currently dressed as.</summary>
-        private bool _dressedAsSubtitle;
+        /// <summary>
+        /// Whether the copy is on screen and what it is dressed as. Kept out of
+        /// the window's own fields so the deciding can be checked without the
+        /// window, the way the placement and the hold are.
+        /// </summary>
+        private readonly DialogueOverlayPresentation _presentation = new DialogueOverlayPresentation();
 
         private readonly DialogueOverlayHold _hold = new DialogueOverlayHold();
 
@@ -56,6 +60,14 @@ namespace FFXIVTataruHelper
         /// a frame of that animation rather than a box worth covering.
         /// </summary>
         private double _widestSeen;
+
+        /// <summary>
+        /// The line this copy was put out for, reduced to its words - what it
+        /// is checked against while the game keeps talking. Empty until the
+        /// copy knows what line it is, which is also how it asks to be shown:
+        /// a line nobody has named cannot yet be taken for a stale one.
+        /// </summary>
+        private string _shownLineKey = string.Empty;
 
         public DialogueOverlayWindow(IFFMemoryReaderService memoryReader, Func<IntPtr> gameWindow)
         {
@@ -145,9 +157,14 @@ namespace FFXIVTataruHelper
             _timer.Tick += (_, __) => Follow();
         }
 
-        /// <summary>The line to show, as it was put on the chat window.</summary>
-        public void SetLine(string speaker, string text)
+        /// <summary>
+        /// The line to show, as it was put on the chat window, and where it
+        /// came from - the line as the game drew it, which the copy is
+        /// checked against while the game keeps talking.
+        /// </summary>
+        public void SetLine(string speaker, string text, string sourceLine)
         {
+            _shownLineKey = DialogueOverlayLineCheck.KeyOf(sourceLine);
             var named = (speaker ?? string.Empty).Trim();
             _speakerText = named.TrimEnd(':');
             _lineText = text ?? string.Empty;
@@ -184,8 +201,7 @@ namespace FFXIVTataruHelper
         {
             if (!GameWindowLocator.TryLocate(_gameWindow(), out var projection))
             {
-                Report("no game window");
-                Visibility = Visibility.Hidden;
+                HideCopy("no game window");
                 return;
             }
 
@@ -198,8 +214,7 @@ namespace FFXIVTataruHelper
             // new - the line was still on screen underneath the whole time.
             if (!foreground)
             {
-                Report("hidden: the game is not in front");
-                Visibility = Visibility.Hidden;
+                HideCopy("hidden: the game is not in front");
                 return;
             }
 
@@ -213,9 +228,8 @@ namespace FFXIVTataruHelper
 
             if (!_hold.Decide(placed, rect, DateTime.UtcNow, out rect))
             {
-                Report(FormattableString.Invariant(
+                HideCopy(FormattableString.Invariant(
                     $"hidden: foreground={foreground} boundsKnown={bounds.IsKnown} box={bounds.Width}x{bounds.Height} lineChars={_lineText.Length}"));
-                Visibility = Visibility.Hidden;
 
                 // The conversation is over, so the line it ended on is not the
                 // line anything says next. Held on to, it was showing through
@@ -226,14 +240,23 @@ namespace FFXIVTataruHelper
                 return;
             }
 
+            // The translation is a touch behind the game, and in that touch the
+            // game moves on: another box, another line. The line read off the
+            // screen is the only judge of which conversation the copy is in,
+            // so when the game has drawn another one, the copy comes off.
+            if (!DialogueOverlayLineCheck.IsCurrent(_shownLineKey, _memoryReader.CurrentDialogueLine))
+            {
+                HideCopy("stale: the game has moved on to another line");
+                return;
+            }
+
             // The game opens its window by growing it, and the copy used to
             // follow every frame of that - resizing and re-wrapping the text a
             // dozen times a line. The full size is the one that means anything,
             // so the copy waits for the growing to stop instead of racing it.
             if (rect.Width < _widestSeen * 0.98)
             {
-                Report("waiting for the box to finish opening");
-                Visibility = Visibility.Hidden;
+                HideCopy("waiting for the box to finish opening");
                 return;
             }
 
@@ -275,49 +298,64 @@ namespace FFXIVTataruHelper
         }
 
         /// <summary>
-        /// Dresses the copy for what it is covering.
+        /// Dresses the copy for what it is covering, and puts it on screen.
         ///
         /// A cutscene subtitle is not in a window at all - Hydaelyn's lines are
         /// bare text laid over the picture, centred, pale, with a dark edge so
         /// they read against anything. Putting the dialogue frame over one of
         /// those would hang a wooden box in the middle of a cutscene.
+        ///
+        /// The showing of it is asked of the presentation rather than decided
+        /// here: the first line of a conversation used to go up undrawn,
+        /// because being dressed for a line and being on screen were one
+        /// question, and the first line's answer to it was "already dressed, so
+        /// change nothing".
         /// </summary>
         private void Dress(bool subtitle, Rect rect)
         {
-            if (subtitle == _dressedAsSubtitle)
+            var mustShow = _presentation.Present(subtitle, out var restyled);
+
+            if (restyled)
             {
-                return;
+                _box.Background = subtitle ? null : _frame;
+                _plate.Visibility = subtitle ? Visibility.Collapsed : Visibility.Visible;
+
+                _line.TextAlignment = subtitle ? TextAlignment.Center : TextAlignment.Left;
+                _line.VerticalAlignment = subtitle ? VerticalAlignment.Center : VerticalAlignment.Top;
+                _line.Foreground = subtitle
+                    ? Brushes.White
+                    : new SolidColorBrush(Color.FromRgb(0x2A, 0x24, 0x1C));
+
+                // The game outlines its subtitles rather than shadowing them, and
+                // over a bright sky an unoutlined white line is unreadable.
+                _line.Effect = subtitle
+                    ? new DropShadowEffect
+                    {
+                        Color = Colors.Black,
+                        BlurRadius = 6,
+                        ShadowDepth = 0,
+                        Opacity = 1
+                    }
+                    : null;
             }
 
-            _dressedAsSubtitle = subtitle;
-
-            _box.Background = subtitle ? null : _frame;
-            _plate.Visibility = subtitle ? Visibility.Collapsed : Visibility.Visible;
-
-            _line.TextAlignment = subtitle ? TextAlignment.Center : TextAlignment.Left;
-            _line.VerticalAlignment = subtitle ? VerticalAlignment.Center : VerticalAlignment.Top;
-            _line.Foreground = subtitle
-                ? Brushes.White
-                : new SolidColorBrush(Color.FromRgb(0x2A, 0x24, 0x1C));
-
-            // The game outlines its subtitles rather than shadowing them, and
-            // over a bright sky an unoutlined white line is unreadable.
-            _line.Effect = subtitle
-                ? new DropShadowEffect
-                {
-                    Color = Colors.Black,
-                    BlurRadius = 6,
-                    ShadowDepth = 0,
-                    Opacity = 1
-                }
-                : null;
-
-            if (Visibility != Visibility.Visible)
+            if (mustShow)
             {
                 Show();
                 Visibility = Visibility.Visible;
                 MakeClickThrough();
             }
+        }
+
+        /// <summary>
+        /// Takes the copy off the screen and says in the raw-dialog log why,
+        /// once per change rather than twenty times a second.
+        /// </summary>
+        private void HideCopy(string reason)
+        {
+            Report(reason);
+            _presentation.Hide();
+            Visibility = Visibility.Hidden;
         }
 
         /// <summary>
@@ -333,6 +371,7 @@ namespace FFXIVTataruHelper
             _line.Text = string.Empty;
             _speaker.Text = string.Empty;
             _widestSeen = 0;
+            _shownLineKey = string.Empty;
         }
 
         private string _lastReport = string.Empty;

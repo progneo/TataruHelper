@@ -257,7 +257,7 @@ namespace FFXIVTataruHelper
                 if (_ChatWindowViewModel.IsHiddenByUser == false)
                     _TextArrivedTime = DateTime.UtcNow;
 
-                ShowTranslatedText(text, textColor, speaker, timeStamp);
+                ShowTranslatedText(text, textColor, speaker, timeStamp, ea.ChatMessage.Text);
 
                 if (_ChatWindowViewModel.IsHiddenByUser == false)
                     _TextArrivedTime = DateTime.UtcNow;
@@ -462,7 +462,8 @@ namespace FFXIVTataruHelper
         }
 
         void ShowTranslatedText(
-            string translatedMsg, Color color, string speaker = "", DateTime timeStamp = default(DateTime))
+            string translatedMsg, Color color, string speaker = "", DateTime timeStamp = default(DateTime),
+            string sourceLine = null)
         {
             try
             {
@@ -472,7 +473,7 @@ namespace FFXIVTataruHelper
                     ChatRtb.Document.Blocks.Clear();
                 }
 
-                EnsureDialogueOverlay()?.SetLine(speaker, translatedMsg);
+                EnsureDialogueOverlay()?.SetLine(speaker, translatedMsg, sourceLine);
 
                 Paragraph paragraph = _paragraphBuilder.BuildMessageParagraph(
                     translatedMsg, color, speaker, timeStamp);
@@ -734,6 +735,16 @@ namespace FFXIVTataruHelper
 
         protected override void OnClosed(EventArgs e)
         {
+            // The copy is its own window, not part of this one: stopping it
+            // here is the only thing that takes its timer and its frame off
+            // screen when this window goes.
+            if (_dialogueOverlay != null)
+            {
+                _dialogueOverlay.Stop();
+                _dialogueOverlay.Close();
+                _dialogueOverlay = null;
+            }
+
             _ChatWindowViewModel.AsyncPropertyChanged -= OnSettingsWindowPropertyChange;
             _ChatWindowViewModel.RequestChatClear -= OnChatClearRequest;
             _TataruModel.FFMemoryReader.AsyncPropertyChanged -= OnMemoryReaderPropertyChange;
