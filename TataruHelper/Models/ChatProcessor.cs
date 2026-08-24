@@ -381,6 +381,20 @@ namespace FFXIVTataruHelper
                 catch (OperationCanceledException)
                 {
                 }
+                catch (Exception exception)
+                {
+                    // A batch that stops here never completes on its own, and
+                    // the lines still buffered for this key would wait forever
+                    // without being shown and without an error. Fail the ones
+                    // still owned by this task.
+                    _Logger.WriteLog($"Delayed translation flush for '{batchKey}' faulted.");
+                    _Logger.WriteLog(exception);
+
+                    lock (_translationBufferSync)
+                    {
+                        FailPendingRequests(_translationBufferStates, batchKey, translationEngine, exception);
+                    }
+                }
             }), "delayed translation flush");
         }
 
@@ -418,9 +432,13 @@ namespace FFXIVTataruHelper
                     await TranslateBatchRequests(activeRequests, translationEngine, fromLang, toLang);
                 }
 
+                // HashSet rather than List.Contains: this loop already walks
+                // the whole batch, and Contains would walk it again per line.
+                var completedRequests = new HashSet<BufferedTranslationRequest>(activeRequests);
+
                 foreach (var request in requests)
                 {
-                    if (!activeRequests.Contains(request) && !request.CompletionSource.Task.IsCompleted)
+                    if (!completedRequests.Contains(request) && !request.CompletionSource.Task.IsCompleted)
                     {
                         request.CompletionSource.TrySetCanceled(request.CancellationToken);
                     }
@@ -503,14 +521,25 @@ namespace FFXIVTataruHelper
 
             for (int i = 0; i < requests.Count; i++)
             {
+                var request = requests[i];
+
+                // The combined call is one shot for everybody, so it stays
+                // uncancelled. The fallback is per line, so a line cancelled
+                // while the batch was in flight does not burn the quota
+                // translating something nobody will read.
+                if (request.CancellationToken.IsCancellationRequested)
+                {
+                    continue;
+                }
+
                 var result = await _WebTranslator.TranslateAsync(
-                    requests[i].InputText ?? string.Empty,
+                    request.InputText ?? string.Empty,
                     translationEngine,
                     fromLang,
                     toLang,
-                    CancellationToken.None);
+                    request.CancellationToken);
 
-                requests[i].CompletionSource.TrySetResult(result);
+                request.CompletionSource.TrySetResult(result);
             }
         }
 
@@ -566,6 +595,45 @@ namespace FFXIVTataruHelper
             state.DelayCts = null;
         }
 
+        /// <summary>
+        /// The dead-task net. A state whose delay token is still set has no
+        /// successor task - the one that was to flush it faulted - so whatever
+        /// is buffered there ends in a failure instead of a silent forever.
+        /// A state the task already rescheduled (token cleared, a new delay
+        /// set for the remainder) is left alone: it belongs to a live task.
+        /// </summary>
+        internal static bool FailPendingRequests(
+            Dictionary<string, TranslationBufferState> states,
+            string batchKey,
+            TranslationEngine translationEngine,
+            Exception exception)
+        {
+            TranslationBufferState state;
+            if (!states.TryGetValue(batchKey, out state))
+            {
+                return false;
+            }
+
+            if (state.DelayCts == null)
+            {
+                return false;
+            }
+
+            state.DelayCts.Dispose();
+            state.DelayCts = null;
+
+            foreach (var request in state.PendingRequests)
+            {
+                request.CompletionSource.TrySetResult(TranslationResult.Failure(
+                    translationEngine?.EngineName ?? default,
+                    TranslationFailureKind.ProviderUnavailable,
+                    exception?.Message ?? string.Empty));
+            }
+
+            states.Remove(batchKey);
+            return true;
+        }
+
         private static string BuildTranslationBatchKey(
             string chatCode,
             string nickName,
@@ -616,14 +684,14 @@ namespace FFXIVTataruHelper
             _Logger.WriteLog(text);
         }
 
-        private sealed class TranslationBufferState
+        internal sealed class TranslationBufferState
         {
             public List<BufferedTranslationRequest> PendingRequests { get; } = new List<BufferedTranslationRequest>();
 
             public CancellationTokenSource DelayCts { get; set; }
         }
 
-        private sealed class BufferedTranslationRequest
+        internal sealed class BufferedTranslationRequest
         {
             public string InputText { get; }
 

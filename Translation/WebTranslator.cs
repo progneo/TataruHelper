@@ -301,7 +301,9 @@ namespace Translation
             return TranslateAsync(inSentence, translationEngine, fromLang, toLang, CancellationToken.None);
         }
 
-        public Task<TranslationResult> TranslateAsync(
+        // Virtual so a test can stand in for the engine and script the faults
+        // and the tokens instead of paying for real translations.
+        public virtual Task<TranslationResult> TranslateAsync(
             string inSentence,
             TranslationEngine translationEngine,
             TranslatorLanguage fromLang,
