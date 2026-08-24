@@ -20,6 +20,13 @@ namespace FFXIVTataruHelper.Services.Settings
         private readonly object _gate = new object();
         private Dictionary<string, string> _entries;
 
+        /// <summary>
+        /// The file existed but could not be read at construction. While it is
+        /// set, a save must not write the in-memory state over the disk copy -
+        /// memory holds what the file failed to give us, i.e. nothing.
+        /// </summary>
+        private bool _diskLoadFailed;
+
         public DpapiCredentialStore() : this(
             Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TataruHelper"))
         {
@@ -112,24 +119,66 @@ namespace FFXIVTataruHelper.Services.Settings
                 var loaded = JsonConvert.DeserializeObject<Dictionary<string, string>>(json);
                 return loaded ?? new Dictionary<string, string>(StringComparer.Ordinal);
             }
-            catch
+            catch (Exception ex)
             {
+                // The file is there but will not come out - DPAPI refusing, or a
+                // file only halfway written. It still holds what it holds, so
+                // remember it and keep every later save away from it.
+                try
+                {
+                    if (File.Exists(_path))
+                    {
+                        _diskLoadFailed = true;
+                        Logger.WriteLog("DpapiCredentialStore could not read " + _path + "; leaving the file in place.");
+                        Logger.WriteLog(ex);
+                    }
+                }
+                catch (Exception probeEx)
+                {
+                    Logger.WriteLog("DpapiCredentialStore failed to probe " + _path);
+                    Logger.WriteLog(probeEx);
+                }
+
                 return new Dictionary<string, string>(StringComparer.Ordinal);
             }
         }
 
         private void Persist(Dictionary<string, string> entries)
         {
+            if (_diskLoadFailed)
+            {
+                // The disk copy could not be read, so writing the in-memory
+                // state (loaded as nothing) over it would put it out of
+                // existence. The keys live in memory for this session.
+                return;
+            }
+
+            // The bytes go to a side file and move across in one step, so a
+            // crash halfway cannot leave the live file empty or torn.
+            var temporaryPath = _path + ".new";
+
             try
             {
                 var json = JsonConvert.SerializeObject(entries);
                 var plain = Encoding.UTF8.GetBytes(json);
                 var encrypted = ProtectedData.Protect(plain, Entropy, DataProtectionScope.CurrentUser);
-                File.WriteAllBytes(_path, encrypted);
+                File.WriteAllBytes(temporaryPath, encrypted);
+                File.Move(temporaryPath, _path, true);
             }
-            catch
+            catch (Exception ex)
             {
-                // swallow — keys live in-memory for this session even if disk write fails.
+                try
+                {
+                    if (File.Exists(temporaryPath))
+                        File.Delete(temporaryPath);
+                }
+                catch (IOException)
+                {
+                }
+
+                // swallow - keys live in-memory for this session even if disk write fails.
+                Logger.WriteLog("DpapiCredentialStore could not persist " + _path);
+                Logger.WriteLog(ex);
             }
         }
     }

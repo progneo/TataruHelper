@@ -86,5 +86,28 @@ namespace TataruHelper.Tests
             Assert.That(second.IsEngineEnabled(TranslationEngineName.Ollama), Is.True);
             Assert.That(second.IsEngineEnabled(TranslationEngineName.GoogleTranslate), Is.False);
         }
+
+        /// <summary>
+        /// When the file on disk will not read (DPAPI refusing, a crash that
+        /// left it torn), a save must not write the in-memory state - nothing,
+        /// since the load came back empty - over it. The keys are already lost
+        /// to this session; clobbering the file makes that permanent.
+        /// </summary>
+        [Test]
+        public void AFileThatWillNotRead_IsNotOverwrittenByASave()
+        {
+            var directory = Path.Combine(
+                Path.GetTempPath(), "tataru-tests", Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(directory);
+            var secretsPath = Path.Combine(directory, "Secrets.dat");
+            var original = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+            File.WriteAllBytes(secretsPath, original);
+
+            var sut = new DpapiCredentialStore(directory);
+            sut.SetApiKey(TranslationEngineName.OpenAI, "a key that must not clobber the file");
+            sut.Save();
+
+            Assert.That(File.ReadAllBytes(secretsPath), Is.EqualTo(original));
+        }
     }
 }

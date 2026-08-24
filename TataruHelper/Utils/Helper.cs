@@ -37,18 +37,28 @@ namespace FFXIVTataruHelper
             }
             catch (Exception e)
             {
+                // A file that is there but will not come out: a crash halfway
+                // through an old non-atomic save, or corruption. Overwriting
+                // it with the default instance - what this used to do -
+                // silently reset the user's settings and destroyed the only
+                // copy of what the file had held. Quarantine instead: move it
+                // aside so somebody can look at it and recover from it, and
+                // go on with the default instance. The next successful save
+                // puts a live file back.
                 Logger.WriteLog(Convert.ToString(e));
 
                 try
                 {
-                    using (TextWriter writer = new StreamWriter(path))
+                    if (File.Exists(path))
                     {
-                        writer.WriteLine(JsonConvert.SerializeObject(result, JsonSettings));
+                        File.Move(path, path + ".corrupt", true);
+                        Logger.WriteLog("Quarantined unreadable " + path + " to " + path + ".corrupt");
                     }
                 }
-                catch (Exception e1)
+                catch (Exception quarantineEx)
                 {
-                    Logger.WriteLog(Convert.ToString(e1));
+                    Logger.WriteLog("Could not quarantine " + path + ":");
+                    Logger.WriteLog(Convert.ToString(quarantineEx));
                 }
             }
 
@@ -57,16 +67,34 @@ namespace FFXIVTataruHelper
 
         public static void SaveJson(object obj, string path)
         {
+            // The bytes go to a side file and move across in one step, so a
+            // crash or a forced shutdown mid-save cannot leave the live file
+            // truncated: the move either never happens or replaces the old
+            // file whole. A truncated half-write used to read back on the
+            // next start as every setting reset to its default.
+            var temporaryPath = path + ".new";
+
             try
             {
-                using (TextWriter writer = new StreamWriter(path))
+                using (TextWriter writer = new StreamWriter(temporaryPath))
                 {
                     writer.WriteLine(JsonConvert.SerializeObject(obj, JsonSettings));
                     writer.Flush();
                 }
+
+                File.Move(temporaryPath, path, true);
             }
             catch (Exception e)
             {
+                try
+                {
+                    if (File.Exists(temporaryPath))
+                        File.Delete(temporaryPath);
+                }
+                catch (IOException)
+                {
+                }
+
                 Logger.WriteLog(Convert.ToString(e));
             }
         }
