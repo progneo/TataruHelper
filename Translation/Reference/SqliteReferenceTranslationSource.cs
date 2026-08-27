@@ -396,6 +396,19 @@ namespace Translation.Reference
                     continue;
                 }
 
+                // The hole must not outweigh the sentence around it. A pattern
+                // is worth using when it translates the line and writes a name
+                // into it; when the name is longer than everything the pattern
+                // knows how to say, it is barely translating at all - "Defeat
+                // ⟨…⟩" carries one word and hands the rest back in English,
+                // and it caught seven hundred story lines doing so. Refusing
+                // those costs nothing: the line goes to an engine instead,
+                // which is where it would have gone anyway.
+                if (item.Length > pattern.FixedLength)
+                {
+                    continue;
+                }
+
                 pinned = pattern.FixedLength;
                 translation = pattern.Translated.Replace(ItemPlaceholder, item);
             }
@@ -412,9 +425,18 @@ namespace Translation.Reference
         /// "Добро пожаловать в " followed by the untouched English, because it
         /// began with those words and ended with a full stop.
         ///
-        /// A name is short and is not a sentence. Both tests are needed: the
-        /// length alone would let a short sentence through, and the punctuation
-        /// alone would let a long clause through.
+        /// A name is short, is not many words, and carries no punctuation
+        /// that joins or ends a sentence. Each test catches what the others
+        /// miss: length alone lets a short sentence through, the word count
+        /// alone lets "the Endeavor, pride and joy of the guild" through at
+        /// exactly eight, and the punctuation alone lets a long plain clause
+        /// through.
+        ///
+        /// Checking the hole against the game's own list of item names was
+        /// tried on paper and does not work: the markup carries the number and
+        /// the article, so what is drawn is "Allagan tomestones of poetics"
+        /// while the list holds "Allagan tomestone of poetics". The very line
+        /// this feature was built for would fail such a check.
         /// </summary>
         internal static bool LooksLikeAnItemName(string item)
         {
@@ -423,18 +445,47 @@ namespace Translation.Reference
             // thirty-four, so sixty leaves room without leaving a sentence in.
             const int longestName = 60;
 
+            // The longest names run to seven words - "Extreme Survival Kit of
+            // the Namazu" is six - so eight leaves room and still refuses a
+            // clause.
+            const int mostWords = 8;
+
             if (item.Length == 0 || item.Length > longestName)
             {
                 return false;
             }
 
-            foreach (var c in item)
+            var words = 1;
+
+            for (var i = 0; i < item.Length; i++)
             {
-                // A full stop is left alone: names carry one, as "Mk. II" does.
-                if (c == '!' || c == '?' || c == ';' ||
+                var c = item[i];
+
+                // A comma joins clauses. Names do not have any to join:
+                // "the Endeavor, pride and joy of the guild" is eight words
+                // and fits in sixty characters, and only the comma gives it
+                // away as a sentence rather than a thing.
+                if (c == '!' || c == '?' || c == ';' || c == ',' ||
                     c == (char)10 || c == (char)13)
                 {
                     return false;
+                }
+
+                // A full stop with a space after it ends a sentence. A name
+                // may carry one - "Mk. II" - but never one that closes.
+                if (c == '.' && i + 1 < item.Length && item[i + 1] == ' ')
+                {
+                    return false;
+                }
+
+                if (c == ' ')
+                {
+                    words++;
+
+                    if (words > mostWords)
+                    {
+                        return false;
+                    }
                 }
             }
 

@@ -198,11 +198,13 @@ namespace Translation.Tests.Reference
         }
 
         [TestCase("Allagan tomestones of poetics", true)]
-        [TestCase("Ceruleum Tank Mk. II", true, TestName = "a name may carry a full stop")]
         [TestCase("Extreme Survival Kit of the Namazu", true)]
+        [TestCase("Gysahl Greens", true)]
         [TestCase("", false)]
         [TestCase("Are you quite sure?", false, TestName = "a question is not a name")]
         [TestCase("Stand back! The thing is waking!", false)]
+        [TestCase("the Endeavor, pride and joy of the guild", false, TestName = "too many words for a name")]
+        [TestCase("a thing. And then another thing", false, TestName = "a full stop that closes a sentence")]
         public void WhatMayFallIntoTheHole(string item, bool isName)
         {
             Assert.That(SqliteReferenceTranslationSource.LooksLikeAnItemName(item), Is.EqualTo(isName));
@@ -217,6 +219,81 @@ namespace Translation.Tests.Reference
             Assert.That(
                 SqliteReferenceTranslationSource.LooksLikeAnItemName(new string('a', 60)),
                 Is.True);
+        }
+
+        /// <summary>
+        /// The reported line is a paragraph, but the rule has to refuse a
+        /// clause too - shorten it to fit inside sixty characters and it is
+        /// still not the name of a thing.
+        /// </summary>
+        [Test]
+        public void AShortClause_IsNotAnItemName()
+        {
+            Assert.That(
+                SqliteReferenceTranslationSource.LooksLikeAnItemName("the Endeavor, pride of the guild"),
+                Is.False);
+        }
+
+        /// <summary>
+        /// Seven words is the longest a name runs to, and the rule must not
+        /// start refusing those.
+        /// </summary>
+        [Test]
+        public void TheLongestRealNames_AreStillNames()
+        {
+            Assert.That(
+                SqliteReferenceTranslationSource.LooksLikeAnItemName("Augmented Cryptlurker's Ring of Healing"),
+                Is.True);
+            Assert.That(
+                SqliteReferenceTranslationSource.LooksLikeAnItemName("Grade 8 Tincture of Strength"),
+                Is.True);
+        }
+
+        /// <summary>
+        /// Measured against the index of 27 August: the shape rules alone
+        /// still let 978 real story lines be swallowed, and this brings it to
+        /// 272. "Defeat ⟨…⟩" has no tail at all, so it matched anything
+        /// beginning with that word and handed the rest back in English.
+        /// </summary>
+        [Test]
+        public void APatternThatBarelyTranslatesAnything_IsNotUsed()
+        {
+            var defeat = new Pattern("Defeat ", string.Empty, "Победите " + Hole);
+
+            Assert.That(
+                SqliteReferenceTranslationSource.TryMatchItemPattern(
+                    new[] { defeat }, "Defeat 100 enemies in the Wolves' Den", out _),
+                Is.False);
+        }
+
+        /// <summary>
+        /// The same pattern still writes in a name it can carry.
+        /// </summary>
+        [Test]
+        public void AShortPattern_StillCarriesAShortName()
+        {
+            var use = new Pattern("Use ", "?", "Использовать " + Hole + "?");
+
+            Assert.That(
+                SqliteReferenceTranslationSource.TryMatchItemPattern(new[] { use }, "Use Ether?", out var ru),
+                Is.True);
+            Assert.That(ru, Is.EqualTo("Использовать Ether?"));
+        }
+
+        /// <summary>
+        /// And the line the whole feature was built for is untouched by both
+        /// rules - it was the check that mattered while tightening them.
+        /// </summary>
+        [Test]
+        public void TheLineThisWasBuiltFor_SurvivesEveryRule()
+        {
+            var line = "As I mentioned earlier, I'm willing to part with each book for the " +
+                       "discounted price of 100 Allagan tomestones of poetics.";
+
+            Assert.That(
+                SqliteReferenceTranslationSource.TryMatchItemPattern(new[] { Gjusana }, line, out var ru),
+                Is.True);
+            Assert.That(ru, Does.EndWith("100 Allagan tomestones of poetics."));
         }
     }
 }
