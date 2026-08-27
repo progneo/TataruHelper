@@ -75,6 +75,32 @@ chat log records its copy while nothing is on screen yet and the screen's copy
 follows 40 ms later, so the clearing landed exactly between them, every time.
 The two seconds are what handles an NPC repeating a bubble as you walk past.
 
+## Three guards, not one
+
+Saying a line once is enforced in three places, and they are not
+interchangeable. Anyone tempted to fold them together should know what each
+covers before removing any of it.
+
+| where | keyed on | window | covers |
+|---|---|---|---|
+| `RecentUtterance` | the words, speaker dropped, plus the "one side names nobody" rule | 2 s, last 16 | both roads, dialogue only |
+| `IsDuplicateOfRealtimeLine` | the words, speaker dropped | last 64, no clock | the chat log's copy of what the screen showed |
+| `ShouldSuppressAsDuplicate` | the code and the **whole line, speaker included** | 2 s | every channel, the last gate before translation |
+
+The third is keyed most strictly and therefore catches least: "Cassard:Well
+met" and "Well met" are two different keys to it, which is why it never caught
+the duty duplicates. What it does cover is everything the other two do not -
+ordinary chat, party, linkshells - where a line has no second road to arrive
+by and an exact repeat is the only duplicate there is.
+
+The second has no clock at all: sixty-four lines deep, however long ago. That
+is deliberate. It answers "did the screen already show this?", and the chat log
+can lag a long way behind on a line the player leaves on screen.
+
+So: a duplicate across the two roads is the first's business, a late chat-log
+copy is the second's, and an exact repeat on any channel is the third's. Three
+questions that look alike and are not.
+
 ## Where each decision can be watched
 
 Run with `--log-raw-dialog` and the reader writes to

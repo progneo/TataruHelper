@@ -146,6 +146,38 @@ namespace TataruHelper.Tests
                 Is.EqualTo(expected));
         }
 
+        /// <summary>
+        /// The signatures behind duplicate suppression were kept for the whole
+        /// session to answer a question that stops mattering after two
+        /// seconds, so an evening in a busy zone put every line anybody said
+        /// into a dictionary that could never use them again.
+        /// </summary>
+        [Test]
+        public void ForgetStaleSignatures_KeepsWhatTheWindowStillCoversAndDropsTheRest()
+        {
+            var now = new DateTime(2026, 8, 27, 14, 0, 0, DateTimeKind.Utc);
+            var window = TimeSpan.FromSeconds(2);
+
+            var seen = new ConcurrentDictionary<string, DateTime>();
+            seen["003D|just said"] = now.AddMilliseconds(-500);
+            seen["003D|said a moment ago"] = now - window;
+            seen["000A|said an hour ago"] = now.AddHours(-1);
+
+            FFMemoryReader.ForgetStaleSignatures(seen, now, window);
+
+            Assert.That(seen.ContainsKey("003D|just said"), Is.True, "still inside the window");
+            Assert.That(seen.ContainsKey("003D|said a moment ago"), Is.True, "exactly at the edge is not past it");
+            Assert.That(seen.ContainsKey("000A|said an hour ago"), Is.False);
+        }
+
+        [Test]
+        public void ForgetStaleSignatures_SurvivesHavingNothingToSweep()
+        {
+            Assert.DoesNotThrow(() => FFMemoryReader.ForgetStaleSignatures(null, DateTime.UtcNow, TimeSpan.FromSeconds(2)));
+            Assert.DoesNotThrow(() => FFMemoryReader.ForgetStaleSignatures(
+                new ConcurrentDictionary<string, DateTime>(), DateTime.UtcNow, TimeSpan.FromSeconds(2)));
+        }
+
         private static void InvokeProcessReadResult(FFMemoryReader reader, ChatLogResult result)
         {
             var method = typeof(FFMemoryReader).GetMethod(

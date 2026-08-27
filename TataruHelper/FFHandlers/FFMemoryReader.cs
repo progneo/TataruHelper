@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -232,6 +232,14 @@ namespace FFXIVTataruHelper.FFHandlers
 
         private readonly ConcurrentDictionary<string, DateTime> _recentEmittedMessages;
         private static readonly TimeSpan DuplicateSuppressionWindow = TimeSpan.FromSeconds(2);
+
+        /// <summary>
+        /// How many signatures may pile up before the stale ones are swept.
+        /// Two seconds of a busy zone is a few dozen lines, so this is roomy
+        /// enough never to sweep in ordinary play and small enough that the
+        /// dictionary cannot grow without bound.
+        /// </summary>
+        private const int MostSignaturesWorthKeeping = 512;
 
         private Process _ffXivProcess = null;
         private string _ffProcessName;
@@ -710,7 +718,41 @@ namespace FFXIVTataruHelper.FFHandlers
             }
 
             _recentEmittedMessages[signature] = now;
+
+            // Nothing here was ever thrown away: an entry per distinct line for
+            // the whole session, each holding the line itself, to answer a
+            // question that stops mattering after two seconds. An evening in a
+            // busy zone put megabytes of chat into a dictionary that could
+            // never use them again.
+            if (_recentEmittedMessages.Count > MostSignaturesWorthKeeping)
+            {
+                ForgetStaleSignatures(_recentEmittedMessages, now, DuplicateSuppressionWindow);
+            }
+
             return false;
+        }
+
+        /// <summary>
+        /// Drops the signatures that have aged past the window they are asked
+        /// about. Swept rather than pruned on every line: the sweep costs a
+        /// walk of the dictionary, and doing that per line would spend more
+        /// than it saves.
+        /// </summary>
+        internal static void ForgetStaleSignatures(
+            ConcurrentDictionary<string, DateTime> seen, DateTime now, TimeSpan window)
+        {
+            if (seen == null)
+            {
+                return;
+            }
+
+            foreach (var entry in seen)
+            {
+                if (now - entry.Value > window)
+                {
+                    seen.TryRemove(entry.Key, out _);
+                }
+            }
         }
 
         private void StartChatMessageEvetRiser(CancellationToken cancellationToken)
