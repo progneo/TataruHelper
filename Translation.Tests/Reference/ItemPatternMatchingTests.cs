@@ -160,5 +160,63 @@ namespace Translation.Tests.Reference
             Assert.That(perLookupMicroseconds, Is.LessThan(200),
                 "1000 lookups against 400 patterns should not take 200ms");
         }
+
+        /// <summary>
+        /// Reported from play on 27 August. The index holds "Welcome to
+        /// ⟨item⟩." - two words and a full stop - and a guildmaster's whole
+        /// speech begins with those words and ends with one, so the hole
+        /// swallowed the entire paragraph and it came back as "Добро
+        /// пожаловать в " with the English untouched behind it.
+        /// </summary>
+        [Test]
+        public void AWholeSpeech_IsNotAnItemName()
+        {
+            var welcome = new Pattern("Welcome to ", ".", "Добро пожаловать в " + Hole + ".");
+
+            var speech = "Welcome to the Endeavor, pride and joy of the Fishermen's Guild. If the " +
+                         "thought of embarking on a voyage to the high seas piques your interest, " +
+                         "you may be pleased to know we are currently recruiting crew members.";
+
+            Assert.That(
+                SqliteReferenceTranslationSource.TryMatchItemPattern(new[] { welcome }, speech, out _),
+                Is.False);
+        }
+
+        /// <summary>
+        /// The same pattern still does its job on what it was made for.
+        /// </summary>
+        [Test]
+        public void AnActualName_StillFallsIntoTheHole()
+        {
+            var welcome = new Pattern("Welcome to ", ".", "Добро пожаловать в " + Hole + ".");
+
+            Assert.That(
+                SqliteReferenceTranslationSource.TryMatchItemPattern(
+                    new[] { welcome }, "Welcome to the Bismarck.", out var ru),
+                Is.True);
+            Assert.That(ru, Is.EqualTo("Добро пожаловать в the Bismarck."));
+        }
+
+        [TestCase("Allagan tomestones of poetics", true)]
+        [TestCase("Ceruleum Tank Mk. II", true, TestName = "a name may carry a full stop")]
+        [TestCase("Extreme Survival Kit of the Namazu", true)]
+        [TestCase("", false)]
+        [TestCase("Are you quite sure?", false, TestName = "a question is not a name")]
+        [TestCase("Stand back! The thing is waking!", false)]
+        public void WhatMayFallIntoTheHole(string item, bool isName)
+        {
+            Assert.That(SqliteReferenceTranslationSource.LooksLikeAnItemName(item), Is.EqualTo(isName));
+        }
+
+        [Test]
+        public void SomethingLongerThanAnyName_IsNotOne()
+        {
+            Assert.That(
+                SqliteReferenceTranslationSource.LooksLikeAnItemName(new string('a', 61)),
+                Is.False);
+            Assert.That(
+                SqliteReferenceTranslationSource.LooksLikeAnItemName(new string('a', 60)),
+                Is.True);
+        }
     }
 }

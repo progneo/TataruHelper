@@ -391,11 +391,54 @@ namespace Translation.Reference
 
                 var item = key.Substring(pattern.Prefix.Length, key.Length - pattern.FixedLength);
 
+                if (!LooksLikeAnItemName(item))
+                {
+                    continue;
+                }
+
                 pinned = pattern.FixedLength;
                 translation = pattern.Translated.Replace(ItemPlaceholder, item);
             }
 
             return pinned >= 0;
+        }
+
+        /// <summary>
+        /// Whether what fell into the hole could be the name of a thing.
+        ///
+        /// The hole was allowed to swallow anything at all, and a pattern as
+        /// short as "Welcome to ⟨item⟩." will happily swallow a paragraph: a
+        /// guildmaster's whole speech about the Fishermen's Guild came out as
+        /// "Добро пожаловать в " followed by the untouched English, because it
+        /// began with those words and ended with a full stop.
+        ///
+        /// A name is short and is not a sentence. Both tests are needed: the
+        /// length alone would let a short sentence through, and the punctuation
+        /// alone would let a long clause through.
+        /// </summary>
+        internal static bool LooksLikeAnItemName(string item)
+        {
+            // Measured against the game's own names: the longest run past
+            // forty characters, and "Extreme Survival Kit of the Namazu" is
+            // thirty-four, so sixty leaves room without leaving a sentence in.
+            const int longestName = 60;
+
+            if (item.Length == 0 || item.Length > longestName)
+            {
+                return false;
+            }
+
+            foreach (var c in item)
+            {
+                // A full stop is left alone: names carry one, as "Mk. II" does.
+                if (c == '!' || c == '?' || c == ';' ||
+                    c == (char)10 || c == (char)13)
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
